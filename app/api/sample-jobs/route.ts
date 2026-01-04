@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
 				email: "sample-free@jobping.com",
 				// No name - using "Hi user" instead
 				cities: ["London", "Amsterdam", "Berlin"],
-				careerPath: "Tech",
+				careerPath: "Strategy", // Changed from "Tech" to "Strategy" for Strategy & Business Design
 				languages_spoken: ["English", "German"], // Common EU languages
 			},
 			premium: {
@@ -226,16 +226,20 @@ export async function GET(req: NextRequest) {
 				const isGraduate = job.is_graduate || false;
 				const isInternship = job.is_internship || false;
 
-				// Build personalized reason
+				// Build personalized reason - use the actual explanation from matching engine
 				let personalizedReason = explanation.reason;
 
-				// Enhance with specific details
+				// Enhance with specific details, but don't replace with generic templates
 				if (matchesPreferredCity && hasCareerMatch) {
-					personalizedReason = `Perfect match! This ${category} role at ${company} in ${city} aligns perfectly with your preference for ${profile.cities.join(" and ")} and your ${profile.careerPath} career path. ${isGraduate ? "Graduate programme" : isInternship ? "Internship" : "Entry-level friendly"} with excellent growth opportunities.`;
+					// Perfect match - enhance the explanation
+					personalizedReason = `${explanation.reason}. Located in ${city}, one of your preferred cities (${profile.cities.join(", ")}), and matches your ${profile.careerPath} career path. ${isGraduate ? "Graduate programme" : isInternship ? "Internship" : "Entry-level friendly"} with excellent growth opportunities.`;
 				} else if (matchesPreferredCity) {
-					personalizedReason = `Great location match! This ${category} role at ${company} is located in ${city}, one of your preferred cities (${profile.cities.join(", ")}). ${isGraduate ? "Graduate-friendly" : "Entry-level friendly"} with opportunities to grow.`;
+					// City match - enhance the explanation
+					personalizedReason = `${explanation.reason}. Located in ${city}, one of your preferred cities. ${isGraduate ? "Graduate-friendly" : "Entry-level friendly"} with opportunities to grow.`;
 				} else if (hasCareerMatch) {
-					personalizedReason = `Excellent ${profile.careerPath} match! ${company}'s ${category} role in ${city} aligns perfectly with your career interests. ${isGraduate ? "Graduate programme" : isInternship ? "Internship" : "Entry-level friendly"} with clear progression paths.`;
+					// Career match - use the explanation which already includes "Perfect career path match"
+					// Just add context about the role type
+					personalizedReason = `${explanation.reason}. ${isGraduate ? "Graduate programme" : isInternship ? "Internship" : "Entry-level friendly"} with clear progression paths.`;
 				} else {
 					// Use explanation from matching engine but personalize it
 					personalizedReason = `${explanation.reason}. ${company}'s ${category} position in ${city} offers ${isGraduate ? "graduate-friendly" : "entry-level"} opportunities.`;
