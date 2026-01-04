@@ -67,6 +67,21 @@ export function buildStablePrompt(
 
 	const careerKeywords = userPrefs.career_keywords ? userPrefs.career_keywords : "";
 
+	// Check if user needs visa sponsorship
+	const visaStatus = userPrefs.visa_status?.toLowerCase() || "";
+	const needsVisaSponsorship =
+		visaStatus.includes("non-eu") ||
+		visaStatus.includes("non-uk") ||
+		visaStatus.includes("require sponsorship") ||
+		visaStatus.includes("need_sponsorship") ||
+		visaStatus.includes("visa-required") ||
+		(visaStatus.includes("sponsorship") && !visaStatus.includes("eu")) ||
+		(!visaStatus.includes("eu-citizen") &&
+			!visaStatus.includes("eu citizen") &&
+			!visaStatus.includes("citizen") &&
+			!visaStatus.includes("permanent") &&
+			visaStatus.length > 0);
+
 	const jobsToAnalyze = isPremiumTier
 		? jobsArray.slice(0, JOBS_TO_ANALYZE_PREMIUM)
 		: jobsArray.slice(0, JOBS_TO_ANALYZE_FREE);
@@ -80,113 +95,70 @@ export function buildStablePrompt(
 	}
 	const jobList = jobListParts.join("\n");
 
-	const tierContext = `\nNOTE: Provide amazing, high-quality matches for this user. Use ALL available preferences for precise matching.`;
-
-	return `You are a career matching expert. Analyze these jobs and match them to the user's profile.${tierContext}
-
-USER PROFILE:
+	return `### USER PROFILE
 - Experience Level: ${userLevel}
 - Professional Expertise: ${userCareer}
 - Target Locations: ${userCities}
 ${languages ? `- Languages: ${languages}` : ""}
 ${roles ? `- Target Roles: ${roles}` : ""}
 ${careerPaths ? `- Career Paths: ${careerPaths}` : ""}
-${workEnv ? `- Work Environment Preference: ${workEnv}` : ""}
+${workEnv ? `- Work Environment: ${workEnv}` : ""}
 ${industries ? `- Preferred Industries: ${industries}` : ""}
 ${skills ? `- Skills: ${skills}` : ""}
 ${careerKeywords ? `- Career Keywords: ${careerKeywords}` : ""}
+${needsVisaSponsorship ? `- Visa Status: Requires sponsorship` : ""}
 
-AVAILABLE JOBS:
+### AVAILABLE JOBS
 ${jobList}
 
-CRITICAL REQUIREMENTS (High-Quality Matching):
-1. **LOCATION MATCH IS REQUIRED**: Jobs MUST be in one of these cities: ${userCities}
-   - Exact city match required (e.g., "London" matches "London, UK" but NOT "New London")
-   - Remote/hybrid jobs are acceptable if location preference allows
-   - DO NOT recommend jobs in other cities, even if they seem relevant
-${
-	careerPaths
-		? `2. **CAREER PATH MATCH IS REQUIRED**: Jobs MUST align with: ${careerPaths}
-   - Job title or description must relate to these career paths
-   - DO NOT recommend jobs outside these career paths`
-		: ""
-}
-${
-	roles
-		? `3. **ROLE MATCH IS REQUIRED**: Jobs MUST match these roles: ${roles}
-   - Job title or description must include these role keywords
-   - DO NOT recommend jobs that don't match these roles`
-		: ""
-}
-${
-	languages
-		? `4. **LANGUAGE REQUIREMENTS ARE CRITICAL**: User speaks: ${languages}
-   - DO NOT recommend jobs that require languages the user doesn't speak
-   - If job requires "Japanese speaker", "Chinese speaker", "Mandarin speaker", "Korean speaker", etc., and user doesn't speak that language, EXCLUDE the job
-   - Only recommend jobs where user speaks at least one required language`
-		: ""
-}
-${
-	industries
-		? `5. **INDUSTRY PREFERENCE**: User prefers: ${industries}
-   - Prioritize jobs in these industries
-   - Still consider other industries if strong match otherwise`
-		: ""
-}
-${
-	skills
-		? `6. **SKILLS MATCH**: User has these skills: ${skills}
-   - Prioritize jobs that require or prefer these skills
-   - Stronger matches if job explicitly mentions these skills`
-		: ""
-}
+---
 
-INSTRUCTIONS (Precise Matching):
-Analyze each job carefully and return ONLY jobs that meet ALL critical requirements above.
-${languages ? `**CRITICAL**: If a job requires languages the user doesn't speak (e.g., "Japanese speaker" but user doesn't speak Japanese), EXCLUDE it immediately.` : ""}
-Then rank by:
-1. Location match quality (exact city > remote/hybrid)
-2. Experience level fit (entry-level, graduate, junior keywords)
-3. Role alignment strength with career path and expertise
-${languages ? `4. Language match (user must speak at least one required language)` : "4. Language requirements (if specified)"}
-5. Industry preference match${industries ? ` (prioritize ${industries})` : ""}
-6. Skills alignment${skills ? ` (prioritize jobs requiring: ${skills})` : ""}
-7. Company type and culture fit
+## 1. FILTERING RULES (Hard Constraints)
+Discard any job that fails these criteria. **Precision overrides all other considerations.**
 
-MATCH REASON GUIDELINES (Evidence-Based):
-- BE SPECIFIC: Link user's stated skills/experience to job requirements
-  Example: "Your React + TypeScript experience matches their requirement for 'frontend expertise with modern frameworks'"
-- BE FACTUAL: Reference actual job description requirements
-  Example: "The job requires '2+ years marketing experience' and you have 3 years in digital marketing"
-- BE TRANSPARENT: Acknowledge gaps when relevant
-  Example: "This role focuses on B2B marketing, which aligns with your experience, though it's more enterprise-focused than your previous B2C work"
-- AVOID: Emotional hype ("This is the startup you'll tell your friends about")
-- AVOID: Confidence claims about outcomes ("easy interview", "guaranteed fit")
-- AVOID: Generic statements ("Good match for your skills", "Aligns with preferences")
+- **Location**: Must be in ${userCities}. Accept regional variations (e.g., "London, UK", "Greater London", "Central London" for "London"). Reject only if clearly different city (e.g., "New London").
+- **Language**: If a job requires a language not in [${languages || "none specified"}], EXCLUDE it. Common exclusions: "Japanese speaker", "Chinese speaker", "Mandarin speaker", "Korean speaker" when user doesn't speak that language.
+${needsVisaSponsorship ? `- **Visa Sponsorship**: Job MUST offer visa sponsorship. Look for keywords: "visa sponsorship", "sponsor visa", "work permit", "relocation support", "visa support", "immigration support", "work authorization", "sponsorship available", "will sponsor", "can sponsor", "visa assistance", "relocation package", "tier 2 sponsorship", "tier 2 visa", "blue card", "skilled worker visa". Also check if job has visa_friendly=true in structured data. EXCLUDE jobs with negative indicators: "eu citizen only", "uk citizen only", "right to work required", "must have right to work", "no visa sponsorship", "local candidates only".` : ""}
+${careerPaths ? `- **Career Path**: Title or description must contain keywords from: ${careerPaths}` : ""}
+${roles ? `- **Role Match**: Title or description must contain keywords from: ${roles}` : ""}
 
-EVIDENCE REQUIREMENT (High-Quality Matching):
-- For match scores > 85, you MUST provide at least TWO distinct points of evidence from the job description
-- Each evidence point should reference specific job requirements or user skills
-- Minimum 30 words required for high-confidence matches (>85%)
-- Example: "Your React experience matches their 'frontend framework' requirement, AND your TypeScript skills align with their 'strongly-typed codebase' preference"
-- If you cannot provide at least two distinct evidence points, lower the match score to 80 or below
+**CRITICAL**: If fewer than 5 jobs pass these filters, return only the jobs that pass. Do NOT include jobs that violate hard constraints to reach 5 matches.
 
-DIVERSITY REQUIREMENT:
-When selecting your top 5 matches, prioritize variety:
-- Include jobs from different company types (startup, corporate, agency)
-- Include jobs from different sources when possible
-- Balance work environments (if user allows multiple types)
+---
 
-Return JSON array with exactly 5 matches (or fewer if less than 5 meet requirements), ranked by relevance:
-[{"job_index":1,"job_hash":"actual-hash","match_score":85,"match_reason":"Evidence-based reason linking user profile to job requirements"}]
+## 2. RANKING & SCORING
+Rank the remaining jobs using these weights:
+
+**Score 90-100**: Direct hit on skills, location, and ${careerPaths || "career path"}. Perfect alignment with user profile.
+**Score 70-89**: Matches location and role, but may have slight industry or secondary skill gaps.
+**Score 50-69**: Meets hard constraints but has notable gaps in skills, industry, or experience level.
+
+**Evidence Rule**: For scores >85, you MUST provide 2+ specific evidence points (minimum 30 words). Each evidence point must reference actual job description text or user profile data. If you cannot find two distinct evidence points, the score cannot exceed 80.
+
+---
+
+## 3. OUTPUT FORMAT
+Return a valid JSON array of up to 5 matches, ranked by score (highest first). If no jobs pass the Filtering Rules, return an empty array [].
+
+Format:
+\`\`\`json
+[
+  {
+    "job_index": 1,
+    "job_hash": "actual-hash-from-list",
+    "match_score": 85,
+    "match_reason": "Evidence-based explanation (2-3 sentences) linking user profile to specific job requirements. Minimum 30 words for scores >85."
+  }
+]
+\`\`\`
 
 Requirements:
-- job_index: Must be 1-${jobsToAnalyze.length}
-- job_hash: Must match the hash from the job list above
+- job_index: Must be 1-${jobsToAnalyze.length} (matches the number in the job list)
+- job_hash: Must exactly match the hash from the job list above
 - match_score: 50-100 (be selective, only recommend truly relevant jobs)
-- match_reason: Evidence-based explanation (2-3 sentences) that explicitly links user's profile to job requirements
-- Return exactly 5 matches (or fewer if less than 5 good matches exist)
-- Valid JSON array only, no markdown or extra text`;
+- match_reason: Evidence-based explanation that references specific job requirements and user skills. NO emotional hype, NO outcome predictions, NO generic statements.
+- Return exactly the number of matches that pass filters (0-5), ranked by relevance
+- Valid JSON array only, no markdown formatting or extra text`;
 }
 
 // ============================================
@@ -211,25 +183,7 @@ export function calculateAICost(tokens: number, model: string): number {
  * System message for AI matching
  */
 export function getSystemMessage(): string {
-	return `You're a professional career advisor focused on evidence-based matching.
-
-Your job: Find 5 perfect job matches and explain WHY they're relevant using factual evidence.
-
-Write match reasons that are:
-- SPECIFIC: Link user's stated skills/experience to explicit job requirements
-  Example: "Your React + TypeScript experience matches their requirement for 'frontend expertise with modern frameworks'"
-- FACTUAL: Reference actual job description text and user profile data
-  Example: "The job requires '2+ years marketing experience' and you have 3 years in digital marketing"
-- TRANSPARENT: Acknowledge both strengths and potential gaps honestly
-  Example: "This role focuses on B2B marketing, which aligns with your experience, though it's more enterprise-focused than your previous B2C work"
-- PROFESSIONAL: Avoid emotional language, hype, or outcome predictions
-
-NEVER use:
-- "Easy interview" or confidence claims about outcomes
-- "This is the startup you'll tell your friends about" (emotional hype)
-- "Good match" or "Aligns with preferences" (too generic)
-
-Keep match reasons 2-3 sentences max. Make every word count with evidence.`;
+	return `You are a professional career advisor. Your mission is to provide evidence-based job matching. You operate with clinical objectivity: you do not use emotional hype, you do not predict interview success, and you never use generic phrases like "Good match." Every claim you make must be tethered to specific keywords in the job description or the user's profile.`;
 }
 
 /**

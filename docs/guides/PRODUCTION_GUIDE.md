@@ -114,7 +114,7 @@ Escalation contacts and detailed steps live in `RUNBOOK.md`; keep them updated.
 ## 7. Compliance & Housekeeping
 
 - Keep dependencies up to date (`npm outdated` monthly). Remove unused packages flagged by `depcheck` or `ts-prune`.
-- Audit migrations quarterly to ensure no scratch files remain (`migrations/*.sql` should all be applied).
+- Audit migrations quarterly to ensure no scratch files remain (`supabase/migrations/*.sql` should all be applied).
 - Review Redis usage and purge stale keys routinely.
 - Ensure new engineers read `README.md` → `PRODUCTION_GUIDE.md` → `RUNBOOK.md` in that order.
 

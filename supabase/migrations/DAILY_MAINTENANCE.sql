@@ -4,7 +4,9 @@
 -- This file combines all security, performance, and data quality fixes
 -- Safe to run daily - all operations are idempotent
 --
--- Last Updated: January 2, 2026
+-- Last Updated: January 3, 2026
+-- Added: Comprehensive job filtering for CEO, medical, legal, teaching, construction roles
+-- Added: Categorization accuracy checks and labeling quality improvements
 -- ============================================================================
 
 BEGIN;
@@ -358,6 +360,285 @@ WHERE location IN ('W', 'Md', 'Ct')
    OR (LENGTH(TRIM(location)) <= 2 AND location !~ '^[A-Z]{2}$');
 
 -- ============================================================================
+-- 1.17. FILTER NON-BUSINESS GRADUATE ROLES (CEO, Medical, Legal, Teaching, Construction)
+-- ============================================================================
+
+-- 1.17.1. FILTER CEO/EXECUTIVE ROLES
+-- Filter all CEO, Chief Executive, Managing Director roles (even internships)
+-- These are not suitable for business graduates
+UPDATE jobs
+SET 
+  is_active = false,
+  status = 'inactive',
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'ceo_executive_role'
+      WHEN filtered_reason NOT LIKE '%ceo_executive_role%' THEN filtered_reason || '; ceo_executive_role'
+      ELSE filtered_reason
+    END,
+    'ceo_executive_role'
+  ),
+  updated_at = NOW()
+WHERE is_active = true
+  AND status = 'active'
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%ceo_executive_role%')
+  AND (
+    LOWER(title) LIKE '%ceo%' OR
+    LOWER(title) LIKE '%chief executive%' OR
+    LOWER(title) LIKE '%managing director%' OR
+    LOWER(title) LIKE '%md %' OR
+    (LOWER(title) LIKE '%chief%' AND (
+      LOWER(title) LIKE '%chief officer%' OR
+      LOWER(title) LIKE '%cfo%' OR
+      LOWER(title) LIKE '%cto%' OR
+      LOWER(title) LIKE '%coo%' OR
+      LOWER(title) LIKE '%cmo%'
+    )) OR
+    -- CEO office internships/associates (even if marked as internship)
+    LOWER(title) LIKE '%ceo office%' OR
+    LOWER(title) LIKE '%ceo associate%' OR
+    LOWER(title) LIKE '%ceo assistant%' OR
+    LOWER(title) LIKE '%executive assistant%ceo%' OR
+    LOWER(title) LIKE '%ceo%executive%'
+  );
+
+-- 1.17.2. FILTER CONSTRUCTION ROLES
+-- Filter construction, building, trade jobs (not business-relevant)
+-- BUT keep: Construction Project Manager (business role), Construction Consultant (business)
+UPDATE jobs
+SET 
+  is_active = false,
+  status = 'inactive',
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'construction_role'
+      WHEN filtered_reason NOT LIKE '%construction_role%' THEN filtered_reason || '; construction_role'
+      ELSE filtered_reason
+    END,
+    'construction_role'
+  ),
+  updated_at = NOW()
+WHERE is_active = true
+  AND status = 'active'
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%construction_role%')
+  AND (
+    (LOWER(title) LIKE '%construction%' AND NOT (
+      LOWER(title) LIKE '%construction project manager%' OR
+      LOWER(title) LIKE '%construction consultant%' OR
+      LOWER(title) LIKE '%construction analyst%' OR
+      LOWER(description) LIKE '%construction management%' OR
+      LOWER(description) LIKE '%construction consultancy%'
+    )) OR
+    LOWER(title) LIKE '%builder%' OR
+    LOWER(title) LIKE '%carpenter%' OR
+    LOWER(title) LIKE '%plumber%' OR
+    LOWER(title) LIKE '%electrician%' OR
+    LOWER(title) LIKE '%welder%' OR
+    LOWER(title) LIKE '%roofer%' OR
+    LOWER(title) LIKE '%mason%' OR
+    LOWER(title) LIKE '%painter%' OR
+    LOWER(title) LIKE '%tiler%' OR
+    LOWER(title) LIKE '%glazier%' OR
+    LOWER(title) LIKE '%bricklayer%' OR
+    LOWER(title) LIKE '%plasterer%'
+  );
+
+-- 1.17.3. FILTER MEDICAL/HEALTHCARE ROLES
+-- Filter medical, healthcare clinical roles (not business-relevant)
+-- BUT keep: Healthcare Management, Healthcare Analyst, Healthcare Consultant (business roles)
+UPDATE jobs
+SET 
+  is_active = false,
+  status = 'inactive',
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'medical_healthcare_role'
+      WHEN filtered_reason NOT LIKE '%medical_healthcare_role%' THEN filtered_reason || '; medical_healthcare_role'
+      ELSE filtered_reason
+    END,
+    'medical_healthcare_role'
+  ),
+  updated_at = NOW()
+WHERE is_active = true
+  AND status = 'active'
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%medical_healthcare_role%')
+  AND (
+    LOWER(title) LIKE '%nurse%' OR
+    LOWER(title) LIKE '%doctor%' OR
+    LOWER(title) LIKE '%physician%' OR
+    LOWER(title) LIKE '%dentist%' OR
+    LOWER(title) LIKE '%therapist%' OR
+    LOWER(title) LIKE '%counselor%' OR
+    LOWER(title) LIKE '%psychologist%' OR
+    LOWER(title) LIKE '%pharmacist%' OR
+    LOWER(title) LIKE '%surgeon%' OR
+    LOWER(title) LIKE '%veterinarian%' OR
+    LOWER(title) LIKE '%vet %' OR
+    (LOWER(title) LIKE '%medical%' AND (
+      LOWER(title) LIKE '%medical doctor%' OR
+      LOWER(title) LIKE '%medical practitioner%' OR
+      LOWER(title) LIKE '%medical officer%' OR
+      LOWER(description) LIKE '%clinical%' OR
+      LOWER(description) LIKE '%patient care%'
+    ))
+  )
+  -- Keep business-related healthcare roles
+  AND NOT (
+    LOWER(title) LIKE '%healthcare%manager%' OR
+    LOWER(title) LIKE '%healthcare%analyst%' OR
+    LOWER(title) LIKE '%healthcare%consultant%' OR
+    LOWER(title) LIKE '%hospital%administrator%' OR
+    LOWER(title) LIKE '%healthcare%business%' OR
+    LOWER(description) LIKE '%healthcare management%' OR
+    LOWER(description) LIKE '%healthcare business%' OR
+    LOWER(description) LIKE '%healthcare administration%'
+  );
+
+-- 1.17.4. FILTER LEGAL ROLES
+-- Filter traditional legal roles (lawyers, solicitors, barristers)
+-- BUT keep: Compliance, Regulatory, Business Legal, Legal Analyst (entry-level)
+UPDATE jobs
+SET 
+  is_active = false,
+  status = 'inactive',
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'legal_role'
+      WHEN filtered_reason NOT LIKE '%legal_role%' THEN filtered_reason || '; legal_role'
+      ELSE filtered_reason
+    END,
+    'legal_role'
+  ),
+  updated_at = NOW()
+WHERE is_active = true
+  AND status = 'active'
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%legal_role%')
+  AND (
+    LOWER(title) LIKE '%lawyer%' OR
+    LOWER(title) LIKE '%attorney%' OR
+    LOWER(title) LIKE '%solicitor%' OR
+    LOWER(title) LIKE '%barrister%' OR
+    (LOWER(title) LIKE '%legal%' AND (
+      LOWER(title) LIKE '%legal counsel%' OR
+      LOWER(title) LIKE '%legal advisor%' OR
+      LOWER(title) LIKE '%legal officer%' OR
+      LOWER(title) LIKE '%lawyer in%'
+    ))
+  )
+  -- Keep compliance, regulatory, and entry-level legal analyst roles
+  AND NOT (
+    LOWER(title) LIKE '%compliance%' OR
+    LOWER(title) LIKE '%regulatory%' OR
+    LOWER(title) LIKE '%legal analyst%' OR
+    LOWER(title) LIKE '%junior legal%' OR
+    LOWER(title) LIKE '%graduate legal%' OR
+    LOWER(title) LIKE '%legal intern%' OR
+    LOWER(title) LIKE '%business%legal%' OR
+    LOWER(description) LIKE '%compliance%' OR
+    LOWER(description) LIKE '%regulatory%'
+  );
+
+-- 1.17.5. FILTER TEACHING/EDUCATION ROLES
+-- Filter teaching, education, academic roles (not business-relevant)
+-- BUT keep: Business Teacher, Business Lecturer, Corporate Training
+UPDATE jobs
+SET 
+  is_active = false,
+  status = 'inactive',
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'teaching_education_role'
+      WHEN filtered_reason NOT LIKE '%teaching_education_role%' THEN filtered_reason || '; teaching_education_role'
+      ELSE filtered_reason
+    END,
+    'teaching_education_role'
+  ),
+  updated_at = NOW()
+WHERE is_active = true
+  AND status = 'active'
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%teaching_education_role%')
+  AND (
+    (LOWER(title) LIKE '%teacher%' OR
+     LOWER(title) LIKE '%teaching%' OR
+     LOWER(title) LIKE '%lecturer%' OR
+     LOWER(title) LIKE '%educator%' OR
+     LOWER(title) LIKE '%tutor%' OR
+     LOWER(title) LIKE '%instructor%' OR
+     (LOWER(title) LIKE '%professor%' AND NOT LOWER(title) LIKE '%assistant professor%business%') OR
+     LOWER(title) LIKE '%academic%')
+    -- Keep business-related teaching roles
+    AND NOT (
+      LOWER(title) LIKE '%business%teacher%' OR
+      LOWER(title) LIKE '%business%lecturer%' OR
+      LOWER(title) LIKE '%business%professor%' OR
+      LOWER(title) LIKE '%corporate%trainer%' OR
+      LOWER(title) LIKE '%corporate%training%' OR
+      LOWER(description) LIKE '%business school%' OR
+      LOWER(description) LIKE '%business education%'
+    )
+  );
+
+-- ============================================================================
+-- 1.18. CATEGORIZATION ACCURACY CHECKS (Labeling Quality)
+-- ============================================================================
+
+-- 1.18.1. FLAG JOBS WITH MISMATCHED CATEGORIES
+-- Jobs that have "early-career" but are clearly senior/executive roles
+-- This doesn't filter them, but flags for review
+UPDATE jobs
+SET 
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'categorization_review_needed'
+      WHEN filtered_reason NOT LIKE '%categorization_review_needed%' THEN filtered_reason || '; categorization_review_needed'
+      ELSE filtered_reason
+    END,
+    'categorization_review_needed'
+  )
+WHERE is_active = true
+  AND status = 'active'
+  AND 'early-career' = ANY(categories)
+  AND (
+    LOWER(title) LIKE '%senior%' OR
+    LOWER(title) LIKE '%director%' OR
+    LOWER(title) LIKE '%head of%' OR
+    LOWER(title) LIKE '%vp%' OR
+    LOWER(title) LIKE '%vice president%' OR
+    LOWER(title) LIKE '%chief%' OR
+    LOWER(title) LIKE '%managing director%'
+  )
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%categorization_review_needed%');
+
+-- 1.18.2. FLAG CONSTRUCTION JOBS WITH BUSINESS CATEGORIES
+-- Construction jobs incorrectly categorized as business roles
+UPDATE jobs
+SET 
+  filtered_reason = COALESCE(
+    CASE 
+      WHEN filtered_reason IS NULL THEN 'categorization_review_needed'
+      WHEN filtered_reason NOT LIKE '%categorization_review_needed%' THEN filtered_reason || '; categorization_review_needed'
+      ELSE filtered_reason
+    END,
+    'categorization_review_needed'
+  )
+WHERE is_active = true
+  AND status = 'active'
+  AND (
+    LOWER(title) LIKE '%construction%' OR
+    LOWER(title) LIKE '%builder%' OR
+    LOWER(title) LIKE '%carpenter%' OR
+    LOWER(title) LIKE '%plumber%' OR
+    LOWER(title) LIKE '%electrician%'
+  )
+  AND (
+    'finance-investment' = ANY(categories) OR
+    'marketing-growth' = ANY(categories) OR
+    'sales-client-success' = ANY(categories) OR
+    'strategy-business-design' = ANY(categories)
+  )
+  AND (filtered_reason IS NULL OR filtered_reason NOT LIKE '%categorization_review_needed%');
+
+-- ============================================================================
 -- 2. ENABLE RLS ON PUBLIC TABLES (Security)
 -- ============================================================================
 
@@ -660,6 +941,41 @@ SELECT
   COUNT(CASE WHEN company_name LIKE '%Ltd%' OR company_name LIKE '%Inc%' OR company_name LIKE '%GmbH%' THEN 1 END) as company_names_with_suffixes
 FROM jobs
 WHERE is_active = true;
+
+-- Non-Business Role Filtering Check
+SELECT 
+  'Non-Business Roles Filtered' as check_type,
+  COUNT(CASE WHEN filtered_reason LIKE '%ceo_executive_role%' THEN 1 END) as ceo_executive_filtered,
+  COUNT(CASE WHEN filtered_reason LIKE '%construction_role%' THEN 1 END) as construction_filtered,
+  COUNT(CASE WHEN filtered_reason LIKE '%medical_healthcare_role%' THEN 1 END) as medical_filtered,
+  COUNT(CASE WHEN filtered_reason LIKE '%legal_role%' THEN 1 END) as legal_filtered,
+  COUNT(CASE WHEN filtered_reason LIKE '%teaching_education_role%' THEN 1 END) as teaching_filtered,
+  COUNT(CASE WHEN filtered_reason LIKE '%categorization_review_needed%' THEN 1 END) as categorization_review_needed
+FROM jobs
+WHERE is_active = false
+  AND filtered_reason IS NOT NULL;
+
+-- Active Jobs That Should Be Filtered (Leak Detection)
+SELECT 
+  'Potential Leaks' as check_type,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%ceo%' OR LOWER(title) LIKE '%chief executive%' OR LOWER(title) LIKE '%managing director%') AND is_active = true THEN 1 END) as active_ceo_jobs,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%construction%' OR LOWER(title) LIKE '%builder%' OR LOWER(title) LIKE '%carpenter%') AND is_active = true THEN 1 END) as active_construction_jobs,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%nurse%' OR LOWER(title) LIKE '%doctor%' OR LOWER(title) LIKE '%physician%') AND is_active = true THEN 1 END) as active_medical_jobs,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%lawyer%' OR LOWER(title) LIKE '%attorney%' OR LOWER(title) LIKE '%solicitor%') AND is_active = true THEN 1 END) as active_legal_jobs,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%teacher%' OR LOWER(title) LIKE '%lecturer%' OR LOWER(title) LIKE '%professor%') AND is_active = true THEN 1 END) as active_teaching_jobs
+FROM jobs
+WHERE status = 'active'
+  AND filtered_reason IS NULL;
+
+-- Categorization Accuracy Check
+SELECT 
+  'Categorization Accuracy' as check_type,
+  COUNT(CASE WHEN 'early-career' = ANY(categories) AND (LOWER(title) LIKE '%senior%' OR LOWER(title) LIKE '%director%' OR LOWER(title) LIKE '%chief%') AND is_active = true THEN 1 END) as senior_jobs_with_early_career_tag,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%construction%' OR LOWER(title) LIKE '%builder%') AND ('finance-investment' = ANY(categories) OR 'marketing-growth' = ANY(categories)) AND is_active = true THEN 1 END) as construction_jobs_with_business_categories,
+  COUNT(CASE WHEN (LOWER(title) LIKE '%nurse%' OR LOWER(title) LIKE '%doctor%') AND ('finance-investment' = ANY(categories) OR 'marketing-growth' = ANY(categories)) AND is_active = true THEN 1 END) as medical_jobs_with_business_categories
+FROM jobs
+WHERE status = 'active'
+  AND filtered_reason IS NULL;
 
 -- Overall Health Summary
 SELECT 

@@ -52,21 +52,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 console.log("✅ Supabase client initialized successfully");
 
-function parseJsonEnv(value) {
-	if (!value) return [];
-	try {
-		const parsed = JSON.parse(value);
-		if (Array.isArray(parsed)) {
-			return parsed
-				.map((item) => (typeof item === "string" ? item.trim() : ""))
-				.filter(Boolean);
-		}
-		return [];
-	} catch (error) {
-		console.warn("⚠️  Failed to parse JSON env value:", error.message);
-		return [];
-	}
-}
+// Import extracted business logic and orchestration modules
+const {
+	getCycleJobTarget,
+	getScraperTargets,
+	shouldStopCycle,
+	hasScraperReachedTarget,
+} = require("./business-logic/quota-manager.cjs");
+const { resolveTargets } = require("./business-logic/target-resolver.cjs");
+const { collectCycleStats } = require("./orchestration/stats-collector.cjs");
 
 class RealJobRunner {
 	constructor() {
@@ -127,49 +121,8 @@ class RealJobRunner {
 				return { cities: [], careerPaths: [], industries: [], roles: [] };
 			}
 
-			const citySet = new Set(parseJsonEnv(process.env.TARGET_CITIES_OVERRIDE));
-			const careerSet = new Set(
-				parseJsonEnv(process.env.TARGET_CAREER_PATHS_OVERRIDE),
-			);
-			const industrySet = new Set(
-				parseJsonEnv(process.env.TARGET_INDUSTRIES_OVERRIDE),
-			);
-			const roleSet = new Set(parseJsonEnv(process.env.TARGET_ROLES_OVERRIDE));
-
-			(data || []).forEach((user) => {
-				if (Array.isArray(user?.target_cities)) {
-					user.target_cities.forEach((city) => {
-						if (typeof city === "string" && city.trim()) {
-							citySet.add(city.trim());
-						}
-					});
-				}
-
-				if (user?.career_path && typeof user.career_path === "string") {
-					careerSet.add(user.career_path.trim());
-				}
-
-				if (Array.isArray(user?.industries)) {
-					user.industries.forEach((industry) => {
-						if (typeof industry === "string" && industry.trim()) {
-							industrySet.add(industry.trim());
-						}
-					});
-				}
-
-				if (Array.isArray(user?.roles_selected)) {
-					user.roles_selected.forEach((role) => {
-						if (typeof role === "string" && role.trim()) {
-							roleSet.add(role.trim());
-						}
-					});
-				}
-			});
-
-			const cities = Array.from(citySet);
-			const careerPaths = Array.from(careerSet);
-			const industries = Array.from(industrySet);
-			const roles = Array.from(roleSet);
+			// Use extracted target resolver
+			const targets = resolveTargets(data || []);
 
 			// Note: We don't provide default cities here because each scraper has its own defaults:
 			// - Reed: UK/Ireland cities (London, Manchester, Birmingham, Belfast, Dublin)
@@ -180,18 +133,18 @@ class RealJobRunner {
 			// Each scraper will use its own defaults if TARGET_CITIES is empty
 
 			console.log("🎯 Signup-driven targets ready", {
-				citiesPreview: cities.slice(0, 10),
-				totalCities: cities.length,
-				totalCareerPaths: careerPaths.length,
-				totalIndustries: industries.length,
-				totalRoles: roles.length,
+				citiesPreview: targets.cities.slice(0, 10),
+				totalCities: targets.cities.length,
+				totalCareerPaths: targets.careerPaths.length,
+				totalIndustries: targets.industries.length,
+				totalRoles: targets.roles.length,
 				note:
-					cities.length === 0
+					targets.cities.length === 0
 						? "Scrapers will use their own default city lists"
 						: "Scrapers will filter to their supported cities",
 			});
 
-			return { cities, careerPaths, industries, roles };
+			return targets;
 		} catch (error) {
 			console.error(
 				"⚠️  Unexpected error collecting signup targets:",
@@ -202,60 +155,16 @@ class RealJobRunner {
 		}
 	}
 
-	getCycleJobTarget() {
-		// EXPANDED: Increased global cycle target to allow more jobs
-		// Set to 0 to disable quota (run all scrapers) or high number like 10000
-		return parseInt(process.env.SCRAPER_CYCLE_JOB_TARGET || "0", 10); // 0 = no limit, run all scrapers
-	}
-
-	// Smart per-scraper targets based on historical performance
-	// EXPANDED: Increased caps to allow more job collection
-	getScraperTargets() {
-		return {
-			"jobspy-indeed": parseInt(process.env.JOBSPY_TARGET || "500", 10), // Increased from 100
-			"jobspy-internships": parseInt(
-				process.env.JOBSPY_INTERNSHIPS_TARGET || "2000",
-				10,
-			), // Increased from 80
-			"jobspy-career-roles": parseInt(
-				process.env.JOBSPY_CAREER_TARGET || "3000",
-				10,
-			), // Increased from 50
-			adzuna: parseInt(process.env.ADZUNA_TARGET || "500", 10), // Increased from 150
-			reed: parseInt(process.env.REED_TARGET || "200", 10), // Increased from 50
-			careerjet: parseInt(process.env.CAREERJET_TARGET || "450", 10), // New EU scraper
-			arbeitnow: parseInt(process.env.ARBEITNOW_TARGET || "400", 10), // Increased from 80 (17 cities × 25 queries = 425 potential)
-		};
-	}
+	// Methods removed - now using extracted modules:
+	// getCycleJobTarget() -> use getCycleJobTarget() from quota-manager
+	// getScraperTargets() -> use getScraperTargets() from quota-manager
+	// collectCycleStats() -> use collectCycleStats() from stats-collector
 
 	async collectCycleStats(sinceIso) {
-		try {
-			const { data, error } = await supabase
-				.from("jobs")
-				.select("job_hash, source")
-				.gte("created_at", sinceIso);
-
-			if (error) {
-				throw error;
-			}
-
-			const uniqueHashes = new Set();
-			const perSource = {};
-
-			(data || []).forEach((row) => {
-				if (!row?.job_hash) return;
-				uniqueHashes.add(row.job_hash);
-				const sourceKey = row.source || "unknown";
-				perSource[sourceKey] = (perSource[sourceKey] || 0) + 1;
-			});
-
-			const stats = { total: uniqueHashes.size, perSource };
-			this.currentCycleStats = stats;
-			return stats;
-		} catch (error) {
-			console.error("⚠️  Failed to collect cycle stats:", error.message);
-			return { total: 0, perSource: {} };
-		}
+		// Use extracted stats collector
+		const stats = await collectCycleStats(supabase, sinceIso);
+		this.currentCycleStats = stats;
+		return stats;
 	}
 
 	async evaluateStopCondition(stage, sinceIso, scraperName = null) {
@@ -264,9 +173,9 @@ class RealJobRunner {
 			`📈 ${stage}: ${stats.total} unique job hashes ingested this cycle`,
 		);
 
-		// Check global target first
-		const globalTarget = this.getCycleJobTarget();
-		if (globalTarget > 0 && stats.total >= globalTarget) {
+		// Use extracted quota manager for global cycle check
+		if (shouldStopCycle(stats)) {
+			const globalTarget = getCycleJobTarget();
 			console.log(
 				`🎯 Global cycle job target (${globalTarget}) reached after ${stage}; skipping remaining scrapers.`,
 			);
@@ -275,11 +184,10 @@ class RealJobRunner {
 
 		// Check per-scraper target if scraper name provided
 		if (scraperName) {
-			const scraperTargets = this.getScraperTargets();
-			const scraperTarget = scraperTargets[scraperName];
-			const scraperJobs = stats.perSource[scraperName] || 0;
-
-			if (scraperTarget > 0 && scraperJobs >= scraperTarget) {
+			if (hasScraperReachedTarget(stats, scraperName)) {
+				const scraperTargets = getScraperTargets();
+				const scraperTarget = scraperTargets[scraperName];
+				const scraperJobs = stats.perSource[scraperName] || 0;
 				console.log(
 					`🎯 Scraper ${scraperName} target (${scraperTarget}) reached (${scraperJobs} jobs); moving to next scraper.`,
 				);
