@@ -115,10 +115,8 @@ class Logger {
 		};
 
 		if (MONITORING_CONFIG.logging.structured) {
-			// Structured JSON logging for production
-			if (MONITORING_CONFIG.logging.console) {
-				console.log(JSON.stringify(logEntry));
-			}
+			// Structured JSON logging for production - always log to console for Vercel debugging
+			console.log(JSON.stringify(logEntry));
 		} else {
 			// Human-readable logging for development
 			const emoji = {

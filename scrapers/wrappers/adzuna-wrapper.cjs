@@ -59,9 +59,7 @@ async function main() {
 			process.env.SUPABASE_SERVICE_ROLE_KEY,
 		);
 
-		// Get all role names from signup form for matching
-		const { getAllRoles } = require("../shared/roles.cjs");
-		const allFormRoles = getAllRoles().map((r) => r.toLowerCase());
+	// REMOVED: Form role filtering to reduce strictness
 
 		const convertToDatabaseFormat = (job) => {
 			// CRITICAL: Add null check at the start to prevent "Cannot read properties of null" errors
@@ -78,21 +76,9 @@ async function main() {
 
 			const titleLower = (job.title || "").toLowerCase();
 
-			// Check multiple criteria for early-career classification
-			const hasEarlyTerms = classifyEarlyCareer(job);
-
-			// Check if title matches any role from signup form (all form roles are early-career)
-			const matchesFormRole = allFormRoles.some((role) => {
-				const roleWords = role.split(" ").filter((w) => w.length > 3); // Skip short words
-				return (
-					roleWords.length > 0 &&
-					roleWords.every((word) => titleLower.includes(word))
-				);
-			});
-
-			// More lenient: accept if it matches form role OR has early-career terms
-			// We're searching with early-career queries, so trust the results more
-			const isEarly = hasEarlyTerms || matchesFormRole;
+			// Check early-career classification (graduate/intern terms only)
+			// REMOVED: Form role matching to reduce filtering strictness
+			const isEarly = classifyEarlyCareer(job);
 
 			// Only save jobs that pass early-career filter
 			if (!isEarly) {
