@@ -38,6 +38,7 @@ Maintain a single `.env.production` (or Vercel environment values) covering **al
 | AI Matching | `OPENAI_API_KEY`, optional overrides (`AI_TIMEOUT_MS`, etc.) | Ensure OpenAI usage quotas are monitored. |
 | Billing | Polar configuration | Configure Polar webhook secret in Vercel environment (used in route handlers). |
 | Observability | Logging via structured logs | Error tracking via application logs. |
+| Axiom | `NEXT_PUBLIC_AXIOM_INGEST_ENDPOINT` | Required for next-axiom integration and full-stack observability. |
 
 Optional values (`REDIS_URL`, scraper knobs, etc.) are already typed and defaulted in `lib/env.ts`. Review before enabling experimental modes.
 
