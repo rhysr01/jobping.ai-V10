@@ -53,7 +53,11 @@ export function applyHardGates(
 	const isEarlyCareerFromCategories = hasEligibility(categories);
 
 	// DEBUG: Log early career eligibility for first few jobs
-	if (failures.length === 0 && (!isEarlyCareerFromCategories && !isEarlyCareerFromFlags)) {
+	if (
+		failures.length === 0 &&
+		!isEarlyCareerFromCategories &&
+		!isEarlyCareerFromFlags
+	) {
 		console.error("🔍 EARLY CAREER DEBUG:", {
 			jobId: job.id,
 			categories: categories,
@@ -61,7 +65,7 @@ export function applyHardGates(
 			isEarlyCareerFromFlags,
 			hasEarlyCareerCategory: categories.includes("early-career"),
 			catsResult: cats(categories),
-			hasEligibilityResult: hasEligibility(categories)
+			hasEligibilityResult: hasEligibility(categories),
 		});
 	}
 
