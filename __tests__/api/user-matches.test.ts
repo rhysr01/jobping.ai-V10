@@ -60,7 +60,7 @@ describe("GET /api/user-matches - Contract Tests", () => {
 		it("should return 400 for missing required parameters", async () => {
 			const { req } = createMocks({
 				method: "GET",
-				url: "/api/user-matches",
+				url: "/api/user-matches?limit=10", // Missing email, signature, timestamp
 			});
 
 			const response = await GET(req as any);

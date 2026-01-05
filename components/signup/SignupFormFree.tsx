@@ -188,6 +188,7 @@ export default function SignupFormFree() {
 						body: JSON.stringify({
 							cities: formData.cities,
 							careerPath: formData.careerPath,
+							visaSponsorship: formData.visaSponsorship || undefined, // Optional: only send if selected
 						}),
 					});
 					setJobCount(data.count || 0);

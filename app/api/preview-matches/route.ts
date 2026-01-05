@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
 	try {
 		const body = await request.json();
-		const { cities, careerPath } = body;
+		const { cities, careerPath, visaSponsorship } = body;
 
 		// Validate input
 		if (!cities || !Array.isArray(cities) || cities.length === 0) {
@@ -40,41 +40,53 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		// visaSponsorship is optional (user may not have selected it yet)
+		// but should be validated if provided
+		if (
+			visaSponsorship !== undefined &&
+			typeof visaSponsorship !== "string"
+		) {
+			return NextResponse.json(
+				{ error: "Invalid visa sponsorship value" },
+				{ status: 400 },
+			);
+		}
+
 		const supabase = getDatabaseClient();
 
-		// Map career path to database categories
-		const careerPathCategories = getDatabaseCategoriesForForm(careerPath);
+	// Map career path to database categories (for hard gates filtering)
+	const careerPathCategories = getDatabaseCategoriesForForm(careerPath);
 
-		// PERFORMANCE FIX: Fetch limited sample (1000 jobs max) instead of all jobs
-		// This gives us a representative sample to estimate realistic count
-		const SAMPLE_SIZE = 1000;
-		const SIXTY_DAYS_AGO = new Date();
-		SIXTY_DAYS_AGO.setDate(SIXTY_DAYS_AGO.getDate() - 60);
+	// PERFORMANCE FIX: Fetch limited sample (1000 jobs max) instead of all jobs
+	// This gives us a representative sample to estimate realistic count
+	const SAMPLE_SIZE = 1000;
+	const SIXTY_DAYS_AGO = new Date();
+	SIXTY_DAYS_AGO.setDate(SIXTY_DAYS_AGO.getDate() - 60);
 
-		// Build query to fetch sample jobs (not just count)
-		let query = supabase
-			.from("jobs")
-			.select("*")
-			.eq("is_active", true)
-			.eq("status", "active")
-			.is("filtered_reason", null)
-			.gte("created_at", SIXTY_DAYS_AGO.toISOString()) // Recent jobs only
-			.limit(SAMPLE_SIZE); // CRITICAL: Limit to prevent memory issues
+	// Build query to fetch sample jobs (not just count)
+	let query = supabase
+		.from("jobs")
+		.select("*")
+		.eq("is_active", true)
+		.eq("status", "active")
+		.is("filtered_reason", null)
+		.gte("created_at", SIXTY_DAYS_AGO.toISOString()) // Recent jobs only
+		.limit(SAMPLE_SIZE); // CRITICAL: Limit to prevent memory issues
 
-		// Filter by cities at database level
-		if (cities.length > 0 && cities.length <= 50) {
-			query = query.in("city", cities);
-		}
+	// Filter by cities at database level
+	if (cities.length > 0 && cities.length <= 50) {
+		query = query.in("city", cities);
+	}
 
-		// Filter by career path categories
-		if (careerPathCategories.length > 0 && careerPathCategories.length <= 20) {
-			query = query.overlaps("categories", careerPathCategories);
-		}
+	// DON'T filter by career path at DB level - too restrictive for preview
+	// Let hard gates handle career path matching for more accurate preview
+	// This matches the signup API's approach (signup/free/route.ts lines 332-334)
+	// Database has categories like "strategy-business-design" not "strategy"
 
-		// Also filter for early-career roles only
-		query = query.or(
-			"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
-		);
+	// Filter for early-career roles only
+	query = query.or(
+		"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
+	);
 
 		// Order by recency for better sample quality
 		query = query.order("created_at", { ascending: false });
@@ -104,21 +116,29 @@ export async function POST(request: NextRequest) {
 			});
 		}
 
-		// Apply hard gates (same logic as matching engine) to get realistic count
-		const userPrefs: UserPreferences = {
-			email: "preview@example.com", // Dummy email for preview
-			target_cities: cities,
-			career_path: careerPath ? [careerPath] : [],
-			subscription_tier: "free" as const,
-			// Default preferences (most lenient for preview)
-			work_environment: undefined, // Don't filter by work env in preview
-			languages_spoken: [],
-			roles_selected: [],
-			company_types: [],
-			visa_status: undefined, // Don't filter by visa in preview (too restrictive)
-			entry_level_preference: undefined,
-			professional_expertise: careerPath || "",
-		};
+	// Apply hard gates (same logic as matching engine) to get realistic count
+	// Map visa_sponsorship to visa_status (same as signup API)
+	const visa_status =
+		visaSponsorship === "yes"
+			? "Non-EU (require sponsorship)"
+			: visaSponsorship === "no"
+				? "EU citizen"
+				: undefined; // If not provided yet, don't filter by visa
+
+	const userPrefs: UserPreferences = {
+		email: "preview@example.com", // Dummy email for preview
+		target_cities: cities,
+		career_path: careerPath ? [careerPath] : [],
+		subscription_tier: "free" as const,
+		// Default preferences (lenient for preview but realistic)
+		work_environment: undefined, // Don't filter by work env in preview
+		languages_spoken: [],
+		roles_selected: [],
+		company_types: [],
+		visa_status: visa_status, // Use actual visa status if provided
+		entry_level_preference: undefined,
+		professional_expertise: careerPath || "",
+	};
 
 		// Apply hard gates to get realistic count
 		const eligibleJobs = preFilterByHardGates(sampleJobs, userPrefs);

@@ -58,12 +58,11 @@ describe("POST /api/signup - Contract Tests", () => {
 
 	describe("Input Validation", () => {
 		it("should return 400 for missing required fields", async () => {
-			const { req } = createMocks({
-				method: "POST",
-				body: {}, // Empty body
-			});
+			const mockRequest = {
+				json: jest.fn().mockResolvedValue({}), // Empty body
+			} as any;
 
-			const response = await POST(req as any);
+			const response = await POST(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(400);

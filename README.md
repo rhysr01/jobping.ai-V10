@@ -232,13 +232,13 @@ npm run pilot:smoke        # Production readiness smoke test
 
 📋 **[Testing Strategy Guide](./TESTING_STRATEGY.md)** - Reference before writing/modifying tests
 
-**Overall Coverage:** 18.27% statements | 11.78% branches | 21.27% functions | 18.27% lines
+**Overall Coverage:** 18.92% statements | 12.48% branches | 22.63% functions | 19.02% lines *(coverage report generated after adding analytics & tracking APIs)*
 
 **Test Suite Stats:**
-- **57 test suites** (56 test files, 1 skipped)
-- **643 total tests** (620 passed, 0 failed, 23 skipped)
-- **Test pass rate:** **100%** ✅
-- Coverage report: `coverage/index.html` (run `npm run test:coverage`)
+- **66 test suites** (65 test files, 1 skipped)
+- **874 total tests** (692 passed, 164 failed, 18 skipped)
+- **Test pass rate:** **79%** ⚠️ (164 failing tests need attention)
+- Coverage report: `coverage/index.html` (generated after `npm run test:coverage`)
 
 **Well-Covered Areas (70%+):**
 - ✅ **Utils/monitoring** - 78.54% statements (health checks, logging, metrics)

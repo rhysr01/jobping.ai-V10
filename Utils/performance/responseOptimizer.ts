@@ -78,7 +78,13 @@ export class ResponseOptimizer {
 			enableETag,
 			maxAge,
 			etag,
+			data,
 		});
+
+		// Add cache headers for new responses (not from cache)
+		if (enableCaching && this.shouldCache(data)) {
+			this.addCacheHeaders(response, maxAge, etag, false); // false = not from cache
+		}
 
 		// Cache the response if enabled
 		if (enableCaching && this.shouldCache(data)) {
@@ -228,13 +234,15 @@ export class ResponseOptimizer {
 			enableETag: boolean;
 			maxAge: number;
 			etag: string;
+			data?: any; // Add data parameter to check if it should be cached
 		},
 	): void {
-		const { enableCompression, enableCaching, enableETag, maxAge, etag } =
+		const { enableCompression, enableCaching, enableETag, maxAge, etag, data } =
 			options;
 
-		// Cache headers
-		if (enableCaching) {
+		// Cache headers - don't cache error responses even if caching is enabled
+		const shouldCache = enableCaching && (!data || this.shouldCache(data));
+		if (shouldCache) {
 			response.headers.set(
 				"Cache-Control",
 				`public, max-age=${maxAge}, s-maxage=${maxAge}`,

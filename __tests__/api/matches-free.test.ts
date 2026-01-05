@@ -39,12 +39,17 @@ describe("GET /api/matches/free - Contract Tests", () => {
 
 	describe("Authentication & Authorization", () => {
 		it("should return 401 when no cookie is provided", async () => {
-			const { req } = createMocks({
+			const mockRequest = {
 				method: "GET",
-				headers: {},
-			});
+				headers: new Headers(),
+				url: "http://localhost/api/matches/free",
+				nextUrl: { pathname: "/api/matches/free" },
+				cookies: {
+					get: jest.fn().mockReturnValue(undefined), // No cookie
+				},
+			} as any;
 
-			const response = await GET(req as any);
+			const response = await GET(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(401);

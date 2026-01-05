@@ -108,14 +108,16 @@ describe("GET /api/dashboard - Contract Tests", () => {
 		});
 
 		it("should handle rate limiting", async () => {
-			// Mock rate limiter to return rate limit response
-			const mockRateLimitResponse = new Response(
-				JSON.stringify({ error: "Rate limit exceeded", retryAfter: 60 }),
-				{ status: 429, headers: { "Retry-After": "60" } }
-			);
-
+			// Temporarily override the rate limiter mock
 			const { getProductionRateLimiter } = require("@/Utils/productionRateLimiter");
-			getProductionRateLimiter().middleware.mockResolvedValue(mockRateLimitResponse);
+			const originalMock = getProductionRateLimiter().middleware;
+
+			getProductionRateLimiter().middleware.mockResolvedValueOnce(
+				new Response(
+					JSON.stringify({ error: "Rate limit exceeded", retryAfter: 60 }),
+					{ status: 429, headers: { "Retry-After": "60" } }
+				)
+			);
 
 			const { req } = createMocks({
 				method: "GET",
@@ -124,6 +126,9 @@ describe("GET /api/dashboard - Contract Tests", () => {
 
 			const response = await GET(req as any);
 			expect(response.status).toBe(429);
+
+			// Restore original mock
+			getProductionRateLimiter().middleware = originalMock;
 		});
 	});
 
