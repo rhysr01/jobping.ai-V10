@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
 		return rateLimitResult;
 	}
 
+	console.log("🔍 PREVIEW-MATCHES API CALLED - PASSED RATE LIMIT");
+
 	try {
 		const body = await request.json();
 		const { cities, careerPath, visaSponsorship } = body;
@@ -106,6 +108,14 @@ export async function POST(request: NextRequest) {
 		visaSponsorship,
 		jobsFetched: sampleJobs?.length || 0,
 		sampleCities: sampleJobs?.slice(0, 3).map(j => ({ city: j.city, categories: j.categories })) || []
+	});
+
+	// INFO level log that should definitely show in Vercel
+	apiLogger.info("Preview matches requested", {
+		cities: cities?.length || 0,
+		careerPath,
+		visaSponsorship,
+		jobsAvailable: sampleJobs?.length || 0
 	});
 
 		// If no jobs found in sample, return early
