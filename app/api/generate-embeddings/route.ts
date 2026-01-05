@@ -4,13 +4,13 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { withAxiom } from "next-axiom";
+// import { withAxiom } from "next-axiom"; // Temporarily disabled due to Axiom URL configuration issue
 import { verifyHMAC } from "@/Utils/auth/hmac";
 import { getDatabaseClient } from "@/Utils/databasePool";
 import { embeddingService } from "@/Utils/matching/embedding.service";
 import { apiLogger } from "@/lib/api-logger";
 
-export const POST = withAxiom(async function POST(req: NextRequest) {
+export async function POST(req: NextRequest) {
 	try {
 		// Verify HMAC signature
 		const signature = req.headers.get("x-jobping-signature");
@@ -92,9 +92,9 @@ export const POST = withAxiom(async function POST(req: NextRequest) {
 			{ status: 500 },
 		);
 	}
-});
+}
 
-export const GET = withAxiom(async function GET(_req: NextRequest) {
+export async function GET(_req: NextRequest) {
 	try {
 		const coverage = await embeddingService.checkEmbeddingCoverage();
 
@@ -110,4 +110,4 @@ export const GET = withAxiom(async function GET(_req: NextRequest) {
 			{ status: 500 },
 		);
 	}
-});
+}

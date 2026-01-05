@@ -1,6 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
-import { withAxiom } from "next-axiom";
 
 const nextConfig: NextConfig = {
 	// Force unique build ID to prevent cache issues during TDZ fix
@@ -135,7 +134,7 @@ const nextConfig: NextConfig = {
 	},
 };
 
-export default withSentryConfig(withAxiom(nextConfig), {
+export default withSentryConfig(nextConfig, {
 	// For all available options, see:
 	// https://github.com/getsentry/sentry-webpack-plugin#options
 

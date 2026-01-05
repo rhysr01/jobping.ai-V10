@@ -1,4 +1,8 @@
-require("dotenv").config({ path: ".env.local" });
+// Load environment variables conditionally
+// In production/GitHub Actions, env vars are already set
+if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
+    require("dotenv").config({ path: ".env.local" });
+}
 const { createClient } = require("@supabase/supabase-js");
 const {
 	classifyEarlyCareer,
@@ -28,14 +32,11 @@ const { processIncomingJob } = require("./shared/processor.cjs");
 const CAREERJET_API_KEY = process.env.CAREERJET_API_KEY;
 const BASE_URL = "http://public.api.careerjet.net/search";
 
-// Cities we target (matching user preferences)
+// Cities we target (CareerJet supported countries only - NO Ireland)
 const CITIES = [
-	{ name: "Dublin", country: "ie", locale: "en_IE" },
-	{ name: "Cork", country: "ie", locale: "en_IE" },
-	{ name: "Belfast", country: "gb", locale: "en_GB" },
 	{ name: "London", country: "gb", locale: "en_GB" },
 	{ name: "Manchester", country: "gb", locale: "en_GB" },
-	{ name: "Edinburgh", country: "gb", locale: "en_GB" },
+	{ name: "Birmingham", country: "gb", locale: "en_GB" },
 	{ name: "Paris", country: "fr", locale: "fr_FR" },
 	{ name: "Berlin", country: "de", locale: "de_DE" },
 	{ name: "Munich", country: "de", locale: "de_DE" },
@@ -44,8 +45,6 @@ const CITIES = [
 	{ name: "Barcelona", country: "es", locale: "es_ES" },
 	{ name: "Milan", country: "it", locale: "it_IT" },
 	{ name: "Rome", country: "it", locale: "it_IT" },
-	{ name: "Lisbon", country: "pt", locale: "en_PT" },
-	{ name: "Brussels", country: "be", locale: "en_BE" },
 ];
 
 // Local language early-career terms by country (expanded for better coverage)

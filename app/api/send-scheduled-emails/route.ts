@@ -6,7 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { withAxiom } from "next-axiom";
+// import { withAxiom } from "next-axiom"; // Temporarily disabled due to Axiom URL configuration issue
 import { apiLogger } from "@/lib/api-logger";
 import type { Database } from "@/lib/database.types";
 import { createConsolidatedMatcher } from "@/Utils/consolidatedMatchingV2";
@@ -418,7 +418,7 @@ async function handleSendScheduledEmails(req: NextRequest) {
 // Supports two auth methods:
 // 1. Vercel Cron: sends CRON_SECRET in Authorization header (optional, for extra security)
 // 2. Manual calls: use SYSTEM_API_KEY in x-api-key header (required)
-export const POST = withAxiom(async function POST(request: NextRequest) {
+export const POST = async function (request: NextRequest) {
 	try {
 		const authHeader = request.headers.get("authorization");
 		const cronSecret = process.env.CRON_SECRET; // Optional - only needed if you want to verify Vercel cron
@@ -459,4 +459,4 @@ export const POST = withAxiom(async function POST(request: NextRequest) {
 			{ status: 500 },
 		);
 	}
-});
+};

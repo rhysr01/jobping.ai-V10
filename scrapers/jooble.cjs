@@ -33,12 +33,19 @@ const { processIncomingJob } = require("./shared/processor.cjs");
 // Note: Jooble may require API key registration for production use
 const BASE_URL = "https://jooble.org/api/";
 
-// EU Cities - MINIMAL for timeout prevention
-// Jooble supports 71 countries including all EU countries
+// EU Cities - MAJOR MARKETS coverage
+// Based on Jooble's primary operations: DE, FR, NL, ES, IT, AT, GB
 const CITIES = [
-	{ name: "London", country: "gb", locale: "en" },
-	{ name: "Berlin", country: "de", locale: "de" },
-	{ name: "Paris", country: "fr", locale: "fr" },
+	{ name: "London", country: "gb", locale: "en" }, // UK
+	{ name: "Berlin", country: "de", locale: "de" }, // Germany
+	{ name: "Paris", country: "fr", locale: "fr" }, // France
+	{ name: "Amsterdam", country: "nl", locale: "nl" }, // Netherlands
+	{ name: "Munich", country: "de", locale: "de" }, // Germany
+	{ name: "Milan", country: "it", locale: "it" }, // Italy
+	{ name: "Frankfurt", country: "de", locale: "de" }, // Germany (major financial hub)
+	{ name: "Madrid", country: "es", locale: "es" }, // Spain
+	{ name: "Vienna", country: "at", locale: "de" }, // Austria
+	{ name: "Rome", country: "it", locale: "it" }, // Italy
 ];
 
 /**

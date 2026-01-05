@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { withAxiom } from "next-axiom";
+// import { withAxiom } from "next-axiom"; // Temporarily disabled due to Axiom URL configuration issue
 import { asyncHandler } from "@/lib/errors";
 import { apiLogger } from "@/lib/api-logger";
 
 // Simple scrape endpoint for production
-export const POST = withAxiom(
+export const POST =
 	asyncHandler(async (req: NextRequest) => {
 		const { platforms = ["all"] } = await req.json();
 
@@ -19,15 +19,13 @@ export const POST = withAxiom(
 			platforms: platforms,
 			note: "Jobs are automatically scraped and delivered to your email every 48 hours",
 		});
-	}),
-);
+	});
 
-export const GET = withAxiom(
+export const GET =
 	asyncHandler(async () => {
 		return NextResponse.json({
 			message: "Scrape endpoint active",
 			note: "Use POST to trigger scraping (though it's automated)",
 			automation: "Jobs are scraped automatically every hour",
 		});
-	}),
-);
+	});

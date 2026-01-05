@@ -1,6 +1,9 @@
 import "./globals.css";
 import "@/lib/web-vitals";
 import type { Metadata } from "next";
+
+// TODO: Add Axiom Web Vitals export once URL is properly configured
+// export { reportWebVitals } from 'next-axiom';
 import { headers } from "next/headers";
 import Script from "next/script";
 import ErrorBoundary from "@/components/ErrorBoundary";

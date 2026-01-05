@@ -6,8 +6,11 @@ const { createClient } = require("@supabase/supabase-js");
 const {
 	classifyEarlyCareer,
 	makeJobHash,
+	normalizeString,
 	CAREER_PATH_KEYWORDS,
 } = require("./shared/helpers.cjs");
+
+// Removed debug regex patterns
 const { recordScraperRun, recordApiRequest } = require("./shared/telemetry.cjs");
 
 // Check for required API credentials
@@ -139,19 +142,16 @@ function convertToDatabaseFormat(job) {
 
 const REED_API = "https://www.reed.co.uk/api/1.0/search";
 
-// Reed.co.uk supports UK and Ireland
+// Reed.co.uk supports UK only (NOT Ireland)
 // UK cities: London, Manchester, Birmingham, Belfast (Belfast is in Northern Ireland, part of UK)
-// Ireland cities: Dublin (Republic of Ireland, NOT part of UK)
 const UK_CITIES = ["London", "Manchester", "Birmingham", "Belfast"];
-const IRELAND_CITIES = ["Dublin"];
-const SUPPORTED_CITIES = [...UK_CITIES, ...IRELAND_CITIES];
+const SUPPORTED_CITIES = UK_CITIES; // UK only, no Ireland
 const DEFAULT_LOCATIONS = [
 	"London",
 	"Manchester",
 	"Birmingham",
 	"Belfast",
-	"Dublin",
-];
+]; // UK only - Dublin removed as Reed is UK-only
 
 function parseTargetCities() {
 	const raw = process.env.TARGET_CITIES;

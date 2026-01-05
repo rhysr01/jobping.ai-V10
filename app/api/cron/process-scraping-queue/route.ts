@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { withAxiom } from "next-axiom";
+// import { withAxiom } from "next-axiom"; // Temporarily disabled due to Axiom URL configuration issue
 import { AppError, asyncHandler } from "@/lib/errors";
 import { getDatabaseClient } from "@/Utils/databasePool";
 import { apiLogger } from "@/lib/api-logger";
@@ -207,10 +207,10 @@ async function processGreenhouseScraper(
 	};
 }
 
-// Export with Axiom logging
-export const GET = withAxiom(processScrapingQueueHandler);
+// Export without Axiom logging (temporarily disabled due to URL configuration issue)
+export const GET = processScrapingQueueHandler;
 
 // Health check endpoint
-export const HEAD = withAxiom(async function HEAD() {
+export const HEAD = async function HEAD() {
 	return new NextResponse(null, { status: 200 });
-});
+};

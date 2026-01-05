@@ -1,7 +1,7 @@
 const GRADUATE_REGEX =
 	/(graduate|new.?grad|recent.?graduate|campus.?hire|graduate.?scheme|graduate.?program|rotational.?program|university.?hire|college.?hire|entry.?level|junior|trainee|intern|internship|placement|analyst|assistant|fellowship|apprenticeship|apprentice|stagiaire|alternant|alternance|d[ée]butant|formation|dipl[oô]m[eé]|apprenti|poste.?d.?entr[ée]e|niveau.?d[ée]butant|praktikum|praktikant|traineeprogramm|berufseinstieg|absolvent|absolventenprogramm|ausbildung|auszubildende|werkstudent|einsteiger|becario|pr[aá]cticas|programa.?de.?graduados|reci[eé]n.?titulado|aprendiz|nivel.?inicial|puesto.?de.?entrada|j[uú]nior|formaci[oó]n.?dual|tirocinio|stagista|apprendista|apprendistato|neolaureato|formazione|inserimento.?lavorativo|stage|stagiair|starterfunctie|traineeship|afgestudeerde|leerwerkplek|instapfunctie|fresher|nyuddannet|nyutdannet|nyexaminerad|neo.?laureato|nuovo.?laureato|reci[eé]n.?graduado|nuevo.?graduado|joven.?profesional|nieuwe.?medewerker)/i;
 const SENIOR_REGEX =
-	/(senior|principal|director|head.?of|vp|vice\s+president|chief|executive\s+level|executive\s+director|5\+.?years|7\+.?years|10\+.?years|experienced\s+professional|architect\b|staff\b|distinguished|managing\s+director|senioritätsniveau|executive|chief\s+officer|cfo|cto|cio|coo)/i;
+	/(senior|principal|director|head.?of|vp|vice\s+president|chief|executive\s+director|5\+.?years|7\+.?years|10\+.?years|experienced\s+professional|architect\b|staff\b|distinguished|managing\s+director|senioritätsniveau|chief\s+officer|cfo|cto|cio|coo)/i;
 const EXPERIENCE_REGEX =
 	/(proven.?track.?record|extensive.?experience|minimum.?3.?years|minimum.?5.?years|minimum.?7.?years|prior.?experience|relevant.?experience|3\+.?years|5\+.?years|7\+.?years|10\+.?years)/i;
 
@@ -71,14 +71,25 @@ function normalizeString(value) {
 }
 
 function classifyEarlyCareer(job) {
-	const text = normalizeString(`${job?.title || ""} ${job?.description || ""}`);
-	if (!text) return false;
+	const title = normalizeString(job?.title || "");
+	const description = normalizeString(job?.description || "");
+	const fullText = title + " " + description;
+	if (!fullText.trim()) return false;
 
-	if (SENIOR_REGEX.test(text) || EXPERIENCE_REGEX.test(text)) {
+	// STRONG EARLY CAREER INDICATORS: If title or description contains clear early career terms,
+	// accept regardless of other content (company descriptions often mention execs)
+	const strongEarlyCareerTerms = /(?:^|\s)(internship|intern|graduate\s+(?:programme|program|scheme|trainee)|placement|work\s+experience\s+placement|industrial\s+placement|sandwich\s+(?:course|placement)|year\s+(?:in|out)\s+industry|undergraduate\s+placement|trainee\s+programme|spring\s+intern|summer\s+intern|fall\s+intern|winter\s+intern)(?:\s|$)/i;
+
+	if (strongEarlyCareerTerms.test(title) || strongEarlyCareerTerms.test(description)) {
+		return true;
+	}
+
+	// For other roles, use the standard logic: no senior/experience terms AND has graduate terms
+	if (SENIOR_REGEX.test(fullText) || EXPERIENCE_REGEX.test(fullText)) {
 		return false;
 	}
 
-	return GRADUATE_REGEX.test(text);
+	return GRADUATE_REGEX.test(fullText);
 }
 
 function makeJobHash(job) {

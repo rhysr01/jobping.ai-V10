@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { withAxiom } from "next-axiom";
+// import { withAxiom } from "next-axiom"; // Temporarily disabled due to Axiom URL configuration issue
 import { z } from "zod";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-types";
 import { AppError, asyncHandler } from "@/lib/errors";
@@ -38,8 +38,7 @@ function getRequestId(req: NextRequest): string {
 	}
 }
 
-export const GET = withAxiom(
-	asyncHandler(async (req: NextRequest) => {
+export const GET = asyncHandler(async (req: NextRequest) => {
 		// PRODUCTION: Rate limiting for user matches endpoint (configurable via env vars)
 		const rateLimitResult = await getProductionRateLimiter().middleware(
 			req,
@@ -275,5 +274,4 @@ export const GET = withAxiom(
 		const response = NextResponse.json(successResponse, { status: 200 });
 		response.headers.set("x-request-id", requestId);
 		return response;
-	}),
-);
+	});
