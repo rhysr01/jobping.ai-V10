@@ -145,9 +145,6 @@ export async function POST(request: NextRequest) {
 		const passRate =
 			sampleJobs.length > 0 ? realisticCount / sampleJobs.length : 0;
 
-	// TEMPORARY DEBUG: Use raw count instead of filtered count
-	const debugCount = sampleJobs.length; // Should be > 0 if DB query works
-
 	// Determine if count is low and needs UI nudge
 	const isLowCount = realisticCount < 3;
 	const suggestion = isLowCount
@@ -155,22 +152,13 @@ export async function POST(request: NextRequest) {
 		: undefined;
 
 		return NextResponse.json({
-			count: debugCount, // TEMP: Use raw count for debugging
+			count: realisticCount, // Realistic count after hard gates
 			rawCount: sampleJobs.length, // Raw SQL count for debugging
-			realisticCount, // Actual count after hard gates
 			passRate: Math.round(passRate * 100) / 100, // Pass rate for analytics
 			cities,
 			careerPath,
 			isLowCount,
 			suggestion,
-			debug: {
-				sampleSize: SAMPLE_SIZE,
-				userPrefs: {
-					career_path: userPrefs.career_path,
-					visa_status: userPrefs.visa_status,
-					target_cities: userPrefs.target_cities,
-				}
-			}
 		});
 	} catch (error) {
 		apiLogger.error("Preview matches API error", error as Error);
