@@ -1092,7 +1092,10 @@ function calculateCareerPathScore(
 		// Only match if keyword appears AND it's not a false positive
 		// Check that the keyword isn't part of a different word
 		// Escape regex special characters to prevent invalid regex patterns
-		const escapedUserPath = userPathLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const escapedUserPath = userPathLower.replace(
+			/[.*+?^${}()|[\]\\]/g,
+			"\\$&",
+		);
 		const wordBoundaryRegex = new RegExp(`\\b${escapedUserPath}\\b`, "i");
 		return wordBoundaryRegex.test(jobText);
 	});

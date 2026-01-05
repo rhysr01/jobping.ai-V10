@@ -58,12 +58,13 @@ describe("GET /api/user-matches - Contract Tests", () => {
 
 	describe("Authentication & Authorization", () => {
 		it("should return 400 for missing required parameters", async () => {
-			const { req } = createMocks({
+			const mockRequest = {
 				method: "GET",
-				url: "/api/user-matches?limit=10", // Missing email, signature, timestamp
-			});
+				url: "http://localhost/api/user-matches?limit=10", // Missing email, signature, timestamp
+				nextUrl: new URL("http://localhost/api/user-matches?limit=10"),
+			} as any;
 
-			const response = await GET(req as any);
+			const response = await GET(mockRequest);
 			expect(response.status).toBe(400);
 
 			const data = await response.json();

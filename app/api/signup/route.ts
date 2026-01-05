@@ -4,7 +4,6 @@ import type { JobWithMetadata } from "@/lib/types/job";
 import { getDatabaseClient } from "@/Utils/databasePool";
 import { sendMatchedJobsEmail, sendWelcomeEmail } from "@/Utils/email/sender";
 // Pre-filtering removed - AI handles semantic matching
-import { getDatabaseCategoriesForForm } from "@/Utils/matching/categoryMapper";
 import { getDistributionStats } from "@/Utils/matching/jobDistribution";
 import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
 
@@ -419,13 +418,6 @@ export async function POST(req: NextRequest) {
 					);
 				}
 
-				// Map career path to database categories for filtering
-				let careerPathCategories: string[] = [];
-				if (userData.career_path) {
-					careerPathCategories = getDatabaseCategoriesForForm(
-						userData.career_path,
-					);
-				}
 
 				// Build optimized query using database indexes
 				// Select all fields needed for email template (including tags, work_environment, etc.)

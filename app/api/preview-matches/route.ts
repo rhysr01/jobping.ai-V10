@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
 import { getDatabaseClient } from "@/Utils/databasePool";
-import { getDatabaseCategoriesForForm } from "@/Utils/matching/categoryMapper";
 import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
 import { preFilterByHardGates } from "@/Utils/matching/preFilterHardGates";
 import type { UserPreferences } from "@/Utils/matching/types";
@@ -54,10 +53,7 @@ export async function POST(request: NextRequest) {
 
 		const supabase = getDatabaseClient();
 
-	// Map career path to database categories (for hard gates filtering)
-	const careerPathCategories = getDatabaseCategoriesForForm(careerPath);
-
-	// PERFORMANCE FIX: Fetch limited sample (1000 jobs max) instead of all jobs
+		// PERFORMANCE FIX: Fetch limited sample (1000 jobs max) instead of all jobs
 	// This gives us a representative sample to estimate realistic count
 	const SAMPLE_SIZE = 1000;
 	const SIXTY_DAYS_AGO = new Date();

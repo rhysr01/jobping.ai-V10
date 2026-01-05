@@ -81,12 +81,13 @@ describe("GET /api/apply/[jobHash] - Contract Tests", () => {
 		});
 
 		it("should return 400 for missing jobHash parameter", async () => {
-			const { req } = createMocks({
+			const mockRequest = {
 				method: "GET",
-				url: `/api/apply/?email=${testUserEmail}`,
-			});
+				url: `http://localhost/api/apply/?email=${testUserEmail}`,
+				nextUrl: new URL(`http://localhost/api/apply/?email=${testUserEmail}`),
+			} as any;
 
-			const response = await GET(req, { params: Promise.resolve({ jobHash: "" }) });
+			const response = await GET(mockRequest, { params: Promise.resolve({ jobHash: "" }) });
 			expect(response.status).toBe(400);
 
 			const data = await response.json();

@@ -70,15 +70,14 @@ describe("POST /api/signup - Contract Tests", () => {
 		});
 
 		it("should return 400 for missing email", async () => {
-			const { req } = createMocks({
-				method: "POST",
-				body: {
+			const mockRequest = {
+				json: jest.fn().mockResolvedValue({
 					fullName: "Test User",
 					cities: ["London"],
-				},
-			});
+				}),
+			} as any;
 
-			const response = await POST(req as any);
+			const response = await POST(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(400);
@@ -86,15 +85,14 @@ describe("POST /api/signup - Contract Tests", () => {
 		});
 
 		it("should return 400 for missing fullName", async () => {
-			const { req } = createMocks({
-				method: "POST",
-				body: {
+			const mockRequest = {
+				json: jest.fn().mockResolvedValue({
 					email: "test@example.com",
 					cities: ["London"],
-				},
-			});
+				}),
+			} as any;
 
-			const response = await POST(req as any);
+			const response = await POST(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(400);
@@ -102,15 +100,14 @@ describe("POST /api/signup - Contract Tests", () => {
 		});
 
 		it("should return 400 for missing cities", async () => {
-			const { req } = createMocks({
-				method: "POST",
-				body: {
+			const mockRequest = {
+				json: jest.fn().mockResolvedValue({
 					email: "test@example.com",
 					fullName: "Test User",
-				},
-			});
+				}),
+			} as any;
 
-			const response = await POST(req as any);
+			const response = await POST(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(400);

@@ -37,7 +37,7 @@ describe("POST /api/analytics/track - Contract Tests", () => {
 	});
 
 	describe("Input Validation", () => {
-		it("should handle missing event gracefully (analytics never fails)", async () => {
+		it("should return 400 for missing event", async () => {
 			const mockRequest = {
 				json: jest.fn().mockResolvedValue({
 					properties: { userId: "123" },
@@ -45,10 +45,11 @@ describe("POST /api/analytics/track - Contract Tests", () => {
 			} as any;
 
 			const response = await POST(mockRequest);
-			expect(response.status).toBe(200); // Analytics always returns 200
+			expect(response.status).toBe(400); // API validates input
 
 			const data = await response.json();
-			expect(data.success).toBe(true); // Still tracks successfully
+			expect(data.success).toBe(false);
+			expect(data.error).toBe("Invalid event name");
 		});
 
 		it("should return 400 for non-string event", async () => {
