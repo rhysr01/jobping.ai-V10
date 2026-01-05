@@ -21,7 +21,7 @@ const isTest = process.env.NODE_ENV === "test";
 const MONITORING_CONFIG = {
 	logging: {
 		level: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
-		structured: process.env.STRUCTURED_LOGS !== "false",
+		structured: false, // Temporarily disable structured logging for Vercel debugging
 		console: !isTest,
 	},
 	environment: process.env.NODE_ENV || "development",
@@ -116,6 +116,7 @@ class Logger {
 
 		if (MONITORING_CONFIG.logging.structured) {
 			// Structured JSON logging for production - always log to console for Vercel debugging
+			console.log(`[${level.toUpperCase()}] ${message}`, context);
 			console.log(JSON.stringify(logEntry));
 		} else {
 			// Human-readable logging for development

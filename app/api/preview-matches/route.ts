@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
 	}
 
 	console.log("🔍 PREVIEW-MATCHES API CALLED - PASSED RATE LIMIT");
+	console.error("🚨 PREVIEW API ERROR TEST - This should definitely show up");
 
 	try {
 		const body = await request.json();

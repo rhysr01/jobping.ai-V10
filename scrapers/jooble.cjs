@@ -1,7 +1,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const { createClient } = require("@supabase/supabase-js");
 const {
