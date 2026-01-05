@@ -83,13 +83,22 @@ export async function POST(request: NextRequest) {
 	// This matches the signup API's approach (signup/free/route.ts lines 332-334)
 	// Database has categories like "strategy-business-design" not "strategy"
 
+	console.error("🔍 PREVIEW: About to query database for jobs");
+
 	// DEBUG: Simplify to just check early-career category
 	query = query.contains("categories", ["early-career"]);
+	console.error("🔍 PREVIEW: Applied early-career filter");
 
 		// Order by recency for better sample quality
 		query = query.order("created_at", { ascending: false });
+	console.error("🔍 PREVIEW: Applied ordering by created_at");
 
 	const { data: sampleJobs, error } = await query;
+	console.error("🔍 PREVIEW: Database query completed", {
+		jobsFound: sampleJobs?.length || 0,
+		hasError: !!error,
+		errorMessage: error?.message
+	});
 
 	if (error) {
 		apiLogger.error("Failed to fetch preview matches", error as Error, {
@@ -157,9 +166,23 @@ export async function POST(request: NextRequest) {
 		professional_expertise: careerPath || "",
 	};
 
+	console.error("🔍 PREVIEW: About to apply hard gates filtering", {
+		sampleJobsCount: sampleJobs.length,
+		userPrefs: {
+			target_cities: cities,
+			career_path: careerPath ? [careerPath] : [],
+			visa_status: visa_status
+		}
+	});
+
 	// Apply hard gates to get realistic count
 	const eligibleJobs = preFilterByHardGates(sampleJobs, userPrefs);
+	console.error("🔍 PREVIEW: Hard gates filtering completed", {
+		eligibleJobsCount: eligibleJobs.length,
+		filteredOutCount: sampleJobs.length - eligibleJobs.length
+	});
 	let realisticCount = eligibleJobs.length;
+	console.error("🔍 PREVIEW: Initial realistic count", { realisticCount });
 
 	// CRO OPTIMIZATION: Visa is the critical filter, be smart about preview
 	if (realisticCount === 0 && sampleJobs.length > 0) {
@@ -203,6 +226,15 @@ export async function POST(request: NextRequest) {
 	const suggestion = isLowCount
 		? `Matches are tight in ${cities.join(", ")}. Try selecting different cities or career paths to see more opportunities.`
 		: undefined;
+
+	console.error("🔍 PREVIEW: Final counts being returned", {
+		realisticCount,
+		rawCount: sampleJobs.length,
+		passRate: Math.round(passRate * 100) / 100,
+		isLowCount,
+		cities,
+		careerPath
+	});
 
 		return NextResponse.json({
 			count: realisticCount, // Realistic count after hard gates
