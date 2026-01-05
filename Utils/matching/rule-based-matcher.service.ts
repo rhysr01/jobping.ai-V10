@@ -52,23 +52,6 @@ export function applyHardGates(
 		job.is_internship === true || job.is_graduate === true;
 	const isEarlyCareerFromCategories = hasEligibility(categories);
 
-	// DEBUG: Log early career eligibility for first few jobs
-	if (
-		failures.length === 0 &&
-		!isEarlyCareerFromCategories &&
-		!isEarlyCareerFromFlags
-	) {
-		console.error("🔍 EARLY CAREER DEBUG:", {
-			jobId: job.id,
-			categories: categories,
-			isEarlyCareerFromCategories,
-			isEarlyCareerFromFlags,
-			hasEarlyCareerCategory: categories.includes("early-career"),
-			catsResult: cats(categories),
-			hasEligibilityResult: hasEligibility(categories),
-		});
-	}
-
 	if (!isEarlyCareerFromCategories && !isEarlyCareerFromFlags) {
 		failures.push("Not eligible for early career");
 	}

@@ -165,25 +165,12 @@ export async function POST(request: NextRequest) {
 		);
 	}
 
-	// DEBUG: Log what we actually fetched
-	console.log("PREVIEW DEBUG:", {
-		cities,
-		careerPath,
-		visaSponsorship,
-		jobsFetched: sampleJobs?.length || 0,
-		queryType: "FULL_DATABASE",
-		sampleCities: sampleJobs?.slice(0, 3).map(j => ({ city: j.city, categories: j.categories })) || []
-	});
-
-	// INFO level log that should definitely show in Vercel
-	console.error("🚨 ABOUT TO CALL APILOGGER.INFO");
-	console.log("📊 PREVIEW MATCHES REQUESTED:", {
+	// Log successful query for monitoring
+	console.error("📊 PREVIEW: Query successful", {
 		cities: cities?.length || 0,
 		careerPath,
-		visaSponsorship,
-		jobsAvailable: sampleJobs?.length || 0
+		jobsFound: sampleJobs?.length || 0
 	});
-	console.error("🚨 FINISHED LOGGING");
 
 		// If no jobs found in sample, return early
 		if (!sampleJobs || sampleJobs.length === 0) {
@@ -221,55 +208,24 @@ export async function POST(request: NextRequest) {
 		professional_expertise: careerPath || "",
 	};
 
-	console.error("🔍 PREVIEW: About to apply hard gates filtering", {
-		sampleJobsCount: sampleJobs.length,
-		userPrefs: {
-			target_cities: cities,
-			career_path: careerPath ? [careerPath] : [],
-			visa_status: visa_status
-		}
-	});
-
 	// Apply hard gates to get realistic count
 	const eligibleJobs = preFilterByHardGates(sampleJobs, userPrefs);
-	console.error("🔍 PREVIEW: Hard gates filtering completed", {
-		eligibleJobsCount: eligibleJobs.length,
-		filteredOutCount: sampleJobs.length - eligibleJobs.length
-	});
 	let realisticCount = eligibleJobs.length;
-	console.error("🔍 PREVIEW: Initial realistic count", { realisticCount });
 
 	// CRO OPTIMIZATION: Visa is the critical filter, be smart about preview
-	console.error("🔍 PREVIEW: CRO logic check", {
-		realisticCount,
-		sampleJobsLength: sampleJobs.length,
-		hasVisaStatus: !!userPrefs.visa_status,
-		croWillTrigger: realisticCount === 0 && sampleJobs.length > 0
-	});
-
 	if (realisticCount === 0 && sampleJobs.length > 0) {
-		console.error("🔍 PREVIEW: CRO logic triggered - applying fallbacks");
-
 		// Since form requires visa selection first, but preview might trigger before it's set
 		if (userPrefs.visa_status) {
-			console.error("🔍 PREVIEW: User has visa status - trying visa-lenient fallback");
 			// User has selected visa status - be lenient with career path only
 			const visaLenientPrefs = {
 				...userPrefs,
 				career_path: [], // Skip career path for estimation, keep visa strict
 			};
 			const visaLenientJobs = preFilterByHardGates(sampleJobs, visaLenientPrefs);
-			const calculatedCount = Math.max(1, Math.min(5, Math.floor(visaLenientJobs.length * 0.4)));
-			console.error("🔍 PREVIEW: Visa-lenient result", {
-				visaLenientJobs: visaLenientJobs.length,
-				calculatedCount,
-				cappedAt5: calculatedCount >= 5
-			});
 			if (visaLenientJobs.length > 0) {
-				realisticCount = calculatedCount;
+				realisticCount = Math.max(1, Math.min(5, Math.floor(visaLenientJobs.length * 0.4)));
 			}
 		} else {
-			console.error("🔍 PREVIEW: No visa status - trying fully-lenient fallback");
 			// Visa not selected yet - be very lenient (skip both career + visa)
 			const fullyLenientPrefs = {
 				...userPrefs,
@@ -277,26 +233,15 @@ export async function POST(request: NextRequest) {
 				visa_status: undefined,
 			};
 			const fullyLenientJobs = preFilterByHardGates(sampleJobs, fullyLenientPrefs);
-			const calculatedCount = Math.max(1, Math.min(3, Math.floor(fullyLenientJobs.length * 0.2)));
-			console.error("🔍 PREVIEW: Fully-lenient result", {
-				fullyLenientJobs: fullyLenientJobs.length,
-				calculatedCount,
-				cappedAt3: calculatedCount >= 3
-			});
 			if (fullyLenientJobs.length > 0) {
-				realisticCount = calculatedCount;
+				realisticCount = Math.max(1, Math.min(3, Math.floor(fullyLenientJobs.length * 0.2)));
 			}
 		}
 
-		console.error("🔍 PREVIEW: After CRO fallbacks", { realisticCount });
-
 		// Final fallback - always show at least 1 potential match
 		if (realisticCount === 0) {
-			console.error("🔍 PREVIEW: Applying final fallback - setting to 1");
 			realisticCount = 1;
 		}
-	} else {
-		console.error("🔍 PREVIEW: CRO logic NOT triggered - count is already > 0");
 	}
 
 	// Calculate pass rate to estimate total realistic count
@@ -310,16 +255,7 @@ export async function POST(request: NextRequest) {
 		? `Matches are tight in ${cities.join(", ")}. Try selecting different cities or career paths to see more opportunities.`
 		: undefined;
 
-	console.error("🔍 PREVIEW: Final counts being returned", {
-		realisticCount,
-		rawCount: sampleJobs.length,
-		passRate: Math.round(passRate * 100) / 100,
-		isLowCount,
-		cities,
-		careerPath
-	});
-
-		return NextResponse.json({
+	return NextResponse.json({
 			count: realisticCount, // Realistic count after hard gates
 			rawCount: sampleJobs.length, // Raw SQL count for debugging
 			passRate: Math.round(passRate * 100) / 100, // Pass rate for analytics

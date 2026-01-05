@@ -1,0 +1,39 @@
+
+> jobping@0.1.0 type-check
+> tsc --noEmit
+
+app/api/admin/cleanup-jobs/route.ts(107,35): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Record<string, any>'.
+app/api/admin/cleanup-jobs/route.ts(318,39): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Record<string, any>'.
+app/api/apply/[jobHash]/route.ts(285,12): error TS6133: 'err' is declared but its value is never read.
+app/api/apply/[jobHash]/route.ts(286,52): error TS2552: Cannot find name 'error'. Did you mean 'err'?
+app/api/apply/[jobHash]/route.ts(342,12): error TS6133: 'err' is declared but its value is never read.
+app/api/apply/[jobHash]/route.ts(343,53): error TS2552: Cannot find name 'error'. Did you mean 'err'?
+app/api/apply/[jobHash]/route.ts(370,11): error TS6133: 'err' is declared but its value is never read.
+app/api/apply/[jobHash]/route.ts(371,54): error TS2552: Cannot find name 'error'. Did you mean 'err'?
+app/api/feedback/enhanced/route.ts(511,58): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | Record<string, any> | undefined'.
+app/api/sample-jobs/route.ts(25,9): error TS6133: '_weekParam' is declared but its value is never read.
+app/api/sample-jobs/route.ts(618,22): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, language_requirements, and 6 more.
+app/api/sample-jobs/route.ts(645,22): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, language_requirements, and 6 more.
+app/api/sample-jobs/route.ts(673,22): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, language_requirements, and 6 more.
+app/api/sample-jobs/route.ts(696,21): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, language_requirements, and 6 more.
+app/api/sample-jobs/route.ts(867,23): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; language_requirements: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; language_requirements: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, scrape_timestamp, and 5 more.
+app/api/sample-jobs/route.ts(1054,22): error TS2345: Argument of type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; language_requirements: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; job_url: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; language_requirements: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, scrape_timestamp, and 5 more.
+app/api/sample-jobs/route.ts(1121,22): error TS2345: Argument of type '{ job_url: any; matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is not assignable to parameter of type 'SampleJob'.
+  Type '{ job_url: any; matchScore: number; matchReason: string; title: any; company: any; location: any; description: any; categories: any; work_environment: any; is_internship: any; is_graduate: any; city: any; job_hash: any; }' is missing the following properties from type 'SampleJob': experience_required, source, company_profile_url, language_requirements, and 6 more.
+app/api/send-scheduled-emails/route.ts(172,11): error TS6133: '_jobsPerSend' is declared but its value is never read.
+app/api/signup/free/route.ts(209,7): error TS6133: '_careerPathCategories' is declared but its value is never read.
+app/api/signup/route.ts(176,17): error TS6133: 'user' is declared but its value is never read.
+app/api/signup/route.ts(214,11): error TS6133: '_anonKeyPrefix' is declared but its value is never read.
+app/api/signup/route.ts(412,11): error TS6133: '_matcher' is declared but its value is never read.
+app/api/signup/route.ts(509,10): error TS6133: '_fallbackMetadata' is declared but its value is never read.
+app/api/signup/route.ts(872,15): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Error | Record<string, any> | undefined'.
+app/api/stripe-connect/create-checkout/route.ts(44,9): error TS6133: '_stripe' is declared but its value is never read.
+app/api/test-resend/route.ts(183,10): error TS6133: '_status' is declared but its value is never read.
+app/api/unsubscribe/one-click/route.ts(42,63): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | Record<string, any> | undefined'.
+scripts/final-cleanup.ts(20,7): error TS6133: 'fixes' is declared but its value is never read.
