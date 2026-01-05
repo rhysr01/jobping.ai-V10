@@ -201,7 +201,7 @@ npm run type-check
 - **Vercel** - Hosting + edge network
 
 ### Job Sources (8 scrapers)
-- JobSpy (LinkedIn, Indeed, Glassdoor), Adzuna, Reed, CareerJet, Arbeitnow, Jooble
+- JobSpy (Indeed, Glassdoor), Adzuna, Reed, CareerJet, Arbeitnow, Jooble
 
 **👉 See [ARCHITECTURE.md](ARCHITECTURE.md) for complete tech stack details**
 

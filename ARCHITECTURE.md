@@ -84,7 +84,7 @@ GetJobPing is a **multi-stage AI-powered job matching platform** for early-caree
 - **Vercel** - Hosting & edge network
 
 ### Job Sources (8 scrapers)
-- JobSpy (LinkedIn, Indeed, Glassdoor)
+- JobSpy (Indeed, Glassdoor)
 - Adzuna, Reed, CareerJet
 - Arbeitnow, Jooble
 
@@ -577,7 +577,7 @@ CREATE INDEX idx_matches_score ON matches(match_score DESC);
 **Schedule:** 2x daily (8am, 6pm UTC)
 
 **8 Active Scrapers:**
-1. **JobSpy** - LinkedIn, Indeed, Glassdoor
+1. **JobSpy** - Indeed, Glassdoor
 2. **JobSpy Internships** - Internship-only variant
 3. **Career Path Roles** - Role-specific scraping
 4. **Adzuna** - European job aggregator

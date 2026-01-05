@@ -24,7 +24,7 @@ const jobArbitrary = fc.record({
 });
 
 const userPreferencesArbitrary = fc.record({
-	email: fc.email(),
+	email: fc.string({ minLength: 5 }).map(s => s + "@example.com"),
 	career_path: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 3 }),
 	target_cities: fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 5 }),
 	professional_expertise: fc.string({ minLength: 1 }),
@@ -143,7 +143,7 @@ describe("Matching Algorithm - Property-Based Tests", () => {
 			});
 
 			const nullableUserArbitrary = fc.record({
-				email: fc.email(),
+				email: fc.string({ minLength: 5 }).map(s => s + "@example.com"),
 				career_path: fc.oneof(fc.constant(null), fc.constant(undefined), fc.array(fc.string())),
 				target_cities: fc.oneof(fc.constant(null), fc.constant(undefined), fc.array(fc.string())),
 				professional_expertise: fc.oneof(fc.constant(null), fc.constant(undefined), fc.string()),
@@ -236,7 +236,7 @@ describe("Matching Algorithm - Property-Based Tests", () => {
 						source: fc.string(),
 					}),
 					fc.record({
-						email: fc.email(),
+						email: fc.string({ minLength: 5 }).map(s => s + "@example.com"),
 						career_path: fc.array(fc.string()),
 						target_cities: fc.array(fc.string()),
 						professional_expertise: fc.string(),
@@ -278,7 +278,7 @@ describe("Matching Algorithm - Property-Based Tests", () => {
 							source: fc.string(),
 						}).chain(job =>
 							fc.record({
-								email: fc.email(),
+								email: fc.string({ minLength: 5 }).map(s => s + "@example.com"),
 								career_path: fc.array(fc.string()),
 								target_cities: fc.array(fc.string()),
 								professional_expertise: fc.string(),
@@ -318,7 +318,7 @@ describe("Matching Algorithm - Property-Based Tests", () => {
 			});
 
 			const largeUserArbitrary = fc.record({
-				email: fc.email(),
+				email: fc.string({ minLength: 5 }).map(s => s + "@example.com"),
 				career_path: fc.array(fc.string(), { minLength: 50, maxLength: 500 }),
 				target_cities: fc.array(fc.string(), { minLength: 50, maxLength: 500 }),
 				professional_expertise: fc.string(),
