@@ -32,6 +32,12 @@ jest.mock("@/Utils/productionRateLimiter", () => ({
 }));
 
 describe("GET /api/featured-jobs - Contract Tests", () => {
+	beforeEach(() => {
+		// Reset the module-level cache variables between tests
+		const featuredJobsModule = require("@/app/api/featured-jobs/route");
+		featuredJobsModule.cachedJobs = [];
+		featuredJobsModule.lastFetch = 0;
+	});
 	let supabase: any;
 
 	beforeAll(async () => {

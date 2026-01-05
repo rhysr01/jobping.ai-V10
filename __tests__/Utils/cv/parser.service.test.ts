@@ -25,8 +25,9 @@ describe("CV Parser Service", () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		// Reset singleton instance
-		(parser as any).parserInstance = undefined;
+		// Reset singleton instance by importing and resetting the module variable
+		const parserModule = require("@/Utils/cv/parser.service");
+		parserModule.parserInstance = null;
 		parser = getCVParser();
 		mockOpenAI = (parser as any).openai;
 	});

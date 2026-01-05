@@ -441,13 +441,12 @@ export async function POST(req: NextRequest) {
 					query = query.in("city", userData.target_cities);
 				}
 
-				// QUALITY-FOCUSED: Filter by career path at database level for quality matches
-				// This ensures graduates get relevant, high-quality matches
-				// But we'll still show quality jobs even if exact match isn't found
-				if (careerPathCategories.length > 0) {
-					// Use overlaps to find jobs with ANY matching category (flexible but quality-focused)
-					query = query.overlaps("categories", careerPathCategories);
-				}
+				// DON'T filter by career path at DB level - too restrictive
+				// Let the coordinator and hard gates handle career path matching for better results
+				// This matches the free signup approach (signup/free/route.ts lines 332-334)
+				// Database has categories like "strategy-business-design" not "strategy"
+				// Filtering at DB level excludes too many jobs, reducing matching pool
+				// query = query.overlaps("categories", careerPathCategories);
 
 				query = query.order("created_at", { ascending: false }).limit(1000);
 
