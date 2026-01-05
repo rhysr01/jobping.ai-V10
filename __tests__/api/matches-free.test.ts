@@ -39,6 +39,7 @@ describe("GET /api/matches/free - Contract Tests", () => {
 
 	describe("Authentication & Authorization", () => {
 		it("should return 401 when no cookie is provided", async () => {
+			// Create a proper mock request without cookies
 			const mockRequest = {
 				method: "GET",
 				headers: new Headers(),
@@ -49,12 +50,18 @@ describe("GET /api/matches/free - Contract Tests", () => {
 				},
 			} as any;
 
+			// Mock the logger to avoid console output during test
+			const loggerSpy = jest.spyOn(require("@/lib/api-logger"), "apiLogger");
+
 			const response = await GET(mockRequest);
 			const data = await response.json();
 
 			expect(response.status).toBe(401);
 			expect(data.error).toBe("Unauthorized");
 			expect(data.message).toBe("Please sign up again to see your matches.");
+
+			// Verify logging happened
+			expect(loggerSpy.warn).toHaveBeenCalled();
 		});
 
 		it("should return 401 when user doesn't exist", async () => {

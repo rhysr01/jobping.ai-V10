@@ -48,15 +48,14 @@ describe("POST /api/tracking/implicit - Contract Tests", () => {
 
 	describe("Input Validation", () => {
 		it("should return 400 for missing jobHash", async () => {
-			const { req } = createMocks({
-				method: "POST",
-				body: {
+			const mockRequest = {
+				json: jest.fn().mockResolvedValue({
 					email: "user@example.com",
 					signalType: "click",
-				},
-			});
+				}),
+			} as any;
 
-			const response = await POST(req as any);
+			const response = await POST(mockRequest);
 			expect(response.status).toBe(400);
 
 			const data = await response.json();
