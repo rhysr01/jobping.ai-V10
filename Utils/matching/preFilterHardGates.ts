@@ -40,7 +40,7 @@ export function preFilterByHardGates(
 
   // Log rejection analysis (only if we have jobs to analyze)
   if (jobs.length > 0) {
-    });
+    // Analysis removed for production
   }
 
   return eligibleJobs;

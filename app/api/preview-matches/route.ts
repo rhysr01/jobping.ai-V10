@@ -99,8 +99,6 @@ export async function POST(request: NextRequest) {
     query = query.order("created_at", { ascending: false });
 
     const { data: sampleJobs, error } = await query;
-      errorMessage: error?.message,
-    });
 
     if (sampleJobs && sampleJobs.length > 0) {
       // Analyze city distribution
@@ -115,29 +113,7 @@ export async function POST(request: NextRequest) {
         }
       });
 
-        requestedCities: cities,
-        jobsInRequestedCities: cities.reduce(
-          (sum, city) => sum + (cityCounts[city] || 0),
-          0,
-        ),
-      });
-
-          .sort(([, a], [, b]) => b - a)
-          .slice(0, 10)
-          .map(([cat, count]) => `${cat}: ${count}`),
-      });
-
-      // Check how many have early-career specifically
-      const earlyCareerJobs = sampleJobs.filter(
-        (job) =>
-          job.categories &&
-          Array.isArray(job.categories) &&
-          job.categories.includes("early-career"),
-      );
-        earlyCareerPercentage: Math.round(
-          (earlyCareerJobs.length / sampleJobs.length) * 100,
-        ),
-      });
+      // Early-career analysis removed for production
     }
 
     if (error) {
