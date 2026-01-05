@@ -20,7 +20,7 @@ export const toStringArray = (
 	}
 	if (typeof v === "string" && v.trim() !== "") {
 		return v
-			.split("|")
+			.split(/\s*,\s*/)
 			.map((s) => s.trim())
 			.filter(Boolean);
 	}
