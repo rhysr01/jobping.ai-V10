@@ -141,24 +141,25 @@ export async function POST(request: NextRequest) {
 	let realisticCount = eligibleJobs.length;
 
 	// CRO OPTIMIZATION: Show realistic potential matches
-	// If hard gates are too restrictive, try more lenient preview criteria
+	// If strict hard gates return 0, try more lenient preview criteria
 	if (realisticCount === 0 && sampleJobs.length > 0) {
-		// Try with more lenient criteria for preview estimation
-		const lenientUserPrefs = {
+		// For preview, be more lenient with career path matching
+		// Keep visa status (user has selected it) but relax career path requirements
+		const previewUserPrefs = {
 			...userPrefs,
-			career_path: [], // Don't filter by career path for preview
-			visa_status: undefined, // Skip visa filtering for preview
+			career_path: [], // Skip career path filtering for preview estimation
 		};
 
-		const lenientEligibleJobs = preFilterByHardGates(sampleJobs, lenientUserPrefs);
-		const lenientCount = lenientEligibleJobs.length;
+		const previewEligibleJobs = preFilterByHardGates(sampleJobs, previewUserPrefs);
+		const previewCount = previewEligibleJobs.length;
 
-		if (lenientCount > 0) {
-			// Estimate realistic matches: 20-40% of lenient matches (accounting for career path fit)
-			realisticCount = Math.max(1, Math.min(5, Math.floor(lenientCount * 0.3)));
+		if (previewCount > 0) {
+			// Estimate realistic matches based on location + basic criteria fit
+			// Career path will be applied during actual matching
+			realisticCount = Math.max(1, Math.min(5, Math.floor(previewCount * 0.4)));
 		} else {
-			// Fallback: show very small number to indicate some potential exists
-			realisticCount = Math.min(2, Math.max(1, Math.floor(sampleJobs.length * 0.01)));
+			// If even lenient criteria return 0, show minimal indication of potential
+			realisticCount = 1; // At least show 1 to indicate some potential exists
 		}
 	}
 
