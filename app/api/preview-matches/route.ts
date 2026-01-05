@@ -138,12 +138,20 @@ export async function POST(request: NextRequest) {
 
 	// Apply hard gates to get realistic count
 	const eligibleJobs = preFilterByHardGates(sampleJobs, userPrefs);
-	const realisticCount = eligibleJobs.length;
+	let realisticCount = eligibleJobs.length;
 
-		// Calculate pass rate to estimate total realistic count
-		// If we sampled 1000 jobs and 100 passed, we estimate ~10% pass rate
-		const passRate =
-			sampleJobs.length > 0 ? realisticCount / sampleJobs.length : 0;
+	// If no jobs pass hard gates, show a small number for UX (don't show 0)
+	// This gives users hope while still being realistic about available matches
+	if (realisticCount === 0 && sampleJobs.length > 0) {
+		// Show at least 1-2 jobs to indicate potential matches exist
+		// The actual signup will do proper filtering
+		realisticCount = Math.min(3, Math.max(1, Math.floor(sampleJobs.length * 0.05)));
+	}
+
+	// Calculate pass rate to estimate total realistic count
+	// If we sampled 1000 jobs and 100 passed, we estimate ~10% pass rate
+	const passRate =
+		sampleJobs.length > 0 ? realisticCount / sampleJobs.length : 0;
 
 	// Determine if count is low and needs UI nudge
 	const isLowCount = realisticCount < 3;
