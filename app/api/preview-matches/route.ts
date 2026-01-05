@@ -140,12 +140,26 @@ export async function POST(request: NextRequest) {
 	const eligibleJobs = preFilterByHardGates(sampleJobs, userPrefs);
 	let realisticCount = eligibleJobs.length;
 
-	// If no jobs pass hard gates, show a small number for UX (don't show 0)
-	// This gives users hope while still being realistic about available matches
+	// CRO OPTIMIZATION: Show realistic potential matches
+	// If hard gates are too restrictive, try more lenient preview criteria
 	if (realisticCount === 0 && sampleJobs.length > 0) {
-		// Show at least 1-2 jobs to indicate potential matches exist
-		// The actual signup will do proper filtering
-		realisticCount = Math.min(3, Math.max(1, Math.floor(sampleJobs.length * 0.05)));
+		// Try with more lenient criteria for preview estimation
+		const lenientUserPrefs = {
+			...userPrefs,
+			career_path: [], // Don't filter by career path for preview
+			visa_status: undefined, // Skip visa filtering for preview
+		};
+
+		const lenientEligibleJobs = preFilterByHardGates(sampleJobs, lenientUserPrefs);
+		const lenientCount = lenientEligibleJobs.length;
+
+		if (lenientCount > 0) {
+			// Estimate realistic matches: 20-40% of lenient matches (accounting for career path fit)
+			realisticCount = Math.max(1, Math.min(5, Math.floor(lenientCount * 0.3)));
+		} else {
+			// Fallback: show very small number to indicate some potential exists
+			realisticCount = Math.min(2, Math.max(1, Math.floor(sampleJobs.length * 0.01)));
+		}
 	}
 
 	// Calculate pass rate to estimate total realistic count
