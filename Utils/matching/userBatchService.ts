@@ -81,15 +81,8 @@ export function transformUsers(users: UserRow[]): TransformedUser[] {
 							: "unclear"
 				: undefined,
 			entry_level_preference: user.entry_level_preference || "entry",
-			company_types: user.company_types || [],
-			professional_expertise:
-				user.professional_expertise || user.career_path || undefined,
 			visa_status: user.visa_status || undefined,
-			// Extended preferences from signup form
-			industries: (user as any).industries || [],
-			company_size_preference: (user as any).company_size_preference || "any",
 			skills: (user as any).skills || [],
-			career_keywords: (user as any).career_keywords || undefined,
 			location_preference: "any",
 			salary_expectations: "any",
 			remote_preference: "any",

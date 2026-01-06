@@ -38,19 +38,13 @@ export interface NormalizedUser {
 	career_path: string[];
 	target_cities: string[];
 	languages_spoken: string[];
-	company_types: string[];
 	roles_selected: string[];
-	professional_expertise: string | null;
 	entry_level_preference: string | null;
 	work_environment: "remote" | "hybrid" | "on-site" | null;
 	start_date: string | null;
 	careerFocus: string;
-	// NEW MATCHING PREFERENCES
-	remote_preference?: string;
-	industries?: string[];
-	company_size_preference?: string;
+	// Core preferences only
 	skills?: string[];
-	career_keywords?: string;
 }
 
 export type NormalizedUserProfile = NormalizedUser;
@@ -61,7 +55,6 @@ export type NormalizedUserProfile = NormalizedUser;
 
 export interface UserPreferences {
 	email: string;
-	professional_expertise?: string;
 	full_name?: string;
 	start_date?: string;
 	work_environment?: "remote" | "hybrid" | "on-site" | "unclear";
@@ -70,13 +63,17 @@ export interface UserPreferences {
 	career_path?: string[];
 	target_cities?: string[];
 	languages_spoken?: string[];
-	company_types?: string[];
 	roles_selected?: string[];
-	// Extended preferences from signup form
+	// Legacy fields (still in database, still used)
+	company_types?: string[];
+	professional_expertise?: string;
+
+	// 🆕 NEW: Premium preference fields (now persisted)
+	skills?: string[];
 	industries?: string[];
 	company_size_preference?: string;
-	skills?: string[];
 	career_keywords?: string;
+
 	// Tier-aware matching
 	subscription_tier?: "free" | "premium";
 }
@@ -121,6 +118,7 @@ export interface JobMatch {
 	match_score: number;
 	match_reason: string;
 	confidence_score: number;
+	validation_issues?: string[]; // Issues found during post-AI validation
 
 	// Optional fields commonly accessed via "as any" in matching services
 	// These fields may be present on jobs returned from matching engine

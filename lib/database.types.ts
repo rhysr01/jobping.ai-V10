@@ -218,9 +218,7 @@ export type Database = {
 				Row: {
 					active: boolean | null;
 					career_path: string | null;
-					company_types: string[] | null;
 					created_at: string | null;
-					cv_url: string | null;
 					delivery_paused: boolean | null;
 					email: string;
 					email_count: number | null;
@@ -236,8 +234,6 @@ export type Database = {
 					last_email_sent: string | null;
 					last_engagement_date: string | null;
 					onboarding_complete: boolean | null;
-					professional_experience: string | null;
-					professional_expertise: string | null;
 					re_engagement_sent: boolean | null;
 					roles_selected: string[] | null;
 					start_date: string | null;
@@ -250,13 +246,19 @@ export type Database = {
 					verification_token_expires: string | null;
 					visa_status: string | null;
 					work_environment: string | null;
+					// Legacy fields (still used)
+					company_types: string[] | null;
+					professional_expertise: string | null;
+					// 🆕 NEW: Premium preference fields
+					skills: string[] | null;
+					industries: string[] | null;
+					company_size_preference: string | null;
+					career_keywords: string | null;
 				};
 				Insert: {
 					active?: boolean | null;
 					career_path?: string | null;
-					company_types?: string[] | null;
 					created_at?: string | null;
-					cv_url?: string | null;
 					delivery_paused?: boolean | null;
 					email: string;
 					email_count?: number | null;
@@ -272,8 +274,6 @@ export type Database = {
 					last_email_sent?: string | null;
 					last_engagement_date?: string | null;
 					onboarding_complete?: boolean | null;
-					professional_experience?: string | null;
-					professional_expertise?: string | null;
 					re_engagement_sent?: boolean | null;
 					roles_selected?: string[] | null;
 					start_date?: string | null;
@@ -286,13 +286,19 @@ export type Database = {
 					verification_token_expires?: string | null;
 					visa_status?: string | null;
 					work_environment?: string | null;
+					// Legacy fields (still used)
+					company_types?: string[] | null;
+					professional_expertise?: string | null;
+					// 🆕 NEW: Premium preference fields
+					skills?: string[] | null;
+					industries?: string[] | null;
+					company_size_preference?: string | null;
+					career_keywords?: string | null;
 				};
 				Update: {
 					active?: boolean | null;
 					career_path?: string | null;
-					company_types?: string[] | null;
 					created_at?: string | null;
-					cv_url?: string | null;
 					delivery_paused?: boolean | null;
 					email?: string;
 					email_count?: number | null;
@@ -308,8 +314,6 @@ export type Database = {
 					last_email_sent?: string | null;
 					last_engagement_date?: string | null;
 					onboarding_complete?: boolean | null;
-					professional_experience?: string | null;
-					professional_expertise?: string | null;
 					re_engagement_sent?: boolean | null;
 					roles_selected?: string[] | null;
 					start_date?: string | null;
@@ -322,6 +326,14 @@ export type Database = {
 					verification_token_expires?: string | null;
 					visa_status?: string | null;
 					work_environment?: string | null;
+					// Legacy fields (still used)
+					company_types?: string[] | null;
+					professional_expertise?: string | null;
+					// 🆕 NEW: Premium preference fields
+					skills?: string[] | null;
+					industries?: string[] | null;
+					company_size_preference?: string | null;
+					career_keywords?: string | null;
 				};
 				Relationships: [];
 			};

@@ -126,7 +126,7 @@ export function EUJobStats() {
 			label: "Total Active",
 			value: displayStats.total,
 			color: "zinc",
-			description: `Across ${displayStats.cities} EU cities`,
+			description: "Across 21 EU cities including London, Berlin, Paris, Amsterdam, and more",
 		},
 	];
 
@@ -305,14 +305,14 @@ export function EUJobStats() {
 					className="mt-12 md:mt-16 text-center"
 				>
 					<div className="inline-flex items-center gap-2 px-6 py-3 rounded-full glass-card elevation-1 border border-white/10">
-						<p className="text-sm md:text-base text-content-secondary">
+						<p className="text-lg md:text-xl text-content-secondary">
 							Updated daily •{" "}
 							<GradientText variant="accent" className="font-semibold">
 								{displayStats.total.toLocaleString()}+ roles
 							</GradientText>{" "}
 							from{" "}
 							<GradientText variant="accent" className="font-semibold">
-								{displayStats.cities} cities
+								21 cities
 							</GradientText>{" "}
 							across Europe
 						</p>

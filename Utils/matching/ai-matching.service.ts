@@ -322,12 +322,7 @@ OTHER PREFERENCES:
 - Work Environment: ${profile.work_environment || "Flexible"}
 - Experience Level: ${profile.entry_level_preference || "Entry-level"}
 - Start Date: ${profile.start_date || "Flexible"}
-- Company Types: ${profile.company_types?.join(", ") || "Open"}
-- Remote Preference: ${profile.remote_preference || "Flexible"}
-- Industries: ${profile.industries?.join(", ") || "Open to all"}
-- Company Size: ${profile.company_size_preference || "Any size"}
 - Skills: ${profile.skills?.join(", ") || "Open to learning"}
-- Career Keywords: ${profile.career_keywords || "Open to all opportunities"}
 
 MATCHING RULES - ONLY 2 REQUIREMENTS, EVERYTHING ELSE IS OPTIONAL:
 

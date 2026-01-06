@@ -185,8 +185,8 @@ export default function Pricing() {
 								}
 								className={`block w-full py-3.5 sm:py-4 rounded-xl font-bold text-center transition-all overflow-hidden relative group text-base sm:text-base ${
 									tier.popular
-										? "bg-gradient-to-r from-brand-600 to-brand-500 text-white hover:from-brand-500 hover:to-brand-600 shadow-[0_8px_30px_rgba(109,40,217,0.4)] hover:shadow-[0_8px_40px_rgba(109,40,217,0.6)] hover:-translate-y-0.5"
-										: "bg-white text-black hover:bg-zinc-100 shadow-lg hover:shadow-2xl hover:-translate-y-1"
+										? "btn-cta-enhanced hover:shadow-[0_8px_40px_rgba(109,40,217,0.6)]"
+										: "btn-cta-secondary"
 								}`}
 							>
 												{tier.popular && (

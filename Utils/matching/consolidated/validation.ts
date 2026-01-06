@@ -264,3 +264,277 @@ export function validateAIMatches(
 
 	return validatedMatches;
 }
+
+/**
+ * Graduate-focused AI validation with reasonable growth inferences
+ * Allows reasonable inferences about mentorship and learning potential for entry-level roles
+ */
+function validateNoHallucinations(
+	match: JobMatch,
+	job: Job,
+	userPrefs: UserPreferences,
+): { isValid: boolean; issues: string[] } {
+	const issues: string[] = [];
+	const reason = match.match_reason.toLowerCase();
+	const jobText = `${job.title || ""} ${job.description || ""}`.toLowerCase();
+
+	// CRITICAL HALLUCINATIONS (skills that definitely don't exist)
+	if (userPrefs.skills) {
+		for (const skill of userPrefs.skills) {
+			// Only penalize if skill is completely unrelated to the job domain
+			const skillLower = skill.toLowerCase();
+			const jobRequiresSkill = jobText.includes(skillLower);
+			const jobDomainRelated = isSkillDomainRelated(skillLower, jobText);
+
+			if (
+				reason.includes(skillLower) &&
+				!jobRequiresSkill &&
+				!jobDomainRelated
+			) {
+				issues.push(`hallucinated_unrelated_skill_${skill}`);
+			}
+		}
+	}
+
+	// ALLOWED GROWTH INFERENCES (reasonable for graduate roles):
+	// - Mentorship in team environments
+	// - Learning in dynamic companies
+	// - Leadership development in growing companies
+	// - Skill development in tech-forward environments
+
+	// Check for obvious contradictions only
+	if (reason.includes("remote work") && jobText.includes("office required")) {
+		issues.push("contradictory_work_environment");
+	}
+
+	return { isValid: issues.length === 0, issues };
+}
+
+/**
+ * Check if a skill is reasonably related to the job domain
+ * Allows AI to make reasonable growth inferences for graduates
+ */
+function isSkillDomainRelated(skill: string, jobText: string): boolean {
+	const skillDomains: Record<string, string[]> = {
+		react: [
+			"frontend",
+			"javascript",
+			"web",
+			"ui",
+			"user interface",
+			"component",
+		],
+		python: ["data", "backend", "ml", "ai", "automation", "scripting"],
+		javascript: ["web", "frontend", "backend", "fullstack", "node"],
+		leadership: ["team", "manage", "lead", "coordinate", "mentor", "guide"], // Allow in team contexts
+		communication: ["team", "collaborate", "present", "stakeholder"], // Allow in team contexts
+		mentorship: ["team", "junior", "train", "develop", "grow", "support"], // Allow in development contexts
+	};
+
+	for (const [skillKey, relatedTerms] of Object.entries(skillDomains)) {
+		if (skill.includes(skillKey)) {
+			return relatedTerms.some((term) => jobText.includes(term));
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Validate reasoning quality and evidence strength
+ */
+function validateReasoningQuality(
+	match: JobMatch,
+	_job: Job,
+	_userPrefs: UserPreferences,
+): { quality: number; issues: string[] } {
+	const issues: string[] = [];
+	let quality = 1.0; // Start at perfect quality
+
+	const reason = match.match_reason || "";
+	const words = reason.split(/\s+/).filter((w) => w.length > 0);
+
+	// Length check (more lenient for graduate-focused explanations)
+	const expectedWords =
+		match.match_score >= 85
+			? 40
+			: match.match_score >= 75
+				? 30
+				: match.match_score >= 65
+					? 20
+					: 15;
+	if (words.length < expectedWords) {
+		issues.push("insufficient_evidence_length");
+		quality *= 0.8; // Less penalty for graduate context
+	}
+
+	// Growth-focused specificity check
+	let growthIndicators = 0;
+
+	// Look for graduate-relevant growth indicators
+	const growthTerms = [
+		"learn",
+		"grow",
+		"develop",
+		"mentor",
+		"train",
+		"support",
+		"team",
+		"collaborate",
+		"opportunity",
+	];
+	growthIndicators += growthTerms.filter((term) =>
+		reason.toLowerCase().includes(term),
+	).length;
+
+	// Career development indicators
+	const careerTerms = [
+		"career",
+		"professional",
+		"future",
+		"path",
+		"journey",
+		"aspirations",
+	];
+	growthIndicators += careerTerms.filter((term) =>
+		reason.toLowerCase().includes(term),
+	).length;
+
+	// Learning environment indicators
+	const learningTerms = [
+		"dynamic",
+		"innovative",
+		"growing",
+		"scale",
+		"startup",
+		"tech-forward",
+	];
+	growthIndicators += learningTerms.filter((term) =>
+		reason.toLowerCase().includes(term),
+	).length;
+
+	if (growthIndicators < 2) {
+		issues.push("lack_of_growth_indicators");
+		quality *= 0.85; // Even less penalty - focus on growth potential
+	}
+
+	// Generic language allowance (more lenient for graduate context)
+	const genericPhrases = [
+		"good fit",
+		"great match",
+		"perfect",
+		"excellent",
+		"ideal",
+	];
+	const hasGeneric = genericPhrases.some((phrase) =>
+		reason.toLowerCase().includes(phrase),
+	);
+	if (hasGeneric && match.match_score >= 90) {
+		// Only penalize at very high scores
+		issues.push("generic_language_high_score");
+		quality *= 0.9;
+	}
+
+	return { quality, issues };
+}
+
+/**
+ * Validate AI output quality after scoring
+ * This catches weak evidence, low confidence, hallucinations, and anomalies
+ */
+export function validateAIOutput(
+	matches: JobMatch[],
+	jobs: Job[],
+	userPrefs: UserPreferences,
+): JobMatch[] {
+	return matches
+		.map((match) => {
+			const job = jobs.find((j) => j.job_hash === match.job_hash);
+			if (!job) {
+				return {
+					...match,
+					confidence_score: 0,
+					validation_issues: ["job_not_found"],
+				};
+			}
+
+			const issues: string[] = [];
+			let adjustedScore = match.match_score;
+			let adjustedConfidence = match.confidence_score || 0.7;
+
+			// 1. HALLUCINATION DETECTION (CRITICAL)
+			const hallucinationCheck = validateNoHallucinations(
+				match,
+				job,
+				userPrefs,
+			);
+			if (!hallucinationCheck.isValid) {
+				issues.push(...hallucinationCheck.issues);
+				adjustedConfidence = Math.max(0.3, adjustedConfidence - 0.4);
+				adjustedScore = Math.max(50, adjustedScore - 20); // Heavy penalty for hallucinations
+
+				console.error(
+					`[VALIDATION] CRITICAL: Hallucinations detected in ${job.title}: ${hallucinationCheck.issues.join(", ")}`,
+				);
+			}
+
+			// 2. REASONING QUALITY ASSESSMENT
+			const qualityCheck = validateReasoningQuality(match, job, userPrefs);
+			if (qualityCheck.quality < 1.0) {
+				issues.push(...qualityCheck.issues);
+				adjustedConfidence *= qualityCheck.quality;
+				adjustedScore = Math.round(adjustedScore * qualityCheck.quality);
+
+				console.warn(
+					`[VALIDATION] Quality issues in ${job.title}: ${qualityCheck.issues.join(", ")} (quality: ${(qualityCheck.quality * 100).toFixed(0)}%)`,
+				);
+			}
+
+			// 3. Score-Confidence Consistency Check
+			if (adjustedScore >= 85 && adjustedConfidence < 0.7) {
+				issues.push("score_confidence_mismatch");
+				adjustedScore = Math.max(75, adjustedScore - 10); // Reduce score if AI isn't confident
+
+				console.warn(
+					`[VALIDATION] Low confidence for high score: ${job.title} (${adjustedConfidence})`,
+				);
+			}
+
+			// 4. Double-check hard requirements (paranoid validation)
+			const userCities = (
+				Array.isArray(userPrefs.target_cities)
+					? userPrefs.target_cities
+					: userPrefs.target_cities
+						? [userPrefs.target_cities]
+						: []
+			).map((c) => c.toLowerCase());
+
+			const jobCity = (job.city || "").toLowerCase();
+			const locationValid = userCities.some((city) => jobCity.includes(city));
+
+			if (!locationValid) {
+				issues.push("CRITICAL_location_filter_failure");
+				adjustedScore = 0;
+				adjustedConfidence = 0;
+
+				console.error(
+					`[VALIDATION] CRITICAL: Location filter failed for ${job.title} in ${job.city}`,
+				);
+			}
+
+			return {
+				...match,
+				match_score: Math.max(0, Math.min(100, adjustedScore)),
+				confidence_score: Math.max(0, Math.min(1, adjustedConfidence)),
+				validation_issues: issues.length > 0 ? issues : undefined,
+			};
+		})
+		.filter((m) => m.match_score >= 50 && m.confidence_score >= 0.5) // Filter low quality
+		.sort((a, b) => {
+			// Sort by score * confidence (weighted quality)
+			const qualityA = a.match_score * (a.confidence_score || 0.7);
+			const qualityB = b.match_score * (b.confidence_score || 0.7);
+			return qualityB - qualityA;
+		})
+		.slice(0, 5); // Return top 5
+}

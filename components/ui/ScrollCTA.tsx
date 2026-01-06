@@ -102,7 +102,7 @@ export default function ScrollCTA() {
 									});
 									setIsVisible(false);
 								}}
-								className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-500 text-white rounded-full text-sm font-semibold hover:bg-brand-500/90 transition-colors min-h-[44px]"
+								className="btn-cta-enhanced px-5 py-2.5 text-sm min-h-[44px]"
 							>
 								{CTA_GET_MY_5_FREE_MATCHES}
 								<BrandIcons.ArrowRight className="h-4 w-4" />

@@ -207,9 +207,24 @@ export class EmbeddingService {
 				if (i + this.BATCH_SIZE < jobs.length) {
 					await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms delay between batches
 				}
-			} catch (error) {
-				console.error(`Failed to generate embeddings for batch ${i}:`, error);
-				// Continue with other batches
+			} catch (error: any) {
+				if (error?.status === 429) {
+					const retryAfter = this.extractRetryAfter(error);
+					console.warn(`OpenAI rate limit hit in batch processing, batch ${Math.floor(i / this.BATCH_SIZE) + 1}:`, {
+						retryAfter,
+						batchSize: batch.length,
+						totalJobs: jobs.length,
+						error: error.message,
+					});
+
+					// For rate limits, wait and retry the entire batch
+					await new Promise(resolve => setTimeout(resolve, retryAfter));
+					i -= this.BATCH_SIZE; // Retry this batch
+					continue;
+				}
+
+				console.error(`Failed to generate embeddings for batch ${Math.floor(i / this.BATCH_SIZE) + 1}:`, error);
+				// Continue with other batches for non-rate-limit errors
 			}
 		}
 
@@ -244,6 +259,13 @@ export class EmbeddingService {
 	async storeJobEmbeddings(embeddings: Map<string, number[]>): Promise<void> {
 		if (embeddings.size === 0) return;
 
+		// Validate all embeddings before storage
+		const validationResults = this.validateEmbeddings(embeddings);
+		if (!validationResults.isValid) {
+			console.error("Embedding validation failed:", validationResults.errors);
+			throw new Error(`Invalid embeddings detected: ${validationResults.errors.join(', ')}`);
+		}
+
 		// Update jobs individually (Supabase doesn't support batch update with different WHERE clauses)
 		// But we can use Promise.all for parallel updates
 		const entries = Array.from(embeddings.entries());
@@ -258,20 +280,6 @@ export class EmbeddingService {
 			// Update each job individually but in parallel
 			const updatePromises = batch.map(async ([jobHash, embedding]) => {
 				try {
-					if (!Array.isArray(embedding)) {
-						console.error(
-							`Embedding for job ${jobHash} is not an array`,
-							typeof embedding,
-						);
-						return false;
-					}
-					if (embedding.length !== this.EMBEDDING_DIMENSION) {
-						console.error(
-							`Embedding length mismatch for job ${jobHash}: expected ${this.EMBEDDING_DIMENSION}, got ${embedding.length}`,
-						);
-						return false;
-					}
-
 					const { data: existing, error: fetchError } = await this.supabase
 						.from("jobs")
 						.select("id, embedding")
@@ -332,6 +340,83 @@ export class EmbeddingService {
 	}
 
 	/**
+	 * Validate embeddings before storage
+	 */
+	private validateEmbeddings(embeddings: Map<string, number[]>): {
+		isValid: boolean;
+		errors: string[];
+		summary: { total: number; valid: number; invalid: number; };
+	} {
+		const errors: string[] = [];
+		let validCount = 0;
+		let invalidCount = 0;
+
+		for (const [jobHash, embedding] of embeddings.entries()) {
+			const validation = this.validateSingleEmbedding(embedding, jobHash);
+			if (validation.isValid) {
+				validCount++;
+			} else {
+				invalidCount++;
+				errors.push(...validation.errors);
+			}
+		}
+
+		return {
+			isValid: invalidCount === 0,
+			errors,
+			summary: {
+				total: embeddings.size,
+				valid: validCount,
+				invalid: invalidCount,
+			}
+		};
+	}
+
+	/**
+	 * Validate a single embedding
+	 */
+	private validateSingleEmbedding(embedding: number[], jobHash: string): {
+		isValid: boolean;
+		errors: string[];
+	} {
+		const errors: string[] = [];
+
+		// Check if it's an array
+		if (!Array.isArray(embedding)) {
+			errors.push(`${jobHash}: embedding is not an array (type: ${typeof embedding})`);
+			return { isValid: false, errors };
+		}
+
+		// Check dimension
+		if (embedding.length !== this.EMBEDDING_DIMENSION) {
+			errors.push(`${jobHash}: embedding dimension mismatch (expected: ${this.EMBEDDING_DIMENSION}, got: ${embedding.length})`);
+		}
+
+		// Check for NaN or infinite values
+		const invalidValues = embedding.filter(val => !isFinite(val));
+		if (invalidValues.length > 0) {
+			errors.push(`${jobHash}: embedding contains ${invalidValues.length} invalid values (NaN/Infinity)`);
+		}
+
+		// Check value range (embeddings should be normalized-ish)
+		const outOfRange = embedding.filter(val => Math.abs(val) > 10);
+		if (outOfRange.length > 0) {
+			errors.push(`${jobHash}: embedding contains ${outOfRange.length} values outside expected range (-10, 10)`);
+		}
+
+		// Check for all zeros (would indicate failed generation)
+		const nonZeroValues = embedding.filter(val => val !== 0);
+		if (nonZeroValues.length === 0) {
+			errors.push(`${jobHash}: embedding is all zeros (likely generation failure)`);
+		}
+
+		return {
+			isValid: errors.length === 0,
+			errors
+		};
+	}
+
+	/**
 	 * Store user preference embedding with hash for cache invalidation
 	 */
 	async storeUserEmbedding(
@@ -359,20 +444,90 @@ export class EmbeddingService {
 	}
 
 	/**
-	 * Generate embedding for text using OpenAI
+	 * Generate embedding for text using OpenAI with rate limit handling
 	 */
 	private async generateEmbedding(text: string): Promise<number[]> {
-		try {
-			const response = await this.getOpenAIClient().embeddings.create({
-				model: this.MODEL,
-				input: text.substring(0, 8000), // Truncate to max token limit
-			});
+		const maxRetries = 3;
+		let lastError: Error | null = null;
 
-			return response.data[0].embedding;
-		} catch (error) {
-			console.error("Failed to generate embedding:", error);
-			throw error;
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				const response = await this.getOpenAIClient().embeddings.create({
+					model: this.MODEL,
+					input: text.substring(0, 8000), // Truncate to max token limit
+				});
+
+				return response.data[0].embedding;
+			} catch (error: any) {
+				lastError = error instanceof Error ? error : new Error(String(error));
+
+				// Handle rate limit errors (429)
+				if (error?.status === 429) {
+					const retryAfter = this.extractRetryAfter(error);
+					const backoffDelay = this.calculateBackoffDelay(attempt, retryAfter);
+
+					console.warn(`OpenAI rate limit hit (attempt ${attempt}/${maxRetries}), retrying in ${backoffDelay}ms:`, {
+						retryAfter,
+						error: error.message,
+						textLength: text.length,
+					});
+
+					if (attempt < maxRetries) {
+						await new Promise(resolve => setTimeout(resolve, backoffDelay));
+						continue;
+					}
+				}
+
+				// Handle other OpenAI errors
+				if (error?.status >= 500) {
+					console.warn(`OpenAI server error (attempt ${attempt}/${maxRetries}):`, error.message);
+					if (attempt < maxRetries) {
+						const backoffDelay = this.calculateBackoffDelay(attempt, 1000);
+						await new Promise(resolve => setTimeout(resolve, backoffDelay));
+						continue;
+					}
+				}
+
+				// For client errors (4xx except 429) or final attempt, throw
+				console.error(`OpenAI embedding failed after ${attempt} attempts:`, {
+					status: error?.status,
+					message: error?.message,
+					textPreview: text.substring(0, 100) + '...',
+				});
+				throw lastError;
+			}
 		}
+
+		throw lastError || new Error("Embedding generation failed after all retries");
+	}
+
+	/**
+	 * Extract retry-after header from OpenAI error
+	 */
+	private extractRetryAfter(error: any): number {
+		// Check various header locations
+		const retryAfter = error?.headers?.['retry-after'] ||
+		                  error?.response?.headers?.['retry-after'] ||
+		                  error?.headers?.['x-ratelimit-reset-requests'];
+
+		if (retryAfter) {
+			const seconds = parseInt(retryAfter, 10);
+			return isNaN(seconds) ? 1000 : seconds * 1000; // Convert to milliseconds
+		}
+
+		return 1000; // Default 1 second
+	}
+
+	/**
+	 * Calculate exponential backoff delay with jitter
+	 */
+	private calculateBackoffDelay(attempt: number, baseDelay: number): number {
+		const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+		const jitter = Math.random() * 0.1 * exponentialDelay; // 10% jitter
+		const totalDelay = exponentialDelay + jitter;
+
+		// Cap at 30 seconds to prevent excessive delays
+		return Math.min(totalDelay, 30000);
 	}
 
 	/**

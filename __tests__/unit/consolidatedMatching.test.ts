@@ -199,9 +199,9 @@ describe("ConsolidatedMatchingEngine", () => {
 
 			const result = await matcher.performMatching(mockJobs, mockUser);
 
-			// When AI fails (due to mocking complexity), should fall back to guaranteed matching
-			// This tests the fallback logic works correctly
-			expect(result.method).toBe("guaranteed_fallback");
+			// With stratified matching for multiple cities, should successfully use AI
+			// This tests that stratified matching works correctly
+			expect(result.method).toBe("ai_success");
 			expect(result.matches).toBeDefined();
 			expect(result.matches.length).toBeGreaterThan(0);
 			expect(result.confidence).toBeGreaterThanOrEqual(0);

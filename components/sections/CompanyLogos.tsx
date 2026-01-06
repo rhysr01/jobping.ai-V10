@@ -376,7 +376,7 @@ export default function CompanyLogos() {
 					className="text-center mt-8"
 				>
 					<p className="text-xs text-content-muted">
-						JobPing aggregates jobs from public sources including Indeed and Glassdoor.
+						JobPing aggregates jobs from public sources including Indeed, Glassdoor, Adzuna, Jooble, Reed, Arbeitnow, and company pages.
 						We are not affiliated with these companies and match you with available listings.
 					</p>
 				</motion.div>

@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#1a1a1a" rx="8"/>
-  <text x="50" y="50" font-family="Arial" font-size="12" fill="#666" text-anchor="middle" dominant-baseline="middle">IBM</text>
-</svg>
+<svg fill="#052FAD" role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>IBM</title><path d="M0 0h2.807v2.807H0V0zm4.552 0H7.36v2.807H4.552V0zM9.104 0h2.808v2.807H9.104V0zM13.656 0h2.808v2.807h-2.808V0zm4.552 0H21.016v2.807h-2.808V0zM21.016 4.552H0v2.808h21.016V4.552zm0 4.552H0v2.808h21.016V9.104zm0 4.552H0v2.808h21.016v-2.808zM0 18.208h21.016V21.016H0v-2.808z"/></svg>

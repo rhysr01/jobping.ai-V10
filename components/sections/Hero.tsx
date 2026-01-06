@@ -132,7 +132,7 @@ export default function Hero() {
 						onClick={() => {
 							trackEvent("cta_clicked", { type: "free", location: "hero" });
 						}}
-						className="inline-flex min-h-[48px] h-auto items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold px-6 sm:px-8 py-3 sm:py-3.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black hover:from-brand-500 hover:to-indigo-500 w-full sm:w-auto sm:max-w-xs text-base md:text-lg shadow-lg hover:shadow-xl shadow-[0_4px_20px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_30px_rgba(139,92,246,0.4)]"
+						className="btn-cta-enhanced w-full sm:w-auto sm:max-w-xs hover:shadow-[0_8px_30px_rgba(139,92,246,0.4)]"
 							aria-label={CTA_GET_MY_5_FREE_MATCHES_ARIA}
 						>
 								<span className="flex items-center justify-center gap-2">

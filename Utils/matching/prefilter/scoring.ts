@@ -359,88 +359,7 @@ export function scoreJob(
 		}
 	}
 
-	// 9. Industries matching
-	if (
-		user.industries &&
-		Array.isArray(user.industries) &&
-		user.industries.length > 0
-	) {
-		const industries = user.industries.map((i) => i.toLowerCase());
-		const hasIndustryMatch = industries.some((industry) => {
-			const industryLower = industry.toLowerCase();
-			return (
-				jobDesc.includes(industryLower) ||
-				jobTitle.includes(industryLower) ||
-				(industryLower.includes("tech") &&
-					(jobDesc.includes("technology") ||
-						jobDesc.includes("software") ||
-						jobDesc.includes("digital"))) ||
-				(industryLower.includes("finance") &&
-					(jobDesc.includes("financial") ||
-						jobDesc.includes("banking") ||
-						jobDesc.includes("investment"))) ||
-				(industryLower.includes("consulting") &&
-					(jobDesc.includes("consulting") ||
-						jobDesc.includes("advisory") ||
-						jobDesc.includes("strategy")))
-			);
-		});
-		if (hasIndustryMatch) {
-			score += 5;
-		}
-	}
-
-	// 10. Company size preference
-	if (user.company_size_preference && user.company_size_preference !== "any") {
-		const sizePreference = user.company_size_preference.toLowerCase();
-		const sizeKeywords: Record<string, string[]> = {
-			startup: [
-				"startup",
-				"early-stage",
-				"seed",
-				"series a",
-				"series b",
-				"founded",
-				"new company",
-			],
-			small: [
-				"small company",
-				"small team",
-				"10-50",
-				"50-200",
-				"boutique",
-				"small business",
-			],
-			medium: ["medium", "200-500", "500-1000", "mid-size", "mid-sized"],
-			large: [
-				"large",
-				"multinational",
-				"fortune",
-				"ftse",
-				"dax",
-				"cac",
-				"1000+",
-				"global",
-				"enterprise",
-				"established",
-			],
-		};
-
-		const keywords = sizeKeywords[sizePreference] || [];
-		if (keywords.length > 0) {
-			const hasSizeMatch = keywords.some(
-				(kw) =>
-					jobDesc.includes(kw) ||
-					(job as any).company?.toLowerCase().includes(kw) ||
-					jobTitle.includes(kw),
-			);
-			if (hasSizeMatch) {
-				score += 3;
-			}
-		}
-	}
-
-	// 11. Skills matching
+	// 9. Skills matching
 	if (user.skills && Array.isArray(user.skills) && user.skills.length > 0) {
 		const skills = user.skills.map((s) => s.toLowerCase().trim());
 		const matchingSkills = skills.filter((skill) => {
@@ -463,23 +382,7 @@ export function scoreJob(
 		}
 	}
 
-	// 12. Career keywords matching
-	if (user.career_keywords && user.career_keywords.trim().length > 0) {
-		const keywords = user.career_keywords
-			.toLowerCase()
-			.split(/\s+/)
-			.filter((kw) => kw.length > 2);
-
-		const matchingKeywords = keywords.filter(
-			(kw) => jobTitle.includes(kw) || jobDesc.includes(kw),
-		);
-
-		if (matchingKeywords.length > 0) {
-			score += Math.min(5, matchingKeywords.length);
-		}
-	}
-
-	// 13. Early career indicators
+	// 10. Early career indicators
 	const earlyCareerKeywords = [
 		"graduate",
 		"intern",
@@ -503,7 +406,7 @@ export function scoreJob(
 		score += 5;
 	}
 
-	// 14. Apply feedback boosts
+	// 11. Apply feedback boosts
 	score = applyFeedbackBoosts(score, job, feedbackBoosts);
 
 	return { job, score, hasRoleMatch, hasCareerMatch };

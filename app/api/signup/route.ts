@@ -273,7 +273,10 @@ export async function POST(req: NextRequest) {
 
 		// Clean up promo_pending if promo code was used
 		if (hasValidPromo) {
-			await supabase.from("promo_pending").delete().eq("email", normalizedEmail);
+			await supabase
+				.from("promo_pending")
+				.delete()
+				.eq("email", normalizedEmail);
 			apiLogger.info("Promo code applied and cleaned up", {
 				email: normalizedEmail,
 				promoCode: pendingPromo.promo_code,
@@ -418,7 +421,6 @@ export async function POST(req: NextRequest) {
 					);
 				}
 
-
 				// Build optimized query using database indexes
 				// Select all fields needed for email template (including tags, work_environment, etc.)
 				let query = supabase
@@ -462,16 +464,14 @@ export async function POST(req: NextRequest) {
 					career_path: userData.career_path ? [userData.career_path] : [],
 					roles_selected: userData.roles_selected,
 					entry_level_preference: userData.entry_level_preference,
-					professional_expertise: userData.career_path || "",
 					work_environment: userData.work_environment,
 					visa_status: userData.visa_status,
-					company_types: userData.company_types || [],
-					// Extended preferences from premium signup form
-					industries: userData.industries || [],
-					company_size_preference: userData.company_size_preference || "any",
+					// 🆕 NEW: Include premium preference fields
 					skills: userData.skills || [],
-					career_keywords: userData.career_keywords || undefined,
-					subscription_tier: "premium" as const, // TIER-AWARE: Mark as premium tier
+					industries: userData.industries || [],
+					company_size_preference: userData.company_size_preference,
+					career_keywords: userData.career_keywords,
+					subscription_tier: "premium" as const,
 				};
 
 				// Pass all jobs to matching engine - it handles hard gates and pre-ranking
@@ -542,7 +542,6 @@ export async function POST(req: NextRequest) {
 								`[SIGNUP] Coordinator complete: ${distributedJobs.length} matches found (method: ${coordinatedResult.metadata.matchingMethod})`,
 							);
 						}
-
 
 						// CRITICAL: If no jobs, trigger guaranteed matching with broader query
 						if (distributedJobs.length === 0) {
@@ -816,10 +815,10 @@ export async function POST(req: NextRequest) {
 														.single();
 
 												if (jobCheckError) {
-							apiLogger.warn(
-								`[SIGNUP] ⚠️ Job ${verifyMatches[0].job_hash} not found in jobs table:`,
-								{ message: jobCheckError.message },
-							);
+													apiLogger.warn(
+														`[SIGNUP] ⚠️ Job ${verifyMatches[0].job_hash} not found in jobs table:`,
+														{ message: jobCheckError.message },
+													);
 												} else {
 													apiLogger.info(`[SIGNUP] ✅ Job exists:`, {
 														job_hash: jobCheck.job_hash,

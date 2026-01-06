@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 		const { data: user, error: userError } = await supabase
 			.from("users")
 			.select(
-				"email, target_cities, languages_spoken, career_path, roles_selected, entry_level_preference, professional_expertise, work_environment, visa_status, company_types, industries, company_size_preference, skills, career_keywords",
+				"email, target_cities, languages_spoken, career_path, roles_selected, entry_level_preference, work_environment, visa_status, skills",
 			)
 			.eq("email", email)
 			.eq("subscription_tier", "free")
@@ -155,14 +155,9 @@ export async function GET(request: NextRequest) {
 			career_path: user.career_path ? [user.career_path] : [],
 			roles_selected: user.roles_selected || [],
 			entry_level_preference: user.entry_level_preference || "",
-			professional_expertise: user.professional_expertise || "",
 			work_environment: user.work_environment || "",
 			visa_status: user.visa_status || "",
-			company_types: user.company_types || [],
-			industries: user.industries || [],
-			company_size_preference: user.company_size_preference || "any",
 			skills: user.skills || [],
-			career_keywords: user.career_keywords || undefined,
 			subscription_tier: "free",
 		};
 
