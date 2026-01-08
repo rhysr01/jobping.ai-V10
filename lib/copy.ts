@@ -130,8 +130,12 @@ export const PREMIUM_PLAN_PRICE_UNIT = "/mo";
 export const PREMIUM_PLAN_ANNUAL = "€20 for 3 months (save €1)";
 export const PREMIUM_PLAN_DESCRIPTION = `Matches delivered to your inbox every Monday, Wednesday, and Friday - so you never miss an opportunity.`;
 export const PREMIUM_PLAN_FEATURES = [
+	`10 instant matches on signup (vs 5 for free)`,
 	`15 curated roles per week (3 emails: Mon / Wed / Fri)`,
-	"Priority curation",
+	"Automatic email delivery to your inbox",
+	"24-hour early access to fresh job postings",
+	"Priority AI matching with better job distribution",
+	"Account stays active (no 30-day deletion)",
 	"Cancel anytime",
 ];
 

@@ -166,12 +166,12 @@ export default function Pricing() {
 													>
 														<div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
 															tier.popular 
-																? "bg-brand-500/20 border border-brand-500/50" 
+																? "bg-emerald-500/20 border border-emerald-500/50" 
 																: "bg-white/5 border border-white/10"
 														}`}>
 															<Check
 																size={14}
-																className={tier.popular ? "text-brand-300" : "text-zinc-400"}
+																className={tier.popular ? "text-emerald-400" : "text-zinc-400"}
 																strokeWidth={3}
 															/>
 														</div>
