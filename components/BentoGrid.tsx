@@ -44,28 +44,28 @@ const FeatureCard = ({
 			aria-label={`${title} - ${description}`}
 			className={cn(
 				"group relative overflow-hidden rounded-3xl glass-card elevation-1 p-6 transition-all duration-300",
-				"hover:elevation-3 hover:border-brand-600/50 hover:shadow-[0_8px_32px_rgba(139,92,246,0.15)]",
-				"focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 focus-within:ring-offset-black",
+				"hover:elevation-3 hover:border-emerald-500/30 hover:shadow-[0_8px_32px_rgba(16,185,129,0.15)]",
+				"focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2 focus-within:ring-offset-black",
 				"bg-gradient-to-br from-surface-base/90 via-surface-base/95 to-surface-elevated/90",
 				className,
 			)}
 		>
 			{/* Enhanced Glow Effect on Hover */}
-			<div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_var(--x,_50%)_var(--y,_50%),rgba(139,92,246,0.15)_0%,transparent_70%)]" />
+			<div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_var(--x,_50%)_var(--y,_50%),rgba(16,185,129,0.15)_0%,transparent_70%)]" />
 
 			{/* Subtle inner glow */}
-			<div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-600/5 via-transparent to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+			<div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
 			<div className="relative z-10 flex h-full flex-col justify-between">
 				<div>
 					<div
 						className={cn(
 							"mb-4 inline-flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-xl",
-							"glass-card elevation-1 text-purple-400",
-							"bg-gradient-to-br from-brand-600/20 via-brand-600/10 to-transparent",
-							"border border-brand-600/30",
-							"shadow-[0_4px_16px_rgba(139,92,246,0.2)]",
-							"group-hover:shadow-[0_8px_24px_rgba(139,92,246,0.3)]",
+							"glass-card elevation-1 text-emerald-400",
+							"bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-transparent",
+							"border border-emerald-500/30",
+							"shadow-[0_4px_16px_rgba(16,185,129,0.2)]",
+							"group-hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)]",
 							"group-hover:scale-110 transition-transform duration-300",
 						)}
 					>
@@ -126,14 +126,26 @@ export default function HowItWorksBento() {
 					</Heading>
 				</motion.div>
 
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:auto-rows-auto">
+			{/* Connecting line between steps - Desktop only */}
+			<div className="hidden md:block absolute top-1/4 left-[16.66%] right-[16.66%] h-0.5 bg-gradient-to-r from-emerald-500/20 via-emerald-500/50 to-emerald-500/20 z-0" />
+			
+			<div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:auto-rows-auto relative">
 				{/* Card 1: Quick Setup */}
 				<FeatureCard
 					title="Instant Setup"
 					description="Tell us your career path and preferred cities. No resume upload needed—just simple preferences that power our AI matching in seconds."
 					icon={FileJson}
-					className="md:col-span-1 min-h-[280px]"
+					className="md:col-span-1 min-h-[280px] relative group"
 				>
+					{/* Step Number with Glow */}
+					<div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+						<div className="relative">
+							<div className="absolute inset-0 bg-emerald-500/30 blur-xl rounded-full group-hover:bg-emerald-500/50 transition-all" />
+							<div className="relative w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
+								<span className="text-xl font-bold bg-gradient-to-br from-emerald-300 to-emerald-500 bg-clip-text text-transparent">1</span>
+							</div>
+						</div>
+					</div>
 						<div className="mt-4 space-y-4">
 							<div className="relative h-28 w-full rounded-xl bg-surface-elevated/50 border border-white/5 overflow-hidden">
 								{/* Vertical Scanning Line */}
@@ -177,8 +189,17 @@ export default function HowItWorksBento() {
 						title="AI-Powered Matching"
 						description="We scan 1,400+ daily listings across multiple job boards. Our AI analyzes each job description against your career path, location preferences, and visa requirements to find your perfect entry-level matches."
 						icon={Cpu}
-						className="md:col-span-2 min-h-[280px]"
+						className="md:col-span-2 min-h-[280px] relative group"
 					>
+						{/* Step Number with Glow */}
+						<div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+							<div className="relative">
+								<div className="absolute inset-0 bg-emerald-500/30 blur-xl rounded-full group-hover:bg-emerald-500/50 transition-all" />
+								<div className="relative w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
+									<span className="text-xl font-bold bg-gradient-to-br from-emerald-300 to-emerald-500 bg-clip-text text-transparent">2</span>
+								</div>
+							</div>
+						</div>
 						<div className="mt-auto flex flex-wrap gap-2.5 pt-4">
 							{[
 								"Career Path",
@@ -219,8 +240,17 @@ export default function HowItWorksBento() {
 					title="Smart Scoring System"
 					description="A 9-signal audit that ensures quality by weighting what matters most to your career."
 					icon={Brain}
-					className="md:col-span-3 min-h-[320px]"
+					className="md:col-span-3 min-h-[320px] relative group"
 				>
+					{/* Step Number with Glow */}
+					<div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+						<div className="relative">
+							<div className="absolute inset-0 bg-emerald-500/30 blur-xl rounded-full group-hover:bg-emerald-500/50 transition-all" />
+							<div className="relative w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-emerald-500/20">
+								<span className="text-xl font-bold bg-gradient-to-br from-emerald-300 to-emerald-500 bg-clip-text text-transparent">3</span>
+							</div>
+						</div>
+					</div>
 						<div className="mt-4 space-y-4">
 							{/* Primary Signals */}
 							<div className="space-y-2">

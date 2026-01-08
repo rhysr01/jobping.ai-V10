@@ -1,8 +1,10 @@
 "use client";
 
-import { MapPin, Briefcase } from "lucide-react";
+import { MapPin, Briefcase, ChevronLeft, ChevronRight } from "lucide-react";
 import { IPhoneShell } from "@/components/ui/IPhoneShell";
 import { TiltCard } from "@/components/ui/TiltCard";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 
 // Same profile across all three emails (Monday, Wednesday, Friday)
 const USER_PROFILE = {
@@ -249,28 +251,32 @@ const getVisaStyle = (confidence: string) => {
 				bg: "bg-emerald-500/20",
 				text: "text-emerald-400",
 				border: "border-emerald-500/30",
-				label: "✅ Confirmed Sponsorship",
+				label: "Confirmed Sponsorship",
+				icon: "✓",
 			};
 		case "likely":
 			return {
 				bg: "bg-yellow-500/20",
 				text: "text-yellow-400",
 				border: "border-yellow-500/30",
-				label: "🟡 Probable Sponsorship",
+				label: "Probable Sponsorship",
+				icon: "○",
 			};
 		case "local-only":
 			return {
 				bg: "bg-blue-500/20",
 				text: "text-blue-400",
 				border: "border-blue-500/30",
-				label: "🔵 Possible Sponsorship",
+				label: "Possible Sponsorship",
+				icon: "○",
 			};
 		default:
 			return {
 				bg: "bg-red-500/20",
 				text: "text-red-400",
 				border: "border-red-500/30",
-				label: "❌ No Sponsorship",
+				label: "No Sponsorship",
+				icon: "✕",
 			};
 	}
 };
@@ -293,8 +299,9 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 		{/* Email Body - All content flows naturally for scrolling */}
 		<div className="p-3 space-y-2.5">
 			{/* Premium Badge */}
-			<div className="inline-flex items-center gap-1 rounded-full bg-purple-500/15 px-2 py-0.5 text-[10px] font-bold text-purple-300 border border-purple-500/30">
-				<span className="text-yellow-400">⭐</span> Premium Member
+			<div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
+				<div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+				<span>Premium Member</span>
 			</div>
 
 			{/* Title */}
@@ -326,20 +333,30 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 					{email.jobs.map((job, index) => (
 						<div
 							key={index}
-							className="rounded-lg border border-white/10 bg-black/40 p-2.5"
+							className="group relative"
 						>
+							{/* Glow effect on hover */}
+							<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
+							
+							{/* Card */}
+							<div className="relative rounded-lg bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5"
+								style={{
+									boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+								}}
+							>
 				{/* Match Score & Company */}
 				<div className="flex items-center justify-between mb-1.5">
-					<span
-						className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-							job.score >= 92
-								? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40"
-								: "bg-purple-500/30 text-purple-400 border border-purple-500/40"
-						}`}
-					>
-						{job.score >= 92 ? "🔥 " : ""}
-						{job.score}% Match
-					</span>
+					{/* Custom Match Badge - No Emoji */}
+					<div className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg ${
+						job.score >= 92
+							? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
+							: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
+					}`}>
+						<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+						<span className="text-[10px] font-bold text-white">
+							{job.score}% Match
+						</span>
+					</div>
 					<div className="text-[10px] font-semibold text-content-heading truncate ml-2">
 						{job.company}
 					</div>
@@ -359,7 +376,7 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 				{/* Match Reason */}
 				<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
 					<div className="text-[9px] font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
-						🤖 Why This Matches
+						Why This Matches
 					</div>
 					<p className="text-[10px] text-content-heading leading-relaxed line-clamp-2">
 						{job.matchReason}
@@ -378,8 +395,9 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 					))}
 					{job.visaConfidence && (
 						<span
-							className={`px-1.5 py-0.5 rounded text-[9px] font-semibold border ${getVisaStyle(job.visaConfidence).bg} ${getVisaStyle(job.visaConfidence).text} ${getVisaStyle(job.visaConfidence).border}`}
+							className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold border ${getVisaStyle(job.visaConfidence).bg} ${getVisaStyle(job.visaConfidence).text} ${getVisaStyle(job.visaConfidence).border}`}
 						>
+							<span className="text-[8px]">{getVisaStyle(job.visaConfidence).icon}</span>
 							{getVisaStyle(job.visaConfidence).label}
 						</span>
 					)}
@@ -402,18 +420,19 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 					<div className="flex gap-1">
 						<button
 							type="button"
-							className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto"
+							className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-emerald-500/20 transition-colors"
 						>
-							👍 Good
+							Good Match
 						</button>
 						<button
 							type="button"
-							className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto"
+							className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-red-500/20 transition-colors"
 						>
-							👎 Not for me
+							Not for me
 						</button>
 					</div>
 				</div>
+							</div>
 						</div>
 					))}
 				</div>
@@ -426,6 +445,20 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 };
 
 export function PremiumEmailShowcase() {
+	const [activeIndex, setActiveIndex] = useState(0);
+
+	const nextEmail = () => {
+		setActiveIndex((prev) => (prev + 1) % PREMIUM_DAYS.length);
+	};
+
+	const prevEmail = () => {
+		setActiveIndex((prev) => (prev - 1 + PREMIUM_DAYS.length) % PREMIUM_DAYS.length);
+	};
+
+	const goToEmail = (index: number) => {
+		setActiveIndex(index);
+	};
+
 	return (
 		<section className="py-24 sm:py-32 md:py-40 bg-black border-t border-border-subtle scroll-snap-section relative">
 			{/* Scroll momentum fade */}
@@ -441,30 +474,98 @@ export function PremiumEmailShowcase() {
 					</p>
 				</div>
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-10 sm:gap-12 md:gap-8 max-w-6xl mx-auto">
-					{PREMIUM_DAYS.map((email) => (
-						<div key={email.day} className="relative flex flex-col items-center">
-							{/* Day Label - Bigger and Bolder */}
-							<div className="mb-4 sm:mb-6 text-center">
-								<div className="text-lg sm:text-xl font-black text-white mb-1">
-									{email.day}
-								</div>
-								<div className="text-sm text-zinc-400 font-medium">
-									{email.time}
-								</div>
-							</div>
+				{/* Carousel Container */}
+				<div className="relative max-w-4xl mx-auto">
+					{/* Navigation Buttons */}
+					<button
+						onClick={prevEmail}
+						aria-label="Previous email"
+						className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-x-1 group"
+					>
+						<ChevronLeft className="w-6 h-6 text-white group-hover:text-emerald-400 transition-colors" />
+					</button>
+					<button
+						onClick={nextEmail}
+						aria-label="Next email"
+						className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300 hover:translate-x-1 group"
+					>
+						<ChevronRight className="w-6 h-6 text-white group-hover:text-emerald-400 transition-colors" />
+					</button>
 
-							<TiltCard>
-								<div className="relative w-full max-w-[280px] sm:max-w-[320px] mx-auto overflow-hidden">
-									<IPhoneShell
-										aria-label={`Premium email preview for ${email.day} showing 5 job matches`}
-									>
-										{renderContent(email)}
-									</IPhoneShell>
+					{/* Carousel Content */}
+					<div className="relative overflow-hidden">
+						<AnimatePresence mode="wait">
+							<motion.div
+								key={activeIndex}
+								initial={{ opacity: 0, x: 100 }}
+								animate={{ opacity: 1, x: 0 }}
+								exit={{ opacity: 0, x: -100 }}
+								transition={{ duration: 0.4, ease: "easeInOut" }}
+								className="flex flex-col items-center"
+							>
+								{/* Day Label */}
+								<div className="mb-6 sm:mb-8 text-center">
+									<div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent mb-2">
+										{PREMIUM_DAYS[activeIndex].day}
+									</div>
+									<div className="text-sm text-zinc-400 font-medium">
+										{PREMIUM_DAYS[activeIndex].time}
+									</div>
 								</div>
-							</TiltCard>
-						</div>
-					))}
+
+								<TiltCard>
+									<div className="relative w-full max-w-[280px] sm:max-w-[320px] mx-auto overflow-hidden">
+										<IPhoneShell
+											aria-label={`Premium email preview for ${PREMIUM_DAYS[activeIndex].day} showing 5 job matches`}
+										>
+											{renderContent(PREMIUM_DAYS[activeIndex])}
+										</IPhoneShell>
+									</div>
+								</TiltCard>
+							</motion.div>
+						</AnimatePresence>
+					</div>
+
+					{/* Dot Indicators */}
+					<div className="flex items-center justify-center gap-3 mt-8">
+						{PREMIUM_DAYS.map((_, index) => (
+							<button
+								key={index}
+								onClick={() => goToEmail(index)}
+								aria-label={`Go to ${PREMIUM_DAYS[index].day} email`}
+								className={`relative w-3 h-3 rounded-full transition-all duration-300 ${
+									index === activeIndex
+										? "bg-emerald-500 w-8 scale-110"
+										: "bg-white/20 hover:bg-white/40"
+								}`}
+							>
+								{index === activeIndex && (
+									<motion.div
+										layoutId="activeDot"
+										className="absolute inset-0 rounded-full bg-emerald-500"
+										transition={{ type: "spring", stiffness: 500, damping: 30 }}
+									/>
+								)}
+							</button>
+						))}
+					</div>
+
+					{/* Day Labels Below */}
+					<div className="flex items-center justify-center gap-6 mt-6">
+						{PREMIUM_DAYS.map((email, index) => (
+							<button
+								key={email.day}
+								onClick={() => goToEmail(index)}
+								className={`text-sm font-medium transition-all duration-300 ${
+									index === activeIndex
+										? "text-emerald-400 scale-110"
+										: "text-zinc-500 hover:text-zinc-300"
+								}`}
+							>
+								{email.day}
+							</button>
+						))}
+					</div>
 				</div>
 			</div>
 		</section>
