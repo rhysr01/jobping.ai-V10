@@ -115,7 +115,7 @@ export default function Hero() {
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2, duration: 0.6 }}
-						className="text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-extrabold tracking-tight mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible"
+						className="font-display text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-extrabold tracking-tight mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible"
 						style={{ wordSpacing: '0.05em', letterSpacing: '-0.02em' }}
 					>
 						{/* Silver Silk gradient: purple-500/80 (20%) → zinc-100 (50%) → purple-500/80 (80%) */}

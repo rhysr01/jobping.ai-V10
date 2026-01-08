@@ -56,7 +56,7 @@ export default function SocialProofRow() {
 					transition={{ duration: 0.5 }}
 					className="mx-auto max-w-3xl text-center mb-8"
 				>
-					<h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-6">
+					<h3 className="font-display text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-6">
 						What's In Every Email
 					</h3>
 				</motion.div>

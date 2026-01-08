@@ -40,7 +40,7 @@ export default function Footer() {
 									</svg>
 								</div>
 							</div>
-							<h3 className="text-xl font-bold bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent">
+							<h3 className="font-display text-xl font-bold bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent">
 								JobPing
 							</h3>
 						</div>

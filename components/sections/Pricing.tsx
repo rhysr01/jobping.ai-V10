@@ -63,7 +63,7 @@ export default function Pricing() {
 					<TrendingUp size={14} />
 					Join 1,000+ Students Landing EU Roles
 				</span>
-				<h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
+				<h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
 					Stop Scrolling LinkedIn.
 					<br />
 					<span className="bg-gradient-to-r from-brand-300 via-white to-brand-300 bg-clip-text text-transparent">
@@ -125,7 +125,7 @@ export default function Pricing() {
 							</div>
 
 							<div className="mb-4 sm:mb-6">
-								<h3 className="text-xl sm:text-2xl font-black text-white mb-1">
+								<h3 className="font-display text-xl sm:text-2xl font-black text-white mb-1">
 													{tier.name}
 												</h3>
 												<p className={`text-sm font-medium mb-3 ${

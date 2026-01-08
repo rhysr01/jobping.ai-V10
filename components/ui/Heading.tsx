@@ -3,7 +3,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const headingVariants = cva("font-bold tracking-tight", {
+const headingVariants = cva("font-display font-bold tracking-tight", {
 	variants: {
 		level: {
 			display: "text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.1]", // Hero only
