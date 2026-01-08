@@ -89,7 +89,7 @@ export default function ScrollCTA() {
 						
 						<div className="relative flex items-center gap-4">
 							<div className="flex-1">
-								<p className="text-sm font-semibold text-white mb-1">
+								<p className="font-display text-sm font-semibold text-white mb-1">
 									{CTA_GET_MY_5_FREE_MATCHES}
 								</p>
 								<p className="text-xs text-zinc-400 hidden md:flex">
@@ -105,7 +105,7 @@ export default function ScrollCTA() {
 									});
 									setIsVisible(false);
 								}}
-								className="group/btn relative px-5 py-2.5 rounded-xl font-semibold text-white overflow-hidden min-h-[44px] flex items-center gap-2"
+								className="font-display group/btn relative px-5 py-2.5 rounded-xl font-semibold text-white overflow-hidden min-h-[44px] flex items-center gap-2"
 							>
 								{/* Gradient background */}
 								<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover/btn:from-emerald-600 group-hover/btn:to-emerald-700 transition-all duration-300" />

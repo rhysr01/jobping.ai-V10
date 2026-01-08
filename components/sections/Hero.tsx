@@ -170,7 +170,7 @@ export default function Hero() {
 						transition={{ delay: 0.42, duration: 0.6 }}
 						className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-transparent border border-brand-500/20 backdrop-blur-sm shadow-lg shadow-brand-500/5"
 					>
-						<p className="text-xs sm:text-sm font-bold text-white/90 mb-3 sm:mb-4 flex items-center gap-2">
+						<p className="font-display text-xs sm:text-sm font-bold text-white/90 mb-3 sm:mb-4 flex items-center gap-2">
 							<BrandIcons.Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-300 flex-shrink-0" />
 							Here's what we'll ask:
 						</p>
@@ -184,8 +184,8 @@ export default function Hero() {
 								</div>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 mb-1">
-										<span className="text-sm sm:text-base font-semibold text-white/90">Cities</span>
-										<span className="text-xs text-emerald-400 font-medium bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+										<span className="font-display text-sm sm:text-base font-semibold text-white/90">Cities</span>
+										<span className="font-display text-xs text-emerald-400 font-medium bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
 											Pick up to 3
 										</span>
 									</div>

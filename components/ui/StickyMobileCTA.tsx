@@ -70,7 +70,7 @@ export default function StickyMobileCTA() {
 						<motion.div
 							whileHover={{ scale: 1.02 }}
 							whileTap={{ scale: 0.98 }}
-							className="group relative w-full min-h-[48px] px-6 py-3 rounded-xl font-semibold text-white overflow-hidden flex items-center justify-center gap-2"
+							className="font-display group relative w-full min-h-[48px] px-6 py-3 rounded-xl font-semibold text-white overflow-hidden flex items-center justify-center gap-2"
 						>
 							{/* Gradient background */}
 							<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300" />

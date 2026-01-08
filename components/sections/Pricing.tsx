@@ -59,7 +59,7 @@ export default function Pricing() {
 				viewport={{ once: true }}
 				className="mx-auto max-w-3xl text-center mb-10 sm:mb-12 px-4 sm:px-6"
 			>
-				<span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 sm:px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-300 mb-4">
+				<span className="font-display inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 sm:px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-300 mb-4">
 					<TrendingUp size={14} />
 					Join 1,000+ Students Landing EU Roles
 				</span>
@@ -73,7 +73,7 @@ export default function Pricing() {
 				<p className="text-zinc-400 text-base sm:text-lg md:text-xl">
 					Stop wasting hours scrolling job boards.
 					<br />
-					<span className="text-emerald-400 font-semibold">We do it in seconds.</span>
+					<span className="font-display text-emerald-400 font-semibold">We do it in seconds.</span>
 				</p>
 			</motion.div>
 
@@ -106,7 +106,7 @@ export default function Pricing() {
 								{/* Popular badge with emerald gradient */}
 								<div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
 									<div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30">
-										<span className="text-xs font-bold text-white uppercase tracking-wider">
+										<span className="font-display text-xs font-bold text-white uppercase tracking-wider">
 											🔥 Most Popular
 										</span>
 									</div>
@@ -151,7 +151,7 @@ export default function Pricing() {
 													<span className="text-zinc-400 text-lg font-medium">/month</span>
 												</div>
 												{tier.savings && (
-													<p className="text-sm text-emerald-400 mt-2 font-medium">
+													<p className="font-display text-sm text-emerald-400 mt-2 font-medium">
 														{tier.savings}
 													</p>
 												)}
@@ -189,7 +189,7 @@ export default function Pricing() {
 										location: "pricing",
 									})
 								}
-								className={`block w-full py-3.5 sm:py-4 rounded-xl font-bold text-center transition-all overflow-hidden relative group text-base sm:text-base ${
+								className={`font-display block w-full py-3.5 sm:py-4 rounded-xl font-bold text-center transition-all overflow-hidden relative group text-base sm:text-base ${
 									tier.popular
 										? "btn-cta-enhanced hover:shadow-[0_8px_40px_rgba(109,40,217,0.6)]"
 										: "btn-cta-secondary"

@@ -121,7 +121,7 @@ export default function Header() {
 									key={link.href}
 									href={link.href}
 									onClick={(e) => handleNavClick(e, link.href, link.scroll)}
-									className={`relative text-sm font-medium transition-colors group py-2 whitespace-nowrap ${
+									className={`font-display relative text-sm font-medium transition-colors group py-2 whitespace-nowrap ${
 										activeSection === link.href
 											? "text-white"
 											: "text-zinc-300 hover:text-white"
@@ -164,7 +164,7 @@ export default function Header() {
 									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
 									<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
 								</div>
-								<span className="text-xs font-medium text-zinc-300">
+								<span className="font-display text-xs font-medium text-zinc-300">
 									1,000+ students
 								</span>
 							</div>
@@ -178,7 +178,7 @@ export default function Header() {
 										location: "header",
 									});
 								}}
-								className="group relative px-6 py-3 rounded-xl font-semibold text-white overflow-hidden"
+								className="font-display group relative px-6 py-3 rounded-xl font-semibold text-white overflow-hidden"
 							>
 								{/* Gradient background */}
 								<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300" />

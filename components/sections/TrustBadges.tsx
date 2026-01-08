@@ -30,7 +30,7 @@ export default function TrustBadges() {
 					
 					{/* Badge */}
 					<div className="relative px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300 cursor-default">
-						<span className="flex items-center gap-2 text-xs font-medium text-white/90">
+						<span className="font-display flex items-center gap-2 text-xs font-medium text-white/90">
 							<badge.icon className="h-4 w-4 text-emerald-400 flex-shrink-0 group-hover:scale-110 transition-transform duration-300" />
 							{badge.text}
 						</span>
