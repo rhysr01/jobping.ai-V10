@@ -27,9 +27,21 @@ export class SemanticRetrievalService {
 		limit: number = 200,
 	): Promise<SemanticJob[]> {
 		try {
+			// Check if semantic search is available first
+			const isAvailable = await this.isSemanticSearchAvailable();
+			if (!isAvailable) {
+				console.warn("Semantic search not available - pgvector extension or embeddings missing");
+				return [];
+			}
+
 			// Step 1: Generate user embedding
 			const userEmbedding =
 				await embeddingService.generateUserEmbedding(userPrefs);
+
+			if (!userEmbedding || userEmbedding.length === 0) {
+				console.warn("Failed to generate user embedding");
+				return [];
+			}
 
 			// Step 2: Query jobs using embedding similarity
 			const cityFilter = Array.isArray(userPrefs.target_cities)
@@ -66,11 +78,21 @@ export class SemanticRetrievalService {
 			);
 
 			if (error) {
+				// Check if it's a vector operator error (pgvector not installed)
+				if (error.message?.includes("operator does not exist") || 
+				    error.message?.includes("vector") ||
+				    error.code === "42883") {
+					console.warn(
+						"pgvector extension not available - semantic search disabled",
+						error,
+					);
+					return [];
+				}
 				console.warn(
-					"Semantic search failed, falling back to keyword search:",
+					"Semantic search failed, falling back to rule-based matching:",
 					error,
 				);
-				return await this.getSemanticCandidatesFallback(userPrefs, limit);
+				return [];
 			}
 
 			// Transform results to match SemanticJob interface
@@ -81,44 +103,23 @@ export class SemanticRetrievalService {
 			})) as SemanticJob[];
 		} catch (error) {
 			console.warn("Semantic retrieval error:", error);
-			// Fallback to text-based search if embeddings not available
-			return await this.getSemanticCandidatesFallback(userPrefs, limit);
+			return [];
 		}
 	}
 
 	/**
 	 * Fallback to text-based semantic search if embeddings not available
+	 * NOTE: This function doesn't exist in the database, so we just return empty array
+	 * The matching engine will fall back to rule-based matching instead
 	 */
 	private async getSemanticCandidatesFallback(
 		userPrefs: UserPreferences,
 		limit: number,
 	): Promise<SemanticJob[]> {
-		try {
-			const semanticQuery = this.buildSemanticQuery(userPrefs);
-
-			const { data: jobs, error } = await this.supabase.rpc(
-				"search_jobs_semantic",
-				{
-					query_text: semanticQuery,
-					match_threshold: 0.3,
-					match_count: limit,
-				},
-			);
-
-			if (error) {
-				console.warn("Fallback semantic search also failed:", error);
-				return [];
-			}
-
-			return (jobs || []).map((job: any) => ({
-				...job,
-				semantic_score: job.semantic_score || 0,
-				embedding_distance: job.embedding_distance || 0,
-			})) as SemanticJob[];
-		} catch (error) {
-			console.warn("Fallback semantic retrieval error:", error);
-			return [];
-		}
+		// The search_jobs_semantic function doesn't exist in the database
+		// Just return empty array - matching engine will use rule-based matching instead
+		console.warn("Semantic search fallback not available - using rule-based matching");
+		return [];
 	}
 
 	/**

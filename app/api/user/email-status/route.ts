@@ -6,7 +6,11 @@ export async function GET(request: NextRequest) {
 	const email = searchParams.get('email');
 
 	if (!email) {
-		return NextResponse.json({ sent: false, error: 'Email required' }, { status: 400 });
+		return NextResponse.json({
+			sent: false,
+			error: 'email_required',
+			message: 'Please provide an email address.'
+		}, { status: 400 });
 	}
 
 	try {
@@ -29,8 +33,16 @@ export async function GET(request: NextRequest) {
 			});
 		}
 
-		return NextResponse.json({ sent: false, error: 'Email not found' });
+		return NextResponse.json({
+			sent: false,
+			error: 'email_not_found',
+			message: 'No account found with this email address.'
+		});
 	} catch (error) {
-		return NextResponse.json({ sent: false, error: 'Status check failed' });
+		return NextResponse.json({
+			sent: false,
+			error: 'status_check_failed',
+			message: 'Unable to check email status. Please try again later.'
+		});
 	}
 }

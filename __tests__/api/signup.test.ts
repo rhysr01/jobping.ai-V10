@@ -164,7 +164,7 @@ describe("POST /api/signup - Contract Tests", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(409);
-			expect(data.error).toBe("Email already registered");
+			expect(data.error).toBe("account_already_exists");
 			expect(data.code).toBe("DUPLICATE_EMAIL");
 		});
 
@@ -185,7 +185,7 @@ describe("POST /api/signup - Contract Tests", () => {
 			const data = await response.json();
 
 			expect(response.status).toBe(409); // Should still detect duplicate
-			expect(data.error).toBe("Email already registered");
+			expect(data.error).toBe("account_already_exists");
 		});
 	});
 

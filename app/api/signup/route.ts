@@ -85,7 +85,10 @@ export async function POST(req: NextRequest) {
 				timestamp: new Date().toISOString(),
 			});
 			return NextResponse.json(
-				{ error: "Missing required fields" },
+				{
+					error: "missing_required_fields",
+					message: "Please fill in all required fields: email, full name, and at least one city."
+				},
 				{ status: 400 },
 			);
 		}
@@ -104,7 +107,8 @@ export async function POST(req: NextRequest) {
 			apiLogger.info("User already exists", { email: normalizedEmail });
 			return NextResponse.json(
 				{
-					error: "Email already registered",
+					error: "account_already_exists",
+					message: "An account with this email already exists. Try signing in instead, or use a different email.",
 					code: "DUPLICATE_EMAIL",
 				},
 				{ status: 409 },

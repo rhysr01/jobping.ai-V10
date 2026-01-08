@@ -8,8 +8,8 @@
 
 import { createMocks } from "node-mocks-http";
 import { POST } from "@/app/api/signup/free/route";
-import { getDatabaseClient } from "@/Utils/databasePool";
 import { apiLogger } from "@/lib/api-logger";
+import { getDatabaseClient } from "@/Utils/databasePool";
 
 // Mock external dependencies but keep database real
 jest.mock("@/lib/api-logger", () => ({
@@ -29,7 +29,9 @@ jest.mock("@/Utils/productionRateLimiter", () => ({
 // Mock country utilities
 jest.mock("@/lib/countryFlags", () => ({
 	getCountryFromCity: jest.fn().mockReturnValue("GB"),
-	getCountryVariations: jest.fn().mockReturnValue(["UK", "United Kingdom", "GB"]),
+	getCountryVariations: jest
+		.fn()
+		.mockReturnValue(["UK", "United Kingdom", "GB"]),
 }));
 
 // Mock Inngest
@@ -48,9 +50,11 @@ jest.mock("@/Utils/business-rules/quality-thresholds", () => ({
 		maxScore: 0.95,
 	}),
 	filterHighQualityJobs: jest.fn().mockImplementation((jobs) => jobs),
-	selectJobsForDistribution: jest.fn().mockImplementation((allJobs, highQualityJobs, targetCount) =>
-		highQualityJobs.slice(0, targetCount)
-	),
+	selectJobsForDistribution: jest
+		.fn()
+		.mockImplementation((allJobs, highQualityJobs, targetCount) =>
+			highQualityJobs.slice(0, targetCount),
+		),
 }));
 
 // Mock matching engine
@@ -69,7 +73,9 @@ jest.mock("@/Utils/consolidatedMatchingV2", () => ({
 
 // Mock job distribution
 jest.mock("@/Utils/matching/jobDistribution", () => ({
-	distributeJobsWithDiversity: jest.fn().mockImplementation((jobs) => jobs.slice(0, 5)),
+	distributeJobsWithDiversity: jest
+		.fn()
+		.mockImplementation((jobs) => jobs.slice(0, 5)),
 }));
 
 describe("POST /api/signup/free - Contract Tests", () => {
@@ -112,7 +118,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(400);
 
 			const data = await response.json();
-			expect(data.error).toBe("Invalid input");
+			expect(data.error).toBe("invalid_input");
 			expect(data.details).toBeDefined();
 		});
 
@@ -131,7 +137,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(400);
 
 			const data = await response.json();
-			expect(data.error).toBe("Invalid input");
+			expect(data.error).toBe("invalid_input");
 		});
 
 		it("should return 400 for missing cities", async () => {
@@ -148,7 +154,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(400);
 
 			const data = await response.json();
-			expect(data.error).toBe("Invalid input");
+			expect(data.error).toBe("invalid_input");
 		});
 
 		it("should return 400 for invalid name format", async () => {
@@ -167,7 +173,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(400);
 
 			const data = await response.json();
-			expect(data.error).toBe("Invalid input");
+			expect(data.error).toBe("invalid_input");
 		});
 
 		it("should accept valid input", async () => {
@@ -215,8 +221,8 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(409);
 
 			const data = await response.json();
-			expect(data.error).toBe("already_signed_up");
-			expect(data.message).toContain("already tried Free");
+			expect(data.error).toBe("account_already_exists");
+			expect(data.message).toContain("already have a JobPing account");
 			expect(data.redirectToMatches).toBe(true);
 		});
 
@@ -236,7 +242,9 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(response.status).toBe(409);
 
 			// Check if cookie is set
-			expect(response.cookies.get("free_user_email")?.value).toBe(testUserEmail);
+			expect(response.cookies.get("free_user_email")?.value).toBe(
+				testUserEmail,
+			);
 		});
 	});
 
@@ -468,10 +476,13 @@ describe("POST /api/signup/free - Contract Tests", () => {
 	describe("Error Handling", () => {
 		it("should handle database errors gracefully", async () => {
 			// Mock database to fail during user creation
-			const originalGetDatabaseClient = require("@/Utils/databasePool").getDatabaseClient;
-			jest.mocked(require("@/Utils/databasePool").getDatabaseClient).mockImplementation(() => {
-				throw new Error("Database connection failed");
-			});
+			const originalGetDatabaseClient =
+				require("@/Utils/databasePool").getDatabaseClient;
+			jest
+				.mocked(require("@/Utils/databasePool").getDatabaseClient)
+				.mockImplementation(() => {
+					throw new Error("Database connection failed");
+				});
 
 			const { req } = createMocks({
 				method: "POST",
@@ -491,7 +502,8 @@ describe("POST /api/signup/free - Contract Tests", () => {
 			expect(data.error).toBe("Internal server error");
 
 			// Restore
-			require("@/Utils/databasePool").getDatabaseClient = originalGetDatabaseClient;
+			require("@/Utils/databasePool").getDatabaseClient =
+				originalGetDatabaseClient;
 		});
 
 		it("should handle invalid JSON", async () => {
@@ -544,11 +556,15 @@ describe("POST /api/signup/free - Contract Tests", () => {
 		it("should respect rate limiting", async () => {
 			const mockRateLimitResponse = new Response(
 				JSON.stringify({ error: "Rate limit exceeded" }),
-				{ status: 429 }
+				{ status: 429 },
 			);
 
-			const { getProductionRateLimiter } = require("@/Utils/productionRateLimiter");
-			getProductionRateLimiter().middleware.mockResolvedValue(mockRateLimitResponse);
+			const {
+				getProductionRateLimiter,
+			} = require("@/Utils/productionRateLimiter");
+			getProductionRateLimiter().middleware.mockResolvedValue(
+				mockRateLimitResponse,
+			);
 
 			const { req } = createMocks({
 				method: "POST",
@@ -606,7 +622,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 						success: true,
 						matchCount: expect.any(Number),
 						userId: expect.any(Number),
-					})
+					}),
 				);
 			}
 		});

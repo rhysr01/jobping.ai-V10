@@ -58,8 +58,30 @@ export class ConsolidatedMatchingEngine {
 	} | null = null;
 
 	constructor(openaiApiKey?: string) {
+		// Helper function to clean API key
+		const cleanApiKey = (key: string): string => {
+			return key
+				.trim()
+				.replace(/^["']|["']$/g, "") // Remove surrounding quotes
+				.replace(/\n/g, "") // Remove newlines
+				.replace(/\r/g, "") // Remove carriage returns
+				.trim();
+		};
+
 		if (openaiApiKey) {
-			this.openai = new OpenAI({ apiKey: openaiApiKey });
+			const cleanedKey = cleanApiKey(openaiApiKey);
+			if (cleanedKey.startsWith("sk-")) {
+				this.openai = new OpenAI({ apiKey: cleanedKey });
+			}
+		} else {
+			// Fallback to environment variable if not provided
+			const envKey = process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY;
+			if (envKey) {
+				const cleanedKey = cleanApiKey(envKey);
+				if (cleanedKey.startsWith("sk-")) {
+					this.openai = new OpenAI({ apiKey: cleanedKey });
+				}
+			}
 		}
 	}
 

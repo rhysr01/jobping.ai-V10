@@ -18,6 +18,7 @@ interface FilterBuilder {
 	order(column: string, options?: { ascending?: boolean }): FilterBuilder;
 	limit(count: number): Promise<MockResponse>;
 	single(): Promise<MockResponse>;
+	maybeSingle(): Promise<MockResponse>;
 	upsert(data: any): Promise<MockResponse>;
 	insert(data: any): Promise<MockResponse>;
 	update(data: any): FilterBuilder;
@@ -188,6 +189,11 @@ class MockFilterBuilder implements FilterBuilder {
 	}
 
 	single(): Promise<MockResponse> {
+		this.isSingle = true;
+		return this.execute();
+	}
+
+	maybeSingle(): Promise<MockResponse> {
 		this.isSingle = true;
 		return this.execute();
 	}

@@ -462,7 +462,16 @@ export async function POST(request: NextRequest) {
 		let matchedJobsRaw: any[] = [];
 
 		// Check if OpenAI API key is available (same way as embedding service)
-		const openaiKey = process.env.OPENAI_API_KEY;
+		const rawOpenaiKey = process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY;
+
+		// Clean the API key (remove quotes, newlines, whitespace) - same as embedding service
+		const openaiKey = rawOpenaiKey
+			?.trim()
+			.replace(/^["']|["']$/g, "") // Remove surrounding quotes
+			.replace(/\n/g, "") // Remove newlines
+			.replace(/\r/g, "") // Remove carriage returns
+			.trim();
+
 		const hasOpenAIKey = openaiKey && openaiKey.startsWith("sk-");
 
 		if (!hasOpenAIKey) {
@@ -471,7 +480,8 @@ export async function POST(request: NextRequest) {
 				{
 					email: normalizedEmail,
 					jobCount: jobsForMatching.length,
-					openaiKeyStatus: openaiKey ? "set but invalid format" : "not set",
+					openaiKeyStatus: rawOpenaiKey ? "set but invalid format" : "not set",
+					cleanedKeyPreview: openaiKey ? `${openaiKey.substring(0, 10)}...` : "none",
 				},
 			);
 

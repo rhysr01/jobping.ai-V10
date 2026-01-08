@@ -28,14 +28,20 @@ export async function POST(request: NextRequest) {
 		// Validate input
 		if (!cities || !Array.isArray(cities) || cities.length === 0) {
 			return NextResponse.json(
-				{ error: "Cities array is required" },
+				{
+					error: "cities_required",
+					message: "Please select at least one city to preview job matches."
+				},
 				{ status: 400 },
 			);
 		}
 
 		if (!careerPath || typeof careerPath !== "string") {
 			return NextResponse.json(
-				{ error: "Career path is required" },
+				{
+					error: "career_path_required",
+					message: "Please select a career path to preview job matches."
+				},
 				{ status: 400 },
 			);
 		}
@@ -47,7 +53,10 @@ export async function POST(request: NextRequest) {
 			typeof visaSponsorship !== "string"
 		) {
 			return NextResponse.json(
-				{ error: "Invalid visa sponsorship value" },
+				{
+					error: "invalid_visa_sponsorship",
+					message: "Please select a valid visa sponsorship preference."
+				},
 				{ status: 400 },
 			);
 		}
