@@ -114,8 +114,8 @@ export default function Hero() {
 						<GradientText variant="brand" className="inline-block">Get 5 early-career</GradientText>{" "}
 						<GradientText variant="brand" className="inline-block">job matches</GradientText>{" "}
 						<span className="text-content-primary inline-block">
-							instantly
-						</span>{" "}
+							instantly—
+						</span>
 						<GradientText variant="brand" className="inline-block text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-black">
 						free
 					</GradientText>

@@ -10,7 +10,7 @@ export default function TrustBadges() {
 			whileInView={{ opacity: 1, y: 0 }}
 			viewport={{ once: true }}
 			transition={{ duration: 0.6 }}
-			className="mt-6 flex items-center justify-center gap-4 px-4 py-3 rounded-full border border-white/10 bg-black/40 backdrop-blur-sm"
+			className="mt-6 flex items-center justify-center gap-4 px-4 py-3 rounded-full bg-white/[0.03] backdrop-blur-[12px] border border-white/8 shadow-lg shadow-white/5"
 		>
 			<span className="flex items-center gap-1.5 text-xs font-semibold text-white/90">
 				<BrandIcons.CheckCircle className="h-3.5 w-3.5 text-brand-400 flex-shrink-0" />

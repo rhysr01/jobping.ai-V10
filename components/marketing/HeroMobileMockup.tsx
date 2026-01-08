@@ -128,7 +128,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 	const displayJobs = jobs.length > 0 ? jobs : FALLBACK_JOBS;
 
 	return (
-		<div className="relative mx-auto w-full max-w-[320px] lg:max-w-[380px]">
+		<div className="relative mx-auto w-full max-w-[320px] lg:max-w-[380px] transform perspective-1000 rotate-y-[-8deg] rotate-x-[2deg] transition-transform duration-300 hover:rotate-y-[-5deg] hover:rotate-x-[1deg] hover:translate-y-[-4px]">
 			<TiltCard>
 				{/* Screen Glow Container */}
 				<div className="relative">
@@ -143,7 +143,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 								{displayJobs.map((job, index) => (
 									<div
 										key={index}
-										className="rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur-[12px] p-2.5 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/12"
+										className="rounded-2xl bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/12 hover:transform hover:translate-y-[-2px] hover:shadow-[0_20px_40px_-10px_rgba(16,185,129,0.2)]"
 										style={{
 											boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
 										}}
@@ -153,11 +153,10 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 											<span
 												className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
 													job.matchScore >= 92
-														? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40"
-														: "bg-purple-500/30 text-purple-400 border border-purple-500/40"
+														? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border border-emerald-500/50"
+														: "bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-500/50"
 												}`}
 											>
-												{job.matchScore >= 92 ? "🔥 " : ""}
 												{job.matchScore}% Match
 											</span>
 											<div className="text-[10px] font-semibold text-white truncate ml-2">
@@ -179,7 +178,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 										{/* Match Reason */}
 										<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
 											<div className="text-[9px] font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
-												🤖 Why This Matches
+												Why This Matches
 											</div>
 											<p className="text-[10px] text-white leading-relaxed line-clamp-2">
 												{job.matchReason}

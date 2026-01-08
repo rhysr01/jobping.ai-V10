@@ -36,6 +36,15 @@
 	--z-sticky: 100;
 	--z-overlay: 1000;
 	--z-modal: 2000;
+
+	/* Typography Scale - 6 sizes as recommended */
+	--text-xs: 0.75rem;    /* 12px - fine print */
+	--text-sm: 0.875rem;   /* 14px - secondary */
+	--text-base: 1rem;     /* 16px - body */
+	--text-lg: 1.125rem;   /* 18px - lead */
+	--text-xl: 1.5rem;     /* 24px - H3 */
+	--text-2xl: 2rem;      /* 32px - H2 */
+	--text-4xl: 3.5rem;    /* 56px - H1 */
 }
 
 * {
@@ -457,14 +466,39 @@ form select {
 	@apply translate-y-0;
 }
 
-/* Enhanced CTA button variants with consistent animations */
+/* Enhanced CTA button variants with shine effect and premium animations */
 .btn-cta-enhanced {
-	@apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-base md:text-lg shadow-lg shadow-brand-500/30 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black;
+	@apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold text-base md:text-lg shadow-lg shadow-emerald-500/30 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black relative overflow-hidden;
+	border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.btn-cta-enhanced::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.2),
+		transparent
+	);
+	transition: left 0.5s;
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.btn-cta-enhanced:hover {
-		@apply from-brand-500 to-indigo-500 shadow-xl shadow-brand-500/50 -translate-y-0.5;
+		@apply from-emerald-500 to-emerald-600 -translate-y-1;
+		box-shadow:
+			0 12px 24px -8px rgba(16, 185, 129, 0.4),
+			0 0 0 1px rgba(16, 185, 129, 0.5);
+		border-color: rgba(16, 185, 129, 0.8);
+	}
+
+	.btn-cta-enhanced:hover::before {
+		left: 100%;
 	}
 }
 

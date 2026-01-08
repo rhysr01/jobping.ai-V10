@@ -216,13 +216,13 @@ export function calculateVisaConfidence(job: {
 export function getVisaConfidenceLabel(confidence: VisaConfidence): string {
 	switch (confidence) {
 		case "verified":
-			return "✅ Confirmed Sponsorship";
+			return "Confirmed Sponsorship";
 		case "likely":
-			return "🟡 Probable Sponsorship";
+			return "Probable Sponsorship";
 		case "local-only":
-			return "🔵 Possible Sponsorship";
+			return "Possible Sponsorship";
 		default:
-			return "❌ No Sponsorship";
+			return "No Sponsorship";
 	}
 }
 
@@ -242,9 +242,10 @@ export function getVisaConfidenceStyle(confidence: VisaConfidence): {
 	switch (confidence) {
 		case "verified":
 			return {
-				bgColor: "bg-zinc-800/50",
+				// Confirmed Sponsorship - Green theme
+				bgColor: "bg-emerald-500/15",
 				textColor: "text-emerald-400",
-				borderColor: "border-white/5",
+				borderColor: "border-emerald-500/30",
 				icon: "✅", // Keep for email compatibility
 				dotColor: "bg-emerald-500", // Status dot
 				emailBgColor: "#065F46", // emerald-800
@@ -253,9 +254,10 @@ export function getVisaConfidenceStyle(confidence: VisaConfidence): {
 			};
 		case "likely":
 			return {
-				bgColor: "bg-zinc-800/50",
+				// Probable Sponsorship - Yellow theme
+				bgColor: "bg-amber-500/15",
 				textColor: "text-amber-400",
-				borderColor: "border-white/5",
+				borderColor: "border-amber-500/30",
 				icon: "⚠️", // Keep for email compatibility
 				dotColor: "bg-amber-500", // Status dot
 				emailBgColor: "#78350F", // amber-900
@@ -264,14 +266,15 @@ export function getVisaConfidenceStyle(confidence: VisaConfidence): {
 			};
 		case "local-only":
 			return {
-				bgColor: "bg-zinc-800/50",
-				textColor: "text-zinc-400",
-				borderColor: "border-white/5",
+				// Possible Sponsorship - Blue theme
+				bgColor: "bg-blue-500/15",
+				textColor: "text-blue-400",
+				borderColor: "border-blue-500/30",
 				icon: "📍", // Keep for email compatibility
-				dotColor: "bg-zinc-500", // Status dot
-				emailBgColor: "#27272A", // zinc-800
-				emailTextColor: "#A1A1AA", // zinc-400
-				emailBorderColor: "#52525B", // zinc-600
+				dotColor: "bg-blue-500", // Status dot
+				emailBgColor: "#1E3A8A", // blue-800
+				emailTextColor: "#3B82F6", // blue-500
+				emailBorderColor: "#2563EB", // blue-600
 			};
 		default:
 			return {
