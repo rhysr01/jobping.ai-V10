@@ -256,9 +256,9 @@ export default function CompanyLogos() {
 						whileInView={{ opacity: 1, scale: 1 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.4, delay: 0.1 }}
-						className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase text-brand-200 shadow-lg shadow-brand-500/10"
+						className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase text-emerald-200 shadow-lg shadow-emerald-500/20 backdrop-blur-sm"
 					>
-						<BrandIcons.Briefcase className="h-4 w-4 text-brand-300" />
+						<BrandIcons.Briefcase className="h-4 w-4 text-emerald-300" />
 						Featured Companies
 					</motion.span>
 					<h2 className="section-title mt-4 mb-3 text-content-heading">
@@ -309,7 +309,10 @@ export default function CompanyLogos() {
 								}}
 								className="flex-shrink-0 snap-start"
 							>
-								<div className="relative h-[180px] w-[200px] flex items-center justify-center rounded-2xl glass-card elevation-2 p-6 transition-all duration-300 ease-out hover:elevation-3 hover:border-purple-500/50 group overflow-hidden">
+								<div className="relative h-[180px] w-[200px] flex items-center justify-center rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-6 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-1 group overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(16,185,129,0.15)]">
+									{/* Glow effect on hover */}
+									<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
+									
 									{/* Animated shimmer sweep */}
 									<motion.div
 										initial={{ x: "-100%" }}
@@ -324,7 +327,7 @@ export default function CompanyLogos() {
 									/>
 
 									{/* Inner glow with light source */}
-									<div className="absolute inset-[1px] bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-2xl pointer-events-none" />
+									<div className="absolute inset-[1px] bg-gradient-to-br from-emerald-500/[0.08] via-transparent to-white/[0.04] rounded-2xl pointer-events-none" />
 
 									{/* Logo with improved error handling */}
 									<div className="relative z-10 flex items-center justify-center w-full h-full">
@@ -333,7 +336,7 @@ export default function CompanyLogos() {
 											alt={`${company.name} company logo`}
 											width={140}
 											height={140}
-											className="object-contain h-[140px] w-auto max-w-[160px] opacity-90 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-125 filter drop-shadow-[0_4px_12px_rgba(139,92,246,0.4)]"
+											className="object-contain h-[140px] w-auto max-w-[160px] opacity-90 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-125 filter drop-shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
 											onError={(e) => {
 												console.error(
 													`Failed to load logo: ${company.logoPath} for ${company.name}`,

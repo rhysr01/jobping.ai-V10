@@ -56,7 +56,7 @@ export default function SocialProofRow() {
 					transition={{ duration: 0.5 }}
 					className="mx-auto max-w-3xl text-center mb-8"
 				>
-					<h3 className="text-2xl font-semibold text-white mb-6">
+					<h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-6">
 						What's In Every Email
 					</h3>
 				</motion.div>
@@ -80,20 +80,23 @@ export default function SocialProofRow() {
 										y: -4,
 										transition: { type: "spring", stiffness: 300, damping: 20 },
 									}}
-									className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl glass-card elevation-2 px-6 py-6 transition-all duration-300 hover:elevation-3 hover:border-purple-500/30 hover:scale-[1.02] active:scale-[0.98]"
+									className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] px-6 py-6 transition-all duration-500 hover:bg-white/[0.06] hover:border-emerald-500/30 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98] shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(16,185,129,0.15)]"
 								>
+									{/* Glow effect on hover */}
+									<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
+									
 									{/* Glowing divider */}
 									{index < items.length - 1 && (
-										<span className="hidden md:inline absolute right-0 top-1/2 h-12 w-px bg-gradient-to-b from-transparent via-purple-500/40 to-transparent -translate-y-1/2" />
+										<span className="hidden md:inline absolute right-0 top-1/2 h-12 w-px bg-gradient-to-b from-transparent via-emerald-500/40 to-transparent -translate-y-1/2" />
 									)}
 
 									{/* Icon with glow effect */}
 									<motion.span
-										className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/30 to-purple-600/20 border-t border-purple-500/40 border-r border-purple-500/30 border-b border-purple-500/20 border-l border-purple-500/30 text-purple-200 shadow-[0_4px_16px_rgba(139,92,246,0.3)] group-hover:shadow-[0_8px_24px_rgba(139,92,246,0.5)] transition-all duration-300"
+										className="relative inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border border-emerald-500/40 text-emerald-200 shadow-[0_4px_16px_rgba(16,185,129,0.3)] group-hover:shadow-[0_8px_24px_rgba(16,185,129,0.5)] transition-all duration-300"
 										whileHover={{ scale: 1.15, rotate: [0, -10, 10, 0] }}
 									>
 										{/* Inner glow */}
-										<div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent rounded-xl" />
+										<div className="absolute inset-0 bg-gradient-to-br from-emerald-300/30 to-transparent rounded-xl" />
 										<div className="relative z-10">{item.icon}</div>
 									</motion.span>
 
