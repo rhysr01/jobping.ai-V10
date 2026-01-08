@@ -58,7 +58,7 @@ export default function FAQ() {
 					transition={{ duration: 0.6 }}
 					className="max-w-3xl mx-auto"
 				>
-					<h2 className="text-2xl font-semibold text-content-heading mb-2 text-center tracking-tight">
+					<h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-emerald-100 to-white bg-clip-text text-transparent mb-2 text-center tracking-tight">
 						Frequently Asked Questions
 					</h2>
 					<p className="text-sm text-content-muted text-center mb-6">
@@ -92,9 +92,9 @@ export default function FAQ() {
 										{/* Chevron with glow */}
 										<motion.div
 											animate={{ rotate: isOpen ? 180 : 0 }}
-											className="flex-shrink-0 p-2 rounded-full bg-purple-500/10 border border-purple-500/20 group-hover:bg-purple-500/20 group-hover:border-purple-500/30 transition-all duration-200"
+											className="flex-shrink-0 p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/30 transition-all duration-200"
 										>
-											<BrandIcons.ChevronDown className="h-5 w-5 text-purple-300" />
+											<BrandIcons.ChevronDown className="h-5 w-5 text-emerald-300" />
 										</motion.div>
 									</button>
 
@@ -108,7 +108,7 @@ export default function FAQ() {
 												className="overflow-hidden"
 											>
 												{/* Answer with left border accent */}
-												<div className="pt-4 pl-3 pr-3 pb-2 ml-2 glass-card elevation-1 border-l-2 border-purple-500/30 rounded-r-lg">
+												<div className="pt-4 pl-3 pr-3 pb-2 ml-2 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] border-l-2 border-l-emerald-500/30 rounded-r-lg">
 													<p className="text-sm text-content-secondary leading-relaxed">
 														{faq.answer}
 													</p>

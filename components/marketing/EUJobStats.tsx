@@ -185,9 +185,9 @@ export function EUJobStats() {
 						whileInView={{ opacity: 1, scale: 1 }}
 						viewport={{ once: true }}
 						transition={{ duration: 0.4, delay: 0.1 }}
-						className="inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase text-brand-200 shadow-lg shadow-brand-500/10 mb-4"
+						className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 text-[11px] font-medium tracking-[0.16em] uppercase text-emerald-200 shadow-lg shadow-emerald-500/20 backdrop-blur-sm mb-4"
 					>
-						<TrendingUp className="h-4 w-4 text-brand-300" />
+						<TrendingUp className="h-4 w-4 text-emerald-300" />
 						Live Data
 					</motion.div>
 					<Heading
