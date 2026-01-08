@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Zap, Mail, Clock, Star, TrendingUp, Shield } from "lucide-react";
+import { Check, Zap, Mail, Star, TrendingUp, Shield } from "lucide-react";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import SocialProofTicker from "@/components/ui/SocialProofTicker";
@@ -87,22 +87,29 @@ export default function Pricing() {
 								whileInView={{ opacity: 1, y: 0 }}
 								viewport={{ once: true }}
 								transition={{ delay: index * 0.1 }}
-								className={tier.popular ? "md:scale-105 md:-mt-4" : ""}
+								className={tier.popular ? "md:scale-105 md:-mt-4 relative" : ""}
 							>
+								{/* Premium Card Glow Effect */}
+								{tier.popular && (
+									<div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-emerald-500/30 to-teal-500/20 rounded-3xl blur-2xl opacity-75" />
+								)}
 						<TiltCard>
 							<div
 								className={`relative flex flex-col h-full rounded-3xl border p-6 sm:p-8 transition-all ${
 									tier.popular
-										? "border-brand-500/60 bg-gradient-to-b from-brand-600/10 via-surface-elevated/40 to-surface-base shadow-[0_0_60px_rgba(109,40,217,0.25)]"
-										: "border-border-subtle bg-surface-base hover:border-white/20"
+										? "border-emerald-500/30 bg-gradient-to-b from-zinc-900 to-black shadow-[0_20px_50px_rgba(16,185,129,0.15)]"
+										: "border-border-subtle bg-white/[0.02] backdrop-blur-xl hover:border-white/20"
 								}`}
 							>
 						{tier.popular && (
 							<>
-								{/* Animated glow - Brand purple */}
-								<div className="absolute -inset-[1px] bg-gradient-to-r from-brand-600 via-brand-500 to-brand-600 rounded-3xl opacity-50 blur-xl" />
-								<div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-2.5 rounded-full text-xs font-black text-white uppercase tracking-wider z-20 shadow-[0_0_30px_rgba(109,40,217,0.6)] border-2 border-brand-300/50">
-									{tier.badge}
+								{/* Popular badge with emerald gradient */}
+								<div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+									<div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30">
+										<span className="text-xs font-bold text-white uppercase tracking-wider">
+											🔥 Most Popular
+										</span>
+									</div>
 								</div>
 							</>
 						)}
@@ -111,10 +118,10 @@ export default function Pricing() {
 							{/* Icon */}
 							<div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl mb-4 sm:mb-6 ${
 								tier.popular 
-									? "bg-gradient-to-br from-brand-600 to-brand-500 shadow-lg shadow-brand-600/50" 
+									? "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 shadow-lg shadow-emerald-500/20" 
 									: "bg-white/5 border border-white/10"
 							}`}>
-								<Icon size={20} className={`sm:w-6 sm:h-6 ${tier.popular ? "text-white" : "text-zinc-400"}`} />
+								<Icon size={20} className={`sm:w-6 sm:h-6 ${tier.popular ? "text-emerald-400" : "text-zinc-400"}`} />
 							</div>
 
 							<div className="mb-4 sm:mb-6">
@@ -136,18 +143,17 @@ export default function Pricing() {
 												<div className="flex items-baseline gap-2">
 													<span className={`text-5xl font-black ${
 														tier.popular 
-															? "bg-gradient-to-r from-brand-300 to-white bg-clip-text text-transparent" 
+															? "bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent" 
 															: "text-white"
 													}`}>
 														€{tier.price}
 													</span>
-													<span className="text-zinc-500 text-lg font-medium">/month</span>
+													<span className="text-zinc-400 text-lg font-medium">/month</span>
 												</div>
 												{tier.savings && (
-													<div className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1">
-														<Clock size={12} />
+													<p className="text-sm text-emerald-400 mt-2 font-medium">
 														{tier.savings}
-													</div>
+													</p>
 												)}
 											</div>
 

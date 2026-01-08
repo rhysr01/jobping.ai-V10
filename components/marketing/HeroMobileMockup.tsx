@@ -143,22 +143,31 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 								{displayJobs.map((job, index) => (
 									<div
 										key={index}
-										className="rounded-2xl bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/12 hover:transform hover:translate-y-[-2px] hover:shadow-[0_20px_40px_-10px_rgba(16,185,129,0.2)]"
-										style={{
-											boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
-										}}
+										className="group relative"
 									>
-										{/* Match Score & Company */}
-										<div className="flex items-center justify-between mb-1.5">
-											<span
-												className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+										{/* Glow effect on hover */}
+										<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
+										
+										{/* Card */}
+										<div
+											className="relative rounded-2xl bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-1"
+											style={{
+												boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+											}}
+										>
+											{/* Match Score & Company */}
+											<div className="flex items-center justify-between mb-1.5">
+												{/* Custom Match Badge - No Emoji */}
+												<div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg ${
 													job.matchScore >= 92
-														? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border border-emerald-500/50"
-														: "bg-gradient-to-r from-purple-500 to-purple-600 text-white border border-purple-500/50"
-												}`}
-											>
-												{job.matchScore}% Match
-											</span>
+														? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
+														: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
+												}`}>
+													<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+													<span className="text-[10px] font-bold text-white">
+														{job.matchScore}% Match
+													</span>
+												</div>
 											<div className="text-[10px] font-semibold text-white truncate ml-2">
 												{job.company}
 											</div>
@@ -193,6 +202,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 											<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-[9px] font-semibold">
 												{job.type}
 											</span>
+										</div>
 										</div>
 									</div>
 								))}
