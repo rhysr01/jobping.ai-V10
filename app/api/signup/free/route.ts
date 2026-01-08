@@ -63,7 +63,11 @@ export async function POST(request: NextRequest) {
 				email: body.email,
 			});
 			return NextResponse.json(
-				{ error: "Invalid input", details: validationResult.error.issues },
+				{
+					error: "invalid_input",
+					message: "Please check your information and try again. All fields are required and must be valid.",
+					details: validationResult.error.issues
+				},
 				{ status: 400 },
 			);
 		}
@@ -99,8 +103,8 @@ export async function POST(request: NextRequest) {
 			// This allows them to access /matches even if cookie was lost
 			const response = NextResponse.json(
 				{
-					error: "already_signed_up",
-					message: "You already tried Free. Redirecting to your matches...",
+					error: "account_already_exists",
+					message: "Looks like you already have a JobPing account! Taking you to your matches...",
 					redirectToMatches: true,
 				},
 				{ status: 409 },

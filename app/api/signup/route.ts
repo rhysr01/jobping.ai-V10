@@ -192,7 +192,8 @@ export async function POST(req: NextRequest) {
 				});
 				return NextResponse.json(
 					{
-						error: "Email already registered",
+						error: "account_already_exists",
+						message: "An account with this email already exists. Try signing in instead, or use a different email.",
 						code: "DUPLICATE_EMAIL",
 					},
 					{ status: 409 },
