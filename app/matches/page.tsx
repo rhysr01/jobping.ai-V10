@@ -670,28 +670,34 @@ function MatchesPageContent() {
 											delay: isDismissing ? 0 : index * 0.1,
 											ease: "easeInOut",
 										}}
-										className="glass-card elevation-2 p-4 md:p-6 pb-6 hover:elevation-3 transition-all duration-300 hover:-translate-y-1.5 hover:scale-[1.01] hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 overflow-hidden relative"
+										className="group relative rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-4 md:p-6 pb-6 transition-all duration-500 hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-1 hover:scale-[1.01] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(16,185,129,0.15)]"
 										role="listitem"
 										aria-labelledby={`job-title-${job.id}`}
 									>
+										{/* Emerald glow on hover */}
+										<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
+										
 										{/* Hot Match Badge - Top Right Corner (92%+ match score) */}
 										{job.match_score && job.match_score >= 0.92 && (
-											<HotMatchBadge />
+											<div className="relative z-10">
+												<HotMatchBadge />
+											</div>
 										)}
 
 										{/* Top Row: Job Number + Match Score + Visa Confidence */}
-										<div className="flex items-center gap-2.5 mb-3 flex-wrap">
-											<span className="text-xs font-bold text-brand-400 bg-brand-500/20 px-2.5 py-1 rounded-full">
+										<div className="relative z-10 flex items-center gap-2.5 mb-3 flex-wrap">
+											<span className="text-xs font-bold text-emerald-400 bg-emerald-500/20 px-2.5 py-1 rounded-full border border-emerald-500/30">
 												#{index + 1}
 											</span>
 											{job.match_score && (
 												<span
-													className={`text-xs md:text-sm font-semibold px-2.5 py-1 rounded-full ${
+													className={`inline-flex items-center gap-1.5 text-xs md:text-sm font-bold px-3 py-1.5 rounded-lg border ${
 														job.match_score >= 0.92
-															? "text-emerald-400 bg-emerald-500/20"
-															: "text-green-400 bg-green-500/20"
+															? "bg-gradient-to-r from-emerald-500 to-emerald-600 border-emerald-500/30 text-white shadow-lg shadow-emerald-500/25"
+															: "bg-gradient-to-r from-purple-500 to-purple-600 border-purple-500/30 text-white shadow-lg shadow-purple-500/25"
 													}`}
 												>
+													<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
 													{Math.round(job.match_score * 100)}% Match
 												</span>
 											)}
@@ -732,13 +738,13 @@ function MatchesPageContent() {
 										{/* Job Title - Larger, more prominent */}
 										<h3
 											id={`job-title-${job.id}`}
-											className="text-xl md:text-2xl font-bold mb-2.5 text-zinc-100 break-words tracking-normal leading-snug"
+											className="relative z-10 text-xl md:text-2xl font-bold mb-2.5 text-white break-words tracking-normal leading-snug"
 										>
 											{job.title}
 										</h3>
 
-										{/* Company - Brand color */}
-										<p className="text-brand-200 font-semibold mb-3 break-words">
+										{/* Company - Emerald accent */}
+										<p className="relative z-10 text-emerald-300 font-semibold mb-3 break-words">
 											{job.company}
 										</p>
 
@@ -762,11 +768,13 @@ function MatchesPageContent() {
 										{/* Match Reason Display - Semantic HTML */}
 										{job.match_reason && (
 											<aside
-												className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/30 border-l-2 border-l-emerald-500/40 rounded-lg"
+												className="relative z-10 mb-4 p-4 bg-emerald-500/10 border border-emerald-500/30 border-l-2 border-l-emerald-500/40 rounded-lg backdrop-blur-sm"
 												aria-label="Match explanation"
 											>
 												<p className="text-xs font-semibold text-emerald-400 mb-1.5 flex items-center gap-1.5">
-													<span aria-hidden="true">💡</span>
+													<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+														<path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+													</svg>
 													Why this match?
 												</p>
 												<p className="text-sm text-zinc-200 leading-relaxed">
@@ -776,7 +784,7 @@ function MatchesPageContent() {
 										)}
 
 										{/* Description */}
-										<p className="text-zinc-300 text-sm mb-4 line-clamp-3 md:line-clamp-4 leading-relaxed">
+										<p className="relative z-10 text-zinc-300 text-sm mb-4 line-clamp-3 md:line-clamp-4 leading-relaxed">
 											{job.description
 												?.replace(/<[^>]*>/g, "")
 												.substring(0, 200)}
@@ -784,7 +792,7 @@ function MatchesPageContent() {
 										</p>
 
 										{/* Button Area Separator */}
-										<div className="border-t border-white/10 pt-4 mt-4">
+										<div className="relative z-10 border-t border-white/10 pt-4 mt-4">
 											<div className="flex gap-4 items-center">
 												<Button
 													variant="primary"

@@ -82,14 +82,17 @@ export default function ScrollCTA() {
 					<motion.div
 						initial={{ scale: 0.9 }}
 						animate={{ scale: 1 }}
-						className="bg-surface-elevated/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl"
+						className="group relative bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl hover:border-emerald-500/30 transition-all duration-300"
 					>
-						<div className="flex items-center gap-4">
+						{/* Emerald glow on hover */}
+						<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-300" />
+						
+						<div className="relative flex items-center gap-4">
 							<div className="flex-1">
 								<p className="text-sm font-semibold text-white mb-1">
 									{CTA_GET_MY_5_FREE_MATCHES}
 								</p>
-								<p className="text-xs text-content-muted hidden md:flex">
+								<p className="text-xs text-zinc-400 hidden md:flex">
 									{TRUST_TEXT_NO_CARD_SETUP}
 								</p>
 							</div>
@@ -102,15 +105,32 @@ export default function ScrollCTA() {
 									});
 									setIsVisible(false);
 								}}
-								className="btn-cta-enhanced px-5 py-2.5 text-sm min-h-[44px]"
+								className="group/btn relative px-5 py-2.5 rounded-xl font-semibold text-white overflow-hidden min-h-[44px] flex items-center gap-2"
 							>
-								{CTA_GET_MY_5_FREE_MATCHES}
-								<BrandIcons.ArrowRight className="h-4 w-4" />
+								{/* Gradient background */}
+								<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover/btn:from-emerald-600 group-hover/btn:to-emerald-700 transition-all duration-300" />
+								
+								{/* Shine effect on hover */}
+								<div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500">
+									<div className="absolute inset-0 translate-x-[-100%] group-hover/btn:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000" />
+								</div>
+								
+								{/* Shadow */}
+								<div className="absolute inset-0 shadow-lg shadow-emerald-500/30 group-hover/btn:shadow-xl group-hover/btn:shadow-emerald-500/40 rounded-xl transition-all" />
+								
+								{/* Text */}
+								<span className="relative z-10 group-hover/btn:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
+									{CTA_GET_MY_5_FREE_MATCHES}
+									<BrandIcons.ArrowRight className="h-4 w-4" />
+								</span>
+								
+								{/* Border glow */}
+								<div className="absolute inset-0 rounded-xl border border-emerald-400/50 group-hover/btn:border-emerald-300 transition-colors" />
 							</Link>
 							<button
 								type="button"
 								onClick={() => setIsVisible(false)}
-								className="p-2 text-content-muted hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+								className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
 								aria-label="Close"
 							>
 								<BrandIcons.X className="h-4 w-4" />

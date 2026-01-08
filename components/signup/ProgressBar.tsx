@@ -14,7 +14,7 @@ export function ProgressBar({ step }: ProgressBarProps) {
 			<div className="sticky top-[-1px] z-40 bg-black/90 backdrop-blur-md border-b border-white/10 mb-6 shadow-lg">
 				<div className="h-1.5 bg-zinc-800/80 relative overflow-hidden">
 					<motion.div
-						className="h-full bg-gradient-to-r from-brand-500 via-brand-700 to-brand-600 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+						className="h-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
 						initial={{ width: 0 }}
 						animate={{ width: `${(step / 4) * 100}%` }}
 						transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
@@ -36,7 +36,7 @@ export function ProgressBar({ step }: ProgressBarProps) {
 				</div>
 				<div className="flex items-center justify-between px-4 py-3 text-sm font-semibold">
 					<span className="text-zinc-300">Step {step} of 4</span>
-					<span className="text-brand-400">{Math.round((step / 4) * 100)}%</span>
+					<span className="text-emerald-400">{Math.round((step / 4) * 100)}%</span>
 				</div>
 			</div>
 
@@ -48,9 +48,9 @@ export function ProgressBar({ step }: ProgressBarProps) {
 							<motion.div
 								className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-bold text-sm sm:text-base transition-all shadow-lg ${
 									i < step
-										? "bg-green-500 text-white shadow-green-500/30"
+										? "bg-emerald-500 text-white shadow-emerald-500/30"
 										: i === step
-											? "bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_0_24px_rgba(99,102,241,0.4)] ring-4 ring-brand-500/30"
+											? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-[0_0_24px_rgba(16,185,129,0.4)] ring-4 ring-emerald-500/30"
 											: "bg-zinc-800/60 border-2 border-zinc-700 text-zinc-400"
 								}`}
 								animate={i === step ? { scale: [1, 1.1, 1] } : {}}
@@ -77,7 +77,7 @@ export function ProgressBar({ step }: ProgressBarProps) {
 				</div>
 				<div className="h-2.5 bg-zinc-800/60 rounded-full overflow-hidden border border-zinc-700/50 relative">
 					<motion.div
-						className="h-full bg-gradient-to-r from-brand-500 via-brand-700 to-brand-600 shadow-[0_0_20px_rgba(99,102,241,0.4)] relative"
+						className="h-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] relative"
 						initial={{ width: 0 }}
 						animate={{ width: `${(step / 4) * 100}%` }}
 						transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}

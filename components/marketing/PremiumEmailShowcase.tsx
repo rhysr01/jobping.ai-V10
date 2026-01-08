@@ -289,7 +289,7 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 		{/* Email Header - Sticky */}
 		<div className="px-3 py-2 border-b border-white/5 bg-surface-elevated/20 shrink-0">
 			<div className="text-[10px] text-zinc-400 mb-0.5">
-				From: <span className="text-purple-400 font-medium">{email.from}</span>
+				From: <span className="text-emerald-400 font-medium">{email.from}</span>
 			</div>
 			<div className="text-[10px] text-zinc-400">
 				Subject: <span className="text-white font-semibold">{email.subject}</span>
@@ -310,17 +310,17 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 			</h1>
 
 			{/* Profile Pill - Fixed layout */}
-			<div className="rounded-full bg-indigo-500/20 border border-white/15 px-2.5 py-1">
+			<div className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-1">
 				<div className="flex items-start gap-1 text-[10px]">
 					<div className="flex items-center gap-1 shrink-0">
-						<Briefcase size={10} className="text-indigo-300" />
+						<Briefcase size={10} className="text-emerald-300" />
 						<span className="text-content-heading font-medium whitespace-nowrap">
 							{USER_PROFILE.careerPath}
 						</span>
 					</div>
 					<span className="text-content-muted shrink-0">·</span>
 					<div className="flex items-center gap-1 shrink-0">
-						<MapPin size={10} className="text-indigo-300" />
+						<MapPin size={10} className="text-emerald-300" />
 						<span className="text-content-heading font-medium whitespace-nowrap">
 							{USER_PROFILE.cities.join(", ")}
 						</span>
@@ -374,8 +374,11 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 				</div>
 
 				{/* Match Reason */}
-				<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
-					<div className="text-[9px] font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
+				<div className="mb-1.5 p-1.5 bg-emerald-500/15 border-l-2 border-emerald-500/40 rounded backdrop-blur-sm">
+					<div className="text-[9px] font-semibold text-emerald-400 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+						<svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+							<path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+						</svg>
 						Why This Matches
 					</div>
 					<p className="text-[10px] text-content-heading leading-relaxed line-clamp-2">
@@ -388,7 +391,7 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 					{job.tags.map((tag) => (
 						<span
 							key={tag}
-							className="px-1.5 py-0.5 rounded bg-purple-500/15 text-content-secondary text-[9px] font-semibold"
+							className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/20 text-content-secondary text-[9px] font-semibold"
 						>
 							{tag}
 						</span>
