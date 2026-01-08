@@ -249,21 +249,28 @@ const getVisaStyle = (confidence: string) => {
 				bg: "bg-emerald-500/20",
 				text: "text-emerald-400",
 				border: "border-emerald-500/30",
-				label: "✅ High Visa Confidence",
+				label: "✅ Confirmed Sponsorship",
 			};
 		case "likely":
+			return {
+				bg: "bg-yellow-500/20",
+				text: "text-yellow-400",
+				border: "border-yellow-500/30",
+				label: "🟡 Probable Sponsorship",
+			};
+		case "local-only":
 			return {
 				bg: "bg-blue-500/20",
 				text: "text-blue-400",
 				border: "border-blue-500/30",
-				label: "🔵 Likely Visa",
+				label: "🔵 Possible Sponsorship",
 			};
 		default:
 			return {
-				bg: "bg-zinc-500/20",
-				text: "text-content-muted",
-				border: "border-zinc-500/30",
-				label: "Check Visa",
+				bg: "bg-red-500/20",
+				text: "text-red-400",
+				border: "border-red-500/30",
+				label: "❌ No Sponsorship",
 			};
 	}
 };

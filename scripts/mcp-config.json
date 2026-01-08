@@ -1,0 +1,76 @@
+{
+	"mcpServers": {
+		"jobping-mcp": {
+			"command": "tsx",
+			"args": ["scripts/mcps/mcp-server.ts"],
+			"env": {
+				"GITHUB_TOKEN": "${GITHUB_TOKEN}",
+				"GITHUB_REPO": "${GITHUB_REPO}",
+				"SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
+				"SENTRY_ORG": "${SENTRY_ORG}",
+				"SENTRY_PROJECT": "${SENTRY_PROJECT}",
+				"VERCEL_ACCESS_TOKEN": "${VERCEL_ACCESS_TOKEN}",
+				"VERCEL_TEAM_ID": "${VERCEL_TEAM_ID}",
+				"NEXT_PUBLIC_SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
+				"SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}",
+				"BRAVE_API_KEY": "${BRAVE_API_KEY}"
+			}
+		}
+	},
+	"documentation": {
+		"setup_instructions": [
+			"1. Create a GitHub Personal Access Token at https://github.com/settings/tokens",
+			"2. Create a Sentry Auth Token at https://sentry.io/settings/tokens/",
+			"3. Create a Vercel Access Token at https://vercel.com/account/tokens",
+			"4. Set all environment variables in your .env.local or Vercel dashboard",
+			"5. Start the MCP server with: npm run mcp:start",
+			"6. Configure Claude Desktop to use the MCP server"
+		],
+		"required_env_vars": [
+			"GITHUB_TOKEN - GitHub Personal Access Token (with repo permissions)",
+			"GITHUB_REPO - Your GitHub repo (e.g., 'username/repo' or 'org/repo')",
+			"SENTRY_AUTH_TOKEN - Sentry authentication token",
+			"SENTRY_ORG - Your Sentry organization slug",
+			"SENTRY_PROJECT - Your Sentry project slug",
+			"VERCEL_ACCESS_TOKEN - Vercel API access token",
+			"VERCEL_TEAM_ID - (Optional) Vercel team ID if using team account",
+			"NEXT_PUBLIC_SUPABASE_URL - Your Supabase project URL",
+			"SUPABASE_SERVICE_ROLE_KEY - Supabase service role key",
+			"BRAVE_API_KEY - BraveSearch API key"
+		],
+		"available_tools": {
+			"github": [
+				"github_create_issue - Create GitHub issues with error details",
+				"github_get_recent_issues - Get recent GitHub issues",
+				"github_search_issues - Search GitHub issues by query"
+			],
+			"sentry": [
+				"sentry_get_recent_errors - Get recent Sentry errors",
+				"sentry_analyze_error_patterns - Analyze error patterns",
+				"sentry_get_error_details - Get detailed error information"
+			],
+			"vercel": [
+				"vercel_get_deployments - Get recent Vercel deployments",
+				"vercel_check_deployment_status - Check deployment status",
+				"vercel_get_logs - Get deployment logs"
+			],
+			"supabase": [
+				"supabase_query_users - Query users from database",
+				"supabase_get_user_details - Get detailed user information",
+				"supabase_query_jobs - Query jobs from database",
+				"supabase_get_table_stats - Get database table statistics"
+			],
+			"bravesearch": [
+				"bravesearch_web_search - General web search",
+				"bravesearch_research_topic - Comprehensive research",
+				"bravesearch_find_solutions - Technical problem solutions",
+				"bravesearch_tech_documentation - Official documentation"
+			],
+			"puppeteer": [
+				"puppeteer_take_screenshot - Capture webpage screenshots",
+				"puppeteer_analyze_design - Analyze page design and UX",
+				"puppeteer_compare_pages - Compare webpage designs"
+			]
+		}
+	}
+}

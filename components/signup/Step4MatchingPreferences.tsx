@@ -45,11 +45,11 @@ export function Step4MatchingPreferences({
 					aria-hidden="true"
 				/>
 				<div className="relative z-10 space-y-6 sm:space-y-8 md:space-y-10">
-					<div className="text-center">
-						<h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+					<div className="text-center mb-6 sm:mb-8">
+						<h2 className="text-2xl sm:text-3xl font-black text-white mb-2 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 							Fine-tune Your Matches
 						</h2>
-						<p className="text-sm sm:text-base text-zinc-200 mb-4">
+						<p className="text-sm sm:text-base text-zinc-200 mb-4 leading-relaxed">
 							Optional - Adding these preferences improves match accuracy by up
 							to 40%
 						</p>
@@ -241,6 +241,59 @@ export function Step4MatchingPreferences({
 						)}
 					</div>
 
+					{/* GDPR Consent - Required before submission */}
+					<div className="bg-gradient-to-r from-brand-500/15 via-brand-700/15 to-brand-500/15 border-2 border-brand-500/40 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+						<label className="flex items-start gap-3 sm:gap-4 cursor-pointer group touch-manipulation">
+							<input
+								type="checkbox"
+								id="gdpr-consent-step4"
+								checked={formData.gdprConsent}
+								onChange={(e) => {
+									setFormData({
+										...formData,
+										gdprConsent: e.target.checked,
+									});
+								}}
+								className="mt-1 w-6 h-6 sm:w-5 sm:h-5 rounded border-2 border-zinc-600 bg-zinc-800 checked:bg-brand-500 checked:border-brand-500 cursor-pointer touch-manipulation min-w-[48px] min-h-[48px] sm:min-w-0 sm:min-h-0"
+								required
+								aria-required="true"
+								aria-describedby="gdpr-error-step4"
+							/>
+							<div className="flex-1">
+								<p className="text-white font-medium mb-1">
+									I agree to receive job recommendations via email *
+								</p>
+								<p className="text-sm text-zinc-400">
+									By checking this box, you consent to receive personalized job matches and agree to our{" "}
+									<a
+										href="/legal/privacy"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-brand-400 hover:text-brand-300 underline font-semibold"
+									>
+										Privacy Policy
+									</a>{" "}
+									and{" "}
+									<a
+										href="/legal/terms"
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-brand-400 hover:text-brand-300 underline font-semibold"
+									>
+										Terms of Service
+									</a>
+									. You can unsubscribe at any time.
+								</p>
+								{!formData.gdprConsent && (
+									<p id="gdpr-error-step4" className="mt-2 text-sm text-red-400 flex items-center gap-2 font-medium" role="alert" aria-live="polite">
+										<span>⚠️</span>
+										<span>You must agree to receive job matches to continue</span>
+									</p>
+								)}
+							</div>
+						</label>
+					</div>
+
 					{/* Spacer for sticky button */}
 					<div className="h-32 sm:h-0" aria-hidden="true" />
 
@@ -257,9 +310,9 @@ export function Step4MatchingPreferences({
 							</motion.button>
 							<motion.button
 								onClick={handleSubmit}
-								disabled={loading}
-								whileHover={{ scale: loading ? 1 : 1.03 }}
-								whileTap={{ scale: loading ? 1 : 0.97 }}
+								disabled={loading || !formData.gdprConsent}
+								whileHover={{ scale: loading || !formData.gdprConsent ? 1 : 1.03 }}
+								whileTap={{ scale: loading || !formData.gdprConsent ? 1 : 0.97 }}
 								className="relative flex-1 py-4 sm:py-6 md:py-7 text-base sm:text-xl md:text-2xl font-black disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wide rounded-xl sm:rounded-2xl overflow-hidden touch-manipulation min-h-[56px]"
 								style={{
 									background: loading

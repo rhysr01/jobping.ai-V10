@@ -19,7 +19,7 @@ export default function TrustBadges() {
 			<span className="w-px h-4 bg-white/10" />
 			<span className="flex items-center gap-1.5 text-xs font-semibold text-white/90">
 				<BrandIcons.Shield className="h-3.5 w-3.5 text-brand-400 flex-shrink-0" />
-				GDPR Compliant
+				Privacy-First
 			</span>
 			<span className="w-px h-4 bg-white/10" />
 			<span className="flex items-center gap-1.5 text-xs font-semibold text-white/90">

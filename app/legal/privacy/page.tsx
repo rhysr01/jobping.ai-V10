@@ -47,6 +47,18 @@ export default function PrivacyPolicy() {
 
 						<section>
 							<h2 className="text-xl md:text-2xl font-semibold text-white mt-8 mb-4 tracking-tight">
+								2.2. Data Storage Location
+							</h2>
+							<p className="text-zinc-300 mb-4">
+								All user data is stored and processed exclusively within the European Union
+								(Supabase EU-West-1 region, Frankfurt, Germany) to comply with GDPR data
+								localization requirements. We do not transfer personal data outside the EU
+								without explicit consent.
+							</p>
+						</section>
+
+						<section>
+							<h2 className="text-xl md:text-2xl font-semibold text-white mt-8 mb-4 tracking-tight">
 								2.1. Email Communications
 							</h2>
 							<div className="space-y-4">

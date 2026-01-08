@@ -39,7 +39,6 @@ export default function Page() {
 					6. Pricing - The decision point (immediately after showing value, €5 feels smaller)
 					7. SocialProofRow - FOMO (others are using this)
 					8. FAQ - Objection killer (addresses Visa/Cancellation fears)
-					9. Final CTA - Safety net for scrollers
 				*/}
 				<ErrorBoundary>
 					<Hero />
@@ -64,56 +63,6 @@ export default function Page() {
 				</ErrorBoundary>
 				<ErrorBoundary>
 					<FAQ />
-				</ErrorBoundary>
-
-				{/* Final CTA Section - Bridge FAQ to Footer */}
-				<ErrorBoundary>
-					<section className="py-16 md:py-20 relative overflow-hidden bg-black">
-						<div className="container-page relative z-10">
-							<motion.div
-								initial={{ opacity: 0, y: 20 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								viewport={{ once: true }}
-								transition={{ duration: 0.6 }}
-								className="max-w-2xl mx-auto text-center"
-							>
-								<h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-									Ready to find your job?
-								</h2>
-								<p className="text-base md:text-lg text-zinc-300 mb-6">
-									Get 5 personalized matches in under 2 minutes. 100% free to
-									start.
-								</p>
-								<motion.div
-									whileHover={{ scale: 1.02 }}
-									whileTap={{ scale: 0.98 }}
-								>
-									<a
-										href="/signup/free"
-										aria-label="Get my 5 free job matches - start free signup"
-										className="btn-cta-enhanced min-h-[44px] px-8 py-3 text-sm"
-									>
-										Get My 5 Free Matches
-										<svg
-											className="w-4 h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-											role="img"
-											aria-label="Arrow right"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M13 7l5 5m0 0l-5 5m5-5H6"
-											/>
-										</svg>
-									</a>
-								</motion.div>
-							</motion.div>
-						</div>
-					</section>
 				</ErrorBoundary>
 			</main>
 			<div className="h-8 w-full bg-gradient-to-b from-transparent to-black/40" />

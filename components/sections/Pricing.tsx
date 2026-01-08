@@ -71,7 +71,7 @@ export default function Pricing() {
 					</span>
 				</h2>
 				<p className="text-zinc-400 text-base sm:text-lg md:text-xl">
-					The average job seeker spends <span className="text-white font-bold">15 hours/week</span> searching.
+					Stop wasting hours scrolling job boards.
 					<br />
 					<span className="text-emerald-400 font-semibold">We do it in seconds.</span>
 				</p>

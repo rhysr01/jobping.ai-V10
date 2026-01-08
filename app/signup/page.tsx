@@ -53,8 +53,8 @@ function SignupForm() {
 		show: boolean;
 		matchesCount?: number;
 	}>({ show: false });
-	const [activeJobs, setActiveJobs] = useState("Updating…");
-	const [totalUsers, setTotalUsers] = useState("");
+	const [activeJobs, setActiveJobs] = useState("~12,000");
+	const [totalUsers, setTotalUsers] = useState("3,400");
 	const [isLoadingStats, setIsLoadingStats] = useState(true);
 	const [_statsStale, setStatsStale] = useState(true);
 	const prefersReduced = useReducedMotion();
@@ -308,6 +308,9 @@ function SignupForm() {
 		if (loading) {
 			return; // Already submitting, ignore additional clicks
 		}
+
+		// Announce loading state to screen readers
+		announce("Finding your perfect matches...", "polite");
 
 		// Validate form before submitting
 		if (
@@ -568,7 +571,8 @@ function SignupForm() {
 	const selectAllRoles = (careerPath: string) => {
 		const career = CAREER_PATHS.find((c) => c.value === careerPath);
 		if (career) {
-			setFormData({ ...formData, roles: career.roles });
+			// Use popular roles instead of all roles for better UX
+			setFormData({ ...formData, roles: career.popularRoles || career.roles });
 		}
 	};
 
@@ -604,7 +608,7 @@ function SignupForm() {
 				aria-hidden="true"
 			/>
 
-			<div className="relative z-10 container-page max-w-5xl py-4 px-4 sm:py-8 sm:px-6 md:py-16">
+			<div className="relative z-10 container-page max-w-5xl py-4 px-4 sm:py-8 sm:px-6 md:py-16 pb-[max(2rem,env(safe-area-inset-bottom))]">
 				<HeroSection
 					activeJobs={activeJobs}
 					totalUsers={totalUsers}
@@ -613,31 +617,45 @@ function SignupForm() {
 
 				<ProgressBar step={step} />
 
+				{/* Skip to main content link for keyboard navigation */}
+				<a
+					href="#signup-form-main"
+					className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-600 focus:text-white focus:rounded-lg focus:font-semibold focus:shadow-lg"
+				>
+					Skip to form
+				</a>
+
 				{/* Form Abandonment Recovery Message */}
 
 				{/* Success Message */}
 				<AnimatePresence>
 					{successState.show && (
 						<motion.div
-							initial={{ opacity: 0, y: -10 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							className="mb-6 p-6 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 border-2 border-green-500/50 rounded-xl text-center"
+							initial={{ opacity: 0, y: -10, scale: 0.95 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, y: -10, scale: 0.95 }}
+							className="mb-6 p-6 sm:p-8 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 border-2 border-green-500/50 rounded-xl sm:rounded-2xl text-center shadow-[0_0_40px_rgba(34,197,94,0.3)] backdrop-blur-sm"
 							role="alert"
 							aria-live="assertive"
+							aria-atomic="true"
 						>
-							<div className="flex items-center justify-center gap-3 mb-2">
-								<BrandIcons.Check className="h-6 w-6 text-green-400" />
-								<h3 className="text-xl font-bold text-green-400">
+							<div className="flex items-center justify-center gap-3 mb-3">
+								<motion.div
+									animate={{ scale: [1, 1.2, 1] }}
+									transition={{ duration: 0.5, repeat: 2 }}
+								>
+									<BrandIcons.Check className="h-7 w-7 sm:h-8 sm:w-8 text-green-400" />
+								</motion.div>
+								<h3 className="text-xl sm:text-2xl font-bold text-green-400">
 									Account Created Successfully!
 								</h3>
 							</div>
-							<p className="text-green-300 text-base mb-2">
+							<p className="text-green-300 text-base sm:text-lg mb-2 font-medium">
 								{successState.matchesCount && successState.matchesCount > 0
 									? `🎯 We found ${successState.matchesCount} perfect matches for you!`
 									: "🎯 We're finding your perfect matches now..."}
 							</p>
-							<p className="text-green-200 text-sm">
+							<p className="text-green-200 text-sm sm:text-base">
 								Check your email in the next few minutes for your first job
 								matches.
 							</p>
@@ -649,14 +667,18 @@ function SignupForm() {
 				<AnimatePresence>
 					{error && (
 						<motion.div
-							initial={{ opacity: 0, y: -10 }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: -10 }}
-							className="mb-6 p-4 bg-red-500/10 border-2 border-red-500/50 rounded-xl text-red-400 text-center"
+							initial={{ opacity: 0, y: -10, scale: 0.95 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, y: -10, scale: 0.95 }}
+							className="mb-6 p-5 sm:p-6 bg-red-500/10 border-2 border-red-500/50 rounded-xl sm:rounded-2xl text-red-400 text-center shadow-[0_0_30px_rgba(239,68,68,0.2)] backdrop-blur-sm"
 							role="alert"
 							aria-live="assertive"
+							aria-atomic="true"
 						>
-							{error}
+							<div className="flex items-center justify-center gap-2 mb-2">
+								<BrandIcons.AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />
+								<p className="text-base sm:text-lg font-semibold">{error}</p>
+							</div>
 						</motion.div>
 					)}
 				</AnimatePresence>
@@ -665,7 +687,10 @@ function SignupForm() {
 				{Announcement}
 
 				{/* Form Container */}
-				<div className="glass-card rounded-2xl sm:rounded-3xl border-2 border-white/20 p-4 sm:p-6 md:p-8 lg:p-14 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-xl">
+				<div id="signup-form-main" className="glass-card rounded-2xl sm:rounded-3xl border-2 border-white/20 p-4 sm:p-6 md:p-8 lg:p-14 shadow-[0_30px_100px_rgba(0,0,0,0.5)] backdrop-blur-xl relative overflow-hidden">
+					{/* Subtle gradient overlay for depth */}
+					<div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-brand-700/5 pointer-events-none" aria-hidden="true" />
+					<div className="relative z-10">
 					<AnimatePresence mode="wait">
 						{step === 1 && (
 							<Step1Basics
@@ -1498,6 +1523,7 @@ function SignupForm() {
 							/>
 						)}
 					</AnimatePresence>
+					</div>
 				</div>
 
 				<TrustSignals activeJobs={activeJobs} isLoadingStats={isLoadingStats} />

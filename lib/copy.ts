@@ -139,7 +139,7 @@ export const PREMIUM_PLAN_FEATURES = [
 export const REASSURANCE_ITEMS = [
 	"No CV required",
 	"Cancel anytime",
-	"GDPR compliant",
+	"Privacy-first",
 ];
 
 // Email showcase

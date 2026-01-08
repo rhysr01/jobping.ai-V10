@@ -85,9 +85,10 @@ export default function Header() {
 						? "bg-surface-base/70 backdrop-blur-md border-b border-white/5 shadow-lg"
 						: "bg-transparent border-b border-transparent"
 				}`}
+				style={{ overflow: "visible" }}
 			>
-				<div className="container-page">
-					<div className="h-20 md:h-24 flex items-center justify-between py-2">
+				<div className="container-page" style={{ overflow: "visible" }}>
+					<div className="h-20 md:h-24 flex items-center justify-between py-2 overflow-visible" style={{ overflow: "visible" }}>
 						{/* Logo */}
 						<Link
 							href="/"
@@ -97,10 +98,11 @@ export default function Header() {
 								}
 								trackEvent("logo_clicked", { location: "header" });
 							}}
-							className="flex items-center gap-2 group py-1"
+							className="flex items-center gap-2 group py-1 overflow-visible"
 							aria-label="JobPing Home"
+							style={{ overflow: "visible", paddingRight: "0.5rem" }}
 						>
-							<div className="scale-90 md:scale-100 origin-left">
+							<div className="scale-90 md:scale-100 origin-left overflow-visible pr-2 md:pr-3" style={{ overflow: "visible", minWidth: "fit-content" }}>
 								<LogoWordmark />
 							</div>
 						</Link>
@@ -113,13 +115,20 @@ export default function Header() {
 									key={link.href}
 									href={link.href}
 									onClick={(e) => handleNavClick(e, link.href, link.scroll)}
-									className={`text-sm font-semibold transition-all duration-200 relative px-3 py-2 rounded-lg hover:bg-white/5 ${
+									className={`text-sm font-semibold transition-all duration-200 relative px-3 py-2 rounded-lg hover:bg-white/5 whitespace-nowrap ${
 										activeSection === link.href
 											? "text-white"
 											: "text-content-secondary hover:text-white"
 									}`}
+									style={{ 
+										overflow: "visible", 
+										textOverflow: "clip", 
+										maxWidth: "none",
+										whiteSpace: "nowrap",
+										wordBreak: "keep-all"
+									}}
 								>
-								{link.label}
+								<span className="inline-block">{link.label}</span>
 								{activeSection === link.href && (
 									<motion.div
 										layoutId="activeNav"
@@ -207,17 +216,18 @@ export default function Header() {
 										<BrandIcons.X className="h-6 w-6" />
 									</button>
 								</div>
-								<nav className="flex flex-col gap-4">
+								<nav className="flex flex-col gap-3" role="navigation" aria-label="Mobile navigation">
 									{navLinks.map((link) => (
 										<Link
 											key={link.href}
 											href={link.href}
 											onClick={(e) => handleNavClick(e, link.href, link.scroll)}
-											className={`text-lg font-medium transition-all duration-200 py-2 ${
+											className={`text-lg font-medium transition-all duration-200 py-3 px-4 rounded-lg min-h-[48px] flex items-center ${
 												activeSection === link.href
-													? "text-white"
-													: "text-content-disabled hover:text-white"
+													? "text-white bg-white/10"
+													: "text-content-disabled hover:text-white hover:bg-white/5"
 											}`}
+											aria-current={activeSection === link.href ? "page" : undefined}
 										>
 											{link.label}
 										</Link>

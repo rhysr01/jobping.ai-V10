@@ -114,13 +114,24 @@ export default {
 				"102": "1.02",
 				"98": "0.98",
 			},
-			// Typography system - Tight, cohesive scale
+			// Typography system - Standardized 6-size scale
+			// Best practice: Max 6 font sizes, 3 weights for consistency
+			// Scale: 12px (xs), 14px (sm), 16px (base), 24px (xl), 32px (3xl), 56px (5xl)
+			// Hero headlines can exceed this scale for impact (up to 72px/7xl)
 			fontSize: {
-				display: ["3rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }], // 48px - Hero headlines
-				heading: ["1.875rem", { lineHeight: "1.3", letterSpacing: "-0.01em" }], // 30px - Section headings
-				large: ["1.125rem", { lineHeight: "1.6", letterSpacing: "0" }], // 18px - Emphasis text
-				body: ["1rem", { lineHeight: "1.6", letterSpacing: "0" }], // 16px - Body text
-				small: ["0.875rem", { lineHeight: "1.5", letterSpacing: "0" }], // 14px - Small text
+				// Standardized scale
+				xs: ["0.75rem", { lineHeight: "1.5", letterSpacing: "0" }], // 12px - Labels, captions
+				sm: ["0.875rem", { lineHeight: "1.5", letterSpacing: "0" }], // 14px - Small text, helper text
+				base: ["1rem", { lineHeight: "1.6", letterSpacing: "0" }], // 16px - Body text (default)
+				xl: ["1.5rem", { lineHeight: "1.4", letterSpacing: "-0.01em" }], // 24px - Subheadings
+				"3xl": ["2rem", { lineHeight: "1.3", letterSpacing: "-0.01em" }], // 32px - Section headings
+				"5xl": ["3.5rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }], // 56px - Large headings
+				// Legacy sizes (keep for backward compatibility, migrate gradually)
+				display: ["3rem", { lineHeight: "1.1", letterSpacing: "-0.02em" }], // 48px - Hero headlines (deprecated, use 5xl)
+				heading: ["1.875rem", { lineHeight: "1.3", letterSpacing: "-0.01em" }], // 30px - Section headings (deprecated, use 3xl)
+				large: ["1.125rem", { lineHeight: "1.6", letterSpacing: "0" }], // 18px - Emphasis text (deprecated, use base)
+				body: ["1rem", { lineHeight: "1.6", letterSpacing: "0" }], // 16px - Body text (deprecated, use base)
+				small: ["0.875rem", { lineHeight: "1.5", letterSpacing: "0" }], // 14px - Small text (deprecated, use sm)
 			},
 			// Depth system - simplified
 			boxShadow: {

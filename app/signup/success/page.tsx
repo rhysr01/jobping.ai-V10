@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { BrandIcons } from "@/components/ui/BrandIcons";
+import Button from "@/components/ui/Button";
 import CustomScanTrigger from "@/components/ui/CustomScanTrigger";
 import { SuccessAnimation } from "@/components/ui/SuccessAnimation";
 import TargetCompaniesAlert from "@/components/ui/TargetCompaniesAlert";
@@ -25,6 +26,12 @@ function SignupSuccessContent() {
 	const [showSuccess, setShowSuccess] = useState(true);
 	const [emailSentAt, setEmailSentAt] = useState<string>("");
 	const [resending, setResending] = useState(false);
+	const [emailStatus, setEmailStatus] = useState<{
+		sent: boolean;
+		sentAt?: string;
+		error?: string;
+		retrying?: boolean;
+	}>({ sent: false });
 	const [metadata, setMetadata] = useState<{
 		targetCompanies: Array<{
 			company: string;
@@ -59,14 +66,19 @@ function SignupSuccessContent() {
 		// Premium confetti celebration
 		const duration = 5000;
 		const animationEnd = Date.now() + duration;
-		const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+		const defaults = {
+			startVelocity: 30,
+			spread: 360,
+			ticks: 60,
+			zIndex: 9999,
+		};
 
 		const interval = setInterval(() => {
 			const timeLeft = animationEnd - Date.now();
 			if (timeLeft <= 0) return clearInterval(interval);
 
 			const particleCount = 50 * (timeLeft / duration);
-			
+
 			// Multiple bursts with brand colors
 			confetti({
 				...defaults,
@@ -98,10 +110,36 @@ function SignupSuccessContent() {
 			});
 	}, [email]);
 
+	// Check email delivery status
+	useEffect(() => {
+		const checkEmailStatus = async () => {
+			try {
+				const response = await apiCall(
+					`/api/user/email-status?email=${encodeURIComponent(email)}`,
+				);
+				const status = await response.json();
+				setEmailStatus(status);
+			} catch {
+				setEmailStatus({ sent: false, error: "Unable to verify email status" });
+			}
+		};
+
+		if (email) {
+			// Check immediately and again after 30 seconds
+			checkEmailStatus();
+			const interval = setInterval(checkEmailStatus, 30000);
+			return () => clearInterval(interval);
+		}
+
+		return undefined;
+	}, [email]);
+
 	const handleSetAlert = async (company: string) => {
 		// Track the alert event
 		console.log("Setting alert for company:", company);
-		showToast.success(`Alert set for ${company}! We'll notify you when new roles appear.`);
+		showToast.success(
+			`Alert set for ${company}! We'll notify you when new roles appear.`,
+		);
 		// TODO: Implement actual alert setting API endpoint
 	};
 
@@ -177,6 +215,8 @@ function SignupSuccessContent() {
 								viewBox="0 0 24 24"
 								stroke="currentColor"
 								strokeWidth="3"
+								aria-label="Success checkmark"
+								role="img"
 							>
 								<path
 									strokeLinecap="round"
@@ -193,9 +233,38 @@ function SignupSuccessContent() {
 							</h1>
 
 							<p className="mx-auto max-w-2xl text-lg font-medium leading-relaxed text-zinc-100 sm:text-xl">
-								You're now part of the 1% who get personalized job matches delivered to their inbox. We found{" "}
-								<span className="text-brand-300 font-bold">{matchCountNum}</span> perfect matches for you—check your inbox now!
+								You're now part of the 1% who get personalized job matches
+								delivered to their inbox. We found{" "}
+								<span className="text-brand-300 font-bold">
+									{matchCountNum}
+								</span>{" "}
+								perfect matches for you—check your inbox now!
 							</p>
+
+							{/* Email Status Indicator */}
+							<div className="mx-auto max-w-md rounded-xl border-2 border-brand-500/30 bg-brand-500/10 p-4 text-center">
+								<div className="flex items-center justify-center gap-2 mb-2">
+									{emailStatus.sent ? (
+										<BrandIcons.CheckCircle className="h-5 w-5 text-green-400" />
+									) : emailStatus.error ? (
+										<BrandIcons.AlertCircle className="h-5 w-5 text-yellow-400" />
+									) : (
+										<div className="h-5 w-5 border-2 border-brand-400 border-t-transparent rounded-full animate-spin" />
+									)}
+									<p className="text-sm font-semibold text-brand-200">
+										{emailStatus.sent
+											? "Email sent successfully!"
+											: emailStatus.error
+												? "Email delivery pending"
+												: "Sending your matches..."}
+									</p>
+								</div>
+								{emailStatus.sent && emailStatus.sentAt && (
+									<p className="text-xs text-zinc-400">
+										Sent at {new Date(emailStatus.sentAt).toLocaleTimeString()}
+									</p>
+								)}
+							</div>
 
 							{/* Value Reinforcement */}
 							<div className="mx-auto max-w-md rounded-xl border-2 border-brand-500/30 bg-brand-500/10 p-4 text-center">
@@ -203,7 +272,9 @@ function SignupSuccessContent() {
 									Premium Value
 								</p>
 								<p className="text-base text-white font-bold">
-									{`${PREMIUM_ROLES_PER_WEEK} jobs per week`} · {`${PREMIUM_SENDS_PER_WEEK} email drops`} · Mon/Wed/Fri delivery
+									{`${PREMIUM_ROLES_PER_WEEK} jobs per week`} ·{" "}
+									{`${PREMIUM_SENDS_PER_WEEK} email drops`} · Mon/Wed/Fri
+									delivery
 								</p>
 							</div>
 						</div>
@@ -215,9 +286,28 @@ function SignupSuccessContent() {
 
 						{/* Fallback Metadata Section */}
 						{metadataLoading ? (
-							<div className="space-y-4">
-								<div className="h-32 bg-zinc-800/50 rounded-xl animate-pulse" />
-								<div className="h-24 bg-zinc-800/50 rounded-xl animate-pulse" />
+							<div className="space-y-6">
+								{/* Match accuracy skeleton */}
+								<div className="flex justify-center">
+									<div className="inline-flex items-center gap-3 rounded-xl border-2 px-5 py-3 border-zinc-700 bg-zinc-800/50 animate-pulse">
+										<div className="flex items-center gap-2">
+											<div className="w-5 h-5 bg-zinc-600 rounded-full" />
+											<div className="space-y-1">
+												<div className="h-4 w-20 bg-zinc-600 rounded" />
+												<div className="h-3 w-16 bg-zinc-600 rounded" />
+											</div>
+										</div>
+									</div>
+								</div>
+
+								{/* Target companies skeleton */}
+								<div className="space-y-3">
+									<div className="h-6 w-48 bg-zinc-700 rounded animate-pulse" />
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+										<div className="h-16 bg-zinc-800/50 rounded-xl animate-pulse" />
+										<div className="h-16 bg-zinc-800/50 rounded-xl animate-pulse" />
+									</div>
+								</div>
 							</div>
 						) : (
 							<>
@@ -295,9 +385,9 @@ function SignupSuccessContent() {
 											Check your inbox
 										</div>
 										<div className="text-zinc-100 text-sm sm:text-base font-medium leading-relaxed">
-											Your first drop includes {matchCountNum} jobs plus your premium welcome
-											email. Check your inbox now—if you don't see it after a few minutes, peek at
-											spam.
+											Your first drop includes {matchCountNum} jobs plus your
+											premium welcome email. Check your inbox now—if you don't
+											see it after a few minutes, peek at spam.
 										</div>
 										<div className="mt-3 text-xs sm:text-sm text-zinc-300 font-medium">
 											We retry delivery automatically. Add{" "}
@@ -363,6 +453,73 @@ function SignupSuccessContent() {
 								</motion.div>
 							</div>
 						</div>
+
+						{/* Didn't receive email troubleshooting */}
+						{emailStatus.error && (
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								className="mx-auto max-w-2xl rounded-xl border-2 border-yellow-500/30 bg-yellow-500/10 p-6"
+							>
+								<div className="text-center mb-4">
+									<BrandIcons.Mail className="h-8 w-8 text-yellow-400 mx-auto mb-2" />
+									<h3 className="text-lg font-bold text-yellow-200 mb-1">
+										Didn't receive your email?
+									</h3>
+									<p className="text-sm text-yellow-100/80">
+										Here are some quick fixes to try:
+									</p>
+								</div>
+
+								<div className="space-y-3 text-sm">
+									<div className="flex items-start gap-3">
+										<div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+											<span className="text-yellow-400 font-bold text-xs">
+												1
+											</span>
+										</div>
+										<p className="text-yellow-100/90">
+											<strong>Check your spam/junk folder</strong> - Email
+											services sometimes filter welcome emails
+										</p>
+									</div>
+
+									<div className="flex items-start gap-3">
+										<div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+											<span className="text-yellow-400 font-bold text-xs">
+												2
+											</span>
+										</div>
+										<p className="text-yellow-100/90">
+											<strong>Add hello@getjobping.com to contacts</strong> -
+											This helps future emails reach your inbox
+										</p>
+									</div>
+
+									<div className="flex items-start gap-3">
+										<div className="w-6 h-6 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+											<span className="text-yellow-400 font-bold text-xs">
+												3
+											</span>
+										</div>
+										<p className="text-yellow-100/90">
+											<strong>Try resending</strong> - Sometimes there are
+											temporary delivery issues
+										</p>
+									</div>
+								</div>
+
+								<div className="flex justify-center mt-6">
+									<Button
+										onClick={handleResendEmail}
+										disabled={resending || !email}
+										className="bg-yellow-600 hover:bg-yellow-500 text-white"
+									>
+										{resending ? "Sending..." : "Resend Welcome Email"}
+									</Button>
+								</div>
+							</motion.div>
+						)}
 
 						<div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
 							<Link

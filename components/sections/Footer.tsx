@@ -36,12 +36,17 @@ export default function Footer() {
 
 					{/* Right: System Status */}
 					<div className="flex flex-col items-start md:items-end gap-4">
-						<div className="flex items-center gap-2">
+						<Link
+							href="https://status.getjobping.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="flex items-center gap-2 hover:text-content-secondary transition-colors"
+						>
 							<div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
 							<span className="text-xs text-content-muted">
 								Status: All Systems Operational
 							</span>
-						</div>
+						</Link>
 
 						<nav className="flex flex-wrap items-center gap-3 md:justify-end">
 							{links.map((link) => (

@@ -8,6 +8,7 @@
 [![Tests](https://img.shields.io/badge/Tests-100%25_Pass-green)](npm run test)
 [![Production](https://img.shields.io/badge/Status-Live-green)](https://getjobping.com)
 [![Code Audit](https://img.shields.io/badge/Audit-94%2F100-success)](CODE_AUDIT_REPORT.md)
+[![MCP Server](https://img.shields.io/badge/MCP-22_Tools-blue)](MCP_README.md)
 
 ---
 
@@ -16,6 +17,7 @@
 ### 🎯 Start Here
 - **[README.md](README.md)** (this file) - Quick start and overview
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, tech stack, and design patterns
+- **[MCP_README.md](MCP_README.md)** - AI-powered development tools (22 conversational tools)
 - **[CODE_AUDIT_REPORT.md](CODE_AUDIT_REPORT.md)** - Complete code audit and production readiness (94/100 ⭐)
 
 ### 📖 Essential Guides
@@ -23,6 +25,7 @@
 - **[DOCUMENTATION_GUIDE.md](DOCUMENTATION_GUIDE.md)** - Complete documentation navigation map
 - **[docs/guides/PRODUCTION_GUIDE.md](docs/guides/PRODUCTION_GUIDE.md)** - Production deployment and configuration
 - **[docs/guides/RUNBOOK.md](docs/guides/RUNBOOK.md)** - Operational procedures and incident response
+- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - Contribution guidelines and standards
 
 ### 🔧 Technical Documentation
 - **[Utils/matching/README.md](Utils/matching/README.md)** - Matching engine architecture
@@ -46,6 +49,49 @@
 - **Security**: A+ grade security policies, HMAC authentication, GDPR compliance
 
 **👉 See [CODE_AUDIT_REPORT.md](CODE_AUDIT_REPORT.md) for complete production assessment**
+
+---
+
+## 🤖 AI-Powered Development (MCP Server)
+
+**22 conversational tools** for complete development intelligence:
+
+### Core Capabilities
+- **🎯 GitHub**: Issue management, repository insights, PR tracking
+- **🚨 Sentry**: Error monitoring, pattern analysis, crash diagnostics
+- **🚀 Vercel**: Deployment tracking, performance monitoring, logs
+- **💾 Supabase**: Database queries, user analytics, table statistics
+- **🔍 BraveSearch**: Web research, technical documentation, solutions
+- **🎨 Puppeteer**: Screenshot analysis, design critique, UX evaluation
+
+### Quick Setup
+```bash
+# Start MCP server
+npm run mcp:start
+
+# Configure Claude Desktop
+# Add to ~/.config/claude-dev/config.json:
+{
+  "mcpServers": {
+    "jobping-mcp": {
+      "command": "npm",
+      "args": ["run", "mcp:start"],
+      "cwd": "/path/to/jobping"
+    }
+  }
+}
+```
+
+### Example Conversations
+```
+"Check recent Sentry errors and create GitHub issues for critical ones"
+"Take a screenshot of our homepage and analyze the design"
+"Find solutions for database connection timeout errors"
+"Compare our pricing page with Stripe's design"
+"Get a daily health summary of the JobPing system"
+```
+
+**👉 See [MCP_README.md](MCP_README.md) for complete MCP documentation and setup**
 
 ---
 
@@ -201,6 +247,12 @@ npm run type-check
 - **Polar** - Subscription management (€5/month)
 - **Sentry** - Error tracking (multi-runtime)
 - **Vercel** - Hosting + edge network
+- **BraveSearch** - Privacy-focused web search API
+
+### AI & Automation
+- **MCP Server** - 22 conversational development tools
+- **Puppeteer** - Screenshot analysis & design critique
+- **OpenAI GPT-4o-mini** - Semantic job matching
 
 ### Job Sources (8 scrapers)
 - JobSpy (Indeed, Glassdoor), Adzuna, Reed, CareerJet, Arbeitnow, Jooble
@@ -218,6 +270,7 @@ npm run build        # Production build
 npm run start        # Run production build locally
 npm run type-check   # TypeScript validation
 npm run lint         # ESLint check
+npm run mcp:start    # Start AI-powered development tools
 ```
 
 ### Testing
@@ -395,6 +448,7 @@ npm run verify:env                      # Verify environment services
 - **Error Handling**: Comprehensive error boundaries and graceful degradation
 - **Monitoring**: Sentry integration with custom performance metrics
 - **Health Checks**: Automated monitoring of all critical system components
+- **MCP Server**: 22 conversational AI tools for development and debugging
 
 **👉 See [ARCHITECTURE.md](ARCHITECTURE.md) for complete system design**
 

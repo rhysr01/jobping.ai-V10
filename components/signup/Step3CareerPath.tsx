@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { BrandIcons } from "@/components/ui/BrandIcons";
 import {
 	FormFieldError,
@@ -40,6 +41,7 @@ export function Step3CareerPath({
 	selectAllRoles,
 	clearAllRoles,
 }: Step3CareerPathProps) {
+	const [showAllRoles, setShowAllRoles] = useState(false);
 	return (
 		<motion.div
 			key="step3"
@@ -63,11 +65,11 @@ export function Step3CareerPath({
 					aria-hidden="true"
 				/>
 				<div className="relative z-10 space-y-6 sm:space-y-8 md:space-y-10 lg:space-y-12">
-					<div>
-						<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3">
+					<div className="mb-6 sm:mb-8">
+						<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 							Your career path
 						</h2>
-						<p className="text-base sm:text-lg font-medium text-zinc-100">
+						<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
 							What type of roles interest you?
 						</p>
 
@@ -216,7 +218,7 @@ export function Step3CareerPath({
 							!!formData.careerPath,
 						) && (
 							<FormFieldError
-								error="Please select a career path"
+														error="Your career interests help us find the perfect job matches tailored to your goals and experience level."
 								id="career-path-error"
 							/>
 						)}
@@ -256,7 +258,7 @@ export function Step3CareerPath({
 										className="px-4 py-3 sm:py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-glow-subtle hover:shadow-glow-medium touch-manipulation min-h-[48px]"
 										title={`Select all ${selectedCareer.roles.length} roles in ${selectedCareer.label}`}
 									>
-										Select All {selectedCareer.roles.length} Roles
+										Select Popular Roles ({selectedCareer.popularRoles?.length || selectedCareer.roles.length})
 									</motion.button>
 									<motion.button
 										type="button"
@@ -291,7 +293,9 @@ export function Step3CareerPath({
 									}
 								>
 									<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-										{selectedCareer.roles.map((role: string, idx: number) => (
+										{selectedCareer.roles
+											.slice(0, showAllRoles ? selectedCareer.roles.length : 5)
+											.map((role: string, idx: number) => (
 											<motion.button
 												key={role}
 												type="button"
@@ -341,6 +345,18 @@ export function Step3CareerPath({
 												</span>
 											</motion.button>
 										))}
+
+										{!showAllRoles && selectedCareer.roles.length > 5 && (
+											<motion.button
+												type="button"
+												onClick={() => setShowAllRoles(true)}
+												className="px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl border-2 border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-brand-500/40 hover:bg-zinc-900/80 text-left text-sm min-h-[48px] col-span-full"
+												whileHover={{ scale: 1.02 }}
+												whileTap={{ scale: 0.98 }}
+											>
+												Show {selectedCareer.roles.length - 5} More Roles →
+											</motion.button>
+										)}
 									</div>
 								</div>
 								{formData.roles.length > 0 && (
@@ -355,7 +371,7 @@ export function Step3CareerPath({
 									formData.roles.length > 0,
 								) && (
 									<FormFieldError
-										error="Please select at least one role"
+															error="Selecting specific roles helps us find more accurate matches. Try the 'Select Popular Roles' button to get started quickly."
 										id="roles-error"
 									/>
 								)}

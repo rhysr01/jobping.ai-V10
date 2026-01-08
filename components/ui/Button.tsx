@@ -26,15 +26,15 @@ export default function Button({
 
 	const variants = {
 		primary:
-			"h-11 bg-brand-500 text-white font-medium shadow-md shadow-brand-500/30 hover:bg-brand-600 hover:-translate-y-0.5 active:translate-y-0",
+			"h-11 bg-brand-500 text-white font-medium shadow-md shadow-brand-500/30 hover:bg-brand-600 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_-8px_rgba(16,185,129,0.4)] active:translate-y-0 active:shadow-md transition-all duration-200",
 		secondary:
-			"border-2 border-white/25 bg-white/[0.08] text-white font-medium hover:border-brand-500/50 hover:bg-white/5",
+			"border-2 border-white/25 bg-white/[0.08] text-white font-medium hover:border-brand-500/50 hover:bg-white/5 hover:-translate-y-[2px] hover:shadow-[0_8px_16px_-4px_rgba(99,102,241,0.3)] active:translate-y-0 transition-all duration-200",
 		ghost:
-			"text-content-secondary hover:text-white hover:bg-white/5 font-medium",
+			"text-content-secondary hover:text-white hover:bg-white/5 font-medium hover:-translate-y-[1px] transition-all duration-200",
 		danger:
-			"border-2 border-error-500/30 bg-error-500/15 text-error-200 hover:bg-error-500/25 font-medium",
+			"border-2 border-error-500/30 bg-error-500/15 text-error-200 hover:bg-error-500/25 font-medium hover:-translate-y-[2px] hover:shadow-[0_8px_16px_-4px_rgba(239,68,68,0.3)] active:translate-y-0 transition-all duration-200",
 		gradient:
-			"h-11 bg-gradient-to-r from-brand-500 to-purple-500 text-white font-medium shadow-md shadow-brand-500/30 hover:from-purple-600 hover:to-purple-600 hover:-translate-y-0.5 active:translate-y-0 transition-all",
+			"h-11 bg-gradient-to-r from-brand-500 to-purple-500 text-white font-medium shadow-md shadow-brand-500/30 hover:from-purple-600 hover:to-purple-600 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_-8px_rgba(139,92,246,0.4)] active:translate-y-0 active:shadow-md transition-all duration-200",
 	};
 
 	const sizes = {

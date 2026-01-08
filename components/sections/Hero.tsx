@@ -70,8 +70,19 @@ export default function Hero() {
 				aria-hidden="true"
 			/>
 
-			{/* Layer 2: Gradient Background + HeroBackgroundAura (The Mood) */}
-			<div className="absolute inset-0 -z-10 bg-gradient-to-b from-surface-base via-black to-surface-base" />
+			{/* Layer 2: Enhanced Gradient Background with Depth + HeroBackgroundAura (The Mood) */}
+			<div 
+				className="absolute inset-0 -z-10"
+				style={{
+					background: `
+						radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.15), transparent),
+						radial-gradient(ellipse 60% 80% at 80% 60%, rgba(59, 130, 246, 0.10), transparent),
+						radial-gradient(ellipse 50% 50% at 20% 80%, rgba(139, 92, 246, 0.08), transparent),
+						linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8)),
+						#000
+					`
+				}}
+			/>
 			<div className="absolute inset-0 -z-10">
 				<HeroBackgroundAura />
 			</div>
@@ -89,35 +100,36 @@ export default function Hero() {
 						animate={{ opacity: 1, x: 0 }}
 						transition={{ duration: 0.6 }}
 						className="text-left space-y-4 sm:space-y-6 relative overflow-visible px-4 sm:pr-8 md:pr-10 sm:pl-6"
-						style={{ backgroundColor: "transparent" }}
+						style={{ backgroundColor: "transparent", overflow: "visible", overflowX: "visible", overflowY: "visible" }}
 					>
 						{/* Headline - "Silver Silk" gradient */}
 					<motion.h1
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ delay: 0.2, duration: 0.6 }}
-						className="text-[2.5rem] leading-[1.1] sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible"
+						className="text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-extrabold tracking-tight mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible"
+						style={{ wordSpacing: '0.05em', letterSpacing: '-0.02em' }}
 					>
 						{/* Silver Silk gradient: purple-500/80 (20%) → zinc-100 (50%) → purple-500/80 (80%) */}
-						<GradientText variant="brand">Get 5 early-career</GradientText>{" "}
-						<GradientText variant="brand">job matches</GradientText>{" "}
-						<span className="text-content-primary block">
+						<GradientText variant="brand" className="inline-block">Get 5 early-career</GradientText>{" "}
+						<GradientText variant="brand" className="inline-block">job matches</GradientText>{" "}
+						<span className="text-content-primary inline-block">
 							instantly
-						</span>
-					<GradientText variant="brand" className="text-[3rem] leading-[1.1] sm:text-6xl md:text-7xl font-black">
+						</span>{" "}
+						<GradientText variant="brand" className="inline-block text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-black">
 						free
 					</GradientText>
 				</motion.h1>
 
-				{/* Subheadline - HIGH-STAKES - Clear value prop */}
+				{/* Tagline - Simplified */}
 				<motion.p
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.25, duration: 0.6 }}
-					className="text-base sm:text-lg md:text-xl text-zinc-200 leading-relaxed max-w-xl mb-4 mt-4 sm:mt-6"
+					transition={{ delay: 0.22, duration: 0.6 }}
+					className="text-base sm:text-lg md:text-xl text-zinc-300 leading-relaxed max-w-xl mb-4 mt-2 sm:mt-4 overflow-visible"
+					style={{ wordSpacing: '0.02em' }}
 				>
-						Stop guessing about <strong className="text-white font-bold">visa status</strong>. Get curated graduate roles{" "}
-						<strong className="text-white font-bold">matched to your city and career path</strong> in under 2 minutes.
+					AI-powered job matching for early-career roles across Europe. Get personalized matches delivered to your inbox.
 					</motion.p>
 
 					{/* CTAs */}

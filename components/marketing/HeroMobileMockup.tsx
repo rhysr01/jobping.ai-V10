@@ -1,5 +1,6 @@
 "use client";
 
+import { MapPin } from "lucide-react";
 import { IPhoneShell } from "@/components/ui/IPhoneShell";
 import { TiltCard } from "@/components/ui/TiltCard";
 import Link from "next/link";
@@ -20,7 +21,7 @@ const FALLBACK_JOBS = [
 		title: "Strategy & Business Design Intern",
 		company: "McKinsey & Company",
 		location: "London, UK",
-		matchScore: 98,
+		matchScore: 95,
 		matchReason: "Perfect for your Strategy and Business Design career path. Located in London, visa sponsorship available.",
 		workEnvironment: "Hybrid",
 		type: "Internship",
@@ -29,7 +30,7 @@ const FALLBACK_JOBS = [
 		title: "Graduate Programme - Consulting",
 		company: "BCG",
 		location: "Amsterdam, Netherlands",
-		matchScore: 95,
+		matchScore: 92,
 		matchReason: "Ideal for recent graduates in Strategy. Visa sponsorship available for non-EU candidates.",
 		workEnvironment: "Hybrid",
 		type: "Graduate Programme",
@@ -38,7 +39,7 @@ const FALLBACK_JOBS = [
 		title: "Junior Business Analyst",
 		company: "Deloitte",
 		location: "Dublin, Ireland",
-		matchScore: 92,
+		matchScore: 89,
 		matchReason: "Great entry-level role matching your career path. Dublin location with visa support.",
 		workEnvironment: "On-site",
 		type: "Full-time",
@@ -47,7 +48,7 @@ const FALLBACK_JOBS = [
 		title: "Strategy Consultant (Entry Level)",
 		company: "PwC",
 		location: "Berlin, Germany",
-		matchScore: 90,
+		matchScore: 86,
 		matchReason: "Entry-level role in Strategy consulting. Berlin office with relocation support.",
 		workEnvironment: "Hybrid",
 		type: "Full-time",
@@ -56,7 +57,7 @@ const FALLBACK_JOBS = [
 		title: "Business Design Intern",
 		company: "EY",
 		location: "Paris, France",
-		matchScore: 88,
+		matchScore: 84,
 		matchReason: "Internship opportunity in Business Design. Paris location, French language preferred.",
 		workEnvironment: "Hybrid",
 		type: "Internship",
@@ -73,7 +74,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 				title: job.title || "",
 				company: job.company || "",
 				location: job.location || "",
-				matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 90,
+								matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 85,
 				matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
 				workEnvironment: job.workEnvironment || "Hybrid",
 				type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",
@@ -104,7 +105,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 								title: job.title || "",
 								company: job.company || "",
 								location: job.location || "",
-								matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 90,
+								matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 85,
 								matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
 								workEnvironment: job.workEnvironment || "Hybrid",
 								type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",
@@ -140,42 +141,53 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 							{/* Scrollable matches container */}
 							<div className="flex-1 overflow-y-auto p-4 pt-6 space-y-4">
 								{displayJobs.map((job, index) => (
-									<article
+									<div
 										key={index}
-										className="glass-card elevation-2 p-4 rounded-xl border border-emerald-500/20 relative"
+										className="rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur-[12px] p-2.5 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/12"
+										style={{
+											boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
+										}}
 									>
-										{/* Match Score Badge */}
-										<div className="flex items-center justify-between mb-2.5">
-											<span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-												🔥 {job.matchScore}% Match
+										{/* Match Score & Company */}
+										<div className="flex items-center justify-between mb-1.5">
+											<span
+												className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+													job.matchScore >= 92
+														? "bg-emerald-500/30 text-emerald-400 border border-emerald-500/40"
+														: "bg-purple-500/30 text-purple-400 border border-purple-500/40"
+												}`}
+											>
+												{job.matchScore >= 92 ? "🔥 " : ""}
+												{job.matchScore}% Match
 											</span>
-											<div className="text-xs font-semibold text-white truncate ml-2">
+											<div className="text-[10px] font-semibold text-white truncate ml-2">
 												{job.company}
 											</div>
 										</div>
 
 										{/* Job Title */}
-										<h3 className="text-sm font-bold text-white mb-1.5 leading-tight line-clamp-2">
+										<h3 className="text-[12px] font-bold text-white mb-1 leading-tight line-clamp-2">
 											{job.title}
 										</h3>
 
 										{/* Location */}
-										<div className="flex items-center gap-1.5 text-xs text-zinc-300 mb-2">
-											📍 {job.location}
+										<div className="flex items-center gap-1 text-[10px] text-zinc-300 mb-1.5">
+											<MapPin size={10} className="shrink-0" />
+											{job.location}
 										</div>
 
-										{/* Match Reason - Compact */}
-										<div className="mb-2 p-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
-											<p className="text-[10px] font-semibold text-zinc-400 mb-1">
-												Why this match?
-											</p>
-											<p className="text-xs text-zinc-200 leading-relaxed line-clamp-2">
+										{/* Match Reason */}
+										<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
+											<div className="text-[9px] font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
+												🤖 Why This Matches
+											</div>
+											<p className="text-[10px] text-white leading-relaxed line-clamp-2">
 												{job.matchReason}
 											</p>
 										</div>
 
 										{/* Tags */}
-										<div className="flex flex-wrap gap-1">
+										<div className="flex flex-wrap gap-1 mb-1.5">
 											<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-[9px] font-semibold">
 												{job.workEnvironment}
 											</span>
@@ -183,7 +195,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 												{job.type}
 											</span>
 										</div>
-									</article>
+									</div>
 								))}
 							</div>
 

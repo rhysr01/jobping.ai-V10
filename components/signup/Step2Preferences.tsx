@@ -60,14 +60,14 @@ export function Step2Preferences({
 					aria-hidden="true"
 				/>
 				<div className="relative z-10 space-y-6 sm:space-y-8 md:space-y-10 lg:space-y-12">
-					<div>
-						<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3">
+					<div className="mb-6 sm:mb-8">
+						<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 							Your preferences
 						</h2>
-						<p className="text-base sm:text-lg font-medium text-zinc-100">
+						<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
 							Help us match you perfectly
 						</p>
-						<p className="text-sm font-medium text-zinc-300 mt-2">
+						<p className="text-sm font-medium text-zinc-300 mt-2 leading-relaxed">
 							These fields improve the quality of your first 5 jobs.
 						</p>
 
@@ -127,7 +127,10 @@ export function Step2Preferences({
 							htmlFor="visa-field"
 							className="block text-base font-bold text-white mb-3"
 						>
-							Do you require visa sponsorship? *
+											Do you require visa sponsorship?
+											<span className="text-sm text-zinc-400 font-normal block mt-1">
+												Most EU students don't need sponsorship
+											</span>
 						</label>
 						<p className="text-sm text-zinc-200 mb-3">
 							We ask this so we can filter for companies that provide visa
@@ -186,7 +189,7 @@ export function Step2Preferences({
 							!!formData.visaStatus,
 						) && (
 							<FormFieldError
-								error="Please select whether you require visa sponsorship"
+													error="We need to know if you require visa sponsorship to find matching jobs that you can actually apply for."
 								id="visa-error"
 							/>
 						)}
@@ -260,7 +263,7 @@ export function Step2Preferences({
 							formData.entryLevelPreferences.length > 0,
 						) && (
 							<FormFieldError
-								error="Please select at least one entry level preference"
+								error="Your experience level helps us match you with roles at the right seniority - internships, graduate programs, or junior positions."
 								id="entry-level-error"
 							/>
 						)}

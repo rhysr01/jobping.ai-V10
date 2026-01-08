@@ -152,6 +152,13 @@ export const CAREER_PATHS = [
 		value: "strategy",
 		label: "Strategy & Business Design",
 		emoji: "",
+		popularRoles: [
+			"Business Analyst",
+			"Associate Consultant",
+			"Strategy Analyst",
+			"Junior Consultant",
+			"Consulting Intern"
+		],
 		roles: [
 			"Business Analyst",
 			"Associate Consultant",
@@ -174,6 +181,13 @@ export const CAREER_PATHS = [
 		value: "data",
 		label: "Data & Analytics",
 		emoji: "",
+		popularRoles: [
+			"Data Analyst",
+			"Junior Data Analyst",
+			"Analytics Intern",
+			"Business Intelligence Intern",
+			"Junior Data Scientist"
+		],
 		roles: [
 			"Data Analyst",
 			"Junior Data Analyst",
@@ -196,6 +210,13 @@ export const CAREER_PATHS = [
 		value: "sales",
 		label: "Sales & Client Success",
 		emoji: "",
+		popularRoles: [
+			"Sales Development Representative (SDR)",
+			"Business Development Representative (BDR)",
+			"Inside Sales Representative",
+			"Account Executive",
+			"Customer Success Associate"
+		],
 		roles: [
 			"Sales Development Representative (SDR)",
 			"Business Development Representative (BDR)",
@@ -218,6 +239,13 @@ export const CAREER_PATHS = [
 		value: "marketing",
 		label: "Marketing & Growth",
 		emoji: "",
+		popularRoles: [
+			"Marketing Intern",
+			"Digital Marketing Assistant",
+			"Marketing Coordinator",
+			"Social Media Intern",
+			"Growth Marketing Intern"
+		],
 		roles: [
 			"Marketing Intern",
 			"Social Media Intern",
@@ -240,6 +268,13 @@ export const CAREER_PATHS = [
 		value: "finance",
 		label: "Finance & Investment",
 		emoji: "",
+		popularRoles: [
+			"Financial Analyst",
+			"Finance Intern",
+			"Investment Banking Analyst",
+			"Risk Analyst",
+			"Audit Associate"
+		],
 		roles: [
 			"Financial Analyst",
 			"Finance Intern",
@@ -262,6 +297,13 @@ export const CAREER_PATHS = [
 		value: "operations",
 		label: "Operations & Supply Chain",
 		emoji: "",
+		popularRoles: [
+			"Operations Analyst",
+			"Supply Chain Analyst",
+			"Logistics Analyst",
+			"Procurement Analyst",
+			"Operations Intern"
+		],
 		roles: [
 			"Operations Analyst",
 			"Supply Chain Analyst",
@@ -284,6 +326,13 @@ export const CAREER_PATHS = [
 		value: "product",
 		label: "Product & Innovation",
 		emoji: "",
+		popularRoles: [
+			"Associate Product Manager (APM)",
+			"Product Analyst",
+			"Product Management Intern",
+			"Junior Product Manager",
+			"Product Designer"
+		],
 		roles: [
 			"Associate Product Manager (APM)",
 			"Product Analyst",
@@ -306,6 +355,13 @@ export const CAREER_PATHS = [
 		value: "tech",
 		label: "Tech & Transformation",
 		emoji: "",
+		popularRoles: [
+			"Software Engineer Intern",
+			"Cloud Engineer Intern",
+			"DevOps Engineer Intern",
+			"Data Engineer Intern",
+			"Systems Analyst"
+		],
 		roles: [
 			"Software Engineer Intern",
 			"Cloud Engineer Intern",
@@ -328,6 +384,13 @@ export const CAREER_PATHS = [
 		value: "sustainability",
 		label: "Sustainability & ESG",
 		emoji: "",
+		popularRoles: [
+			"ESG Intern",
+			"Sustainability Strategy Intern",
+			"Junior ESG Analyst",
+			"Sustainability Graduate Programme",
+			"ESG Data Analyst Intern"
+		],
 		roles: [
 			"ESG Intern",
 			"Sustainability Strategy Intern",
@@ -350,6 +413,13 @@ export const CAREER_PATHS = [
 		value: "unsure",
 		label: "Not Sure Yet / General",
 		emoji: "",
+		popularRoles: [
+			"Graduate Trainee",
+			"Rotational Graduate Program",
+			"Management Trainee",
+			"Business Graduate Analyst",
+			"Entry Level Program Associate"
+		],
 		roles: [
 			"Graduate Trainee",
 			"Rotational Graduate Program",

@@ -51,6 +51,7 @@ function MatchesPageContent() {
 	const searchParams = useSearchParams();
 	const [jobs, setJobs] = useState<Job[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingMessage, setLoadingMessage] = useState("Finding your perfect matches...");
 	const [error, setError] = useState("");
 	const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
 	const [_jobsViewed, setJobsViewed] = useState(0);
@@ -316,7 +317,13 @@ function MatchesPageContent() {
 	if (loading && !showMatchingSuite) {
 		return (
 			<div className="min-h-screen bg-black flex items-center justify-center p-4">
-				<div className="text-white text-xl">Loading matches...</div>
+				<div className="flex items-center justify-center py-8">
+					<div className="text-center">
+						<div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+						<p className="text-white font-medium">{loadingMessage}</p>
+						<p className="text-zinc-400 text-sm mt-1">This usually takes 5-10 seconds</p>
+					</div>
+				</div>
 			</div>
 		);
 	}

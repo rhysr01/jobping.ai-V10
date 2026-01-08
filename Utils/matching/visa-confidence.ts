@@ -216,13 +216,13 @@ export function calculateVisaConfidence(job: {
 export function getVisaConfidenceLabel(confidence: VisaConfidence): string {
 	switch (confidence) {
 		case "verified":
-			return "Verified Sponsorship";
+			return "✅ Confirmed Sponsorship";
 		case "likely":
-			return "Likely Sponsorship";
+			return "🟡 Probable Sponsorship";
 		case "local-only":
-			return "Local Only";
+			return "🔵 Possible Sponsorship";
 		default:
-			return "Visa Status Unknown";
+			return "❌ No Sponsorship";
 	}
 }
 

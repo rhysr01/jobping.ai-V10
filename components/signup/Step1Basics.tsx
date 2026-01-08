@@ -69,84 +69,22 @@ export function Step1Basics({
 			transition={{ duration: 0.4 }}
 			className="space-y-6 sm:space-y-8 md:space-y-10 lg:space-y-12"
 		>
-			<div>
-				<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3">
+			<div className="mb-6 sm:mb-8">
+				<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 					Let's get started
 				</h2>
-				<p className="text-base sm:text-lg font-medium text-zinc-100">
+				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
 					Tell us about yourself
 				</p>
-			</div>
-
-			{/* GDPR Consent */}
-			<div className="bg-gradient-to-r from-brand-500/15 via-brand-700/15 to-brand-500/15 border-2 border-brand-500/40 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
-				<label className="flex items-start gap-3 sm:gap-4 cursor-pointer group touch-manipulation">
-					<input
-						type="checkbox"
-						id="gdpr-consent"
-						checked={formData.gdprConsent}
-						onChange={(e) => {
-							setFormData({
-								...formData,
-								gdprConsent: e.target.checked,
-							});
-							setTouchedFields((prev) => new Set(prev).add("gdprConsent"));
-						}}
-						onBlur={() =>
-							setTouchedFields((prev) => new Set(prev).add("gdprConsent"))
-						}
-						className="mt-1 w-6 h-6 sm:w-5 sm:h-5 rounded border-2 border-zinc-600 bg-zinc-800 checked:bg-brand-500 checked:border-brand-500 cursor-pointer touch-manipulation min-w-[48px] min-h-[48px] sm:min-w-0 sm:min-h-0"
-						required
-						aria-required="true"
-						aria-describedby={
-							shouldShowError("gdprConsent", true, formData.gdprConsent)
-								? "gdpr-error"
-								: undefined
-						}
-					/>
-					<div className="flex-1">
-						<p className="text-white font-medium mb-1">
-							I agree to receive job recommendations via email{" "}
-							<span className="text-red-400">*</span>
-						</p>
-						<p className="text-sm text-zinc-400">
-							By checking this box, you consent to receive personalized job
-							matches and agree to our{" "}
-							<a
-								href="/legal/privacy"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-brand-400 hover:text-brand-300 underline font-semibold"
-							>
-								Privacy Policy
-							</a>{" "}
-							and{" "}
-							<a
-								href="/legal/terms"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-brand-400 hover:text-brand-300 underline font-semibold"
-							>
-								Terms of Service
-							</a>
-							. You can unsubscribe at any time.
-						</p>
-					</div>
-				</label>
-				{shouldShowError("gdprConsent", true, formData.gdprConsent) && (
-					<FormFieldError
-						error="Please check the box to agree to receive job recommendations"
-						id="gdpr-error"
-					/>
-				)}
 			</div>
 
 			<div>
 				<label
 					htmlFor="fullName"
-					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3"
+					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3 flex items-center gap-2"
 				>
-					Full Name *
+					<span>Full Name</span>
+					<span className="text-red-400 text-sm" aria-label="required">*</span>
 				</label>
 				<input
 					ref={formRefs.fullName}
@@ -169,7 +107,7 @@ export function Step1Basics({
 							announce("Full name is valid", "polite");
 						}
 					}}
-					className={`w-full px-4 sm:px-6 py-4 sm:py-5 bg-black/50 border-2 rounded-xl sm:rounded-2xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
+					className={`w-full px-4 sm:px-6 py-4 sm:py-5 min-h-[56px] bg-black/50 border-2 rounded-xl sm:rounded-2xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-black transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
 						formData.fullName
 							? nameValidation.isValid
 								? "border-green-500/60 shadow-[0_0_20px_rgba(34,197,94,0.2)]"
@@ -209,11 +147,12 @@ export function Step1Basics({
 			<div>
 				<label
 					htmlFor="email"
-					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3"
+					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3 flex items-center gap-2"
 				>
-					Email *
+					<span>Email</span>
+					<span className="text-red-400 text-sm" aria-label="required">*</span>
 				</label>
-				<p className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4">
+				<p id="email-help" className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4 leading-relaxed">
 					Get {SIGNUP_INITIAL_ROLES} jobs in your welcome email, then curated
 					drops 3x per week (Mon/Wed/Fri).
 				</p>
@@ -241,7 +180,7 @@ export function Step1Basics({
 							announce("Email address is valid", "polite");
 						}
 					}}
-					className={`w-full px-4 sm:px-6 py-4 sm:py-5 bg-black/50 border-2 rounded-xl sm:rounded-2xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
+					className={`w-full px-4 sm:px-6 py-4 sm:py-5 min-h-[56px] bg-black/50 border-2 rounded-xl sm:rounded-2xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-black transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
 						formData.email
 							? emailValidation.isValid && !fieldErrors.email
 								? "border-green-500/60 shadow-[0_0_20px_rgba(34,197,94,0.2)]"
@@ -260,9 +199,9 @@ export function Step1Basics({
 					aria-describedby={
 						formData.email.length > 0
 							? emailValidation.isValid && !fieldErrors.email
-								? "email-success"
-								: "email-error"
-							: undefined
+								? "email-success email-help"
+								: "email-error email-help"
+							: "email-help"
 					}
 					aria-required="true"
 				/>
@@ -281,16 +220,17 @@ export function Step1Basics({
 				<label
 					id="cities-label"
 					htmlFor="cities-field"
-					className="block text-base font-bold text-white mb-3"
+					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
-					Preferred Cities *{" "}
-					<span className="text-zinc-400 font-normal">(Select up to 3)</span>
+					<span>Preferred Cities</span>
+					<span className="text-red-400 text-sm" aria-label="required">*</span>
+					<span className="text-zinc-400 font-normal text-sm">(Select up to 3)</span>
 				</label>
-				<p className="text-sm text-zinc-400 mb-2">
+				<p id="cities-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
 					Choose up to 3 cities where you'd like to work. You can click on the
 					map or use the buttons below.
 				</p>
-				<p className="text-sm text-zinc-500 mb-4">
+				<p className="text-sm text-zinc-500 mb-4 leading-relaxed">
 					💡 We'll only show jobs in these cities. You can add more later in
 					your preferences.
 				</p>
@@ -305,10 +245,10 @@ export function Step1Basics({
 							formData.cities.length > 0,
 							citiesValidation.isValid,
 						)
-							? "cities-error"
+							? "cities-error cities-help"
 							: formData.cities.length > 0 && citiesValidation.isValid
-								? "cities-success"
-								: undefined
+								? "cities-success cities-help"
+								: "cities-help"
 					}
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -463,7 +403,7 @@ export function Step1Basics({
 					citiesValidation.isValid,
 				) && (
 					<FormFieldError
-						error="Please select at least one city. You can click on the map or use the buttons below."
+						error="We need to know where you want to work so we can find relevant job opportunities in those cities."
 						id="cities-error"
 					/>
 				)}
@@ -478,14 +418,15 @@ export function Step1Basics({
 				<label
 					id="languages-label"
 					htmlFor="languages-field"
-					className="block text-base font-bold text-white mb-3"
+					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
-					Languages (Professional Level) *
+					<span>Languages (Professional Level)</span>
+					<span className="text-red-400 text-sm" aria-label="required">*</span>
 				</label>
-				<p className="text-sm text-zinc-400 mb-2">
+				<p id="languages-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
 					Select languages you can use professionally
 				</p>
-				<p className="text-sm text-zinc-500 mb-4">
+				<p className="text-sm text-zinc-500 mb-4 leading-relaxed">
 					💡 We'll prioritize jobs that match your language skills.
 				</p>
 				<div
@@ -497,10 +438,10 @@ export function Step1Basics({
 							formData.languages.length > 0,
 							languagesValidation.isValid,
 						)
-							? "languages-error"
+							? "languages-error languages-help"
 							: formData.languages.length > 0 && languagesValidation.isValid
-								? "languages-success"
-								: undefined
+								? "languages-success languages-help"
+								: "languages-help"
 					}
 					onBlur={() =>
 						setTouchedFields((prev) => new Set(prev).add("languages"))
@@ -536,7 +477,7 @@ export function Step1Basics({
 					languagesValidation.isValid,
 				) && (
 					<FormFieldError
-						error="Please select at least one language"
+						error="Your language skills help us match you with companies that communicate in languages you're comfortable with."
 						id="languages-error"
 					/>
 				)}
@@ -546,7 +487,7 @@ export function Step1Basics({
 			<div className="h-32 sm:h-0" aria-hidden="true" />
 
 			{/* Sticky Submit Button */}
-			<div className="sticky bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
+			<div className="sticky bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
 				<motion.button
 					onClick={() => setStep(2)}
 					disabled={
