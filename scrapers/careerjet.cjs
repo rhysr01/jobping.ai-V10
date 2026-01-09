@@ -50,41 +50,24 @@ const CITIES = [
 // Local language early-career terms by country (expanded for better coverage)
 const LOCAL_EARLY_CAREER_TERMS = {
 	fr: [
-		"jeune diplômé",
-		"stagiaire",
-		"alternance",
-		"junior",
-		"débutant",
-		"programme graduate",
-		"coordinateur",
-		"assistant",
-		"représentant",
-		"spécialiste",
-		"ingénieur",
-		"stagiaire marketing",
-		"stagiaire finance",
-		"stagiaire tech",
-		"stagiaire hr",
-		"stagiaire esg",
+		// EXPANDED: Maximum French early career terms
+		"jeune diplômé", "stagiaire", "alternance", "junior", "débutant",
+		"programme graduate", "coordinateur", "assistant", "représentant", "spécialiste",
+		"ingénieur", "stagiaire marketing", "stagiaire finance", "stagiaire tech",
+		"stagiaire hr", "stagiaire esg", "diplômé", "alternant", "apprenti",
+		"premier emploi", "jeune professionnel", "coordinateur junior", "assistant junior",
+		"spécialiste junior", "ingénieur junior", "stagiaire commercial", "stagiaire opérationnel",
+		"stagiaire logistique", "stagiaire rh", "stagiaire comptabilité", "cdd", "cdi débutant"
 	],
 	de: [
-		"absolvent",
-		"trainee",
-		"praktikant",
-		"junior",
-		"berufseinsteiger",
-		"nachwuchskraft",
-		"praktikum",
-		"werkstudent",
-		"koordinator",
-		"assistent",
-		"vertreter",
-		"spezialist",
-		"ingenieur",
-		"praktikum marketing",
-		"praktikum finance",
-		"praktikum tech",
-		"praktikum hr",
+		// EXPANDED: Maximum German early career terms
+		"absolvent", "trainee", "praktikant", "junior", "berufseinsteiger",
+		"nachwuchskraft", "praktikum", "werkstudent", "koordinator", "assistent",
+		"vertreter", "spezialist", "ingenieur", "praktikum marketing", "praktikum finance",
+		"praktikum tech", "praktikum hr", "praktikum nachhaltigkeit", "ausbildung",
+		"duales studium", "azubi", "berufseinstieg", "karrierestart", "einsteiger",
+		"praktikumsplatz", "koordinator junior", "assistent junior", "spezialist junior",
+		"ingenieur junior", "volontariat", "freiwilligendienst", "fsj", " BFD"
 	],
 	es: [
 		"programa de graduados",
@@ -520,17 +503,29 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 			totalResponseTime += responseTime;
 
 			if (!response.ok) {
-				// Log error but don't fail completely - might be rate limit
+				// Handle specific error codes
+				if (response.status === 403) {
+					console.error(
+						`[CareerJet] 🚫 ACCESS FORBIDDEN (403) - API key invalid or account blocked`,
+					);
+					console.error(
+						`[CareerJet] Please check CAREERJET_API_KEY or contact CareerJet support`,
+					);
+					// Fail fast on 403 - don't retry
+					throw new Error("CareerJet API access forbidden - invalid API key");
+				}
+
 				if (response.status === 429) {
 					console.warn(
 						`[CareerJet] Rate limit hit for ${keyword} in ${city.name} (page ${page}) - will slow down`,
 					);
 					return { saved: savedCount, shouldSlowDown: true, responseTime: totalResponseTime };
 				}
+
 				console.error(
 					`[CareerJet] API error ${response.status} for ${keyword} in ${city.name} (page ${page})`,
 				);
-				break; // Stop pagination on error
+				break; // Stop pagination on other errors
 			}
 
 			const data = await response.json();
@@ -596,7 +591,7 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 				}
 
 				// Process through standardization pipe
-				const processed = processIncomingJob(
+				const processed = await processIncomingJob(
 					{
 						title: job.title,
 						company: job.company,
@@ -761,8 +756,12 @@ async function scrapeCareerJet() {
 
 	const baseQueries = generateSearchQueries();
 
-	// Limit to top queries to respect free tier (adjust as needed)
-	const limitedBaseQueries = baseQueries.slice(0, 20);
+	// EXPANDED: Maximize early career queries within CareerJet API limits
+	// CareerJet Free Tier: Generous limits with adaptive rate limiting
+	// Strategy: 12 cities × 25 queries × 2-3 pages = ~600-900 requests per run
+	// Increased from 20 to 25 queries per city for better early career coverage
+	// Adaptive rate limiting handles API throttling automatically
+	const limitedBaseQueries = baseQueries.slice(0, 25); // EXPANDED from 20 to 25
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -775,8 +774,8 @@ async function scrapeCareerJet() {
 		// Combine base queries with local terms for this city
 		const cityQueries = [...limitedBaseQueries];
 		if (localTerms.length > 0) {
-			// Add top 3 local terms for this city
-			cityQueries.push(...localTerms.slice(0, 3));
+			// EXPANDED: Add top 5 local terms for this city (increased from 3)
+			cityQueries.push(...localTerms.slice(0, 5)); // EXPANDED from 3 to 5
 			console.log(
 				`[CareerJet] ${city.name}: Using ${cityQueries.length} queries (${localTerms.slice(0, 3).length} local language terms)`,
 			);

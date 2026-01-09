@@ -17,7 +17,7 @@ const {
 	getRoleVariations,
 	cleanRoleForSearch,
 } = require("./shared/roles.cjs");
-const { recordScraperRun } = require("./shared/telemetry.cjs");
+const { recordScraperRun, recordApiRequest } = require("./shared/telemetry.cjs");
 const { processIncomingJob } = require("./shared/processor.cjs");
 
 const BASE_URL = "https://www.arbeitnow.com/api/job-board-api";
@@ -492,6 +492,7 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 	const jobBatch = []; // Accumulate jobs for batch saving
 
 	while (hasMorePages && page <= MAX_PAGES) {
+		let retries = 0; // Reset retries for each page
 		try {
 			const url = new URL(BASE_URL);
 			url.searchParams.set("search", keyword);
@@ -505,11 +506,35 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 				},
 			});
 
+			// Track API request
+			recordApiRequest("arbeitnow", url.toString(), response.ok);
+
 			if (!response.ok) {
+				// Handle rate limiting with exponential backoff
+				if (response.status === 429) {
+					console.warn(
+						`[Arbeitnow] Rate limit hit (429) for ${keyword} in ${location.name} (page ${page}) - backing off`,
+					);
+
+					// Exponential backoff: 5s, 10s, 20s, then give up
+					const backoffTime = Math.min(5000 * Math.pow(2, retries), 30000);
+					console.log(`[Arbeitnow] Waiting ${backoffTime}ms before retry...`);
+
+					await new Promise(resolve => setTimeout(resolve, backoffTime));
+					retries++;
+
+					if (retries < 3) {
+						continue; // Retry the same request
+					} else {
+						console.error(`[Arbeitnow] Rate limit persists after ${retries} retries - skipping`);
+						break;
+					}
+				}
+
 				console.error(
 					`[Arbeitnow] API error ${response.status} for ${keyword} in ${location.name} (page ${page})`,
 				);
-				break; // Stop pagination on error
+				break; // Stop pagination on other errors
 			}
 
 			const data = await response.json();
@@ -554,7 +579,7 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 					}
 
 					// Process through standardization pipe
-					const processed = processIncomingJob(
+					const processed = await processIncomingJob(
 						{
 							title: job.title,
 							company: job.company_name,

@@ -63,7 +63,7 @@ describe("ConsolidatedMatchingEngine", () => {
 	let mockUser: UserPreferences;
 
 	beforeEach(() => {
-		matcher = new ConsolidatedMatchingEngine("test-api-key");
+		matcher = new ConsolidatedMatchingEngine("sk-test-api-key-for-testing");
 
 		mockJobs = [
 			{

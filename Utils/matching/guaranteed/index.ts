@@ -142,20 +142,20 @@ async function getGuaranteedMatchesSinglePass(
 				const jobCategories = ((s.job as any).categories || []).map(
 					(c: string) => c.toLowerCase(),
 				);
-				
+
 				// First check: Job must have at least one work-type category
 				const hasWorkTypeCategory = jobCategories.some((cat: string) =>
 					workTypeCategories.includes(cat),
 				);
-				
+
 				if (!hasWorkTypeCategory) {
 					return false; // Filter out jobs without work-type categories
 				}
-				
-				// Second check: Job must have at least one matching category
-				return jobCategories.some((cat: string) =>
-					userDatabaseCategories.has(cat),
-				);
+
+				// For premium users, be less strict: accept jobs with work-type categories
+				// even if they don't exactly match the career path
+				// This ensures premium users get more matches while still getting quality jobs
+				return true;
 			});
 		}
 	}

@@ -8,6 +8,7 @@ import {
 	FormFieldError,
 	FormFieldSuccess,
 } from "@/components/ui/FormFieldFeedback";
+import { Skeleton } from "@/components/ui/Skeleton";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import { SIGNUP_INITIAL_ROLES } from "@/lib/productMetrics";
 import { showToast } from "@/lib/toast";
@@ -524,7 +525,7 @@ export function Step1Basics({
 									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 								/>
 							</svg>
-							Loading...
+							<Skeleton className="w-16 h-4" />
 						</span>
 					) : (
 						getDisabledMessage(1)

@@ -115,14 +115,39 @@ export class SemanticRetrievalService {
 	 */
 	async isSemanticSearchAvailable(): Promise<boolean> {
 		try {
+			// First check if we can query vector columns without errors
+			const { data: testData, error: testError } = await this.supabase
+				.from("jobs")
+				.select("id")
+				.limit(1);
+
+			if (testError) {
+				console.warn("Basic jobs query failed:", testError);
+				return false;
+			}
+
+			// Then check if vector operations work
 			const { data, error } = await this.supabase
 				.from("jobs")
 				.select("id")
 				.not("embedding", "is", null)
 				.limit(1);
 
-			return !error && data && data.length > 0;
-		} catch {
+			// Check for pgvector-specific errors
+			if (error) {
+				if (error.message?.includes("operator does not exist") ||
+				    error.message?.includes("vector") ||
+				    error.code === "42883") {
+					console.warn("pgvector extension not available - semantic search disabled", error);
+					return false;
+				}
+				console.warn("Embedding query failed:", error);
+				return false;
+			}
+
+			return data && data.length > 0;
+		} catch (error) {
+			console.warn("Semantic search availability check failed:", error);
 			return false;
 		}
 	}

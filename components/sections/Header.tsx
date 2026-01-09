@@ -106,9 +106,9 @@ export default function Header() {
 							}}
 							className="flex items-center gap-2 group py-1 overflow-visible"
 							aria-label="JobPing Home"
-							style={{ overflow: "visible", paddingRight: "0.5rem" }}
+							style={{ overflow: "visible", paddingRight: "0.75rem" }}
 						>
-							<div className="scale-90 md:scale-100 origin-left overflow-visible pr-2 md:pr-3" style={{ overflow: "visible", minWidth: "fit-content" }}>
+							<div className="scale-90 md:scale-100 origin-left overflow-visible pr-3 md:pr-4" style={{ overflow: "visible", minWidth: "fit-content" }}>
 								<LogoWordmark />
 							</div>
 						</Link>
@@ -180,25 +180,25 @@ export default function Header() {
 								}}
 								className="font-display group relative px-6 py-3 rounded-xl font-semibold text-white overflow-hidden"
 							>
-								{/* Gradient background */}
-								<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300" />
-								
+								{/* Black shiny background */}
+								<div className="absolute inset-0 bg-black group-hover:bg-gradient-to-r group-hover:from-black group-hover:via-gray-900 group-hover:to-black transition-all duration-300" />
+
 								{/* Shine effect on hover */}
 								<div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-									<div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000" />
+									<div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000" />
 								</div>
-								
+
 								{/* Shadow that grows on hover */}
-								<div className="absolute inset-0 shadow-lg shadow-emerald-500/30 group-hover:shadow-xl group-hover:shadow-emerald-500/40 rounded-xl transition-all" />
-								
+								<div className="absolute inset-0 shadow-lg shadow-black/50 group-hover:shadow-xl group-hover:shadow-black/80 rounded-xl transition-all" />
+
 								{/* Text */}
 								<span className="relative z-10 group-hover:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
 									{CTA_GET_MY_5_FREE_MATCHES}
 									<BrandIcons.ArrowRight className="h-4 w-4" />
 								</span>
-								
+
 								{/* Border glow */}
-								<div className="absolute inset-0 rounded-xl border border-emerald-400/50 group-hover:border-emerald-300 transition-colors" />
+								<div className="absolute inset-0 rounded-xl border border-white/30 group-hover:border-white/60 transition-colors" />
 							</Link>
 						</nav>
 

@@ -130,8 +130,25 @@ export class ConsolidatedMatchingEngine {
 	): Promise<ConsolidatedMatchResult> {
 		const jobsArray = Array.isArray(jobs) ? jobs : [];
 		const startTime = Date.now();
+		const userId = userPrefs.email || "unknown";
+		const originalJobCount = jobsArray.length;
+		const tier = userPrefs.subscription_tier || "free";
+
+		// START: Log overall matching process initiation
+		apiLogger.info("Matching process started", {
+			userId,
+			originalJobCount,
+			tier,
+			forceRulesBased,
+			timestamp: new Date().toISOString(),
+		});
 
 		if (!jobsArray || jobsArray.length === 0) {
+			apiLogger.warn("Matching process: no jobs provided", {
+				userId,
+				tier,
+			});
+
 			return {
 				matches: [],
 				method: "rule_based",
@@ -147,6 +164,18 @@ export class ConsolidatedMatchingEngine {
 		const { preFilterByHardGates } = await import("../preFilterHardGates");
 		const eligibleJobs = preFilterByHardGates(jobsArray, userPrefs);
 
+		const eligibleJobCount = eligibleJobs.length;
+		const filteredOutCount = originalJobCount - eligibleJobCount;
+
+		apiLogger.info("Hard gates filtering completed", {
+			userId,
+			originalJobCount,
+			eligibleJobCount,
+			filteredOutCount,
+			filterRate: Math.round((filteredOutCount / originalJobCount) * 100),
+			tier,
+		});
+
 		// 🆕 NEW: Route to stratified vs global matching
 		const targetCities = Array.isArray(userPrefs.target_cities)
 			? userPrefs.target_cities
@@ -154,10 +183,57 @@ export class ConsolidatedMatchingEngine {
 
 		if (targetCities.length > 1) {
 			// Multiple cities: Use weighted stratified matching
-			return this.performWeightedStratifiedMatching(jobsArray, eligibleJobs, userPrefs, targetCities, startTime, forceRulesBased);
+			apiLogger.info("Routing to stratified matching", {
+				userId,
+				cityCount: targetCities.length,
+				cities: targetCities,
+				eligibleJobCount,
+				tier,
+			});
+
+			const result = await this.performWeightedStratifiedMatching(jobsArray, eligibleJobs, userPrefs, targetCities, startTime, forceRulesBased);
+
+			// FINAL: Log completed matching process
+			apiLogger.info("Matching process completed", {
+				userId,
+				method: result.method,
+				matchCount: result.matches.length,
+				processingTimeMs: result.processingTime,
+				confidence: Math.round(result.confidence * 100) / 100,
+				aiModel: result.aiModel,
+				aiCostUsd: result.aiCostUsd,
+				aiTokensUsed: result.aiTokensUsed,
+				strategy: "stratified",
+				tier,
+			});
+
+			return result;
 		} else {
 			// Single city: Use enhanced matching with pre-filtering
-			return this.performEnhancedMatching(eligibleJobs, userPrefs, startTime);
+			apiLogger.info("Routing to enhanced matching", {
+				userId,
+				city: targetCities[0] || "any",
+				eligibleJobCount,
+				tier,
+			});
+
+			const result = await this.performEnhancedMatching(eligibleJobs, userPrefs, startTime);
+
+			// FINAL: Log completed matching process
+			apiLogger.info("Matching process completed", {
+				userId,
+				method: result.method,
+				matchCount: result.matches.length,
+				processingTimeMs: result.processingTime,
+				confidence: Math.round(result.confidence * 100) / 100,
+				aiModel: result.aiModel,
+				aiCostUsd: result.aiCostUsd,
+				aiTokensUsed: result.aiTokensUsed,
+				strategy: "enhanced",
+				tier,
+			});
+
+			return result;
 		}
 	}
 
@@ -191,8 +267,16 @@ export class ConsolidatedMatchingEngine {
 		const aiMatches = await this.performAIMatchingWithRetry(hardFilteredJobs, userPrefs);
 
 		if (aiMatches.length === 0) {
-			console.warn(`[ENHANCED MATCHING] AI returned no matches for ${userPrefs.email} - using semantic fallback`);
-			return this.performSemanticFallback(hardFilteredJobs, userPrefs);
+			console.warn(`[ENHANCED MATCHING] AI returned no matches for ${userPrefs.email} - trying semantic fallback`);
+			const semanticResult = await this.performSemanticFallback(hardFilteredJobs, userPrefs);
+
+			// If semantic fallback also returns no matches, provide rule-based matches as final fallback
+			if (semanticResult.matches.length === 0) {
+				console.warn(`[ENHANCED MATCHING] All matching methods failed for ${userPrefs.email} - using rule-based fallback`);
+				return this.performRuleBasedFallback(hardFilteredJobs, userPrefs);
+			}
+
+			return semanticResult;
 		}
 
 		console.log(`[ENHANCED MATCHING] AI returned ${aiMatches.length} candidates`);
@@ -253,15 +337,20 @@ export class ConsolidatedMatchingEngine {
 
 		const userLanguages = (userPrefs.languages_spoken || ["english"]).map(l => l.toLowerCase());
 
-		return jobs.filter(job => {
+
+		const filteredJobs = jobs.filter(job => {
 			// 1. LOCATION CHECK (CRITICAL)
 			const jobCity = (job.city || job.location || "").toLowerCase();
 			const locationMatch = userCities.some(city =>
 				jobCity.includes(city) || city.includes(jobCity)
 			);
 
-			if (!locationMatch) {
-				console.log(`[HARD FILTER] Rejected: ${job.title} - Wrong location (${job.city})`);
+			const isRemoteOrHybrid = (job.location || "").toLowerCase().includes("remote") ||
+			                        (job.location || "").toLowerCase().includes("hybrid");
+
+			const locationOk = locationMatch || isRemoteOrHybrid;
+
+			if (!locationOk) {
 				return false;
 			}
 
@@ -271,7 +360,6 @@ export class ConsolidatedMatchingEngine {
 				                    (job.description || "").toLowerCase().includes("visa sponsor");
 
 				if (!visaFriendly) {
-					console.log(`[HARD FILTER] Rejected: ${job.title} - No visa sponsorship`);
 					return false;
 				}
 			}
@@ -283,12 +371,100 @@ export class ConsolidatedMatchingEngine {
 			);
 
 			if (!hasAllRequiredLanguages) {
-				console.log(`[HARD FILTER] Rejected: ${job.title} - Language mismatch`);
 				return false;
 			}
 
 			return true;
 		});
+
+
+		return filteredJobs;
+	}
+
+	/**
+	 * Final fallback when AI and semantic search both fail
+	 * Uses simple rule-based matching to provide at least some matches
+	 */
+	private async performRuleBasedFallback(
+		jobs: Job[],
+		userPrefs: UserPreferences,
+	): Promise<ConsolidatedMatchResult> {
+		console.warn(`[RULE-BASED FALLBACK] Providing basic matches for ${userPrefs.email}`);
+
+		// Simple scoring based on career path and early career eligibility
+		const scoredJobs = jobs.map((job, index) => {
+			let score = 60; // Base score
+			let reasons: string[] = [];
+
+			// Career path matching (basic)
+			const userCareerPath = Array.isArray(userPrefs.career_path)
+				? userPrefs.career_path[0]
+				: userPrefs.career_path;
+
+			if (userCareerPath && job.categories) {
+				const categoryMatch = job.categories.some(cat =>
+					cat.toLowerCase().includes(userCareerPath.toLowerCase())
+				);
+				if (categoryMatch) {
+					score += 15;
+					reasons.push("Career path alignment");
+				}
+			}
+
+			// Early career bonus
+			if (job.is_internship || job.is_graduate ||
+				job.categories?.some(cat => cat.includes("early-career"))) {
+				score += 10;
+				reasons.push("Early career opportunity");
+			}
+
+			// Location bonus (already filtered, but add small bonus)
+			score += 5;
+			reasons.push("Location match");
+
+			// Skills bonus (basic keyword matching)
+			if (userPrefs.skills && job.description) {
+				const description = job.description.toLowerCase();
+				const skillsMatch = userPrefs.skills.some(skill =>
+					description.includes(skill.toLowerCase())
+				);
+				if (skillsMatch) {
+					score += 10;
+					reasons.push("Skills alignment");
+				}
+			}
+
+			return {
+				job,
+				score: Math.min(95, score),
+				reasons
+			};
+		});
+
+		// Sort by score and take top matches
+		scoredJobs.sort((a, b) => b.score - a.score);
+		const topMatches = scoredJobs.slice(0, Math.min(5, jobs.length));
+
+		// Convert to JobMatch format
+		const matches: JobMatch[] = topMatches.map((match, index) => ({
+			job_index: index + 1,
+			job_hash: match.job.job_hash,
+			match_score: match.score / 100, // Convert to 0-1 scale
+			match_reason: `Rule-based match: ${match.reasons.join(", ")}. AI and semantic matching unavailable.`,
+			confidence_score: 0.2, // Very low confidence - this is last resort
+		}));
+
+		console.warn(`[RULE-BASED FALLBACK] Provided ${matches.length} basic matches for ${userPrefs.email}`);
+
+		return {
+			matches,
+			method: "rule_based_fallback",
+			processingTime: 0,
+			confidence: 0.1, // Very low confidence
+			aiModel: undefined,
+			aiCostUsd: 0,
+			aiTokensUsed: 0,
+		};
 	}
 
 	/**
@@ -867,11 +1043,48 @@ export class ConsolidatedMatchingEngine {
 		const maxRetries = AI_MAX_RETRIES;
 		let lastError: Error | null = null;
 		const startTime = Date.now();
+		const userId = userPrefs.email || "unknown";
+		const jobCount = jobsArray.length;
+		const tier = userPrefs.subscription_tier || "free";
+		const temperature = process.env.AI_TEMPERATURE_AB_TEST === "creative" ? 0.3 : 0.0;
+
+		// START: Log AI matching initiation
+		apiLogger.info("AI matching started", {
+			userId,
+			jobCount,
+			tier,
+			temperature,
+			model: "gpt-4o-mini",
+			cacheHit: false,
+			timestamp: new Date().toISOString(),
+		});
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				const matches = await this.performAIMatchingWithTimeout(jobsArray, userPrefs);
 				const latency = Date.now() - startTime;
+
+				// SUCCESS: Log successful AI completion
+				const averageScore = matches.length > 0
+					? matches.reduce((sum, m) => sum + m.match_score, 0) / matches.length
+					: 0;
+				const averageConfidence = matches.length > 0
+					? matches.reduce((sum, m) => sum + (m.confidence_score || 0), 0) / matches.length
+					: 0;
+
+				apiLogger.info("AI matching complete", {
+					userId,
+					matchCount: matches.length,
+					averageScore: Math.round(averageScore * 100) / 100,
+					averageConfidence: Math.round(averageConfidence * 100) / 100,
+					latencyMs: latency,
+					tokenCount: this.lastAIMetadata?.tokens || 0,
+					cost: this.lastAIMetadata?.cost || 0,
+					tier,
+					model: "gpt-4o-mini",
+					temperature,
+					attempt,
+				});
 
 				// Record successful AI call
 				const qualityScore = aiMonitor.calculateQualityScore(matches);
@@ -883,6 +1096,21 @@ export class ConsolidatedMatchingEngine {
 				const latency = Date.now() - startTime;
 				const isRateLimit = error?.status === 429;
 
+				// FAILURE ATTEMPT: Log individual failed attempts
+				if (attempt < maxRetries) {
+					apiLogger.warn("AI matching attempt failed", {
+						userId,
+						attempt,
+						maxRetries,
+						latencyMs: latency,
+						error: error instanceof Error ? error.message : String(error),
+						errorType: error instanceof Error ? error.constructor.name : "Unknown",
+						isRateLimit,
+						willRetry: true,
+						tier,
+					});
+				}
+
 				// Record failed AI call
 				aiMonitor.recordRequest("gpt-4o-mini", latency, 0, 0, false, isRateLimit);
 
@@ -892,6 +1120,18 @@ export class ConsolidatedMatchingEngine {
 				}
 			}
 		}
+
+		// FINAL FAILURE: Log complete failure after all retries
+		apiLogger.error("AI matching failed after all retries", {
+			userId,
+			jobCount,
+			tier,
+			totalLatencyMs: Date.now() - startTime,
+			attempts: maxRetries,
+			finalError: lastError instanceof Error ? lastError.message : String(lastError),
+			errorType: lastError instanceof Error ? lastError.constructor.name : "Unknown",
+			temperature,
+		} as any);
 
 		throw lastError || new Error("AI matching failed after all retries");
 	}

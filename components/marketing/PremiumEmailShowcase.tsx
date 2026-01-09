@@ -299,8 +299,8 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 		{/* Email Body - All content flows naturally for scrolling */}
 		<div className="p-3 space-y-2.5">
 			{/* Premium Badge */}
-			<div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
-				<div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+			<div className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500/20 to-brand-600/20 px-2 py-0.5 text-[10px] font-bold text-brand-300 border border-brand-500/30 shadow-lg shadow-brand-500/20">
+				<div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
 				<span>Premium Member</span>
 			</div>
 
@@ -329,7 +329,7 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 							className="group relative"
 						>
 							{/* Glow effect on hover */}
-							<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
+							<div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
 							
 							{/* Card */}
 							<div className="relative rounded-lg bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5"
@@ -416,13 +416,13 @@ const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
 					<div className="flex gap-1 mt-1">
 						<button
 							type="button"
-							className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-emerald-500/20 transition-colors"
+							className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-emerald-500/20 transition-colors min-h-[48px]"
 						>
 							👍 Good match
 						</button>
 						<button
 							type="button"
-							className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-red-500/20 transition-colors"
+							className="flex-1 bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-red-500/20 transition-colors min-h-[48px]"
 						>
 							👎 Not for me
 						</button>

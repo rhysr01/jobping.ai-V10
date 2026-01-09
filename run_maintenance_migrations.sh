@@ -15,7 +15,12 @@ run_migration() {
     echo "▶️  Running: $description"
     echo "   Migration: $migration_name"
 
-    if npx supabase db push; then
+    # Extract database connection details from environment
+    SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL:-https://kpecjbjtdjzgkzywylhn.supabase.co}"
+    PROJECT_REF=$(echo "$SUPABASE_URL" | sed 's|https://||' | sed 's|\.supabase\.co||')
+    DB_URL="postgresql://postgres:$SUPABASE_SERVICE_ROLE_KEY@db.$PROJECT_REF.supabase.co:5432/postgres?sslmode=require"
+
+    if npx supabase db push --db-url "$DB_URL" --include-all; then
         echo "✅ SUCCESS: $description"
         echo ""
     else

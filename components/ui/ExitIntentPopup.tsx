@@ -140,14 +140,14 @@ export default function ExitIntentPopup() {
 							<Link
 								href="/signup/free"
 								onClick={() => setShowPopup(false)}
-								className="btn-primary w-full text-sm sm:text-base py-3 sm:py-3.5 min-h-[44px] sm:min-h-[48px]"
+								className="btn-primary w-full text-sm sm:text-base py-3 sm:py-3.5 min-h-[48px]"
 							>
 								{CTA_GET_MY_5_FREE_MATCHES} →
 							</Link>
 							<button
 								type="button"
 								onClick={() => setShowPopup(false)}
-								className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 opacity-50 hover:opacity-75 min-h-[44px] min-w-[44px] px-4 py-2"
+								className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 opacity-50 hover:opacity-75 min-h-[48px] min-w-[48px] px-4 py-2"
 							>
 								No thanks
 							</button>

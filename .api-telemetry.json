@@ -1,0 +1,17 @@
+{
+  "adzuna__2026-01-09": {
+    "total": 100,
+    "success": 100,
+    "errors": 0
+  },
+  "reed__2026-01-09": {
+    "total": 44,
+    "success": 44,
+    "errors": 0
+  },
+  "jooble__2026-01-09": {
+    "total": 4,
+    "success": 4,
+    "errors": 0
+  }
+}

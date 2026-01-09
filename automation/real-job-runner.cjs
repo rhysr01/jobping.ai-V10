@@ -7,6 +7,7 @@ const { promisify } = require("util");
 const execAsync = promisify(exec);
 const { createClient } = require("@supabase/supabase-js");
 const fs = require("fs");
+const { getApiUsageReport } = require("../scrapers/shared/telemetry.cjs");
 
 // Initialize language detection (simple version)
 // const { initLang } = require('../scrapers/lang');
@@ -377,47 +378,27 @@ class RealJobRunner {
 				console.warn("⚠️  JobSpy stderr:", stderr.substring(0, 1000));
 			}
 
-			// Parse job count from the result - try multiple patterns
-			let jobsSaved = 0;
-			const savedMatch = stdout.match(/✅ JobSpy: total_saved=(\d+)/);
-			if (savedMatch) {
-				jobsSaved = parseInt(savedMatch[1]);
+			// Get job count from database - JobSpy saves with "jobspy-indeed" source
+			const startTime = new Date(Date.now() - 15 * 60 * 1000).toISOString(); // 15 minutes ago
+			const { count, error } = await supabase
+				.from("jobs")
+				.select("id", { count: "exact", head: false })
+				.eq("source", "jobspy-indeed")
+				.gte("created_at", startTime);
+
+			const jobsSaved = error ? 0 : count || 0;
+
+			if (jobsSaved > 0) {
+				console.log(`✅ JobSpy: Found ${jobsSaved} jobs in database`);
 			} else {
-				// Try alternative patterns
-				const altMatch = stdout.match(/total_saved[=:](\d+)/i);
-				if (altMatch) {
-					jobsSaved = parseInt(altMatch[1]);
-				} else {
-					// Fallback to DB count (last 10 minutes)
-					const { count, error } = await supabase
-						.from("jobs")
-						.select("id", { count: "exact", head: false })
-						.eq("source", "jobspy-indeed")
-						.gte(
-							"created_at",
-							new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-						);
-					jobsSaved = error ? 0 : count || 0;
-					if (jobsSaved > 0) {
-						console.log(`ℹ️  JobSpy: DB fallback count: ${jobsSaved} jobs`);
-					} else {
-						console.warn(
-							"⚠️  JobSpy: No jobs found in DB - scraper may have filtered all jobs or found none",
-						);
-						// Show last 30 lines of output for debugging
-						const lines = stdout.split("\n").filter((l) => l.trim());
-						if (lines.length > 0) {
-							console.log("📋 Last output lines:", lines.slice(-30).join("\n"));
-						}
-						// Also check if script completed
-						if (stdout.includes("Done") || stdout.includes("Complete")) {
-							console.log(
-								"ℹ️  Script completed but no jobs saved - likely filtering issue",
-							);
-						} else {
-							console.log("⚠️  Script may not have completed successfully");
-						}
-					}
+				console.log(
+					`ℹ️  JobSpy: No new jobs found in database (checked last 15 minutes)`,
+				);
+				// Show some output for debugging if no jobs found
+				if (stdout.includes("Saved") || stdout.includes("✅")) {
+					console.log(
+						"📋 JobSpy did run and reported saving jobs - check database manually",
+					);
 				}
 			}
 
@@ -923,7 +904,7 @@ class RealJobRunner {
 					timeout: 600000, // 10 minutes timeout
 					env: { ...process.env },
 				}),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				300000, // Increased from 120000 (2min) to 300000 (5min) for 54 queries
 				"Jooble scraper",
 			);
 
@@ -1629,6 +1610,24 @@ class RealJobRunner {
 			console.log(
 				`📦 Per-source breakdown this cycle: ${JSON.stringify(this.currentCycleStats.perSource)}`,
 			);
+
+			// API Usage Report
+			const apiUsage = getApiUsageReport();
+			console.log(`📊 API Usage Report:`);
+			Object.entries(apiUsage).forEach(([api, dates]) => {
+				const today = new Date().toISOString().split("T")[0];
+				const todayStats = dates[today];
+				if (todayStats) {
+					const successRate =
+						todayStats.total > 0
+							? ((todayStats.success / todayStats.total) * 100).toFixed(1)
+							: "0.0";
+					console.log(
+						`   - ${api}: ${todayStats.total} requests (${successRate}% success, ${todayStats.errors} errors)`,
+					);
+				}
+			});
+
 			if (
 				deactivatedCount.status === "fulfilled" &&
 				deactivatedCount.value > 0

@@ -11,6 +11,7 @@ export interface ConsolidatedMatchResult {
 		| "ai_timeout"
 		| "ai_failed"
 		| "rule_based"
+		| "rule_based_fallback"
 		| "guaranteed_fallback"
 		| "semantic_fallback"
 		| "ai_failed_semantic_fallback";

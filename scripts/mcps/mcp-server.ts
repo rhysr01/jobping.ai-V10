@@ -19,12 +19,47 @@ class JobPingMCPServer {
   private puppeteer: PuppeteerMCP;
 
   constructor() {
-    this.github = new GitHubMCP();
-    this.sentry = new SentryMCP();
-    this.vercel = new VercelMCP();
-    this.supabase = new SupabaseMCP();
-    this.bravesearch = new BraveSearchMCP();
-    this.puppeteer = new PuppeteerMCP();
+    try {
+      this.github = new GitHubMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize GitHub MCP:", error.message);
+      this.github = null as any;
+    }
+
+    try {
+      this.sentry = new SentryMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize Sentry MCP:", error.message);
+      this.sentry = null as any;
+    }
+
+    try {
+      this.vercel = new VercelMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize Vercel MCP:", error.message);
+      this.vercel = null as any;
+    }
+
+    try {
+      this.supabase = new SupabaseMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize Supabase MCP:", error.message);
+      this.supabase = null as any;
+    }
+
+    try {
+      this.bravesearch = new BraveSearchMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize BraveSearch MCP:", error.message);
+      this.bravesearch = null as any;
+    }
+
+    try {
+      this.puppeteer = new PuppeteerMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize Puppeteer MCP:", error.message);
+      this.puppeteer = null as any;
+    }
 
     this.server = new Server(
       {
@@ -343,49 +378,49 @@ class JobPingMCPServer {
       try {
         switch (name) {
           case "github_create_issue":
-            return await this.github.createIssue(args);
+            return this.github ? await this.github.createIssue(args) : this.getServiceUnavailableResponse("GitHub");
           case "github_get_recent_issues":
-            return await this.github.getRecentIssues(args);
+            return this.github ? await this.github.getRecentIssues(args) : this.getServiceUnavailableResponse("GitHub");
           case "github_search_issues":
-            return await this.github.searchIssues(args);
+            return this.github ? await this.github.searchIssues(args) : this.getServiceUnavailableResponse("GitHub");
           case "sentry_get_recent_errors":
-            return await this.sentry.getRecentErrors(args);
+            return this.sentry ? await this.sentry.getRecentErrors(args) : this.getServiceUnavailableResponse("Sentry");
           case "sentry_analyze_error_patterns":
-            return await this.sentry.analyzeErrorPatterns(args);
+            return this.sentry ? await this.sentry.analyzeErrorPatterns(args) : this.getServiceUnavailableResponse("Sentry");
           case "sentry_get_error_details":
-            return await this.sentry.getErrorDetails(args);
+            return this.sentry ? await this.sentry.getErrorDetails(args) : this.getServiceUnavailableResponse("Sentry");
           case "vercel_get_deployments":
-            return await this.vercel.getDeployments(args);
+            return this.vercel ? await this.vercel.getDeployments(args) : this.getServiceUnavailableResponse("Vercel");
           case "vercel_check_deployment_status":
-            return await this.vercel.checkDeploymentStatus(args);
+            return this.vercel ? await this.vercel.checkDeploymentStatus(args) : this.getServiceUnavailableResponse("Vercel");
           case "vercel_get_logs":
-            return await this.vercel.getLogs(args);
+            return this.vercel ? await this.vercel.getLogs(args) : this.getServiceUnavailableResponse("Vercel");
           case "supabase_query_users":
-            return await this.supabase.queryUsers(args);
+            return this.supabase ? await this.supabase.queryUsers(args) : this.getServiceUnavailableResponse("Supabase");
           case "supabase_get_user_details":
-            return await this.supabase.getUserDetails(args);
+            return this.supabase ? await this.supabase.getUserDetails(args) : this.getServiceUnavailableResponse("Supabase");
           case "supabase_query_jobs":
-            return await this.supabase.queryJobs(args);
+            return this.supabase ? await this.supabase.queryJobs(args) : this.getServiceUnavailableResponse("Supabase");
           case "supabase_get_table_stats":
-            return await this.supabase.getTableStats(args);
+            return this.supabase ? await this.supabase.getTableStats(args) : this.getServiceUnavailableResponse("Supabase");
           case "supabase_run_maintenance_migrations":
-            return await this.supabase.runMaintenanceMigrations(args);
+            return this.supabase ? await this.supabase.runMaintenanceMigrations(args) : this.getServiceUnavailableResponse("Supabase");
           case "daily_health_summary":
             return await this.getDailyHealthSummary(args);
           case "bravesearch_web_search":
-            return await this.bravesearch.webSearch(args);
+            return this.bravesearch ? await this.bravesearch.webSearch(args) : this.getServiceUnavailableResponse("BraveSearch");
           case "bravesearch_research_topic":
-            return await this.bravesearch.researchTopic(args);
+            return this.bravesearch ? await this.bravesearch.researchTopic(args) : this.getServiceUnavailableResponse("BraveSearch");
           case "bravesearch_find_solutions":
-            return await this.bravesearch.findSolutions(args);
+            return this.bravesearch ? await this.bravesearch.findSolutions(args) : this.getServiceUnavailableResponse("BraveSearch");
           case "bravesearch_tech_documentation":
-            return await this.bravesearch.techDocumentation(args);
+            return this.bravesearch ? await this.bravesearch.techDocumentation(args) : this.getServiceUnavailableResponse("BraveSearch");
           case "puppeteer_take_screenshot":
-            return await this.puppeteer.takeScreenshot(args);
+            return this.puppeteer ? await this.puppeteer.takeScreenshot(args) : this.getServiceUnavailableResponse("Puppeteer");
           case "puppeteer_analyze_design":
-            return await this.puppeteer.analyzePageDesign(args);
+            return this.puppeteer ? await this.puppeteer.analyzePageDesign(args) : this.getServiceUnavailableResponse("Puppeteer");
           case "puppeteer_compare_pages":
-            return await this.puppeteer.comparePages(args);
+            return this.puppeteer ? await this.puppeteer.comparePages(args) : this.getServiceUnavailableResponse("Puppeteer");
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -410,20 +445,24 @@ class JobPingMCPServer {
       const hours = days * 24;
 
       // Get recent GitHub issues
-      const githubIssues = await this.github.getRecentIssues({ state: "open", limit: 20 });
-      const githubData = githubIssues.content[0].text;
+      const githubData = this.github
+        ? (await this.github.getRecentIssues({ state: "open", limit: 20 })).content[0].text
+        : "GitHub MCP not configured";
 
       // Get recent Sentry errors
-      const sentryErrors = await this.sentry.getRecentErrors({ hours, limit: 50 });
-      const sentryData = sentryErrors.content[0].text;
+      const sentryData = this.sentry
+        ? (await this.sentry.getRecentErrors({ hours, limit: 50 })).content[0].text
+        : "Sentry MCP not configured";
 
       // Get user metrics from Supabase
-      const userStats = await this.supabase.getTableStats({ tables: ["users"] });
-      const userData = userStats.content[0].text;
+      const userData = this.supabase
+        ? (await this.supabase.getTableStats({ tables: ["users"] })).content[0].text
+        : "Supabase MCP not configured";
 
       // Analyze patterns
-      const errorPatterns = await this.sentry.analyzeErrorPatterns({ days });
-      const patternData = errorPatterns.content[0].text;
+      const patternData = this.sentry
+        ? (await this.sentry.analyzeErrorPatterns({ days })).content[0].text
+        : "Sentry MCP not configured";
 
       // Generate comprehensive report
       const report = this.generateHealthReport({
@@ -554,6 +593,17 @@ ${recentIssues}`;
     return recommendations.length > 0 ?
       recommendations.join('\n') :
       "✅ **All systems operating normally** - No immediate actions needed";
+  }
+
+  private getServiceUnavailableResponse(serviceName: string) {
+    return {
+      content: [
+        {
+          type: "text",
+          text: `⚠️  ${serviceName} MCP not configured. This tool is not available.\n\nPlease check your environment variables and MCP configuration.`,
+        },
+      ],
+    };
   }
 
   async start() {

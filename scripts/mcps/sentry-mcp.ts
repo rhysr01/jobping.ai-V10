@@ -13,6 +13,7 @@ export class SentryMCP {
     if (!this.authToken || !this.org || !this.project) {
       console.warn("⚠️  Sentry MCP: Missing environment variables. Sentry tools will not be available.");
       console.warn("Required: SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT");
+      return;
     }
   }
 

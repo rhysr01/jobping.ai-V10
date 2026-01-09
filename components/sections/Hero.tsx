@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { HeroMobileMockup } from "@/components/marketing/HeroMobileMockup";
 import TrustBadges from "@/components/sections/TrustBadges";
 import { BrandIcons } from "@/components/ui/BrandIcons";
@@ -13,11 +13,11 @@ import {
 	CTA_GET_MY_5_FREE_MATCHES_ARIA,
 } from "@/lib/copy";
 
-export default function Hero() {
+function Hero() {
 	const [preloadedJobs, setPreloadedJobs] = useState<any[]>([]);
 	const { stats } = useStats();
 
-	// Pre-fetch jobs immediately on mount (before component renders)
+	// Defer job pre-fetching to improve initial page load performance
 	useEffect(() => {
 		async function fetchJobs() {
 			try {
@@ -56,7 +56,9 @@ export default function Hero() {
 			}
 		}
 
-		fetchJobs();
+		const timeoutId = setTimeout(fetchJobs, 2000); // Defer by 2 seconds
+
+		return () => clearTimeout(timeoutId); // Cleanup timeout on unmount
 	}, []);
 
 	return (
@@ -179,8 +181,8 @@ export default function Hero() {
 								whileHover={{ scale: 1.02 }}
 								className="flex items-start gap-3 px-3 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-400/30 transition-all group"
 							>
-								<div className="p-2 rounded-lg bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors flex-shrink-0 mt-0.5">
-									<BrandIcons.MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400" />
+								<div className="p-2 rounded-lg bg-brand-500/20 group-hover:bg-brand-500/30 transition-colors flex-shrink-0 mt-0.5">
+									<BrandIcons.MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-brand-400" />
 								</div>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 mb-1">
@@ -199,8 +201,8 @@ export default function Hero() {
 								whileHover={{ scale: 1.02 }}
 								className="flex items-start gap-3 px-3 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-400/30 transition-all group"
 							>
-								<div className="p-2 rounded-lg bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors flex-shrink-0 mt-0.5">
-									<BrandIcons.Compass className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" />
+								<div className="p-2 rounded-lg bg-brand-500/20 group-hover:bg-brand-500/30 transition-colors flex-shrink-0 mt-0.5">
+									<BrandIcons.Compass className="h-4 w-4 sm:h-5 sm:w-5 text-brand-400" />
 								</div>
 								<div className="flex-1 min-w-0">
 									<span className="text-sm sm:text-base font-semibold text-white/90 block mb-1">Career Path</span>
@@ -214,8 +216,8 @@ export default function Hero() {
 								whileHover={{ scale: 1.02 }}
 								className="flex items-start gap-3 px-3 py-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-brand-400/30 transition-all group"
 							>
-								<div className="p-2 rounded-lg bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors flex-shrink-0 mt-0.5">
-									<BrandIcons.Passport className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400" />
+								<div className="p-2 rounded-lg bg-brand-500/20 group-hover:bg-brand-500/30 transition-colors flex-shrink-0 mt-0.5">
+									<BrandIcons.Passport className="h-4 w-4 sm:h-5 sm:w-5 text-brand-400" />
 								</div>
 								<div className="flex-1 min-w-0">
 									<span className="text-sm sm:text-base font-semibold text-white/90 block mb-1">Visa Status</span>
@@ -247,3 +249,5 @@ export default function Hero() {
 		</section>
 	);
 }
+
+export default memo(Hero);

@@ -16,7 +16,7 @@ const {
 	getTopRolesByCareerPath,
 	cleanRoleForSearch,
 } = require("./shared/roles.cjs");
-const { recordScraperRun } = require("./shared/telemetry.cjs");
+const { recordScraperRun, recordApiRequest } = require("./shared/telemetry.cjs");
 
 // Check for required API credentials
 if (!process.env.JOOBLE_API_KEY) {
@@ -58,63 +58,59 @@ const CITIES = [
  */
 const QUERY_SETS = {
 	SET_A: [
-		// Focus: Internships, graduate programs, and coordinator roles
-		"internship",
-		"graduate programme",
-		"graduate scheme",
-		"intern",
-		"graduate trainee",
-		"management trainee",
-		"trainee program",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
+		// EXPANDED: Maximum internships and graduate programs (20 terms)
+		"internship", "graduate programme", "graduate scheme", "graduate program",
+		"intern", "summer intern", "year in industry", "industrial placement",
+		"graduate trainee", "management trainee", "trainee program", "trainee scheme",
+		"campus hire", "new grad", "recent graduate", "early graduate", "fresh graduate",
+		"entry level program", "graduate development program", "leadership graduate program",
+		"marketing coordinator", "operations coordinator", "product coordinator", "hr coordinator",
+		"project coordinator", "sales coordinator", "finance coordinator", "business coordinator",
+		"event coordinator", "communications coordinator", "content coordinator",
+		"finance intern", "consulting intern", "marketing intern", "data intern",
+		"investment banking intern", "technology intern", "engineering intern", "product intern",
+		"entry level software engineer", "junior data scientist", "graduate consultant",
+		"associate investment banker", "recent graduate finance", "campus recruiter", "new grad program",
+		"apprentice", "apprenticeship", "graduate apprenticeship", "degree apprenticeship",
+		"placement student", "sandwich course", "vacation scheme", "vacation student"
 	],
 	SET_B: [
-		// Focus: Analyst, associate, assistant, and representative roles
-		"business analyst",
-		"financial analyst",
-		"data analyst",
-		"operations analyst",
-		"associate consultant",
-		"graduate analyst",
-		"junior analyst",
-		"marketing assistant",
-		"brand assistant",
-		"product assistant",
-		"sales development representative",
-		"sdr",
-		"bdr",
-		"junior account executive",
-		"customer success associate",
-		"hr assistant",
+		// EXPANDED: Maximum analyst, associate, and assistant roles (30 terms)
+		"business analyst", "financial analyst", "data analyst", "operations analyst",
+		"strategy analyst", "risk analyst", "investment analyst", "product analyst",
+		"marketing analyst", "sales analyst", "hr analyst", "supply chain analyst",
+		"associate consultant", "graduate analyst", "junior analyst", "entry level analyst",
+		"analyst graduate", "trainee analyst", "analyst intern",
+		"marketing assistant", "brand assistant", "product assistant", "finance assistant",
+		"operations assistant", "hr assistant", "sales assistant", "admin assistant",
+		"personal assistant", "executive assistant", "management assistant",
+		"sales development representative", "sdr", "bdr", "business development representative",
+		"junior account executive", "customer success associate", "account manager assistant",
+		"associate finance", "graduate associate", "junior consultant", "trainee consultant",
+		"associate product manager", "apm", "associate product", "product associate",
+		"entry level consultant", "consultant graduate", "junior business analyst",
+		"graduate business analyst", "trainee business analyst", "research assistant",
+		"junior researcher", "graduate researcher", "analyst assistant"
 	],
 	SET_C: [
-		// Focus: Entry-level, junior, engineer, specialist, manager, designer roles
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early careers program",
-		"rotational graduate program",
-		"software engineer intern",
-		"data engineer intern",
-		"cloud engineer intern",
-		"associate product manager",
-		"apm",
-		"product analyst",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
-		"ux intern",
-		"junior product designer",
-		"design intern",
-		"esg intern",
-		"sustainability analyst",
-		"climate analyst",
+		// EXPANDED: Maximum entry-level, junior, engineer, specialist roles (35 terms)
+		"entry level", "junior", "graduate", "recent graduate", "early graduate",
+		"early careers program", "rotational graduate program", "graduate rotation",
+		"entry level software engineer", "junior software engineer", "graduate software engineer",
+		"software engineer intern", "data engineer intern", "cloud engineer intern",
+		"frontend engineer intern", "backend engineer intern", "devops engineer intern",
+		"associate product manager", "apm", "product analyst", "junior product manager",
+		"entry level product", "product graduate", "junior fulfilment specialist",
+		"entry level technical specialist", "graduate hr specialist", "junior marketing specialist",
+		"junior product designer", "ux intern", "ui intern", "junior ux designer",
+		"design intern", "junior designer", "graduate designer", "entry level designer",
+		"junior engineer", "graduate engineer", "entry level engineer", "trainee engineer",
+		"junior specialist", "graduate specialist", "entry level specialist",
+		"esg intern", "sustainability analyst", "climate analyst", "environment analyst",
+		"junior researcher", "research assistant", "graduate researcher",
+		"junior developer", "graduate developer", "trainee developer", "junior programmer",
+		"entry level developer", "graduate web developer", "junior web developer",
+		"junior consultant", "graduate consultant", "trainee consultant"
 	],
 };
 
@@ -316,6 +312,9 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 				}),
 			});
 
+			// Track API request
+			recordApiRequest("jooble", url, response.ok);
+
 			if (!response.ok) {
 				const errorText = await response.text().catch(() => "");
 				console.error(
@@ -401,7 +400,7 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 					}
 
 					// Process through standardization pipe
-					const processed = processIncomingJob(
+					const processed = await processIncomingJob(
 						{
 							title: job.title || job.jobTitle || "",
 							company: job.company || job.companyName || job.employer || "",
@@ -556,10 +555,12 @@ async function scrapeJooble() {
 
 	const queries = generateSearchQueries();
 
-	// Limit queries to stay within API limits
-	// 22 cities × 20 keywords = 440 requests per run
-	// Rate limiting: 2s between requests = ~15 minutes total
-	const limitedQueries = queries.slice(0, 6); // Emergency reduction: 12->6 to prevent 120s timeout
+	// EXPANDED: Maximize early career queries within API limits
+	// Jooble Free Tier: Generous limits, focus on quality over quantity
+	// Strategy: 10 cities × 12 queries × 3 pages = ~360 requests per run
+	// Increased from 6 to 12 queries per city for better early career coverage
+	// Reduced cities to focus on major EU markets for quality over quantity
+	const limitedQueries = queries.slice(0, 12); // EXPANDED from 6 to 12 queries per city
 
 	let totalSaved = 0;
 	let errors = 0;

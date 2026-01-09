@@ -30,56 +30,12 @@ import { trackEvent } from "@/lib/analytics";
 import { ApiError, apiCall, apiCallJson } from "@/lib/api-client";
 import { showToast } from "@/lib/toast";
 import { LiveMatchingMessages } from "./LiveMatchingMessages";
+import { VisaSponsorshipSection } from "./VisaSponsorshipSection";
+import { CitySelectionSection } from "./CitySelectionSection";
+import { CareerPathSection } from "./CareerPathSection";
+import { ContactInfoSection } from "./ContactInfoSection";
+import { GDPRConsentSection } from "./GDPRConsentSection";
 
-// Code split EuropeMap for better performance
-const EuropeMap = dynamic(() => import("@/components/ui/EuropeMap"), {
-	loading: () => (
-		<div className="w-full h-[420px] sm:h-[480px] md:h-[540px] lg:h-[600px] rounded-2xl border-2 border-brand-500/30 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
-			<div className="text-center">
-				<div className="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto mb-4" />
-				<p className="text-content-secondary text-sm">Loading map...</p>
-			</div>
-		</div>
-	),
-	ssr: false, // Map is interactive, no need for SSR
-});
-
-const CAREER_PATHS = [
-	{ value: "strategy", label: "Strategy & Business Design" },
-	{ value: "data", label: "Data & Analytics" },
-	{ value: "sales", label: "Sales & Client Success" },
-	{ value: "marketing", label: "Marketing & Growth" },
-	{ value: "finance", label: "Finance & Investment" },
-	{ value: "operations", label: "Operations & Supply Chain" },
-	{ value: "product", label: "Product & Innovation" },
-	{ value: "tech", label: "Tech & Transformation" },
-	{ value: "sustainability", label: "Sustainability & ESG" },
-	{ value: "unsure", label: "Not Sure Yet / General" },
-];
-
-const CITIES = [
-	"Dublin",
-	"London",
-	"Paris",
-	"Amsterdam",
-	"Manchester",
-	"Birmingham",
-	"Belfast",
-	"Madrid",
-	"Barcelona",
-	"Berlin",
-	"Hamburg",
-	"Munich",
-	"Zurich",
-	"Milan",
-	"Rome",
-	"Brussels",
-	"Stockholm",
-	"Copenhagen",
-	"Vienna",
-	"Prague",
-	"Warsaw",
-];
 
 export default function SignupFormFree() {
 	const router = useRouter();
@@ -593,88 +549,11 @@ export default function SignupFormFree() {
 							</div>
 
 							{/* VISA SPONSORSHIP - PRIMARY QUESTION (FIRST) */}
-							<div className="mb-8">
-								<label className="block text-lg font-bold text-white mb-3">
-									Do you require visa sponsorship to work in the EU? *
-								</label>
-								<p className="text-sm text-content-secondary mb-4">
-									90% of graduate applications from international students are
-									rejected because of visa issues.
-								</p>
-
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<motion.button
-										type="button"
-										onClick={() => handleVisaSponsorshipChange("yes")}
-										whileTap={{ scale: 0.97 }}
-										disabled={isSubmitting}
-										className={`p-8 rounded-xl border-2 transition-all duration-300 text-left relative ${
-											formData.visaSponsorship === "yes"
-												? "border-emerald-500 bg-emerald-500/20 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-500/30"
-												: formData.visaSponsorship === "no"
-													? "opacity-50 border-border-default bg-surface-elevated/40"
-													: "border-border-default bg-surface-elevated/40 hover:border-border-default"
-										}`}
-									>
-										{/* Inner glow effect when selected */}
-										{formData.visaSponsorship === "yes" && (
-											<div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-400/20 to-transparent pointer-events-none" />
-										)}
-										<div className="relative flex flex-col">
-											<div className="flex items-center gap-2 mb-4">
-												<span className="text-xl">✅</span>
-												<span className="font-bold text-white">
-													Yes, I need a visa
-												</span>
-											</div>
-											<p className="text-sm text-content-secondary relative">
-												Tier 2, Blue Card, or work permit
-											</p>
-										</div>
-									</motion.button>
-
-									<motion.button
-										type="button"
-										onClick={() => handleVisaSponsorshipChange("no")}
-										whileTap={{ scale: 0.97 }}
-										disabled={isSubmitting}
-										className={`p-8 rounded-xl border-2 transition-all duration-300 text-left relative ${
-											formData.visaSponsorship === "no"
-												? "border-brand-500 bg-brand-500/20 shadow-lg shadow-brand-500/20 ring-2 ring-brand-500/30"
-												: formData.visaSponsorship === "yes"
-													? "opacity-50 border-border-default bg-surface-elevated/40"
-													: "border-border-default bg-surface-elevated/40 hover:border-border-default"
-										}`}
-									>
-										{/* Inner glow effect when selected */}
-										{formData.visaSponsorship === "no" && (
-											<div className="absolute inset-0 rounded-xl bg-gradient-to-br from-brand-400/20 to-transparent pointer-events-none" />
-										)}
-										<div className="relative flex flex-col">
-											<div className="flex items-center gap-2 mb-4">
-												<span className="text-xl">🇪🇺</span>
-												<span className="font-bold text-white">
-													No, I have EU citizenship
-												</span>
-											</div>
-											<p className="text-sm text-content-secondary relative">
-												EU/EEA citizen or permanent residency
-											</p>
-										</div>
-									</motion.button>
-								</div>
-
-								{shouldShowError(
-									"visaSponsorship",
-									!formData.visaSponsorship,
-									!!formData.visaSponsorship,
-								) && (
-									<FormFieldError
-										error="Please select your visa sponsorship requirement."
-										id="visa-error"
-									/>
-								)}
-							</div>
+							<VisaSponsorshipSection
+								visaSponsorship={formData.visaSponsorship}
+								onChange={handleVisaSponsorshipChange}
+								isSubmitting={isSubmitting}
+							/>
 
 							{/* Cities Selection with Map - KEPT AS REQUESTED */}
 							<div>

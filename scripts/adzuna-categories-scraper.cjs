@@ -4,6 +4,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
     require("dotenv").config({ path: ".env.local" });
 }
 const axios = require("axios");
+const { recordApiRequest } = require("../scrapers/shared/telemetry.cjs");
 
 // Check for required API credentials
 if (!process.env.ADZUNA_APP_ID || !process.env.ADZUNA_APP_KEY) {
@@ -246,80 +247,46 @@ console.log(
 	`🔄 Adzuna using query set: ${currentSet} - rotating between internship, graduate programme, and early career queries for career paths`,
 );
 
-// Local language terms by country (EXPANDED for better coverage - includes coordinator, assistant, representative, engineer, specialist roles)
-const LOCAL_EARLY_CAREER_TERMS = {
-	gb: [], // English only set is CORE_ENGLISH_TERMS
-	es: [
-		"programa de graduados",
-		"becario",
-		"prácticas",
-		"junior",
-		"recién graduado",
-		"nivel inicial",
-		"coordinador",
-		"asistente",
-		"representante",
-		"especialista",
-		"ingeniero",
-		"prácticas marketing",
-		"prácticas finance",
-		"prácticas tech",
-		"prácticas hr",
-		"prácticas sostenibilidad",
-	],
+	// EXPANDED: Local language terms by country (maximum early career coverage)
+	const LOCAL_EARLY_CAREER_TERMS = {
+		gb: [], // English only set is CORE_ENGLISH_TERMS
+		es: [
+			// EXPANDED: Maximum Spanish early career terms
+			"programa de graduados", "becario", "prácticas", "junior", "recién graduado",
+			"nivel inicial", "coordinador", "asistente", "representante", "especialista",
+			"ingeniero", "prácticas marketing", "prácticas finance", "prácticas tech",
+			"prácticas hr", "prácticas sostenibilidad", "graduado", "pasante",
+			"aprendiz", "trainee", "formación dual", "primer empleo", "entrada laboral",
+			"coordinador junior", "asistente junior", "especialista junior", "ingeniero junior"
+		],
 	de: [
-		"absolvent",
-		"trainee",
-		"praktikant",
-		"junior",
-		"berufseinsteiger",
-		"nachwuchskraft",
-		"koordinator",
-		"assistent",
-		"vertreter",
-		"spezialist",
-		"ingenieur",
-		"praktikum marketing",
-		"praktikum finance",
-		"praktikum tech",
-		"praktikum hr",
-		"praktikum nachhaltigkeit",
+		// EXPANDED: Maximum German early career terms
+		"absolvent", "trainee", "praktikant", "junior", "berufseinsteiger",
+		"nachwuchskraft", "praktikum", "werkstudent", "koordinator", "assistent",
+		"vertreter", "spezialist", "ingenieur", "praktikum marketing", "praktikum finance",
+		"praktikum tech", "praktikum hr", "praktikum nachhaltigkeit", "ausbildung",
+		"duales studium", "azubi", "berufseinstieg", "karrierestart", "einsteiger",
+		"praktikumsplatz", "koordinator junior", "assistent junior", "spezialist junior",
+		"ingenieur junior", "volontariat", "freiwilligendienst", "fsj"
 	],
 	nl: [
-		"afgestudeerde",
-		"traineeship",
-		"starter",
-		"junior",
-		"beginnend",
-		"werkstudent",
-		"coördinator",
-		"assistent",
-		"vertegenwoordiger",
-		"specialist",
-		"ingenieur",
-		"stage marketing",
-		"stage finance",
-		"stage tech",
-		"stage hr",
-		"stage duurzaamheid",
+		// EXPANDED: Maximum Dutch early career terms
+		"afgestudeerde", "traineeship", "starter", "junior", "beginnend",
+		"werkstudent", "coördinator", "assistent", "vertegenwoordiger", "specialist",
+		"ingenieur", "stage marketing", "stage finance", "stage tech", "stage hr",
+		"stage duurzaamheid", "student", "afstudeerstagiair", "young professional",
+		"startende medewerker", "beroepseinstieg", "junior medewerker", "coördinator junior",
+		"assistent junior", "specialist junior", "ingenieur junior", "stagiair",
+		"leerling", "beroepsopleiding", "dual learning", "werkervaringsplaats"
 	],
 	fr: [
-		"jeune diplômé",
-		"stagiaire",
-		"alternance",
-		"junior",
-		"débutant",
-		"programme graduate",
-		"coordinateur",
-		"assistant",
-		"représentant",
-		"spécialiste",
-		"ingénieur",
-		"stagiaire marketing",
-		"stagiaire finance",
-		"stagiaire tech",
-		"stagiaire hr",
-		"stagiaire esg",
+		// EXPANDED: Maximum French early career terms
+		"jeune diplômé", "stagiaire", "alternance", "junior", "débutant",
+		"programme graduate", "coordinateur", "assistant", "représentant", "spécialiste",
+		"ingénieur", "stagiaire marketing", "stagiaire finance", "stagiaire tech",
+		"stagiaire hr", "stagiaire esg", "diplômé", "alternant", "apprenti",
+		"premier emploi", "jeune professionnel", "coordinateur junior", "assistant junior",
+		"spécialiste junior", "ingénieur junior", "stagiaire commercial", "stagiaire opérationnel"
 	],
 	ch: [
 		"absolvent",
@@ -335,22 +302,14 @@ const LOCAL_EARLY_CAREER_TERMS = {
 		"ingenieur",
 	],
 	it: [
-		"neolaureato",
-		"stage",
-		"tirocinio",
-		"junior",
-		"primo lavoro",
-		"laureato",
-		"coordinatore",
-		"assistente",
-		"rappresentante",
-		"specialista",
-		"ingegnere",
-		"stage marketing",
-		"stage finance",
-		"stage tech",
-		"stage hr",
-		"stage sostenibilità",
+		// EXPANDED: Maximum Italian early career terms
+		"neolaureato", "stage", "tirocinio", "junior", "primo lavoro",
+		"laureato", "coordinatore", "assistente", "rappresentante", "specialista",
+		"ingegnere", "stage marketing", "stage finance", "stage tech", "stage hr",
+		"stage sostenibilità", "laureando", "tirocinante", "apprendista", "praticante",
+		"inserimento lavorativo", "primo impiego", "neoassunto", "coordinatore junior",
+		"assistente junior", "specialista junior", "ingegnere junior", "borsista",
+		"collaboratore", "tirocinio curriculare", "tirocinio extracurriculare"
 	],
 	ie: [], // English only set is CORE_ENGLISH_TERMS
 	be: [
@@ -526,9 +485,10 @@ function generateCityQueries(countryCode) {
 		}
 	}
 
-	// Generate queries for each career path
-	// Limit to top 3 career paths per city to stay within API limits
-	const topCareerPaths = careerPaths.slice(0, 3);
+	// EMERGENCY REDUCTION: Adzuna free tier is 2,500/month (83/day), not 250/day
+	// PREVIOUS: Would have been 9 cities × ~234 requests/run × 2 runs/day = 468/day = 14,040/month (5.6x over limit)
+	// NEW: 1 city × ~22 requests/run × 2 runs/day = 44/day = 1,320/month (SAFE for 2,500 limit)
+	const topCareerPaths = careerPaths.slice(0, 2); // Limited to 2 career paths to stay within monthly limits
 	
 	for (const path of topCareerPaths) {
 		// Use local language if available, otherwise English
@@ -652,6 +612,9 @@ async function scrapeCityCategories(
 							validateStatus: (status) => status < 500, // Don't throw on 4xx errors
 						});
 
+						// Track successful API request
+						recordApiRequest("adzuna", url, true);
+
 						// If we got a response (even if error), break retry loop
 						break;
 					} catch (error) {
@@ -711,6 +674,7 @@ async function scrapeCityCategories(
 				// Check for other HTTP errors
 				if (response.status !== 200) {
 					scrapeErrors += 1;
+					recordApiRequest("adzuna", url, false); // Track failed request
 					console.error(
 						`❌ Error searching ${cityName} for "${query}": HTTP ${response.status}`,
 					);
@@ -886,14 +850,14 @@ async function scrapeAllCitiesCategories(options = {}) {
 			? overridePageDelayJitter
 			: parseInt(process.env.ADZUNA_PAGE_DELAY_JITTER_MS || "0", 10);
 	// Priority cities with low Adzuna coverage - get more queries
-	// Based on database analysis: Most cities have 0 Adzuna jobs, only London has good coverage
+	// EMERGENCY REDUCTION: Adzuna free tier is 2,500/month (83/day)
+	// Current usage was ~14,000/month - REDUCED to stay within limits
 	const LOW_COVERAGE_CITIES = new Set([
-		"warsaw", "manchester", "birmingham", "brussels", "vienna", "rome",
-		"zurich", "milan", "hamburg", "barcelona", "paris", "berlin",
-		"madrid", "munich", "amsterdam" // Amsterdam has only 24 jobs, 0 recent
+		// REDUCED: Only 1 city to stay within 2,500/month limit
+		// Was: 8 cities × 2 career paths = ~14,000/month (5.6x over limit)
 	]);
 	const HIGH_COVERAGE_CITIES = new Set([
-		"london" // London has 1102 Adzuna jobs, 986 recent - already well covered
+		"london" // Only London - has best coverage, focus here only
 	]);
 	
 	const maxQueriesPerCity =
@@ -931,33 +895,43 @@ async function scrapeAllCitiesCategories(options = {}) {
 		10,
 	);
 	
-	// Calculate estimated requests (weighted by city priority)
-	// After removing 11 unsupported cities, we have 16 cities total
-	const lowCoverageCount = EU_CITIES_CATEGORIES.filter(c => 
+	// Calculate estimated requests (only for cities that will actually be processed)
+	// We filter cities during processing, so only count cities that pass our filters
+	const actuallyProcessedCities = EU_CITIES_CATEGORIES.filter(c => {
+		const cityName = c.name.toLowerCase();
+		const isLow = LOW_COVERAGE_CITIES.has(cityName);
+		const isHigh = HIGH_COVERAGE_CITIES.has(cityName);
+		const isStandard = !isLow && !isHigh;
+		// We process low + high coverage cities (standard are filtered out due to API limits)
+		return isLow || isHigh;
+	});
+
+	const lowCoverageCount = actuallyProcessedCities.filter(c =>
 		LOW_COVERAGE_CITIES.has(c.name.toLowerCase())
 	).length;
-	const highCoverageCount = EU_CITIES_CATEGORIES.filter(c => 
+	const highCoverageCount = actuallyProcessedCities.filter(c =>
 		HIGH_COVERAGE_CITIES.has(c.name.toLowerCase())
 	).length;
-	const standardCount = EU_CITIES_CATEGORIES.length - lowCoverageCount - highCoverageCount;
-	
-	// Query allocation per city type:
-	// Low-coverage: 5 queries (2 role queries × 6 pages + 1 generic × 5 pages) = 5 × 17 = 85 requests per city
-	// High-coverage: 3 queries (2 role queries × 4 pages + 1 generic × 3 pages) = 3 × 11 = 33 requests per city  
-	// Standard: 4 queries (2 role queries × 5 pages + 1 generic × 4 pages) = 4 × 14 = 56 requests per city
-	const estimatedRequests = 
-		(lowCoverageCount * 5 * (2 * 6 + 1 * 5)) +
-		(highCoverageCount * 3 * (2 * 4 + 1 * 3)) +
-		(standardCount * 4 * (2 * 5 + 1 * 4));
-	
+	const standardCount = 0; // We don't process standard cities to stay within limits
+
+	// REDUCED Query allocation to respect 2,500/month (83/day) limit:
+	// Low-coverage: 2 career paths × (2 role queries × 5 pages + 1 generic × 4 pages) = 2 × 14 = 28 requests per city
+	// High-coverage: 2 career paths × (2 role queries × 4 pages + 1 generic × 3 pages) = 2 × 11 = 22 requests per city
+	// Standard: 2 career paths × (2 role queries × 5 pages + 1 generic × 4 pages) = 2 × 14 = 28 requests per city
+	// EMERGENCY REDUCTION: Only 1 high-coverage city = ~22 requests per run
+	const estimatedRequests =
+		(lowCoverageCount * 2 * (2 * 5 + 1 * 4)) +
+		(highCoverageCount * 2 * (2 * 4 + 1 * 3)) +
+		(standardCount * 2 * (2 * 5 + 1 * 4));
+
 	console.log(
-		`📊 City Priority Breakdown: ${lowCoverageCount} low-coverage (5 queries, 6/5 pages), ${highCoverageCount} high-coverage (3 queries, 4/3 pages), ${standardCount} standard (4 queries, 5/4 pages)`,
+		`📊 City Priority Breakdown: ${lowCoverageCount} low-coverage, ${highCoverageCount} high-coverage, ${standardCount} standard`,
 	);
 	console.log(
-		`📊 API Usage: ~${EU_CITIES_CATEGORIES.length} cities × (2 role queries × ${baseRolePages} pages + 1 generic × ${baseGenericPages} pages) = ~${estimatedRequests} calls per run`,
+		`📊 API Usage: ~${estimatedRequests} calls per run (${highCoverageCount} high-coverage city × ~22 requests = ~22 total)`,
 	);
 	console.log(
-		`⚠️  Free Tier Limit: 250 requests/day. Current: ~${estimatedRequests} (${estimatedRequests < 250 ? "✅ SAFE" : "❌ EXCEEDS LIMIT"})`,
+		`⚠️  Free Tier Limit: 2,500 requests/month (83/day). Current: ~${estimatedRequests * 2} daily (~${estimatedRequests * 60} monthly) (${estimatedRequests * 60 < 2500 ? "✅ SAFE" : "❌ EXCEEDS LIMIT"})`,
 	);
 	console.log(
 		`⚡ Strategy: Prioritizing exact role names (highest performing), smart pagination (more pages for roles)`,
@@ -1046,10 +1020,10 @@ async function scrapeAllCitiesCategories(options = {}) {
 			// Dynamic query allocation based on coverage
 			let cityMaxQueries, cityRolePages, cityGenericPages;
 			if (isLowCoverage) {
-				// Low-coverage cities: More queries and pages to maximize collection
-				cityMaxQueries = maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 5) : 5;
-				cityRolePages = Math.max(baseRolePages, 6); // Increased from 4 to 6
-				cityGenericPages = Math.max(baseGenericPages, 5); // Increased from 3 to 5
+				// Low-coverage cities: Moderate queries and pages to stay within limits
+				cityMaxQueries = maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 3) : 3; // REDUCED from 5 to 3
+				cityRolePages = Math.max(baseRolePages, 5); // REDUCED from 6 to 5
+				cityGenericPages = Math.max(baseGenericPages, 4); // REDUCED from 5 to 4
 			} else if (isHighCoverage) {
 				// High-coverage cities: Standard allocation (already well covered)
 				cityMaxQueries = maxQueriesPerCity > 0 ? maxQueriesPerCity : 3;

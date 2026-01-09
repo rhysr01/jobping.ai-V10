@@ -484,10 +484,12 @@ form select {
 	@apply translate-y-0;
 }
 
-/* Enhanced CTA button variants with shine effect and premium animations */
+/* Enhanced CTA button variants with shine effect and premium animations - v2 */
 .btn-cta-enhanced {
-	@apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold text-base md:text-lg shadow-lg shadow-emerald-500/30 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-black relative overflow-hidden;
-	border: 1px solid rgba(16, 185, 129, 0.5);
+	@apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-black text-white font-bold text-base md:text-lg shadow-lg shadow-black/50 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black relative overflow-hidden;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	/* Force black background to override any cached styles */
+	background-color: #000000 !important;
 }
 
 .btn-cta-enhanced::before {
@@ -508,11 +510,12 @@ form select {
 
 @media (hover: hover) and (pointer: fine) {
 	.btn-cta-enhanced:hover {
-		@apply from-emerald-500 to-emerald-600 -translate-y-1;
+		@apply -translate-y-1;
 		box-shadow:
-			0 12px 24px -8px rgba(16, 185, 129, 0.4),
-			0 0 0 1px rgba(16, 185, 129, 0.5);
-		border-color: rgba(16, 185, 129, 0.8);
+			0 20px 40px -12px rgba(0, 0, 0, 0.8),
+			0 0 0 1px rgba(255, 255, 255, 0.5);
+		border-color: rgba(255, 255, 255, 0.8);
+		background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
 	}
 
 	.btn-cta-enhanced:hover::before {

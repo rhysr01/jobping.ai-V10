@@ -873,6 +873,20 @@ async function saveJobs(jobs, source) {
 				`${j.title || ""} at ${j.company || ""}. ${description}`.trim();
 		}
 
+		// Debug missing/empty fields for JobSpy
+		if (source === 'jobspy' && (!j.title || !j.company || !j.job_url || j.title === '' || j.company === '')) {
+			console.log(`[JobSpy Debug] Missing/empty fields for job:`, {
+				title: `"${j.title}"`,
+				company: `"${j.company}"`,
+				job_url: `"${j.job_url}"`,
+				url: `"${j.url}"`,
+				location: `"${j.location}"`,
+				description_length: description.length,
+				description_preview: description.substring(0, 50),
+				raw_keys: Object.keys(j)
+			});
+		}
+
 		// Process through standardization pipe
 		const processed = processIncomingJob(
 			{
@@ -1010,6 +1024,19 @@ async function saveJobs(jobs, source) {
 						// This handles "TypeError: fetch failed" exceptions from undici
 						const errorMessage = error?.message || String(error || "");
 						const errorName = error?.name || "";
+
+						// DEBUG: Log database insertion failures
+						console.log(`[JobSpy DEBUG] Database insertion failed for batch:`, {
+							error: errorMessage,
+							errorName,
+							batchSize: slice.length,
+							firstJob: slice[0] ? {
+								title: slice[0].title,
+								company_name: slice[0].company_name,
+								job_url: slice[0].job_url,
+								has_job_hash: !!slice[0].job_hash
+							} : null
+						});
 						const errorCode = error?.code || error?.cause?.code || "";
 
 						// Check if this is a network error (fetch exception)

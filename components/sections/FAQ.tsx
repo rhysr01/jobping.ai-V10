@@ -92,9 +92,9 @@ export default function FAQ() {
 										{/* Chevron with glow */}
 										<motion.div
 											animate={{ rotate: isOpen ? 180 : 0 }}
-											className="flex-shrink-0 p-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/30 transition-all duration-200"
+											className="flex-shrink-0 p-2 rounded-full bg-brand-500/10 border border-brand-500/20 group-hover:bg-brand-500/20 group-hover:border-brand-500/30 transition-all duration-200"
 										>
-											<BrandIcons.ChevronDown className="h-5 w-5 text-emerald-300" />
+											<BrandIcons.ChevronDown className="h-5 w-5 text-brand-300" />
 										</motion.div>
 									</button>
 
@@ -108,7 +108,7 @@ export default function FAQ() {
 												className="overflow-hidden"
 											>
 												{/* Answer with left border accent */}
-												<div className="pt-4 pl-3 pr-3 pb-2 ml-2 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] border-l-2 border-l-emerald-500/30 rounded-r-lg">
+												<div className="pt-4 pl-3 pr-3 pb-2 ml-2 bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] border-l-2 border-l-brand-500/30 rounded-r-lg">
 													<p className="text-sm text-content-secondary leading-relaxed">
 														{faq.answer}
 													</p>

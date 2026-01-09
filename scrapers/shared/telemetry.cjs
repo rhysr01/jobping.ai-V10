@@ -1,10 +1,36 @@
-// API request counter (in-memory for this session)
-const apiRequestCounts = new Map();
+// API request counter with file persistence
+const fs = require('fs');
+const path = require('path');
+const TELEMETRY_FILE = path.join(__dirname, '../../.api-telemetry.json');
+
+function loadTelemetryData() {
+	try {
+		if (fs.existsSync(TELEMETRY_FILE)) {
+			const data = fs.readFileSync(TELEMETRY_FILE, 'utf8');
+			const parsed = JSON.parse(data);
+			return new Map(Object.entries(parsed));
+		}
+	} catch (error) {
+		console.warn('⚠️  Failed to load telemetry data:', error.message);
+	}
+	return new Map();
+}
+
+function saveTelemetryData() {
+	try {
+		const data = Object.fromEntries(apiRequestCounts);
+		fs.writeFileSync(TELEMETRY_FILE, JSON.stringify(data, null, 2));
+	} catch (error) {
+		console.warn('⚠️  Failed to save telemetry data:', error.message);
+	}
+}
+
+const apiRequestCounts = loadTelemetryData();
 
 function recordApiRequest(apiName, endpoint = "", success = true) {
 	try {
 		const dateKey = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-		const key = `${apiName}-${dateKey}`;
+		const key = `${apiName}__${dateKey}`; // Use double underscore to avoid conflicts
 
 		if (!apiRequestCounts.has(key)) {
 			apiRequestCounts.set(key, { total: 0, success: 0, errors: 0 });
@@ -18,6 +44,9 @@ function recordApiRequest(apiName, endpoint = "", success = true) {
 		} else {
 			counts.errors++;
 		}
+
+		// Save to file after each update
+		saveTelemetryData();
 
 		// Log API request metrics
 		const payload = {
@@ -49,9 +78,11 @@ function recordApiRequest(apiName, endpoint = "", success = true) {
 }
 
 function getApiUsageReport() {
+	// Reload data from file to get latest updates from child processes
+	const freshData = loadTelemetryData();
 	const report = {};
-	for (const [key, counts] of apiRequestCounts.entries()) {
-		const [apiName, date] = key.split('-');
+	for (const [key, counts] of freshData.entries()) {
+		const [apiName, date] = key.split('__');
 		if (!report[apiName]) {
 			report[apiName] = {};
 		}

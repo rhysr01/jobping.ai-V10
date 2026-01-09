@@ -36,7 +36,7 @@ function parseLocation(location) {
 	const isRemote = /remote|work\s+from\s+home|wfh|anywhere/i.test(loc);
 	if (isRemote) return { city: "", country: "", isRemote: true };
 
-	// Known UK/Ireland cities (Reed is UK/Ireland only)
+	// Known UK/Ireland cities (Reed supports both UK and Ireland)
 	const ukIrelandCities = new Set([
 		"london",
 		"manchester",
@@ -104,7 +104,7 @@ function parseLocation(location) {
 }
 
 // Use centralized processor for standardization
-function convertToDatabaseFormat(job) {
+async function convertToDatabaseFormat(job) {
 	// CRITICAL: Add null check - processIncomingJob can return null for job boards
 	if (!job) {
 		console.warn("⚠️  Reed: Skipping null job object");
@@ -112,7 +112,7 @@ function convertToDatabaseFormat(job) {
 	}
 
 	// Process through standardization pipe
-	const processed = processIncomingJob(job, {
+	const processed = await processIncomingJob(job, {
 		source: "reed",
 	});
 
@@ -149,13 +149,15 @@ const REED_API = "https://www.reed.co.uk/api/1.0/search";
 // Reed.co.uk supports UK only (NOT Ireland)
 // UK cities: London, Manchester, Birmingham, Belfast (Belfast is in Northern Ireland, part of UK)
 const UK_CITIES = ["London", "Manchester", "Birmingham", "Belfast"];
-const SUPPORTED_CITIES = UK_CITIES; // UK only, no Ireland
+const IRELAND_CITIES = ["Dublin", "Cork"];
+const SUPPORTED_CITIES = [...UK_CITIES, ...IRELAND_CITIES]; // UK + Ireland
 const DEFAULT_LOCATIONS = [
 	"London",
 	"Manchester",
 	"Birmingham",
 	"Belfast",
-]; // UK only - Dublin removed as Reed is UK-only
+	"Dublin", // Reed supports Ireland too
+]; // UK + Ireland cities
 
 function parseTargetCities() {
 	const raw = process.env.TARGET_CITIES;
@@ -240,63 +242,59 @@ const {
  */
 const QUERY_SETS = {
 	SET_A: [
-		// Focus: Internships, graduate programs, and coordinator roles
-		"graduate programme",
-		"graduate scheme",
-		"internship",
-		"intern",
-		"graduate trainee",
-		"management trainee",
-		"trainee program",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
+		// EXPANDED: Maximum early career internships and graduate programs (35 terms)
+		"graduate programme", "graduate scheme", "graduate program", "graduate training",
+		"internship", "intern", "summer intern", "year in industry", "industrial placement",
+		"graduate trainee", "management trainee", "trainee program", "trainee scheme",
+		"campus hire", "new grad", "recent graduate", "early graduate", "fresh graduate",
+		"entry level program", "graduate development program", "leadership graduate program",
+		"marketing coordinator", "operations coordinator", "product coordinator", "hr coordinator",
+		"project coordinator", "sales coordinator", "finance coordinator", "business coordinator",
+		"event coordinator", "communications coordinator", "content coordinator",
+		"finance intern", "consulting intern", "marketing intern", "data intern",
+		"investment banking intern", "technology intern", "engineering intern", "product intern",
+		"entry level software engineer", "junior data scientist", "graduate consultant",
+		"associate investment banker", "recent graduate finance", "campus recruiter", "new grad program",
+		"apprentice", "apprenticeship", "graduate apprenticeship", "degree apprenticeship",
+		"placement student", "sandwich course", "vacation scheme", "vacation student"
 	],
 	SET_B: [
-		// Focus: Analyst, associate, assistant, and representative roles
-		"business analyst",
-		"financial analyst",
-		"data analyst",
-		"operations analyst",
-		"junior analyst",
-		"associate consultant",
-		"graduate analyst",
-		"marketing assistant",
-		"brand assistant",
-		"product assistant",
-		"sales development representative",
-		"sdr",
-		"bdr",
-		"junior account executive",
-		"customer success associate",
-		"hr assistant",
+		// EXPANDED: Maximum analyst, associate, and assistant roles (40 terms)
+		"business analyst", "financial analyst", "data analyst", "operations analyst",
+		"strategy analyst", "risk analyst", "investment analyst", "product analyst",
+		"marketing analyst", "sales analyst", "hr analyst", "supply chain analyst",
+		"associate consultant", "graduate analyst", "junior analyst", "entry level analyst",
+		"analyst graduate", "trainee analyst", "analyst intern",
+		"marketing assistant", "brand assistant", "product assistant", "finance assistant",
+		"operations assistant", "hr assistant", "sales assistant", "admin assistant",
+		"personal assistant", "executive assistant", "management assistant",
+		"sales development representative", "sdr", "bdr", "business development representative",
+		"junior account executive", "customer success associate", "account manager assistant",
+		"associate finance", "graduate associate", "junior consultant", "trainee consultant",
+		"associate product manager", "apm", "associate product", "product associate",
+		"entry level consultant", "consultant graduate", "junior business analyst",
+		"graduate business analyst", "trainee business analyst", "research assistant",
+		"junior researcher", "graduate researcher", "analyst assistant"
 	],
 	SET_C: [
-		// Focus: Entry-level, junior, engineer, specialist, manager, designer, and program roles
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early careers program",
-		"rotational graduate program",
-		"software engineer intern",
-		"data engineer intern",
-		"cloud engineer intern",
-		"associate product manager",
-		"apm",
-		"product analyst",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
-		"ux intern",
-		"junior product designer",
-		"design intern",
-		"esg intern",
-		"sustainability analyst",
-		"climate analyst",
+		// EXPANDED: Maximum entry-level, junior, engineer, specialist roles (45 terms)
+		"entry level", "junior", "graduate", "recent graduate", "early graduate",
+		"early careers program", "rotational graduate program", "graduate rotation",
+		"entry level software engineer", "junior software engineer", "graduate software engineer",
+		"software engineer intern", "data engineer intern", "cloud engineer intern",
+		"frontend engineer intern", "backend engineer intern", "devops engineer intern",
+		"associate product manager", "apm", "product analyst", "junior product manager",
+		"entry level product", "product graduate", "junior fulfilment specialist",
+		"entry level technical specialist", "graduate hr specialist", "junior marketing specialist",
+		"junior product designer", "ux intern", "ui intern", "junior ux designer",
+		"design intern", "junior designer", "graduate designer", "entry level designer",
+		"junior engineer", "graduate engineer", "entry level engineer", "trainee engineer",
+		"junior specialist", "graduate specialist", "entry level specialist",
+		"esg intern", "sustainability analyst", "climate analyst", "environment analyst",
+		"junior researcher", "research assistant", "graduate researcher",
+		"junior developer", "graduate developer", "trainee developer", "junior programmer",
+		"entry level developer", "graduate web developer", "junior web developer",
+		"junior consultant", "graduate consultant", "trainee consultant"
 	],
 };
 
@@ -383,13 +381,13 @@ function generateReedQueries() {
 
 const EARLY_TERMS = generateReedQueries();
 
-// Free tier: 1,000 requests/day, 2 runs/day = 500 per run
-// Reed supports only UK/Ireland (5 cities), so: 5 cities × queries × pages ≤ 500
-// Target: 10 queries × 10 pages × 5 cities = 500 requests (perfect!)
-// INCREASED: Now using more queries (up to 26 available) but capped at 10 per city to stay within limit
-// If you want to use all queries, reduce pages: 26 queries × 4 pages × 5 cities = 520 (slightly over)
+// EXPANDED: Maximize early career role discovery within free tier limits
+// Reed Free Tier: 1,000 requests/day, 2 runs/day = 500 requests per run MAX
+// Strategy: 5 cities × 15 queries × 6-7 pages = ~450-525 requests (optimal for limit)
+// Increased from 10 to 15 queries per city, reduced pages to 6-7 to stay within 500 limit
+// This maximizes job discovery while respecting API limits
 const MAX_QUERIES_PER_LOCATION = parseInt(
-	process.env.REED_MAX_QUERIES_PER_LOCATION || "10", // Default: 10 queries per city (500 requests total)
+	process.env.REED_MAX_QUERIES_PER_LOCATION || "15", // EXPANDED: 15 queries per city (up from 10)
 	10,
 );
 const INCLUDE_REMOTE =
@@ -401,9 +399,9 @@ const queriesToUse =
 	MAX_QUERIES_PER_LOCATION > 0
 		? EARLY_TERMS.slice(0, MAX_QUERIES_PER_LOCATION)
 		: EARLY_TERMS;
-// Calculate estimated requests based on average pages per query type
-// Career path queries: 10 pages, role queries: 10 pages (both use same max now)
-const avgPagesPerQuery = 10;
+// Calculate estimated requests based on actual pages per query type
+// Career path queries: 6 pages, role queries: 7 pages (from getMaxPagesForQuery logic)
+const avgPagesPerQuery = 6.5; // Average of 6-7 pages per query
 const estimatedRequests = LOCATIONS.length * queriesToUse.length * avgPagesPerQuery;
 console.log(
 	`📋 Reed query strategy: Using ${queriesToUse.length} queries per location (from ${EARLY_TERMS.length} total)`,
@@ -438,10 +436,11 @@ if (TARGET_CAREER_PATHS.length) {
 }
 
 /**
- * Determine max pages based on query type (smart pagination)
+ * EXPANDED: Optimized pagination for maximum early career job discovery
  * RESPECTS API LIMITS: Free tier is 1,000 requests/day, 2 runs/day = 500 per run
- * Strategy: 5 cities × 10 queries × 10 pages = 500 requests (perfect match to limit)
- * This maximizes job collection while staying within free tier limits
+ * NEW Strategy: 5 cities × 15 queries × 6-7 pages = ~450-525 requests (optimal for limit)
+ * Increased queries from 10 to 15, reduced pages to 6-7 to stay within 500 limit
+ * This maximizes early career job discovery while respecting API limits
  */
 function getMaxPagesForQuery(query) {
 	// Career path queries (e.g., "strategy internship", "finance graduate programme")
@@ -449,13 +448,13 @@ function getMaxPagesForQuery(query) {
 	const isCareerPathQuery = careerPathPattern.test(query.trim());
 
 	// REED FREE TIER LIMIT: 1,000 requests/day, 2 runs/day = 500 per run
-	// Calculation: 5 cities × 10 queries × 10 pages = 500 requests (perfect!)
-	// We use 10 pages to maximize collection while respecting the limit
-	// Users can override via env vars if they have paid tier
+	// NEW Calculation: 5 cities × 15 queries × 6-7 pages = ~450-525 requests
+	// Reduced pages to accommodate more queries while staying within limit
+	// Career path queries get slightly more pages as they're more targeted
 	if (isCareerPathQuery) {
-		return parseInt(process.env.REED_MAX_PAGES_CAREER_PATH || "10", 10); // 10 pages respects free tier limit
+		return parseInt(process.env.REED_MAX_PAGES_CAREER_PATH || "7", 10); // 7 pages for career paths
 	}
-	return parseInt(process.env.REED_MAX_PAGES || "10", 10); // 10 pages respects free tier limit
+	return parseInt(process.env.REED_MAX_PAGES || "6", 10); // 6 pages for general queries
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -680,9 +679,8 @@ async function saveJobsToDB(jobs) {
 		process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 	const supabase = createClient(url, key);
 
-	const dbJobs = jobs
-		.map(convertToDatabaseFormat)
-		.filter((job) => job !== null);
+	const dbJobsPromises = jobs.map(convertToDatabaseFormat);
+	const dbJobs = (await Promise.all(dbJobsPromises)).filter((job) => job !== null);
 
 	// CRITICAL: Use comprehensive validator (consolidates all validation logic)
 	const { validateJobs } = require("./shared/jobValidator.cjs");

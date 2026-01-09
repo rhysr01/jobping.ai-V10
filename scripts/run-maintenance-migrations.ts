@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { Client } from "pg";
 
 async function runMaintenanceMigrations() {
   console.log("🛠️ JobPing Maintenance Migration Runner");
@@ -17,6 +18,23 @@ async function runMaintenanceMigrations() {
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Set up direct PostgreSQL connection for raw SQL execution
+  const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+  const dbUrl = `postgresql://postgres:${supabaseKey}@db.${projectRef}.supabase.co:5432/postgres?sslmode=require`;
+  const pgClient = new Client({
+    connectionString: dbUrl,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  try {
+    console.log("🔌 Connecting to PostgreSQL database...");
+    await pgClient.connect();
+    console.log("✅ Database connection established");
+  } catch (error: any) {
+    console.error(`❌ Failed to connect to database: ${error.message}`);
+    process.exit(1);
+  }
 
   const migrations = [
     {
@@ -75,16 +93,10 @@ async function runMaintenanceMigrations() {
       const sqlPath = resolve(process.cwd(), "supabase", "migrations", migration.file);
       const sql = readFileSync(sqlPath, "utf-8");
 
-      const { error } = await supabase.rpc('exec_sql', { sql });
+      console.log(`   Executing SQL...`);
 
-      if (error) {
-        console.error(`❌ FAILED: ${migration.name}`);
-        console.error(`   Error: ${error.message}`);
-        // Continue with next migration instead of exiting
-        console.log("   Continuing with next migration...");
-        console.log("");
-        continue;
-      }
+      // Execute raw SQL directly using PostgreSQL client
+      await pgClient.query(sql);
 
       console.log(`✅ SUCCESS: ${migration.name}`);
       console.log("");
@@ -100,6 +112,10 @@ async function runMaintenanceMigrations() {
 
   console.log("🎉 Maintenance migration run completed!");
   console.log("📊 Check the logs above for any failures.");
+
+  // Close database connection
+  await pgClient.end();
+  console.log("🔌 Database connection closed.");
 }
 
 runMaintenanceMigrations().catch((error) => {

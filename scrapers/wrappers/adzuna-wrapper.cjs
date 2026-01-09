@@ -61,7 +61,7 @@ async function main() {
 
 	// REMOVED: Form role filtering to reduce strictness
 
-		const convertToDatabaseFormat = (job) => {
+		const convertToDatabaseFormat = async (job) => {
 			// CRITICAL: Add null check at the start to prevent "Cannot read properties of null" errors
 			if (!job) {
 				console.warn("⚠️  Adzuna: Skipping null job object");
@@ -86,7 +86,7 @@ async function main() {
 			}
 
 			// Process through standardization pipe
-			const processed = processIncomingJob(job, {
+			const processed = await processIncomingJob(job, {
 				source: "adzuna",
 			});
 
@@ -135,9 +135,8 @@ async function main() {
 				});
 
 		// Convert to database format
-		const dbJobs = filteredJobs
-			.map((job) => convertToDatabaseFormat(job))
-			.filter((job) => job !== null);
+		const dbJobsPromises = filteredJobs.map(convertToDatabaseFormat);
+		const dbJobs = (await Promise.all(dbJobsPromises)).filter((job) => job !== null);
 
 		// CRITICAL: Validate jobs before saving (consolidates all validation logic)
 		const { validateJobs } = require("../shared/jobValidator.cjs");

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { memo } from "react";
 import { CheckCircle2, Cpu, FileJson, Target, Mail } from "lucide-react";
 import { useEffect, useRef } from "react";
 import GradientText from "@/components/ui/GradientText";
@@ -44,28 +45,28 @@ const FeatureCard = ({
 			aria-label={`${title} - ${description}`}
 			className={cn(
 				"group relative overflow-hidden rounded-3xl glass-card elevation-1 p-6 transition-all duration-300",
-				"hover:elevation-3 hover:border-emerald-500/30 hover:shadow-[0_8px_32px_rgba(16,185,129,0.15)]",
-				"focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2 focus-within:ring-offset-black",
+				"hover:elevation-3 hover:border-brand-500/30 hover:shadow-[0_8px_32px_rgba(139,92,246,0.15)]",
+				"focus-within:ring-2 focus-within:ring-brand-500 focus-within:ring-offset-2 focus-within:ring-offset-black",
 				"bg-gradient-to-br from-surface-base/90 via-surface-base/95 to-surface-elevated/90",
 				className,
 			)}
 		>
 			{/* Enhanced Glow Effect on Hover */}
-			<div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_var(--x,_50%)_var(--y,_50%),rgba(16,185,129,0.15)_0%,transparent_70%)]" />
+			<div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_var(--x,_50%)_var(--y,_50%),rgba(139,92,246,0.15)_0%,transparent_70%)]" />
 
 			{/* Subtle inner glow */}
-			<div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+			<div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
 			<div className="relative z-10 flex h-full flex-col justify-between">
 				<div>
 					<div
 						className={cn(
 							"mb-4 inline-flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-xl",
-							"glass-card elevation-1 text-emerald-400",
-							"bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-transparent",
-							"border border-emerald-500/30",
-							"shadow-[0_4px_16px_rgba(16,185,129,0.2)]",
-							"group-hover:shadow-[0_8px_24px_rgba(16,185,129,0.3)]",
+							"glass-card elevation-1 text-brand-400",
+							"bg-gradient-to-br from-brand-500/20 via-brand-500/10 to-transparent",
+							"border border-brand-500/30",
+							"shadow-[0_4px_16px_rgba(139,92,246,0.2)]",
+							"group-hover:shadow-[0_8px_24px_rgba(139,92,246,0.3)]",
 							"group-hover:scale-110 transition-transform duration-300",
 						)}
 					>
@@ -96,7 +97,7 @@ const FeatureCard = ({
 	);
 };
 
-export default function HowItWorksBento() {
+function HowItWorksBento() {
 	return (
 	<section
 		id="how-it-works"
@@ -311,3 +312,5 @@ export default function HowItWorksBento() {
 		</section>
 	);
 }
+
+export default memo(BentoGrid);

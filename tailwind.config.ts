@@ -4,8 +4,8 @@ export default {
 	content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
 	theme: {
 		fontFamily: {
-			display: ["Space Grotesk", "Inter", "system-ui", "sans-serif"], // Headlines (h1, h2, h3)
-			sans: ["Inter", "system-ui", "sans-serif"], // Body text
+			display: ["Clash Display", "Inter", "system-ui", "sans-serif"], // Headlines (h1, h2, h3) - Modern, sophisticated, premium feel
+			sans: ["Inter", "system-ui", "sans-serif"], // Body text - Clean, professional, highly readable
 		},
 		extend: {
 			// Spacing removed - Tailwind defaults are sufficient

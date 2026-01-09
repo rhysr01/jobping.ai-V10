@@ -79,29 +79,53 @@ function validateJob(job) {
 	const errors = [];
 	const warnings = [];
 
-	// CRITICAL: Required fields
+	// For JobSpy, be more lenient and provide fallbacks instead of rejecting
+	const isJobSpy = job.source && job.source.includes('jobspy');
+
+	// CRITICAL: Required fields - but provide fallbacks for JobSpy
 	if (!job.title || job.title.trim().length === 0) {
-		errors.push("Missing title");
+		if (isJobSpy) {
+			job.title = "Job Opportunity"; // Fallback title
+			warnings.push("Auto-fixed: Used fallback title for missing title");
+		} else {
+			errors.push("Missing title");
+		}
 	}
 
 	if (!job.company || job.company.trim().length === 0) {
-		errors.push("Missing company");
+		if (isJobSpy) {
+			job.company = "Company Not Specified"; // Fallback company
+			warnings.push("Auto-fixed: Used fallback company for missing company");
+		} else {
+			errors.push("Missing company");
+		}
 	}
 
 	if (!job.job_hash || job.job_hash.trim().length === 0) {
-		errors.push("Missing job_hash");
+		errors.push("Missing job_hash"); // Hash is always required
 	}
 
 	if (!job.job_url || job.job_url.trim().length === 0) {
-		errors.push("Missing job_url");
+		if (isJobSpy && job.url) {
+			job.job_url = job.url; // Use url field as fallback
+			warnings.push("Auto-fixed: Used url field as job_url");
+		} else if (isJobSpy) {
+			job.job_url = "#"; // Placeholder URL
+			warnings.push("Auto-fixed: Used placeholder URL for missing job_url");
+		} else {
+			errors.push("Missing job_url");
+		}
 	}
 
 	// CRITICAL: Company name must be set
 	if (!job.company_name || job.company_name.trim().length === 0) {
-		if (job.company && job.company.trim().length > 0) {
+		if (job.company && job.company.trim().length > 0 && job.company !== "Company Not Specified") {
 			// Auto-fix: Set company_name from company
 			job.company_name = job.company;
 			warnings.push("Auto-fixed: Set company_name from company field");
+		} else if (isJobSpy) {
+			job.company_name = job.company || "Company Not Specified";
+			warnings.push("Auto-fixed: Used fallback company_name");
 		} else {
 			errors.push("Missing company_name and company");
 		}

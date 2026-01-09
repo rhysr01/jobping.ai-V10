@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { memo } from "react";
 import { Check, Zap, Mail, Star, TrendingUp, Shield } from "lucide-react";
 import Link from "next/link";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -37,7 +38,7 @@ const TIERS = [
 	},
 ];
 
-export default function Pricing() {
+function Pricing() {
 	const { stats } = useStats();
 
 	return (
@@ -91,13 +92,13 @@ export default function Pricing() {
 							>
 								{/* Premium Card Glow Effect */}
 								{tier.popular && (
-									<div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-emerald-500/30 to-teal-500/20 rounded-3xl blur-2xl opacity-75" />
+									<div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-500/30 to-purple-500/20 rounded-3xl blur-2xl opacity-75" />
 								)}
 						<TiltCard>
 							<div
 								className={`relative flex flex-col h-full rounded-3xl border p-6 sm:p-8 transition-all ${
 									tier.popular
-										? "border-emerald-500/30 bg-gradient-to-b from-zinc-900 to-black shadow-[0_20px_50px_rgba(16,185,129,0.15)]"
+										? "border-brand-500/30 bg-gradient-to-b from-zinc-900 to-black shadow-[0_20px_50px_rgba(139,92,246,0.15)]"
 										: "border-border-subtle bg-white/[0.02] backdrop-blur-xl hover:border-white/20"
 								}`}
 							>
@@ -117,11 +118,11 @@ export default function Pricing() {
 						<div className="relative z-10">
 							{/* Icon */}
 							<div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl mb-4 sm:mb-6 ${
-								tier.popular 
-									? "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 shadow-lg shadow-emerald-500/20" 
+								tier.popular
+									? "bg-gradient-to-br from-brand-500/20 to-brand-600/20 border border-brand-500/30 shadow-lg shadow-brand-500/20"
 									: "bg-white/5 border border-white/10"
 							}`}>
-								<Icon size={20} className={`sm:w-6 sm:h-6 ${tier.popular ? "text-emerald-400" : "text-zinc-400"}`} />
+								<Icon size={20} className={`sm:w-6 sm:h-6 ${tier.popular ? "text-brand-400" : "text-zinc-400"}`} />
 							</div>
 
 							<div className="mb-4 sm:mb-6">
@@ -129,7 +130,7 @@ export default function Pricing() {
 													{tier.name}
 												</h3>
 												<p className={`text-sm font-medium mb-3 ${
-													tier.popular ? "text-brand-300" : "text-zinc-500"
+													tier.popular ? "text-emerald-300" : "text-zinc-500"
 												}`}>
 													{tier.tagline}
 												</p>
@@ -142,8 +143,8 @@ export default function Pricing() {
 											<div className="mb-8 pb-8 border-b border-white/10">
 												<div className="flex items-baseline gap-2">
 													<span className={`text-5xl font-black ${
-														tier.popular 
-															? "bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent" 
+														tier.popular
+															? "bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent"
 															: "text-white"
 													}`}>
 														€{tier.price}
@@ -165,13 +166,13 @@ export default function Pricing() {
 														className="flex items-start gap-3 text-sm"
 													>
 														<div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-															tier.popular 
-																? "bg-emerald-500/20 border border-emerald-500/50" 
+															tier.popular
+																? "bg-brand-500/20 border border-brand-500/50"
 																: "bg-white/5 border border-white/10"
 														}`}>
 															<Check
 																size={14}
-																className={tier.popular ? "text-emerald-400" : "text-zinc-400"}
+																className={tier.popular ? "text-brand-400" : "text-zinc-400"}
 																strokeWidth={3}
 															/>
 														</div>
@@ -191,12 +192,12 @@ export default function Pricing() {
 								}
 								className={`font-display block w-full py-3.5 sm:py-4 rounded-xl font-bold text-center transition-all overflow-hidden relative group text-base sm:text-base ${
 									tier.popular
-										? "btn-cta-enhanced hover:shadow-[0_8px_40px_rgba(109,40,217,0.6)]"
+										? "btn-cta-enhanced"
 										: "btn-cta-secondary"
 								}`}
 							>
 												{tier.popular && (
-													<div className="absolute inset-0 bg-gradient-to-r from-brand-300 via-white to-brand-300 opacity-0 group-hover:opacity-20 transition-opacity pointer-events-none" />
+													<div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/30 to-white/20 opacity-0 group-hover:opacity-30 transition-opacity pointer-events-none" />
 												)}
 												<span className="relative z-10 flex items-center justify-center gap-2">
 													{tier.cta}
@@ -207,7 +208,7 @@ export default function Pricing() {
 											{/* Guarantee badge for premium */}
 											{tier.popular && (
 												<div className="mt-4 flex items-center justify-center gap-2 text-xs text-zinc-400">
-													<Shield size={14} className="text-emerald-500" />
+													<Shield size={14} className="text-brand-500" />
 													<span>Cancel anytime • No questions asked</span>
 												</div>
 											)}
@@ -235,8 +236,8 @@ export default function Pricing() {
 							<p className="text-xs text-zinc-500">Mon, Wed, Fri delivery</p>
 						</div>
 						<div className="text-center">
-							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 mb-3">
-								<TrendingUp className="text-emerald-400" size={24} />
+							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/30 mb-3">
+								<TrendingUp className="text-brand-400" size={24} />
 							</div>
 							<h4 className="text-sm font-bold text-white mb-1">95%+ Match Rate</h4>
 							<p className="text-xs text-zinc-500">AI-powered accuracy</p>
@@ -282,3 +283,5 @@ export default function Pricing() {
 		</section>
 	);
 }
+
+export default memo(Pricing);

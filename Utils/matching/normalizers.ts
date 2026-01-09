@@ -19,8 +19,10 @@ export const toStringArray = (
 		);
 	}
 	if (typeof v === "string" && v.trim() !== "") {
+		// Support both pipe and comma separators for backward compatibility
+		const separator = v.includes("|") ? "|" : ",";
 		return v
-			.split(/\s*,\s*/)
+			.split(separator)
 			.map((s) => s.trim())
 			.filter(Boolean);
 	}

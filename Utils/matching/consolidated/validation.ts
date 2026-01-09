@@ -68,7 +68,7 @@ export function parseFunctionCallResponse(
 				job_hash: match.job_hash,
 				match_score: Math.min(100, Math.max(50, match.match_score || 50)),
 				match_reason: match.match_reason || "AI match",
-				confidence_score: 0.8,
+				confidence_score: (match as any).confidence_score || (match as any).confidence || 0.8,
 			});
 		}
 
@@ -529,7 +529,7 @@ export function validateAIOutput(
 				validation_issues: issues.length > 0 ? issues : undefined,
 			};
 		})
-		.filter((m) => m.match_score >= 50 && m.confidence_score >= 0.5) // Filter low quality
+		.filter((m) => m.match_score >= 50 && (m.confidence_score || 0.7) >= 0.4) // Allow AI to express uncertainty
 		.sort((a, b) => {
 			// Sort by score * confidence (weighted quality)
 			const qualityA = a.match_score * (a.confidence_score || 0.7);

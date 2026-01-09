@@ -17,7 +17,7 @@ import {
 import React, { useEffect, useState } from "react";
 import Button from "@/components/ui/Button";
 import GlassCard from "@/components/ui/GlassCard";
-import Skeleton, { SkeletonText } from "@/components/ui/Skeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { ApiError, apiCall, apiCallJson } from "@/lib/api-client";
 
 interface BillingPageProps {

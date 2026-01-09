@@ -4,7 +4,7 @@
  * Ensures uniform metadata extraction across all job sources
  */
 
-const { classifyEarlyCareer, normalizeString } = require("./helpers.cjs");
+const { classifyEarlyCareer, normalizeString, fetchFullJobDescription } = require("./helpers.cjs");
 const { normalizeJobLocation } = require("./locationNormalizer.cjs");
 
 /**
@@ -498,7 +498,7 @@ function extractYearsOfExperience(description) {
  * @param {string} options.defaultCountry - Default country if not in location
  * @returns {Object} - Standardized job object ready for database
  */
-function processIncomingJob(job, options = {}) {
+async function processIncomingJob(job, options = {}) {
 	const {
 		source = "unknown",
 		defaultCity = null,
@@ -650,14 +650,27 @@ function processIncomingJob(job, options = {}) {
 		}
 	}
 
-	// 5. Ensure description is adequate (minimum 20 chars)
-	let finalDescription = description;
-	if (!finalDescription || finalDescription.length < 20) {
-		// Try to build from title and company
-		finalDescription = `${title} at ${company_name}`.trim();
-		if (finalDescription.length < 20) {
-			finalDescription = title || "Job opportunity";
+	// 5. Build comprehensive description using all available context
+	let finalDescription = description || "";
+
+	// Always try to fetch full description if we have a URL and description is short
+	if (jobUrl && finalDescription.length < 200) {
+		try {
+			console.log(`[Processor] Description short (${finalDescription.length} chars), attempting to fetch full description from ${jobUrl}`);
+			const fetchedDesc = await fetchFullJobDescription(jobUrl, finalDescription);
+			if (fetchedDesc && fetchedDesc.length > finalDescription.length) {
+				finalDescription = fetchedDesc;
+				console.log(`[Processor] Enhanced description length: ${finalDescription.length} chars`);
+			}
+		} catch (error) {
+			console.warn(`[Processor] Failed to fetch full description: ${error.message}`);
 		}
+	}
+
+	// If description is very short but we have title/company, create a basic enriched description
+	if (finalDescription.length < 30 && title && company_name) {
+		finalDescription = `${finalDescription || 'Job opportunity'}. ${title} at ${company_name}.`;
+		console.log(`[Processor] ✨ Basic enrichment: ${finalDescription.length} chars`);
 	}
 
 	// 6. Ensure posted_at is not in the future
@@ -665,6 +678,20 @@ function processIncomingJob(job, options = {}) {
 	if (finalPostedAt && new Date(finalPostedAt) > new Date()) {
 		finalPostedAt = nowIso; // Use current time if future date
 	}
+
+	// 7. Smart quality check - use all available context for matching
+	let hasBasicInfo = (title && title.length > 3) || (company_name && company_name.length > 2);
+
+	// For jobs with good title+company context, be much more lenient on description length
+	const hasRichContext = (title && title.length > 5) && (company_name && company_name.length > 2);
+	const minDescLength = hasRichContext ? 15 : 20; // Shorter requirement with rich context
+
+	if (!finalDescription || finalDescription.length < minDescLength || !hasBasicInfo) {
+		console.warn(`[Processor] ❌ Rejecting job with insufficient data (desc: ${finalDescription.length} chars, title: ${title?.length || 0}, company: ${company_name?.length || 0}, rich_context: ${hasRichContext})`);
+		return null; // Reject only truly incomplete jobs
+	}
+
+	console.log(`[Processor] ✅ Accepting job with ${finalDescription.length} chars (rich context: ${hasRichContext})`);
 
 	// Return standardized job object
 	return {
