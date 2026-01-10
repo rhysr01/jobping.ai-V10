@@ -55,58 +55,6 @@ test.describe("Premium Tier - Complete User Journey", () => {
 		expect(isUpgradePage || hasAnyPremiumContent || hasBody).toBe(true);
 	});
 
-		// Select career path
-		const careerPathButton = page
-			.getByRole("button", { name: /Finance|Tech|Strategy/ })
-			.first();
-		await expect(careerPathButton).toBeVisible({ timeout: 5000 });
-		await careerPathButton.click();
-
-		await page.waitForTimeout(500);
-
-		// Continue to preferences
-		const continueButton = page.locator('button:has-text("Continue to Preferences")').first();
-		await expect(continueButton).toBeVisible({ timeout: 5000 });
-		await continueButton.click();
-
-		// Step 4: Preferences - premium users get more options
-		await expect(page.locator("text=Your preferences")).toBeVisible();
-
-		await page.fill('input[type="date"]', "2024-06-01");
-		await page.locator('button:has-text("1 year")').click();
-		await page.locator('button:has-text("EU citizen")').click();
-		await page.locator('button:has-text("Graduate Programmes")').click();
-
-		await page.locator('button:has-text("Continue")').click();
-
-		// Step 5: Career path selection
-		await expect(page.locator("text=Your career path")).toBeVisible();
-
-		await page.locator('button:has-text("Finance & Investment")').click();
-		await page.locator('button:has-text("Analyst")').first().click();
-
-		await page.locator('button:has-text("Continue to Preferences")').click();
-
-		// Step 6: Final preferences and billing
-		await expect(page.locator("text=Additional Preferences")).toBeVisible();
-
-		await page.check('input[type="checkbox"]'); // GDPR consent
-
-		// Submit premium signup
-		await page.locator('button:has-text("Upgrade to Premium")').or(
-			page.locator('button:has-text("Complete Payment")')
-		).first().click();
-
-		// Should complete successfully or show payment form
-		await Promise.race([
-			page.waitForURL(/.*success/, { timeout: 30000 }),
-			page.waitForSelector("text=Payment", { timeout: 30000 }),
-			page.waitForSelector("text=Premium", { timeout: 30000 }),
-		]);
-
-		console.log("✅ Premium signup completed successfully");
-	});
-
 	test("Premium matches page is accessible", async ({ page }) => {
 		console.log("🧪 Testing premium matches page accessibility");
 

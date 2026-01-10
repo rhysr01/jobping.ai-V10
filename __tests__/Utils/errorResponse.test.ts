@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { errorJson, errorResponse, getRequestId } from "@/Utils/errorResponse";
+import { errorJson, error-response, getRequestId } from "@/Utils/core/error-response";
 
 describe("Error Response Utilities", () => {
 	let mockRequest: NextRequest;
@@ -45,9 +45,9 @@ describe("Error Response Utilities", () => {
 		});
 	});
 
-	describe("errorResponse convenience methods", () => {
+	describe("error-response convenience methods", () => {
 		it("should create badRequest response", () => {
-			const response = errorResponse.badRequest(mockRequest, "Invalid input");
+			const response = error-response.badRequest(mockRequest, "Invalid input");
 
 			// Behavior: Should return 400 status
 			expect(response.status).toBe(400);
@@ -55,7 +55,7 @@ describe("Error Response Utilities", () => {
 		});
 
 		it("should create unauthorized response", () => {
-			const response = errorResponse.unauthorized(mockRequest);
+			const response = error-response.unauthorized(mockRequest);
 
 			// Behavior: Should return 401 status
 			expect(response.status).toBe(401);
@@ -63,7 +63,7 @@ describe("Error Response Utilities", () => {
 		});
 
 		it("should create forbidden response", () => {
-			const response = errorResponse.forbidden(mockRequest);
+			const response = error-response.forbidden(mockRequest);
 
 			// Behavior: Should return 403 status
 			expect(response.status).toBe(403);
@@ -71,7 +71,7 @@ describe("Error Response Utilities", () => {
 		});
 
 		it("should create notFound response", () => {
-			const response = errorResponse.notFound(mockRequest);
+			const response = error-response.notFound(mockRequest);
 
 			// Behavior: Should return 404 status
 			expect(response.status).toBe(404);
@@ -79,7 +79,7 @@ describe("Error Response Utilities", () => {
 		});
 
 		it("should create rateLimited response", () => {
-			const response = errorResponse.rateLimited(mockRequest);
+			const response = error-response.rateLimited(mockRequest);
 
 			// Behavior: Should return 429 status
 			expect(response.status).toBe(429);
@@ -87,7 +87,7 @@ describe("Error Response Utilities", () => {
 		});
 
 		it("should create internal error response", () => {
-			const response = errorResponse.internal(mockRequest);
+			const response = error-response.internal(mockRequest);
 
 			// Behavior: Should return 500 status
 			expect(response.status).toBe(500);

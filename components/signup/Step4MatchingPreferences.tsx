@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import React from "react";
 import { FormFieldHelper } from "@/components/ui/FormFieldFeedback";
+import { AgeVerificationSection } from "./AgeVerificationSection";
 import { COMMON_SKILLS, COMPANY_SIZES, INDUSTRIES } from "./constants";
 import type { SignupFormData } from "./types";
 
@@ -14,7 +16,7 @@ interface Step4MatchingPreferencesProps {
 	handleSubmit: () => void;
 }
 
-export function Step4MatchingPreferences({
+export const Step4MatchingPreferences = React.memo(function Step4MatchingPreferences({
 	formData,
 	setFormData,
 	loading,
@@ -56,18 +58,39 @@ export function Step4MatchingPreferences({
 						<motion.button
 							type="button"
 							onClick={() => {
-								if (formData.gdprConsent) {
+								if (formData.ageVerified && formData.termsAccepted && formData.gdprConsent) {
 									handleSubmit();
 								} else {
-									const gdprCheckbox = document.querySelector(
-										'input[type="checkbox"]',
-									) as HTMLInputElement;
-									if (gdprCheckbox) {
-										gdprCheckbox.focus();
-										gdprCheckbox.scrollIntoView({
-											behavior: "smooth",
-											block: "center",
-										});
+									// Focus on the first missing required field
+									if (!formData.ageVerified) {
+										const ageCheckbox = document.getElementById("age-verification") as HTMLInputElement;
+										if (ageCheckbox) {
+											ageCheckbox.focus();
+											ageCheckbox.scrollIntoView({
+												behavior: "smooth",
+												block: "center",
+											});
+										}
+									} else if (!formData.termsAccepted) {
+										const termsCheckbox = document.getElementById("terms-acceptance") as HTMLInputElement;
+										if (termsCheckbox) {
+											termsCheckbox.focus();
+											termsCheckbox.scrollIntoView({
+												behavior: "smooth",
+												block: "center",
+											});
+										}
+									} else if (!formData.gdprConsent) {
+										const gdprCheckbox = document.querySelector(
+											'input[type="checkbox"]',
+										) as HTMLInputElement;
+										if (gdprCheckbox) {
+											gdprCheckbox.focus();
+											gdprCheckbox.scrollIntoView({
+												behavior: "smooth",
+												block: "center",
+											});
+										}
 									}
 								}
 							}}
@@ -79,7 +102,25 @@ export function Step4MatchingPreferences({
 						</motion.button>
 					</div>
 
-					{/* Industry Preferences */}
+					{/* Age Verification and Terms - Required before submission */}
+					<AgeVerificationSection
+						birthYear={formData.birthYear}
+						ageVerified={formData.ageVerified}
+						termsAccepted={formData.termsAccepted}
+						onBirthYearChange={(year) =>
+							setFormData({ ...formData, birthYear: year })
+						}
+						onAgeVerifiedChange={(verified) =>
+							setFormData({ ...formData, ageVerified: verified })
+						}
+						onTermsAcceptedChange={(accepted) =>
+							setFormData({ ...formData, termsAccepted: accepted })
+						}
+						disabled={loading}
+						showErrors={!formData.ageVerified || !formData.termsAccepted}
+					/>
+
+					{/* GDPR Consent - Required before submission */}
 					<div className="space-y-4">
 						<h3 className="text-xl font-bold text-white">
 							Industry Preferences
@@ -241,6 +282,24 @@ export function Step4MatchingPreferences({
 						)}
 					</div>
 
+					{/* Age Verification and Terms - Required before submission */}
+					<AgeVerificationSection
+						birthYear={formData.birthYear}
+						ageVerified={formData.ageVerified}
+						termsAccepted={formData.termsAccepted}
+						onBirthYearChange={(year) =>
+							setFormData({ ...formData, birthYear: year })
+						}
+						onAgeVerifiedChange={(verified) =>
+							setFormData({ ...formData, ageVerified: verified })
+						}
+						onTermsAcceptedChange={(accepted) =>
+							setFormData({ ...formData, termsAccepted: accepted })
+						}
+						disabled={loading}
+						showErrors={!formData.ageVerified || !formData.termsAccepted}
+					/>
+
 					{/* GDPR Consent - Required before submission */}
 					<div className="bg-gradient-to-r from-brand-500/15 via-brand-700/15 to-brand-500/15 border-2 border-brand-500/40 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
 						<label className="flex items-start gap-3 sm:gap-4 cursor-pointer group touch-manipulation">
@@ -310,9 +369,9 @@ export function Step4MatchingPreferences({
 							</motion.button>
 							<motion.button
 								onClick={handleSubmit}
-								disabled={loading || !formData.gdprConsent}
-								whileHover={{ scale: loading || !formData.gdprConsent ? 1 : 1.03 }}
-								whileTap={{ scale: loading || !formData.gdprConsent ? 1 : 0.97 }}
+								disabled={loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent}
+								whileHover={{ scale: loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent ? 1 : 1.03 }}
+								whileTap={{ scale: loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent ? 1 : 0.97 }}
 								className="relative flex-1 py-4 sm:py-6 md:py-7 text-base sm:text-xl md:text-2xl font-black disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wide rounded-xl sm:rounded-2xl overflow-hidden touch-manipulation min-h-[56px]"
 								style={{
 									background: loading
@@ -359,4 +418,4 @@ export function Step4MatchingPreferences({
 			</div>
 		</motion.div>
 	);
-}
+});

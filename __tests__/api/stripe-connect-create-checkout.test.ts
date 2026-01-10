@@ -40,6 +40,7 @@ jest.mock("@/lib/stripe", () => ({
 jest.mock("@/lib/env", () => ({
 	ENV: {
 		NEXT_PUBLIC_URL: "https://example.com",
+		STRIPE_SECRET_KEY: "sk_test_mock_stripe_secret_key",
 	},
 }));
 
@@ -199,7 +200,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 				expect.objectContaining({
 					success_url: "https://example.com/store/acct_test123?success=true",
 					cancel_url: "https://example.com/store/acct_test123?canceled=true",
-				})
+				}),
 			);
 		});
 
@@ -221,7 +222,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 					payment_intent_data: {
 						application_fee_amount: 200,
 					},
-				})
+				}),
 			);
 		});
 	});
@@ -253,7 +254,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 			expect(mockStripeAccount.checkout.sessions.create).toHaveBeenCalledWith(
 				expect.objectContaining({
 					mode: "subscription",
-				})
+				}),
 			);
 		});
 
@@ -274,7 +275,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 					subscription_data: {
 						application_fee_percent: 5,
 					},
-				})
+				}),
 			);
 		});
 	});
@@ -298,9 +299,11 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 
 			expect(mockStripeAccount.checkout.sessions.create).toHaveBeenCalledWith(
 				expect.objectContaining({
-					success_url: "https://vercel-app.vercel.app/store/acct_test123?success=true",
-					cancel_url: "https://vercel-app.vercel.app/store/acct_test123?canceled=true",
-				})
+					success_url:
+						"https://vercel-app.vercel.app/store/acct_test123?success=true",
+					cancel_url:
+						"https://vercel-app.vercel.app/store/acct_test123?canceled=true",
+				}),
 			);
 
 			// Restore
@@ -328,7 +331,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 				expect.objectContaining({
 					success_url: "http://localhost:3000/store/acct_test123?success=true",
 					cancel_url: "http://localhost:3000/store/acct_test123?canceled=true",
-				})
+				}),
 			);
 
 			// Restore
@@ -339,7 +342,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 	describe("Error Handling", () => {
 		it("should handle Stripe price retrieval errors", async () => {
 			mockStripeAccount.prices.retrieve.mockRejectedValue(
-				new Error("Price not found")
+				new Error("Price not found"),
 			);
 
 			const { req } = createMocks({
@@ -362,7 +365,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 				expect.objectContaining({
 					errorType: undefined,
 					errorCode: undefined,
-				})
+				}),
 			);
 		});
 
@@ -394,7 +397,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 				expect.objectContaining({
 					errorType: "card_error",
 					errorCode: "card_declined",
-				})
+				}),
 			);
 		});
 
@@ -427,7 +430,7 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 					accountId: "acct_test123",
 					sessionId: "cs_test123",
 					priceId: "price_test123",
-				})
+				}),
 			);
 		});
 
@@ -478,7 +481,9 @@ describe("POST /api/stripe-connect/create-checkout - Contract Tests", () => {
 				},
 			});
 
-			mockStripeAccount.prices.retrieve.mockRejectedValue(new Error("Price not found"));
+			mockStripeAccount.prices.retrieve.mockRejectedValue(
+				new Error("Price not found"),
+			);
 
 			const response = await POST(req as any);
 			const data = await response.json();

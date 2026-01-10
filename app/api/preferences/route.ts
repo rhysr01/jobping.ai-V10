@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { verifySecureToken } from "@/Utils/auth/secureTokens";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { apiLogger } from "@/lib/api-logger";
+import { asyncHandler, AppError } from "@/lib/errors";
 
-export async function GET(req: NextRequest) {
-	try {
+export const GET = asyncHandler(async (req: NextRequest) => {
 		const { searchParams } = new URL(req.url);
 		const token = searchParams.get("token");
 		const email = searchParams.get("email");
@@ -37,17 +37,9 @@ export async function GET(req: NextRequest) {
 		}
 
 		return NextResponse.json({ success: true, user });
-	} catch (error) {
-		apiLogger.error("Preferences GET error:", error as Error);
-		return NextResponse.json(
-			{ error: "Failed to load preferences" },
-			{ status: 500 },
-		);
-	}
-}
+});
 
-export async function POST(req: NextRequest) {
-	try {
+export const POST = asyncHandler(async (req: NextRequest) => {
 		const body = await req.json();
 		const { token, email, ...preferences } = body;
 
@@ -95,11 +87,4 @@ export async function POST(req: NextRequest) {
 		}
 
 		return NextResponse.json({ success: true, message: "Preferences updated" });
-	} catch (error) {
-		apiLogger.error("Preferences POST error:", error as Error);
-		return NextResponse.json(
-			{ error: "Failed to save preferences" },
-			{ status: 500 },
-		);
-	}
-}
+});

@@ -56,6 +56,7 @@ next-env.d.ts
 
 # Ignore AI/Log junk
 *.log
+logs/
 .cursor/
 
 # Additional build outputs

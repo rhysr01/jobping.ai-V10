@@ -1,47 +1,121 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { showToast } from "@/lib/toast";
 
-const STORAGE_KEY = "jobping_premium_signup_v1";
-const STORAGE_VERSION = 1; // Increment when formData structure changes
+const STORAGE_VERSION = 1;
 const EXPIRATION_MS = 86400000; // 24 hours
 
-interface SavedFormState {
+interface BaseFormData {
+	email?: string;
+	fullName?: string;
+	cities?: string[];
+	careerPath?: string;
+	visaSponsorship?: string;
+	gdprConsent?: boolean;
+	// GDPR compliance fields
+	birthYear?: number;
+	ageVerified?: boolean;
+	termsAccepted?: boolean;
+}
+
+interface PremiumFormData extends BaseFormData {
+	// Premium-specific fields
+	visaStatus?: string;
+	entryLevelPreferences?: string[];
+	roles?: string[];
+	keywords?: string[];
+	industries?: string[];
+	companySizePreferences?: string[];
+	workEnvironment?: string[];
+	salaryExpectations?: string;
+	[key: string]: unknown; // Allow additional fields
+}
+
+interface FreeFormData extends BaseFormData {
+	cities: string[];
+	careerPath: string;
+	email: string;
+	fullName: string;
+	visaSponsorship: string;
+	gdprConsent: boolean;
+}
+
+type FormDataType = PremiumFormData | FreeFormData;
+
+interface SavedFormState<T extends FormDataType> {
 	version: number;
-	step: number;
-	formData: any;
+	formData: T;
+	step?: number; // Only for premium
 	timestamp: number;
 }
 
-/**
- * Custom hook for persisting premium signup form state to localStorage
- * Automatically saves on step changes and offers to restore on mount
- */
-export function useFormPersistence(
-	step: number,
-	formData: any,
-	setFormData: (data: any) => void,
-	setStep: (step: number) => void,
-) {
-	const hasRestoredRef = useRef(false);
+interface UseFormPersistenceOptions<T extends FormDataType> {
+	tier: 'premium' | 'free';
+	hasStep?: boolean; // Whether to track step changes
+	minStepForSave?: number; // Minimum step to start saving (premium only)
+}
 
-	// Save progress whenever step or formData changes
-	useEffect(() => {
-		// Only save if we're past step 1 (user has made progress)
-		if (step > 1) {
-			try {
-				const state: SavedFormState = {
-					version: STORAGE_VERSION,
-					step,
-					formData,
-					timestamp: Date.now(),
-				};
-				localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-			} catch (error) {
-				// localStorage might be disabled or full - fail silently
-				console.warn("Failed to save form progress:", error);
-			}
+/**
+ * Unified custom hook for persisting signup form state to localStorage
+ * Handles both premium and free signup flows with different requirements
+ */
+export function useFormPersistence<T extends FormDataType>(
+	formData: T,
+	setFormData: React.Dispatch<React.SetStateAction<T>>,
+	options: UseFormPersistenceOptions<T>,
+	setStep?: (step: number) => void,
+	currentStep?: number,
+) {
+	const { tier, hasStep = false, minStepForSave = 1 } = options;
+	const STORAGE_KEY = `jobping_${tier}_signup_v${STORAGE_VERSION}`;
+
+	const hasRestoredRef = useRef(false);
+	const hasUserDataRef = useRef(false);
+
+	// Check if user has entered any data (for free tier)
+	const checkHasUserData = useCallback((data: T) => {
+		if (tier === 'free') {
+			const freeData = data as FreeFormData;
+			return !!(
+				freeData.email ||
+				freeData.fullName ||
+				freeData.cities?.length ||
+				freeData.careerPath ||
+				freeData.visaSponsorship
+			);
 		}
-	}, [step, formData]);
+		return true; // Premium always saves after minStepForSave
+	}, [tier]);
+
+	// Update hasUserData ref when formData changes
+	useEffect(() => {
+		hasUserDataRef.current = checkHasUserData(formData);
+	}, [formData, checkHasUserData]);
+
+	// Save progress based on tier-specific logic
+	useEffect(() => {
+		const shouldSave = tier === 'premium'
+			? (currentStep && currentStep >= minStepForSave)
+			: hasUserDataRef.current;
+
+		if (!shouldSave) return;
+
+		try {
+			const state: SavedFormState<T> = {
+				version: STORAGE_VERSION,
+				formData,
+				timestamp: Date.now(),
+			};
+
+			if (hasStep && currentStep !== undefined) {
+				(state as any).step = currentStep;
+			}
+
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+		} catch (error) {
+			// localStorage might be disabled or full - fail silently
+			console.warn("Failed to save form progress:", error);
+		}
+	}, [formData, currentStep, hasStep, minStepForSave, STORAGE_KEY, tier]);
 
 	// Restore progress on mount (only once)
 	useEffect(() => {
@@ -52,87 +126,44 @@ export function useFormPersistence(
 			const saved = localStorage.getItem(STORAGE_KEY);
 			if (!saved) return;
 
-			// Wrap JSON.parse in try-catch to handle corrupted localStorage
-			let parsed: SavedFormState;
-			try {
-				parsed = JSON.parse(saved);
-			} catch (parseError) {
-				console.error(
-					"Failed to parse form persistence data (corrupted localStorage):",
-					parseError,
-				);
-				// Clear corrupted data
-				try {
-					localStorage.removeItem(STORAGE_KEY);
-				} catch {
-					// Ignore cleanup errors
-				}
-				return;
-			}
+			const parsed: SavedFormState<T> = JSON.parse(saved);
 
-			const {
-				version,
-				step: savedStep,
-				formData: savedData,
-				timestamp,
-			} = parsed;
-
-			// Check version compatibility - prevent "Zombie Data" bug
-			if (version !== STORAGE_VERSION) {
-				console.warn(
-					`Form data version mismatch (${version} vs ${STORAGE_VERSION}), clearing storage`,
-				);
-				try {
-					localStorage.removeItem(STORAGE_KEY);
-				} catch {
-					// Ignore cleanup errors
-				}
-				return;
-			}
-
-			// Check if expired (24 hours)
-			const isExpired = Date.now() - timestamp > EXPIRATION_MS;
-
-			if (isExpired) {
-				// Clean up expired data
+			// Validate version and expiration
+			if (parsed.version !== STORAGE_VERSION) {
 				localStorage.removeItem(STORAGE_KEY);
 				return;
 			}
 
-			// Only restore if user was past step 1
-			if (savedStep > 1 && savedData) {
-				// Show toast notification
-				showToast.error(
-					`Welcome back! Resume from Step ${savedStep}?`,
-					{
-						label: "Resume",
-						onClick: () => {
-							setFormData(savedData);
-							setStep(savedStep);
-							showToast.success(`Resumed from Step ${savedStep}`);
-						},
-					},
+			if (Date.now() - parsed.timestamp > EXPIRATION_MS) {
+				localStorage.removeItem(STORAGE_KEY);
+				return;
+			}
+
+			// Restore data based on tier
+			if (tier === 'premium') {
+				// Premium: restore formData and step
+				setFormData(parsed.formData);
+				if (hasStep && setStep && parsed.step !== undefined) {
+					setStep(parsed.step);
+				}
+				showToast("Welcome back! Your progress has been restored.", "info");
+			} else {
+				// Free: only restore if user confirms
+				const shouldRestore = confirm(
+					"We found your previous progress. Would you like to restore it?"
 				);
+				if (shouldRestore) {
+					setFormData(parsed.formData);
+				}
 			}
 		} catch (error) {
-			// Invalid JSON or other error - clear corrupted data
-			console.error("Failed to restore form progress:", error);
-			try {
-				localStorage.removeItem(STORAGE_KEY);
-			} catch {
-				// Ignore cleanup errors
-			}
-		}
-	}, [setFormData, setStep]);
-
-	// Clear saved progress (call this on successful submission)
-	const clearProgress = () => {
-		try {
+			// Corrupted data or parsing error - remove it
 			localStorage.removeItem(STORAGE_KEY);
-		} catch (error) {
-			console.warn("Failed to clear form progress:", error);
 		}
-	};
+	}, [STORAGE_KEY, setFormData, setStep, hasStep, tier]);
 
-	return { clearProgress };
+	return {
+		// Could add utility functions here if needed
+		clearProgress: () => localStorage.removeItem(STORAGE_KEY),
+	};
 }

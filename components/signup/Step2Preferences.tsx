@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import React from "react";
 import EntryLevelSelector from "@/components/ui/EntryLevelSelector";
 import {
 	FormFieldError,
@@ -27,7 +28,7 @@ interface Step2PreferencesProps {
 	toggleArray: (arr: string[], value: string) => string[];
 }
 
-export function Step2Preferences({
+export const Step2Preferences = React.memo(function Step2Preferences({
 	formData,
 	setFormData,
 	touchedFields: _touchedFields,
@@ -376,4 +377,4 @@ export function Step2Preferences({
 			</div>
 		</motion.div>
 	);
-}
+});

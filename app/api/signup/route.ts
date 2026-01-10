@@ -1,11 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
+import { asyncHandler, AppError } from "@/lib/errors";
 import type { JobWithMetadata } from "@/lib/types/job";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { sendMatchedJobsEmail, sendWelcomeEmail } from "@/Utils/email/sender";
 // Pre-filtering removed - AI handles semantic matching
 import { getDistributionStats } from "@/Utils/matching/jobDistribution";
-import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
+import { getProductionRateLimiter } from "@/Utils/production-rate-limiter";
 
 // Helper function to safely send welcome email and update tracking
 async function sendWelcomeEmailAndTrack(
@@ -55,8 +56,7 @@ async function sendWelcomeEmailAndTrack(
 	}
 }
 
-export async function POST(req: NextRequest) {
-	try {
+export const POST = asyncHandler(async (req: NextRequest) => {
 		// Rate limiting - prevent abuse of expensive AI matching
 		const rateLimitResult = await getProductionRateLimiter().middleware(
 			req,
@@ -68,12 +68,14 @@ export async function POST(req: NextRequest) {
 
 		const data = await req.json();
 
-		// Validate required fields
+		// Validate required fields including GDPR compliance
 		if (
 			!data.email ||
 			!data.fullName ||
 			!data.cities ||
-			data.cities.length === 0
+			data.cities.length === 0 ||
+			data.ageVerified !== true ||
+			data.termsAccepted !== true
 		) {
 			// Track validation failure
 			apiLogger.info("signup_failed_validation", {
@@ -82,12 +84,14 @@ export async function POST(req: NextRequest) {
 				hasEmail: !!data.email,
 				hasFullName: !!data.fullName,
 				hasCities: !!(data.cities && data.cities.length > 0),
+				hasAgeVerification: !!data.ageVerified,
+				hasTermsAcceptance: !!data.termsAccepted,
 				timestamp: new Date().toISOString(),
 			});
 			return NextResponse.json(
 				{
 					error: "missing_required_fields",
-					message: "Please fill in all required fields: email, full name, and at least one city."
+					message: "Please fill in all required fields: email, full name, at least one city, age verification, and terms acceptance."
 				},
 				{ status: 400 },
 			);
@@ -171,6 +175,10 @@ export async function POST(req: NextRequest) {
 			onboarding_complete: false, // Will be set to true after first email
 			email_count: 0, // Will increment after first email
 			last_email_sent: null, // Will be set after first email
+			// GDPR compliance fields
+			birth_year: data.birthYear || null,
+			age_verified: data.ageVerified || false,
+			terms_accepted: data.termsAccepted || false,
 			created_at: new Date().toISOString(),
 		};
 
@@ -1064,11 +1072,4 @@ export async function POST(req: NextRequest) {
 		// Note: Metadata is primarily fetched via /api/signup/metadata for decoupling
 
 		return NextResponse.json(responseData);
-	} catch (error) {
-		apiLogger.error("Signup error", error as Error);
-		return NextResponse.json(
-			{ error: "Internal server error" },
-			{ status: 500 },
-		);
-	}
-}
+});

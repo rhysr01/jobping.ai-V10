@@ -1,13 +1,51 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-	COUNTRY_FLAGS,
-	extractCountryFromLocation,
-	getCountryFlag,
-	getCountryFromCity,
-} from "@/lib/countryFlags";
 import { apiLogger } from "@/lib/api-logger";
+
+// Inline country flags and helper functions (from deleted countryFlags.ts)
+const COUNTRY_FLAGS: Record<string, string> = {
+	"United Kingdom": "🇬🇧", // London, Manchester, Birmingham
+	Ireland: "🇮🇪", // Dublin, Belfast
+	France: "🇫🇷", // Paris
+	Germany: "🇩🇪", // Berlin, Hamburg, Munich
+	Spain: "🇪🇸", // Madrid, Barcelona
+	Italy: "🇮🇹", // Milan, Rome
+	Netherlands: "🇳🇱", // Amsterdam
+	Belgium: "🇧🇪", // Brussels
+	Switzerland: "🇨🇭", // Zurich
+	Sweden: "🇸🇪", // Stockholm
+	Denmark: "🇩🇰", // Copenhagen
+	Austria: "🇦🇹", // Vienna
+	"Czech Republic": "🇨🇿", // Prague
+	Poland: "🇵🇱", // Warsaw
+};
+
+const getCountryFlag = (country: string): string => {
+	if (!country) return "";
+	return COUNTRY_FLAGS[country] || "";
+};
+
+// Simplified country extraction (removed complex logic from deleted file)
+const extractCountryFromLocation = (location: string): string => {
+	if (!location) return "";
+	const trimmed = location.trim();
+	// Simple city to country mapping for known cities
+	const cityMap: Record<string, string> = {
+		"Dublin": "Ireland", "Belfast": "Ireland",
+		"London": "United Kingdom", "Manchester": "United Kingdom", "Birmingham": "United Kingdom",
+		"Paris": "France", "Amsterdam": "Netherlands", "Brussels": "Belgium",
+		"Berlin": "Germany", "Hamburg": "Germany", "Munich": "Germany",
+		"Zurich": "Switzerland", "Madrid": "Spain", "Barcelona": "Spain",
+		"Milan": "Italy", "Rome": "Italy", "Stockholm": "Sweden",
+		"Copenhagen": "Denmark", "Vienna": "Austria", "Prague": "Czech Republic", "Warsaw": "Poland"
+	};
+	return cityMap[trimmed] || trimmed;
+};
+
+const getCountryFromCity = (city: string): string => {
+	return extractCountryFromLocation(city);
+};
 import { asyncHandler } from "@/lib/errors";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { withApiAuth } from "@/Utils/auth/apiAuth";
 
 // Cache for 1 hour

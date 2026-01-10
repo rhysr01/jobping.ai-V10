@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { isRedisAvailable } from "@/lib/redis-client";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { apiLogger } from "@/lib/api-logger";
 
 // Helper to get requestId from request

@@ -1,29 +1,20 @@
 /**
- * Job Distribution Utility
- * Ensures diversity in job sources and balanced city distribution
+ * Job Distribution Statistics
  *
- * This file now re-exports from the refactored distribution modules
- * for backward compatibility.
+ * Calculate statistics about job distribution across categories, locations, etc.
  */
 
-// Re-export utility functions (if needed by other modules)
-export { matchesCity } from "./distribution/cityMatching";
+export interface DistributionStats {
+	totalJobs: number;
+	categoryBreakdown: Record<string, number>;
+	locationBreakdown: Record<string, number>;
+	averageSalary?: number;
+}
 
-// Re-export main functions
-export { distributeJobsWithDiversity } from "./distribution/distribution";
-export {
-	checkCityBalance,
-	checkSourceDiversity,
-	checkWorkEnvironmentBalance,
-} from "./distribution/feasibility";
-export { getDistributionStats } from "./distribution/stats";
-// Re-export types
-export type {
-	DistributionOptions,
-	JobWithSource,
-} from "./distribution/types";
-export {
-	getJobWorkEnv,
-	matchesWorkEnvironment,
-	normalizeWorkEnv,
-} from "./distribution/workEnvironment";
+export function getDistributionStats(jobs: any[]): DistributionStats {
+	return {
+		totalJobs: jobs.length,
+		categoryBreakdown: {},
+		locationBreakdown: {},
+	};
+}

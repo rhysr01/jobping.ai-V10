@@ -20,7 +20,7 @@ jest.mock("@/lib/api-logger", () => ({
 	},
 }));
 
-jest.mock("@/Utils/productionRateLimiter", () => ({
+jest.mock("@/Utils/production-rate-limiter", () => ({
 	getProductionRateLimiter: () => ({
 		middleware: jest.fn().mockResolvedValue(null), // No rate limiting for tests
 	}),
@@ -561,7 +561,7 @@ describe("POST /api/signup/free - Contract Tests", () => {
 
 			const {
 				getProductionRateLimiter,
-			} = require("@/Utils/productionRateLimiter");
+			} = require("@/Utils/production-rate-limiter");
 			getProductionRateLimiter().middleware.mockResolvedValue(
 				mockRateLimitResponse,
 			);

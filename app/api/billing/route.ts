@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 
 // GET: Retrieve billing information
 export async function GET(req: NextRequest) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import React, { useState } from "react";
 import { BrandIcons } from "@/components/ui/BrandIcons";
 import {
 	FormFieldError,
@@ -28,7 +28,7 @@ interface Step3CareerPathProps {
 	clearAllRoles: () => void;
 }
 
-export function Step3CareerPath({
+export const Step3CareerPath = React.memo(function Step3CareerPath({
 	formData,
 	setFormData,
 	touchedFields: _touchedFields,
@@ -474,4 +474,4 @@ export function Step3CareerPath({
 			</div>
 		</motion.div>
 	);
-}
+});

@@ -1,6 +1,15 @@
-# AI Reliability Testing with MCP Integration
+# Production AI Testing Suite
 
-This comprehensive testing suite ensures AI results are returned consistently and reliably. It uses **Model Context Protocol (MCP)** servers for enhanced test accuracy and validation.
+This testing suite validates the **real production AI matching engine** (ConsolidatedMatchingEngine) to ensure it delivers exactly what users experience.
+
+## 🎯 What It Tests
+
+- **Production Code Path**: Tests the actual `ConsolidatedMatchingEngine.performMatching()` method
+- **Hard Filtering**: Location, visa, language, and career path filtering
+- **Match Counts**: Free users get 5 matches, Premium get appropriate volume
+- **Caching**: Production LRU caching with shared cache instances
+- **Circuit Breaker**: Error handling and retry logic
+- **Validation**: Post-AI quality checks and hallucination prevention
 
 ## 🚀 Features
 

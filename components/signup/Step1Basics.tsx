@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import React, { useRef } from "react";
 import { CityChip } from "@/components/ui/CityChip";
 import EuropeMap from "@/components/ui/EuropeMap";
 import {
@@ -38,7 +38,7 @@ interface Step1BasicsProps {
 	toggleArray: (arr: string[], value: string) => string[];
 }
 
-export function Step1Basics({
+export const Step1Basics = React.memo(function Step1Basics({
 	formData,
 	setFormData,
 	touchedFields: _touchedFields,
@@ -534,4 +534,4 @@ export function Step1Basics({
 			</div>
 		</motion.div>
 	);
-}
+});

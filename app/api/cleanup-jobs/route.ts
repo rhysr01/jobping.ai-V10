@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getDatabaseClient } from "@/Utils/databasePool";
-import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
+import { getProductionRateLimiter } from "@/Utils/production-rate-limiter";
 import { apiLogger } from "@/lib/api-logger";
 
 export async function POST(req: NextRequest) {

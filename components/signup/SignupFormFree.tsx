@@ -25,7 +25,7 @@ import {
 	useRequiredValidation,
 } from "@/hooks/useFormValidation";
 // import { useStats } from "@/hooks/useStats"; // Kept for future use
-import { useFormPersistenceFree } from "@/hooks/useFormPersistenceFree";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 import { trackEvent } from "@/lib/analytics";
 import { ApiError, apiCall, apiCallJson } from "@/lib/api-client";
 import { showToast } from "@/lib/toast";
@@ -35,6 +35,7 @@ import { CitySelectionSection } from "./CitySelectionSection";
 import { CareerPathSection } from "./CareerPathSection";
 import { ContactInfoSection } from "./ContactInfoSection";
 import { GDPRConsentSection } from "./GDPRConsentSection";
+import { AgeVerificationSection } from "./AgeVerificationSection";
 
 
 export default function SignupFormFree() {
@@ -52,6 +53,10 @@ export default function SignupFormFree() {
 		fullName: "",
 		visaSponsorship: "", // Added visa sponsorship field
 		gdprConsent: false, // GDPR consent
+		// GDPR compliance fields
+		birthYear: undefined as number | undefined,
+		ageVerified: false,
+		termsAccepted: false,
 	});
 
 	const [jobCount, setJobCount] = useState<number | null>(null);
@@ -64,7 +69,11 @@ export default function SignupFormFree() {
 	const [showLiveMatching, setShowLiveMatching] = useState(false);
 
 	// Form persistence
-	const { clearProgress } = useFormPersistenceFree(formData, setFormData);
+	const { clearProgress } = useFormPersistence(
+		formData,
+		setFormData,
+		{ tier: 'free', hasStep: false },
+	);
 
 	// Form validation hooks
 	const emailValidation = useEmailValidation(formData.email);
@@ -153,7 +162,7 @@ export default function SignupFormFree() {
 						suggestion: data.suggestion,
 					});
 				} catch (error) {
-					console.error("Failed to fetch job count:", error);
+					// Silently handle job count fetch failures
 					setJobCount(null);
 					setJobCountMetadata(null);
 				} finally {
@@ -196,6 +205,8 @@ export default function SignupFormFree() {
 			emailValidation.isValid &&
 			nameValidation.isValid &&
 			visaSponsorshipValidation.isValid &&
+			formData.ageVerified &&
+			formData.termsAccepted &&
 			formData.gdprConsent,
 		[
 			formData.cities.length,
@@ -203,6 +214,8 @@ export default function SignupFormFree() {
 			emailValidation.isValid,
 			nameValidation.isValid,
 			visaSponsorshipValidation.isValid,
+			formData.ageVerified,
+			formData.termsAccepted,
 			formData.gdprConsent,
 		],
 	);
@@ -327,6 +340,10 @@ export default function SignupFormFree() {
 						career_paths: [formData.careerPath],
 						visa_sponsorship: formData.visaSponsorship,
 						entry_level_preferences: ["graduate", "intern", "junior"],
+						// GDPR compliance fields
+						birth_year: formData.birthYear,
+						age_verified: formData.ageVerified,
+						terms_accepted: formData.termsAccepted,
 					}),
 				});
 
@@ -359,11 +376,6 @@ export default function SignupFormFree() {
 				if (!response.ok) {
 					// Show user-friendly error messages
 					const errorMsg = data.error || data.message || "Signup failed";
-					console.error("Signup failed:", {
-						status: response.status,
-						error: errorMsg,
-						data,
-					});
 					throw new Error(errorMsg);
 				}
 
@@ -920,6 +932,26 @@ export default function SignupFormFree() {
 										/>
 									)}
 								</div>
+							</div>
+
+							{/* Age Verification and Terms - Required */}
+							<div className="mt-6">
+								<AgeVerificationSection
+									birthYear={formData.birthYear}
+									ageVerified={formData.ageVerified}
+									termsAccepted={formData.termsAccepted}
+									onBirthYearChange={(year) =>
+										setFormData((prev) => ({ ...prev, birthYear: year }))
+									}
+									onAgeVerifiedChange={(verified) =>
+										setFormData((prev) => ({ ...prev, ageVerified: verified }))
+									}
+									onTermsAcceptedChange={(accepted) =>
+										setFormData((prev) => ({ ...prev, termsAccepted: accepted }))
+									}
+									disabled={isSubmitting}
+									showErrors={!formData.ageVerified || !formData.termsAccepted}
+								/>
 							</div>
 
 							{/* GDPR Consent */}

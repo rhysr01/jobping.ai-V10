@@ -25,7 +25,7 @@ jest.mock("@/Utils/auth/apiAuth", () => ({
 	withApiAuth: jest.fn((handler) => handler),
 }));
 
-jest.mock("@/Utils/productionRateLimiter", () => ({
+jest.mock("@/Utils/production-rate-limiter", () => ({
 	getProductionRateLimiter: () => ({
 		middleware: jest.fn().mockResolvedValue(null), // No rate limiting for tests
 	}),

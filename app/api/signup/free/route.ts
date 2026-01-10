@@ -1,18 +1,32 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { apiLogger } from "@/lib/api-logger";
+import { asyncHandler, AppError } from "@/lib/errors";
 import { getCountryFromCity, getCountryVariations } from "@/lib/countryFlags";
 import { triggerMatchingEvent } from "@/lib/inngest/matching-helpers";
-import {
-	QUALITY_THRESHOLDS,
-	calculateQualityMetrics,
-	filterHighQualityJobs,
-	selectJobsForDistribution,
-} from "@/Utils/business-rules/quality-thresholds";
-import { createConsolidatedMatcher } from "@/Utils/consolidatedMatchingV2";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { simplifiedMatchingEngine } from "@/Utils/matching/core";
+
+// Inline quality thresholds (from deleted business-rules/quality-thresholds.ts)
+const QUALITY_THRESHOLDS = {
+	FREE_SIGNUP: 0.7,
+};
+
+const calculateQualityMetrics = (jobs: any[]) => ({
+	averageScore: jobs.reduce((sum, job) => sum + (job.score || 0), 0) / jobs.length,
+	minScore: Math.min(...jobs.map(job => job.score || 0)),
+	maxScore: Math.max(...jobs.map(job => job.score || 0)),
+});
+
+const filterHighQualityJobs = (jobs: any[]) =>
+	jobs.filter(job => (job.score || 0) >= QUALITY_THRESHOLDS.FREE_SIGNUP);
+
+const selectJobsForDistribution = (allJobs: any[], highQualityJobs: any[], targetCount: number) =>
+	highQualityJobs.slice(0, targetCount);
+
+// Note: createConsolidatedMatcher import removed - using simplified matching engine
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { distributeJobsWithDiversity } from "@/Utils/matching/jobDistribution";
-import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
+import { getProductionRateLimiter } from "@/Utils/production-rate-limiter";
 
 // Input validation schema
 const freeSignupSchema = z.object({
@@ -32,9 +46,16 @@ const freeSignupSchema = z.object({
 		.optional()
 		.default(["graduate", "intern", "junior"]),
 	visa_sponsorship: z.string().min(1, "Visa sponsorship status is required"),
+	// GDPR compliance fields
+	birth_year: z.number()
+		.min(1900, "Invalid birth year")
+		.max(new Date().getFullYear() - 16, "You must be at least 16 years old to use this service")
+		.optional(),
+	age_verified: z.boolean().refine(val => val === true, "Age verification is required"),
+	terms_accepted: z.boolean().refine(val => val === true, "Terms of service must be accepted"),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = asyncHandler(async (request: NextRequest) => {
 	// Rate limiting - prevent abuse (more lenient for legitimate users)
 	const rateLimitResult = await getProductionRateLimiter().middleware(
 		request,
@@ -79,6 +100,9 @@ export async function POST(request: NextRequest) {
 			career_paths,
 			entry_level_preferences,
 			visa_sponsorship,
+			birth_year,
+			age_verified,
+			terms_accepted,
 		} = validationResult.data;
 
 		// Map visa_sponsorship ('yes'/'no') to visa_status format
@@ -489,12 +513,11 @@ export async function POST(request: NextRequest) {
 				},
 			);
 
-			// FALLBACK: Use rule-based matching (engine will handle hard gates and pre-ranking)
-			const matcher = createConsolidatedMatcher();
-			const matchResult = await matcher.performMatching(
-				jobsForMatching as any[],
+			// FALLBACK: Use simplified matching engine
+			const matchResult = await simplifiedMatchingEngine.findMatchesForUser(
 				userPrefs as any,
-				true, // Force rule-based
+				jobsForMatching as any[],
+				{ useAI: false } // Force rule-based fallback
 			);
 
 			matchedJobsRaw = matchResult.matches
@@ -557,7 +580,6 @@ export async function POST(request: NextRequest) {
 
 		// Normal AI matching flow (synchronous for immediate response)
 		// Matching engine handles: Hard Gates → Pre-Ranking → AI Matching
-		const matcher = createConsolidatedMatcher(openaiKey);
 
 			apiLogger.info("Starting AI matching", {
 				email: normalizedEmail,
@@ -571,9 +593,10 @@ export async function POST(request: NextRequest) {
 			let matchResult: any = null;
 			try {
 				// Pass all jobs - engine handles hard gates and pre-ranking internally
-				matchResult = await matcher.performMatching(
-					jobsForMatching as any[],
+				matchResult = await simplifiedMatchingEngine.findMatchesForUser(
 					userPrefs as any,
+					jobsForMatching as any[],
+					{ useAI: true } // Use AI matching
 				);
 			} catch (matchingError) {
 				apiLogger.error("AI matching failed", matchingError as Error, {
@@ -976,11 +999,4 @@ export async function POST(request: NextRequest) {
 		});
 
 		return response;
-	} catch (error) {
-		apiLogger.error("Free signup failed", error as Error);
-		return NextResponse.json(
-			{ error: "Internal server error" },
-			{ status: 500 },
-		);
-	}
-}
+});

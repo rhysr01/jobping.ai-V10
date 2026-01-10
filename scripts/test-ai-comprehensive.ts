@@ -5,30 +5,21 @@
  * Runs all AI-related tests in sequence for complete validation.
  */
 
+import { config } from "dotenv";
+import { resolve } from "path";
+
+// Load environment variables from .env.local
+config({ path: resolve(process.cwd(), ".env.local") });
+
 async function runComprehensiveAITests() {
   console.log("🚀 COMPREHENSIVE AI TESTING SUITE\n");
   console.log("=".repeat(60));
 
   const tests = [
     {
-      name: "AI Reliability (Simple)",
-      command: "npm run test:ai-simple",
-      description: "Basic connection and response validation"
-    },
-    {
-      name: "AI Results Quality",
-      command: "npm run test:ai-quality",
-      description: "Relevance, accuracy, diversity, and ranking tests"
-    },
-    {
-      name: "Results Validation",
-      command: "npm run test:ai-validation",
-      description: "Data structure, types, and format validation"
-    },
-    {
-      name: "AI Reliability (Full)",
-      command: "npm run test:ai-reliability",
-      description: "Complete reliability suite with MCP integration"
+      name: "Production Engine Tests",
+      command: "npm run test:production-engine",
+      description: "Real production code testing (ConsolidatedMatchingEngine)"
     }
   ];
 

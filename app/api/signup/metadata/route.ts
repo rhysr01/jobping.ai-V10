@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { getTargetCompaniesFromHistory } from "@/Utils/matching/guaranteed/historical-alerts";
-import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
+import { getProductionRateLimiter } from "@/Utils/production-rate-limiter";
 
 export async function GET(request: NextRequest) {
 	// Rate limiting

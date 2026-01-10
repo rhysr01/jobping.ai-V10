@@ -1,16 +1,25 @@
-export const SIGNUP_INITIAL_ROLES = 10;
+/**
+ * Product Metrics Configuration
+ *
+ * Defines the core product limits and metrics used across the application
+ */
 
+// Free tier limits
 export const FREE_ROLES_PER_SEND = 5;
-export const FREE_SEND_DAYS = ["Thursday"] as const;
-export const FREE_SEND_DAY_LABEL = FREE_SEND_DAYS.join(" & ");
 
-export const PREMIUM_ROLES_PER_SEND = 5;
-export const PREMIUM_SENDS_PER_WEEK = 3;
-export const PREMIUM_SEND_DAYS = ["Mon", "Wed", "Fri"] as const;
-export const PREMIUM_SEND_DAYS_LABEL = PREMIUM_SEND_DAYS.join(" / ");
+// Premium tier limits
+export const PREMIUM_SENDS_PER_WEEK = 1;
+export const PREMIUM_ROLES_PER_WEEK = 50;
+export const PREMIUM_ROLES_PER_MONTH = 200;
 
-export const PREMIUM_ROLES_PER_WEEK =
-	PREMIUM_ROLES_PER_SEND * PREMIUM_SENDS_PER_WEEK;
-export const WEEKS_PER_MONTH = 4;
-export const PREMIUM_ROLES_PER_MONTH = PREMIUM_ROLES_PER_WEEK * WEEKS_PER_MONTH;
-export const PREMIUM_ROLES_PER_YEAR = PREMIUM_ROLES_PER_MONTH * 12;
+// Cache and performance metrics
+export const AI_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+export const MATCHING_TIMEOUT_MS = 20 * 1000; // 20 seconds
+
+// Rate limiting
+export const FREE_REQUESTS_PER_HOUR = 10;
+export const PREMIUM_REQUESTS_PER_HOUR = 100;
+
+// Email delivery metrics
+export const EMAIL_DELIVERY_TIMEOUT_MS = 30 * 1000; // 30 seconds
+export const EMAIL_RETRY_ATTEMPTS = 3;

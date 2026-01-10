@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAllCompanyLogos, getCompanyLogo } from "@/lib/companyLogos";
 import { apiLogger } from "@/lib/api-logger";
 import { asyncHandler } from "@/lib/errors";
-import { getDatabaseClient } from "@/Utils/databasePool";
+import { getDatabaseClient } from "@/Utils/core/database-pool";
 import { withApiAuth } from "@/Utils/auth/apiAuth";
 
 // Cache for 1 hour

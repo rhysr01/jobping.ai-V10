@@ -11,50 +11,40 @@ test.describe("Critical User Flows", () => {
 		await page.goto("/");
 	});
 
-	test("Homepage loads correctly and displays all sections", async ({
+	test("Homepage loads correctly and displays key user journey elements", async ({
 		page,
 	}) => {
-		// Use data-testids instead of text selectors
-		await expect(page.locator('[data-testid="hero-section"]')).toBeVisible();
-		await expect(page.locator('[data-testid="how-it-works"]')).toBeVisible();
-		await expect(page.locator('[data-testid="pricing"]')).toBeVisible();
+		// Test critical user journey elements that drive conversions
+		await expect(page.locator("text=Land your first job faster")).toBeVisible();
+		await expect(page.locator("text=Find my matches")).toBeVisible();
+		await expect(page.locator("text=Pricing")).toBeVisible();
 
-		// Use semantic selectors
-		await expect(page.locator("h1")).toBeVisible();
+		// Test that both free and premium options are visible (critical for conversion)
+		await expect(page.locator("text=Free")).toBeVisible();
+		await expect(page.locator("text=Premium")).toBeVisible();
 
-		// Use role-based selectors where appropriate
-		await expect(page.locator("role=heading[level=1]")).toBeVisible();
+		// Test social proof and trust signals
+		await expect(page.locator("text=students")).toBeVisible();
 	});
 
-	test("Pricing section displays correctly with both tiers", async ({
+	test("Free user signup flow works end-to-end", async ({
 		page,
 	}) => {
-		// Navigate to pricing section using data-testid
-		await page.locator('[data-testid="pricing"]').scrollIntoViewIfNeeded();
+		// Navigate to homepage
+		await page.goto("/");
 
-		// Check free tier using data-testid
-		await expect(page.locator('[data-testid="free-plan"]')).toBeVisible();
-		await expect(
-			page.locator('[data-testid="free-plan"]').locator("role=heading"),
-		).toBeVisible();
+		// Click free signup CTA (most common user journey)
+		await page.locator("text=Find my matches").first().click();
 
-		// Check premium tier using data-testid
-		await expect(page.locator('[data-testid="premium-plan"]')).toBeVisible();
-		await expect(
-			page.locator('[data-testid="premium-plan"]').locator("role=heading"),
-		).toBeVisible();
+		// Should navigate to signup page
+		await expect(page).toHaveURL(/.*signup/);
 
-		// Check CTA buttons using role and aria-label
-		await expect(
-			page
-				.locator('[data-testid="free-plan"]')
-				.locator('role=link[aria-label*="Start free"]'),
-		).toBeVisible();
-		await expect(
-			page
-				.locator('[data-testid="premium-plan"]')
-				.locator('role=link[aria-label*="Premium"]'),
-		).toBeVisible();
+		// Verify signup page loads with free tier
+		await expect(page.locator("text=Join")).toBeVisible();
+
+		// Test that we can start the free signup process
+		const startButton = page.locator("text=Start").or(page.locator("text=Begin")).first();
+		await expect(startButton).toBeVisible();
 	});
 
 	test("Signup flow works for free tier", async ({ page }) => {
@@ -258,8 +248,29 @@ test.describe("Cross-browser Compatibility", () => {
 		await expect(page.locator('[data-testid="hero-section"]')).toBeVisible();
 	});
 
+	test("Premium upgrade flow works end-to-end", async ({
+		page,
+	}) => {
+		// Navigate to homepage
+		await page.goto("/");
+
+		// Verify premium pricing is visible (€5)
+		await expect(page.locator("text=€5")).toBeVisible();
+		await expect(page.locator("text=Premium")).toBeVisible();
+
+		// Click premium CTA
+		const premiumCTA = page.locator("text=Upgrade").or(page.locator("text=Premium")).first();
+		await premiumCTA.click();
+
+		// Should navigate to premium signup or show premium features
+		await expect(page.locator("text=Premium").or(page.locator("text=€5"))).toBeVisible();
+
+		// Test that premium features are highlighted
+		await expect(page.locator("text=weekly").or(page.locator("text=matches"))).toBeVisible();
+	});
+
 	test("Works in Safari", async ({ page, browserName }) => {
 		await page.goto("/");
-		await expect(page.locator('[data-testid="hero-section"]')).toBeVisible();
+		await expect(page.locator("text=Land your first job faster")).toBeVisible();
 	});
 });

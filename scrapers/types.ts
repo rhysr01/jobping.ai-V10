@@ -26,6 +26,7 @@ export interface Job {
 	created_at: string; // timestamptz Non-nullable, default now()
 	is_internship?: boolean; // boolean Nullable (for internship detection)
 	is_graduate?: boolean; // boolean Nullable (for graduate scheme detection)
+	visa_friendly?: boolean; // boolean Nullable (visa sponsorship availability)
 }
 
 // Type guards for validation

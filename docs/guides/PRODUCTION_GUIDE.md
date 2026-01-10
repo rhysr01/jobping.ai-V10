@@ -8,7 +8,7 @@ This guide consolidates everything required to operate JobPing in production. It
 
 - **Next.js API & App Routes** – Core services run inside Vercel’s serverless runtime. Every API route enforces the shared patterns below (logging, rate-limiting, secure tokens, structured payloads).
 - **Supabase** – Primary datastore (Postgres) plus authentication for internal tooling. Accessed via the shared connection pool defined in `Utils/databasePool.ts`.
-- **Redis** – Optional cache layer for rate limiting and matching accelerators (`Utils/productionRateLimiter.ts`).
+- **Redis** – Optional cache layer for rate limiting and matching accelerators (`Utils/production-rate-limiter.ts`).
 - **Background & Scraping Jobs** – Triggered via script entry points under `scripts/` and `automation/`, authenticated with system keys and unified locking.
 - **Email Delivery** – Resend (transactional) driven by `Utils/email/sender.ts` with signed preference links and verification flows.
 - **Billing** – Polar-based checkout/endpoints under `app/api/billing/*`.
@@ -18,7 +18,7 @@ Consistency rules:
 
 1. **Request Lifecycle** – Every route uses the shared logger, rate limiter (`getProductionRateLimiter`), and error helpers (`Utils/errorResponse`).
 2. **Security** – API/system endpoints require HMAC or system keys; user-facing flows rely on signed tokens (`Utils/auth/secureTokens.ts`).
-3. **Caching & Locks** – Use the helpers in `Utils/productionRateLimiter.ts` and `Utils/matching/*` (avoid ad-hoc caches).
+3. **Caching & Locks** – Use the helpers in `Utils/production-rate-limiter.ts` and `Utils/matching/*` (avoid ad-hoc caches).
 4. **Health** – The `/api/health` endpoint must stay fast (<100 ms) and side effect free.
 
 ---
@@ -67,7 +67,7 @@ Optional values (`REDIS_URL`, scraper knobs, etc.) are already typed and default
 ## 4. Monitoring & Alerting
 
 - **Error Tracking** – Structured logging via `lib/monitoring.ts` for error tracking and debugging.
-- **Rate Limiting & Abuse Detection** – Centralised via `Utils/productionRateLimiter.ts`; check Redis metrics if throttle issues trigger.
+- **Rate Limiting & Abuse Detection** – Centralised via `Utils/production-rate-limiter.ts`; check Redis metrics if throttle issues trigger.
 - **Business Metrics** – Output through `lib/monitoring.ts` (`logger.metric`, `performanceMonitor`). Ensure log streams feed into your observability stack (e.g. DataDog, Vercel Analytics).
 - **Health Endpoints**
   - `/api/health` → basic uptime check.

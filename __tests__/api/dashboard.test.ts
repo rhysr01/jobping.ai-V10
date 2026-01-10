@@ -21,7 +21,7 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 // Mock rate limiter to avoid external dependencies
-jest.mock("@/Utils/productionRateLimiter", () => ({
+jest.mock("@/Utils/production-rate-limiter", () => ({
 	getProductionRateLimiter: () => ({
 		middleware: jest.fn().mockResolvedValue(null), // No rate limiting for tests
 	}),

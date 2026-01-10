@@ -4,8 +4,8 @@ import { asyncHandler, ValidationError } from "@/lib/errors";
 import {
 	markUserVerified,
 	verifyVerificationToken,
-} from "@/Utils/emailVerification";
-import { getProductionRateLimiter } from "@/Utils/productionRateLimiter";
+} from "@/Utils/email-verification";
+import { getProductionRateLimiter } from "@/Utils/production-rate-limiter";
 import { getBaseUrl } from "@/Utils/url-helpers";
 
 // Test mode helper - using professional pattern
