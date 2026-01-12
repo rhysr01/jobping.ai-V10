@@ -3,7 +3,7 @@ import { getAllCompanyLogos, getCompanyLogo } from "@/lib/company-logos";
 import { apiLogger } from "@/lib/api-logger";
 import { asyncHandler } from "@/lib/errors";
 import { getDatabaseClient } from "../../../utils/core/database-pool";
-import { withApiAuth } from "@/utils/authentication/apiAuth";
+import { withApiAuth } from "../../../utils/authentication/apiAuth";
 
 // Cache for 1 hour
 let cachedCompanies: Array<{ name: string; logoPath: string }> | null = null;

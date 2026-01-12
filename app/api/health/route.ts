@@ -35,3 +35,4 @@ export async function PUT() {
 export async function DELETE() {
 	return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
+// Force Vercel redeploy
