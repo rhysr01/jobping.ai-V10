@@ -23,5 +23,15 @@
     "total": 191,
     "success": 191,
     "errors": 0
+  },
+  "reed__2026-01-12": {
+    "total": 58,
+    "success": 58,
+    "errors": 0
+  },
+  "jooble__2026-01-12": {
+    "total": 44,
+    "success": 44,
+    "errors": 0
   }
 }
