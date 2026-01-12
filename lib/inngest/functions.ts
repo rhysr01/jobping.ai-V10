@@ -1,8 +1,8 @@
 import { Inngest } from "inngest";
 import { logger } from "@/lib/monitoring";
-import { simplifiedMatchingEngine } from "@/utils/matching/core/matching-engine";
-import { getDatabaseClient } from "@/utils/core/database-pool";
-import type { Job, UserPreferences } from "@/utils/matching/types";
+import { simplifiedMatchingEngine } from "../../utils/matching/core/matching-engine";
+import { getDatabaseClient } from "../../utils/core/database-pool";
+import type { Job, UserPreferences } from "../../utils/matching/types";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "my-app" });

@@ -45,7 +45,7 @@ const getCountryFromCity = (city: string): string => {
 	return extractCountryFromLocation(city);
 };
 import { asyncHandler } from "@/lib/errors";
-import { getDatabaseClient } from "@/utils/core/database-pool";
+import { getDatabaseClient } from "../../../utils/core/database-pool";
 import { withApiAuth } from "@/utils/authentication/apiAuth";
 
 // Cache for 1 hour

@@ -15,7 +15,7 @@ import {
 	createClient as createSupabaseClient,
 	type SupabaseClient,
 } from "@supabase/supabase-js";
-import { getDatabaseClient } from "@/utils/core/database-pool";
+import { getDatabaseClient } from "../utils/core/database-pool";
 
 // Server-side client (uses service role key)
 /**

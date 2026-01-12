@@ -5,7 +5,7 @@ import {
 	markUserVerified,
 	verifyVerificationToken,
 } from "@/utils/email-verification";
-import { getProductionRateLimiter } from "@/utils/production-rate-limiter";
+import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
 import { getBaseUrl } from "@/utils/url-helpers";
 
 // Test mode helper - using professional pattern

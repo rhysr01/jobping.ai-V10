@@ -51,7 +51,7 @@ const selectJobsForDistribution = (
 ) => highQualityJobs.slice(0, targetCount);
 
 // Note: createConsolidatedMatcher import removed - using simplified matching engine
-import { getDatabaseClient } from "@/utils/core/database-pool";
+import { getDatabaseClient } from "../../../../utils/core/database-pool";
 
 // Simple replacement for distributeJobsWithDiversity
 function distributeJobsWithDiversity(jobs: any[], options: any) {
@@ -60,7 +60,7 @@ function distributeJobsWithDiversity(jobs: any[], options: any) {
 	return jobs.slice(0, targetCount);
 }
 
-import { getProductionRateLimiter } from "@/utils/production-rate-limiter";
+import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
 
 // Input validation schema
 const freeSignupSchema = z.object({

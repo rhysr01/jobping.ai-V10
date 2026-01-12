@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
-import { getDatabaseClient } from "@/utils/core/database-pool";
+import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import { sendMatchedJobsEmail } from "@/utils/email/sender";
 
 // Simple replacement for distributeJobsWithDiversity

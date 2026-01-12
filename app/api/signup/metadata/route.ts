@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
-import { getDatabaseClient } from "@/utils/core/database-pool";
-import { getProductionRateLimiter } from "@/utils/production-rate-limiter";
+import { getDatabaseClient } from "../../../../utils/core/database-pool";
+import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
 
 // Simple replacement for getTargetCompaniesFromHistory
 async function getTargetCompaniesFromHistory() {

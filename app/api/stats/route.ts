@@ -5,7 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createSuccessResponse } from "@/lib/api-response";
 import { asyncHandler, AppError } from "@/lib/errors";
 import { apiLogger } from "@/lib/api-logger";
-import { getDatabaseClient } from "@/utils/core/database-pool";
+import { getDatabaseClient } from "../../../utils/core/database-pool";
 import type { StatsCache } from "@/lib/stats-types";
 
 // Helper to get requestId from request
