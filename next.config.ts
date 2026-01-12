@@ -11,11 +11,6 @@ const nextConfig: NextConfig = {
 	// Turbopack configuration with path aliases
 	experimental: {
 		optimizePackageImports: ["framer-motion"],
-		turbo: {
-			resolveAlias: {
-				"@": ".",
-			},
-		},
 	},
 	// Remove console logs in production (keep errors and warnings)
 	compiler: {
