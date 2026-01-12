@@ -5,7 +5,7 @@ import Button from "../../components/ui/Button";
 import { BasicInfoSection } from "../../components/preferences/BasicInfoSection";
 import { LanguageLocationSection } from "../../components/preferences/LanguageLocationSection";
 import { CareerPreferencesSection } from "../../components/preferences/CareerPreferencesSection";
-import { usePreferences } from "@/hooks/usePreferences";
+import { usePreferences } from "../../hooks/usePreferences";
 
 function PreferencesContent() {
 	const {

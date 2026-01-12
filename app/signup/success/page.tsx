@@ -6,7 +6,7 @@ import { PremiumFeaturesSection } from "../../../components/signup-success/Premi
 import { TargetCompaniesSection } from "../../../components/signup-success/TargetCompaniesSection";
 import { CustomScanSection } from "../../../components/signup-success/CustomScanSection";
 import { NextStepsSection } from "../../../components/signup-success/NextStepsSection";
-import { useSignupSuccess } from "@/hooks/useSignupSuccess";
+import { useSignupSuccess } from "../../../hooks/useSignupSuccess";
 
 function SignupSuccessContent() {
 	const {

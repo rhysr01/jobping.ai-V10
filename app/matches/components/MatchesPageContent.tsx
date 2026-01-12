@@ -9,7 +9,7 @@ import { UpgradeBanner } from "../../../components/matches/UpgradeBanner";
 import CustomScanTrigger from "../../../components/ui/CustomScanTrigger";
 import JobClosedModal from "../../../components/ui/JobClosedModal";
 import TargetCompaniesAlert from "../../../components/ui/TargetCompaniesAlert";
-import { useMatches } from "@/hooks/useMatches";
+import { useMatches } from "../../../hooks/useMatches";
 
 export default function MatchesPageContent() {
 	const {

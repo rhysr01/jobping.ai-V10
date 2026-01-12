@@ -14,16 +14,16 @@ import { Step4MatchingPreferences } from "../../components/signup/Step4MatchingP
 import { TrustSignals } from "../../components/signup/TrustSignals";
 import { useAriaAnnounce } from "../../components/ui/AriaLiveRegion";
 import { useReducedMotion } from "../../components/ui/useReducedMotion";
-import { useFormPersistence } from "@/hooks/useFormPersistence";
+import { useFormPersistence } from "../../hooks/useFormPersistence";
 import {
 	useEmailValidation,
 	useRequiredValidation,
-} from "@/hooks/useFormValidation";
+} from "../../hooks/useFormValidation";
 import { ApiError, apiCallJson } from "../../lib/api-client";
 import { TIMING } from "../../lib/constants";
 import { showToast } from "../../lib/toast";
-import { useSignupState } from "@/hooks/useSignupState";
-import { useSignupNavigation } from "@/hooks/useSignupNavigation";
+import { useSignupState } from "../../hooks/useSignupState";
+import { useSignupNavigation } from "../../hooks/useSignupNavigation";
 import { SignupStats } from "../../components/signup/SignupStats";
 
 function SignupForm() {
