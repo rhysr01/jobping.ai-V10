@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useRef } from "react";
+import { Suspense, useCallback, useRef } from "react";
 import ErrorBoundary from "@/components/error-boundary";
 import { CAREER_PATHS } from "@/components/signup/constants";
 import { HeroSection } from "@/components/signup/HeroSection";
@@ -12,10 +12,6 @@ import { Step2Preferences } from "@/components/signup/Step2Preferences";
 import { Step3CareerPath } from "@/components/signup/Step3CareerPath";
 import { Step4MatchingPreferences } from "@/components/signup/Step4MatchingPreferences";
 import { TrustSignals } from "@/components/signup/TrustSignals";
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "@/components/ui/FormFieldFeedback";
 import { useAriaAnnounce } from "@/components/ui/AriaLiveRegion";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
 import { useFormPersistence } from "@/hooks/useFormPersistence";
@@ -25,7 +21,6 @@ import {
 } from "@/hooks/useFormValidation";
 import { ApiError, apiCallJson } from "@/lib/api-client";
 import { TIMING } from "@/lib/constants";
-import { logger } from "@/lib/monitoring";
 import { showToast } from "@/lib/toast";
 import { useSignupState } from "@/hooks/useSignupState";
 import { useSignupNavigation } from "@/hooks/useSignupNavigation";
@@ -46,10 +41,6 @@ function SignupForm() {
 	const {
 		step,
 		loading,
-		error,
-		fieldErrors,
-		touchedFields,
-		successState,
 		activeJobs,
 		totalUsers,
 		isLoadingStats,
@@ -58,7 +49,6 @@ function SignupForm() {
 		setLoading,
 		setError,
 		setSuccessState,
-		updateFormData,
 		setFormData,
 		toggleArrayValue,
 	} = signupState;
@@ -72,15 +62,15 @@ function SignupForm() {
 
 	// Form persistence hook
 	const { clearProgress } = useFormPersistence(
-		formData,
-		setFormData,
+		formData as any,
+		setFormData as any,
 		{ tier: 'premium', hasStep: true, minStepForSave: 1 },
 		setStep,
 		step,
 	);
 
 	// Use navigation hook
-	const { isStepValid, navigateToStep } = useSignupNavigation({
+	useSignupNavigation({
 		step,
 		formData,
 		setStep,
@@ -166,41 +156,7 @@ function SignupForm() {
 	]);
 
 	// Helper functions
-	const getDisabledMessage = useCallback((stepNumber: number) => {
-		if (stepNumber === 1) {
-			const missing = [];
-			if (!formData.fullName.trim()) missing.push("Full Name");
-			if (!formData.email.trim() || !emailValidation.isValid)
-				missing.push("Email");
-			if (formData.cities.length === 0) missing.push("Preferred Cities");
-			if (formData.languages.length === 0) missing.push("Languages");
-			if (!formData.gdprConsent) missing.push("GDPR Consent");
-			if (missing.length === 0) return "Continue to Preferences →";
-			return `Complete: ${missing.join(", ")}`;
-		} else if (stepNumber === 2) {
-			const missing = [];
-			if (!formData.visaStatus) missing.push("Visa Sponsorship");
-			if (formData.entryLevelPreferences.length === 0)
-				missing.push("Role Type");
-			if (missing.length === 0) return "Continue to Career Path →";
-			return `Complete: ${missing.join(", ")}`;
-		} else if (stepNumber === 3) {
-			const missing = [];
-			if (!formData.careerPath) missing.push("Career Path");
-			if (formData.roles.length === 0) missing.push("Role Selection");
-			if (missing.length === 0) return "Complete Signup";
-			return `Complete: ${missing.join(", ")}`;
-		}
-		return "";
-	}, [formData, emailValidation.isValid, nameValidation.isValid, citiesValidation.isValid, languagesValidation.isValid]);
 
-	const shouldShowError = useCallback((
-		fieldName: string,
-		hasValue: boolean,
-		isValid: boolean,
-	) => {
-		return (touchedFields.has(fieldName) || step === 1) && hasValue && !isValid;
-	}, [touchedFields, step]);
 
 	const selectAllRoles = useCallback((careerPath: string) => {
 		const career = CAREER_PATHS.find((c) => c.value === careerPath);
@@ -233,10 +189,6 @@ function SignupForm() {
 
 			{/* Stats fetching component */}
 			<SignupStats
-				activeJobs={activeJobs}
-				totalUsers={totalUsers}
-				isLoadingStats={isLoadingStats}
-				setActiveJobs={(jobs) => signupState.setActiveJobs(jobs)}
 				setTotalUsers={(users) => signupState.setTotalUsers(users)}
 				setIsLoadingStats={(loading) => signupState.setIsLoadingStats(loading)}
 			/>
@@ -258,7 +210,7 @@ function SignupForm() {
 					<div className="w-full max-w-2xl">
 						{/* Step content will be added here */}
 						<div className="text-white text-center">
-							{step === 1 && <Step1Basics key="step1" formData={formData} setFormData={setFormData} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} citiesValidation={citiesValidation} languagesValidation={languagesValidation} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue} />} {step === 2 && <Step2Preferences key="step2" formData={formData} setFormData={setFormData} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue} />} {step === 3 && <Step3CareerPath key="step3" formData={formData} setFormData={setFormData} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue} selectAllRoles={selectAllRoles} clearAllRoles={clearAllRoles} />} {step === 4 && <Step4MatchingPreferences key="step4" formData={formData} setFormData={setFormData} loading={loading} setStep={navigation.navigateToStep} toggleArray={toggleArrayValue} handleSubmit={handleSubmit} />} 
+							{step === 1 && <Step1Basics key="step1" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} citiesValidation={citiesValidation} languagesValidation={languagesValidation} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 2 && <Step2Preferences key="step2" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 3 && <Step3CareerPath key="step3" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} selectAllRoles={selectAllRoles} clearAllRoles={clearAllRoles} />} {step === 4 && <Step4MatchingPreferences key="step4" formData={formData} setFormData={setFormData as any} loading={loading} setStep={navigation.navigateToStep} toggleArray={toggleArrayValue as any} handleSubmit={handleSubmit} />} 
 						</div>
 					</div>
 				</div>
@@ -268,7 +220,7 @@ function SignupForm() {
 			</div>
 
 			{/* Announcement for screen readers */}
-			<Announcement />
+			{Announcement}
 		</div>
 	);
 }

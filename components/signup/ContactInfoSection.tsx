@@ -52,7 +52,7 @@ export function ContactInfoSection({
 						{emailValidation.isValid ? (
 							<FormFieldSuccess message="Valid email address" />
 						) : (
-							<FormFieldError message={emailValidation.message} />
+							<FormFieldError error={emailValidation.message} />
 						)}
 					</div>
 				)}
@@ -81,7 +81,7 @@ export function ContactInfoSection({
 						{nameValidation.isValid ? (
 							<FormFieldSuccess message="Looks good!" />
 						) : (
-							<FormFieldError message={nameValidation.message} />
+							<FormFieldError error={nameValidation.message} />
 						)}
 					</div>
 				)}

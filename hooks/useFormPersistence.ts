@@ -41,14 +41,14 @@ interface FreeFormData extends BaseFormData {
 
 type FormDataType = PremiumFormData | FreeFormData;
 
-interface SavedFormState<T extends FormDataType> {
+interface SavedFormState {
 	version: number;
-	formData: T;
+	formData: FormDataType;
 	step?: number; // Only for premium
 	timestamp: number;
 }
 
-interface UseFormPersistenceOptions<T extends FormDataType> {
+interface UseFormPersistenceOptions {
 	tier: 'premium' | 'free';
 	hasStep?: boolean; // Whether to track step changes
 	minStepForSave?: number; // Minimum step to start saving (premium only)
@@ -58,10 +58,10 @@ interface UseFormPersistenceOptions<T extends FormDataType> {
  * Unified custom hook for persisting signup form state to localStorage
  * Handles both premium and free signup flows with different requirements
  */
-export function useFormPersistence<T extends FormDataType>(
-	formData: T,
-	setFormData: React.Dispatch<React.SetStateAction<T>>,
-	options: UseFormPersistenceOptions<T>,
+export function useFormPersistence(
+	formData: FormDataType,
+	setFormData: React.Dispatch<React.SetStateAction<FormDataType>>,
+	options: UseFormPersistenceOptions,
 	setStep?: (step: number) => void,
 	currentStep?: number,
 ) {
@@ -72,7 +72,7 @@ export function useFormPersistence<T extends FormDataType>(
 	const hasUserDataRef = useRef(false);
 
 	// Check if user has entered any data (for free tier)
-	const checkHasUserData = useCallback((data: T) => {
+	const checkHasUserData = useCallback((data: FormDataType) => {
 		if (tier === 'free') {
 			const freeData = data as FreeFormData;
 			return !!(
@@ -100,7 +100,7 @@ export function useFormPersistence<T extends FormDataType>(
 		if (!shouldSave) return;
 
 		try {
-			const state: SavedFormState<T> = {
+			const state: SavedFormState = {
 				version: STORAGE_VERSION,
 				formData,
 				timestamp: Date.now(),
@@ -126,7 +126,7 @@ export function useFormPersistence<T extends FormDataType>(
 			const saved = localStorage.getItem(STORAGE_KEY);
 			if (!saved) return;
 
-			const parsed: SavedFormState<T> = JSON.parse(saved);
+			const parsed: SavedFormState = JSON.parse(saved);
 
 			// Validate version and expiration
 			if (parsed.version !== STORAGE_VERSION) {
@@ -146,7 +146,7 @@ export function useFormPersistence<T extends FormDataType>(
 				if (hasStep && setStep && parsed.step !== undefined) {
 					setStep(parsed.step);
 				}
-				showToast("Welcome back! Your progress has been restored.", "info");
+				showToast.success("Welcome back! Your progress has been restored.");
 			} else {
 				// Free: only restore if user confirms
 				const shouldRestore = confirm(

@@ -7,8 +7,13 @@ import { apiLogger } from "@/lib/api-logger";
 import type { Job } from "@/scrapers/types";
 import type { UserPreferences, JobMatch } from "@/utils/matching/types";
 import { prefilterService, type PrefilterResult } from "./prefilter.service";
-import { aiMatchingService, type AIMatchResult } from "./ai-matching.service";
-import { fallbackService, type FallbackMatch } from "./fallback.service";
+import { aiMatchingService } from "./ai-matching.service";
+import { fallbackService } from "./fallback.service";
+import {
+	calculateFreshnessTier,
+	convertAIMatchesToJobMatches,
+	convertFallbackMatchesToJobMatches,
+} from "../matchUtils";
 
 export interface MatchingOptions {
 	useAI: boolean;
@@ -44,8 +49,12 @@ export class SimplifiedMatchingEngine {
 		};
 
 		try {
-			// Step 1: Prefilter jobs
-			const prefilterResult = await prefilterService.prefilterJobs(allJobs, user);
+			// Step 1: Add freshness tier to jobs and prefilter
+			const jobsWithFreshness = allJobs.map(job => ({
+				...job,
+				freshnessTier: calculateFreshnessTier(job),
+			}));
+			const prefilterResult = await prefilterService.prefilterJobs(jobsWithFreshness, user);
 
 			if (prefilterResult.jobs.length === 0) {
 				apiLogger.warn("No jobs passed prefilter", {
@@ -74,7 +83,7 @@ export class SimplifiedMatchingEngine {
 					);
 
 					if (aiResults.length > 0) {
-						matches = this.convertAIMatchesToJobMatches(aiResults, opts);
+						matches = convertAIMatchesToJobMatches(aiResults);
 						method = "ai";
 
 						apiLogger.info("AI matching successful", {
@@ -98,18 +107,18 @@ export class SimplifiedMatchingEngine {
 					opts.fallbackThreshold * 2
 				);
 
-				const fallbackMatches = this.convertFallbackMatchesToJobMatches(fallbackResults, opts);
+				const fallbackMatches = convertFallbackMatchesToJobMatches(fallbackResults);
 
 				// Combine with AI results if any
 				matches = [...matches, ...fallbackMatches]
 					.filter((match, index, arr) =>
 						// Remove duplicates by job URL
-						arr.findIndex(m => m.job.job_url === match.job.job_url) === index
+						arr.findIndex(m => m.job?.job_url === match.job?.job_url) === index
 					)
 					.sort((a, b) => b.match_score - a.match_score)
 					.slice(0, opts.fallbackThreshold * 2);
 
-				method = matches.some(m => m.method === "ai") ? "ai" : "fallback";
+				method = opts.useAI ? "ai" : "fallback";
 			}
 
 			const result: MatchingResult = {
@@ -143,7 +152,7 @@ export class SimplifiedMatchingEngine {
 			const emergencyMatches = fallbackService.generateFallbackMatches(allJobs, user, 5);
 
 			return {
-				matches: this.convertFallbackMatchesToJobMatches(emergencyMatches, opts),
+				matches: convertFallbackMatchesToJobMatches(emergencyMatches),
 				method: "fallback",
 				totalJobsProcessed: allJobs.length,
 				prefilterResults: {
@@ -157,41 +166,6 @@ export class SimplifiedMatchingEngine {
 		}
 	}
 
-	/**
-	 * Convert AI match results to standard JobMatch format
-	 */
-	private convertAIMatchesToJobMatches(
-		aiResults: AIMatchResult[],
-		options: MatchingOptions
-	): JobMatch[] {
-		return aiResults.map(aiMatch => ({
-			job: aiMatch.job,
-			match_score: aiMatch.matchScore,
-			match_reason: aiMatch.matchReason,
-			confidence_score: aiMatch.confidenceScore,
-			score_breakdown: aiMatch.scoreBreakdown,
-			method: "ai" as const,
-			timestamp: new Date().toISOString(),
-		}));
-	}
-
-	/**
-	 * Convert fallback match results to standard JobMatch format
-	 */
-	private convertFallbackMatchesToJobMatches(
-		fallbackResults: FallbackMatch[],
-		options: MatchingOptions
-	): JobMatch[] {
-		return fallbackResults.map(fallbackMatch => ({
-			job: fallbackMatch.job,
-			match_score: fallbackMatch.matchScore,
-			match_reason: fallbackMatch.matchReason,
-			confidence_score: fallbackMatch.confidenceScore,
-			score_breakdown: fallbackMatch.scoreBreakdown,
-			method: "fallback" as const,
-			timestamp: new Date().toISOString(),
-		}));
-	}
 }
 
 export const simplifiedMatchingEngine = new SimplifiedMatchingEngine();

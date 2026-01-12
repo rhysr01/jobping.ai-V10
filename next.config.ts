@@ -6,8 +6,7 @@ const nextConfig: NextConfig = {
 	generateBuildId: async () => {
 		return `build-${Date.now()}`;
 	},
-	// Disable Turbopack, use webpack instead
-	turbopack: false,
+	// Turbopack configuration - disabled for Vercel compatibility
 	experimental: {
 		optimizePackageImports: ["framer-motion"],
 	},
@@ -96,6 +95,13 @@ const nextConfig: NextConfig = {
 		return [];
 	},
 	webpack: (config, { isServer, webpack }) => {
+		// Ensure path aliases work correctly
+		config.resolve = config.resolve || {};
+		config.resolve.alias = {
+			...config.resolve.alias,
+			"@": require("path").resolve(__dirname),
+		};
+
 		// Always exclude problematic modules
 		config.externals = config.externals || [];
 

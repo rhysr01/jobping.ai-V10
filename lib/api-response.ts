@@ -39,9 +39,8 @@ export function createErrorResponse(
 			: { ...error, status: error.status || status };
 
 	// Log error
-	apiLogger.error("API Error Response", {
-		message: errorObj.message,
-		code: errorObj.code,
+	apiLogger.error("API Error Response", new Error(errorObj.message), {
+		...(errorObj.code && { code: errorObj.code }),
 		status: errorObj.status,
 		requestId,
 		details: errorObj.details

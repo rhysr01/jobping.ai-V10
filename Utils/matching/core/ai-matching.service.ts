@@ -173,14 +173,13 @@ export class AIMatchingService {
 		const userProfile = `
 User Profile:
 - Email: ${user.email}
-- Experience Level: ${user.experience_level || 'Not specified'}
+ - Experience Level: ${user.entry_level_preference || 'Not specified'}
 - Target Cities: ${Array.isArray(user.target_cities) ? user.target_cities.join(', ') : user.target_cities || 'Not specified'}
-- Keywords: ${user.keywords?.join(', ') || 'Not specified'}
-- Industries: ${user.industries?.join(', ') || 'Not specified'}
-- Languages: ${user.languages?.join(', ') || 'Not specified'}
+ - Keywords: ${user.career_keywords || 'Not specified'}
+ - Industries: ${user.industries?.join(', ') || 'Not specified'}
+ - Languages: ${user.languages_spoken?.join(', ') || 'Not specified'}
 - Work Environment: ${user.work_environment || 'Not specified'}
-- Salary Expectations: ${user.salary_expectations || 'Not specified'}
-- Remote Work: ${user.remote_work ? 'Yes' : 'No'}
+ - Work Environment: ${user.work_environment || 'Not specified'}
 		`.trim();
 
 		const jobsList = jobs.map((job, index) => `
@@ -266,7 +265,7 @@ ${jobsList}
 	 * Generate cache key
 	 */
 	private generateCacheKey(user: UserPreferences, jobs: Job[]): string {
-		const userKey = `${user.email}-${user.experience_level}-${JSON.stringify(user.keywords)}`;
+		const userKey = `${user.email}-${user.entry_level_preference}-${JSON.stringify(user.career_keywords)}`;
 		const jobsKey = jobs.map(j => `${j.title}-${j.company}`).sort().join('|');
 		return `${userKey}|${jobsKey}`;
 	}

@@ -63,9 +63,9 @@ export function CitySelectionSection({
 			<div className="hidden sm:block mb-6">
 				<EuropeMap
 					selectedCities={cities}
-					onCitySelect={handleCityToggle}
-					maxCities={3}
-					disabled={isSubmitting}
+					onCityClick={handleCityToggle}
+					maxSelections={3}
+					className=""
 				/>
 			</div>
 
@@ -86,7 +86,7 @@ export function CitySelectionSection({
 								city={city}
 								isSelected={isSelected}
 								isDisabled={isDisabled}
-								onClick={() => handleCityToggle(city)}
+								onToggle={handleCityToggle}
 							/>
 						);
 					})}
@@ -119,7 +119,7 @@ export function CitySelectionSection({
 			</div>
 
 			{!validation.isValid && validation.message && (
-				<FormFieldError message={validation.message} />
+				<FormFieldError error={validation.message} />
 			)}
 		</div>
 	);

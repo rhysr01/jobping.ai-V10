@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import HowItWorksBento from "@/components/bento-grid";
 import ErrorBoundary from "@/components/error-boundary";
 import { EUJobStats } from "@/components/marketing/EUJobStats";
 import { PremiumEmailShowcase } from "@/components/marketing/PremiumEmailShowcase";
@@ -33,7 +32,6 @@ export default function Page() {
 					1. Hero - The hook
 					2. CompanyLogos - Trust signal (Big Tech association)
 					3. EUJobStats - The "Why Now" (creates urgency)
-					4. HowItWorksBento - The logic (explains AI matching)
 					5. PremiumEmailShowcase - The "Aha!" moment (visual proof of value)
 					6. Pricing - The decision point (immediately after showing value, €5 feels smaller)
 					7. SocialProofRow - FOMO (others are using this)
@@ -47,9 +45,6 @@ export default function Page() {
 				</ErrorBoundary>
 				<ErrorBoundary>
 					<EUJobStats />
-				</ErrorBoundary>
-				<ErrorBoundary>
-					<HowItWorksBento />
 				</ErrorBoundary>
 				<ErrorBoundary>
 					<PremiumEmailShowcase />

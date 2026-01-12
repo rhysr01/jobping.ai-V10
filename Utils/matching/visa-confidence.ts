@@ -10,7 +10,7 @@ export interface VisaConfidence {
 	score: number;
 }
 
-export function calculateVisaConfidence(job: any, user: any): VisaConfidence {
+export function calculateVisaConfidence(_job: any, _user: any): VisaConfidence {
 	// Simple implementation - can be enhanced later
 	const score = Math.random() * 100;
 

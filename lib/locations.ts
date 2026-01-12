@@ -1,4 +1,4 @@
-import { mantiks } from "./mantiks";
+import { mantiks } from "./mantiks-api-client";
 
 const locationCache = new Map<string, number>();
 

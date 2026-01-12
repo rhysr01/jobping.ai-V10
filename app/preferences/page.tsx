@@ -1,208 +1,22 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import CalendarPicker from "@/components/ui/CalendarPicker";
-import EntryLevelSelector from "@/components/ui/EntryLevelSelector";
-import EuropeMap from "@/components/ui/EuropeMap";
-import ExperienceTimeline from "@/components/ui/ExperienceTimeline";
-import LanguageSelector from "@/components/ui/LanguageSelector";
-import WorkEnvironmentSelector from "@/components/ui/WorkEnvironmentSelector";
-import { ApiError, apiCall, apiCallJson } from "@/lib/api-client";
+import { Suspense } from "react";
+import Button from "@/components/ui/Button";
+import { BasicInfoSection } from "@/components/preferences/BasicInfoSection";
+import { LanguageLocationSection } from "@/components/preferences/LanguageLocationSection";
+import { CareerPreferencesSection } from "@/components/preferences/CareerPreferencesSection";
+import { usePreferences } from "@/hooks/usePreferences";
 
 function PreferencesContent() {
-	const searchParams = useSearchParams();
-	const token = searchParams?.get("token");
-	const email = searchParams?.get("email");
-	const [loading, setLoading] = useState(true);
-	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState("");
-	const [success, setSuccess] = useState(false);
-	const [userData, setUserData] = useState<any>(null);
-	const [formData, setFormData] = useState({
-		cities: [] as string[],
-		languages: [] as string[],
-		startDate: "",
-		experience: "",
-		workEnvironment: [] as string[],
-		visaStatus: "",
-		entryLevelPreferences: [] as string[],
-		targetCompanies: [] as string[],
-		careerPath: "",
-		roles: [] as string[],
-	});
-
-	// const _CITIES = [
-	// 	"Dublin",
-	// 	"London",
-	// 	"Paris",
-	// 	"Amsterdam",
-	// 	"Manchester",
-	// 	"Birmingham",
-	// 	"Belfast",
-	// 	"Madrid",
-	// 	"Barcelona",
-	// 	"Berlin",
-	// 	"Hamburg",
-	// 	"Munich",
-	// 	"Zurich",
-	// 	"Milan",
-	// 	"Rome",
-	// 	"Brussels",
-	// 	"Stockholm",
-	// 	"Copenhagen",
-	// 	"Vienna",
-	// 	"Prague",
-	// 	"Warsaw",
-	// ];
-	const LANGUAGES = [
-		// Most common EU languages
-		"English",
-		"French",
-		"German",
-		"Spanish",
-		"Italian",
-		"Dutch",
-		"Portuguese",
-		// Additional EU languages
-		"Polish",
-		"Swedish",
-		"Danish",
-		"Finnish",
-		"Czech",
-		"Romanian",
-		"Hungarian",
-		"Greek",
-		"Bulgarian",
-		"Croatian",
-		"Serbian",
-		"Slovak",
-		"Slovenian",
-		"Estonian",
-		"Latvian",
-		"Lithuanian",
-		"Ukrainian",
-		// Middle Eastern & Central Asian (common visa seekers)
-		"Arabic",
-		"Turkish",
-		"Hebrew",
-		"Persian",
-		"Farsi",
-		"Urdu",
-		// Asian languages (common visa seekers)
-		"Japanese",
-		"Chinese",
-		"Mandarin",
-		"Cantonese",
-		"Korean",
-		"Hindi",
-		"Thai",
-		"Vietnamese",
-		"Indonesian",
-		"Tagalog",
-		"Malay",
-		"Bengali",
-		"Tamil",
-		"Telugu",
-		// Other common languages
-		"Russian",
-	];
-	// const _COMPANIES = [
-	// 	"Global Consulting Firms",
-	// 	"Startups / Scaleups",
-	// 	"Tech Giants",
-	// 	"Investment Firms / VCs",
-	// 	"Multinationals",
-	// 	"Public Sector / NGOs",
-	// 	"B2B SaaS",
-	// 	"Financial Services",
-	// ];
-
-	useEffect(() => {
-		if (!token || !email) {
-			setError("Invalid access token. Please use the link from your email.");
-			setLoading(false);
-			return;
-		}
-
-		// Verify token and load user data
-		apiCallJson<{ success: boolean; user?: any; error?: string }>(
-			`/api/preferences?token=${token}&email=${encodeURIComponent(email)}`,
-		)
-			.then((data) => {
-				if (data.success && data.user) {
-					setUserData(data.user);
-					setFormData({
-						cities: data.user.target_cities || [],
-						languages: data.user.languages || [],
-						startDate: data.user.start_date || "",
-						experience: data.user.experience || "",
-						workEnvironment: data.user.work_environment || [],
-						visaStatus: data.user.visa_status || "",
-						entryLevelPreferences: data.user.entry_level_preference || [],
-						targetCompanies: data.user.company_types || [],
-						careerPath: data.user.professional_expertise || "",
-						roles: data.user.roles || [],
-					});
-				} else {
-					setError(data.error || "Failed to load preferences");
-				}
-			})
-			.catch((err) => {
-				const errorMessage =
-					err instanceof ApiError
-						? err.message
-						: "Unable to load preferences. Please check your connection and try again.";
-				setError(errorMessage);
-				console.error(err);
-			})
-			.finally(() => setLoading(false));
-	}, [token, email]);
-
-	const handleSave = async () => {
-		setSaving(true);
-		setError("");
-		setSuccess(false);
-
-		try {
-			const response = await apiCall("/api/preferences", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					token,
-					email,
-					...formData,
-				}),
-			});
-
-			const result = await response.json();
-			if (response.ok) {
-				setSuccess(true);
-				setTimeout(() => setSuccess(false), 3000);
-			} else {
-				const errorMessage =
-					result.error ||
-					"Unable to save preferences. Please check your information and try again.";
-				setError(errorMessage);
-			}
-		} catch (err) {
-			const errorMessage =
-				err instanceof ApiError
-					? err.message
-					: "Unable to connect. Please check your internet connection and try again.";
-			setError(errorMessage);
-		} finally {
-			setSaving(false);
-		}
-	};
-
-	const toggleArray = (arr: string[], value: string) => {
-		return arr.includes(value)
-			? arr.filter((v) => v !== value)
-			: [...arr, value];
-	};
+	const {
+		loading,
+		saving,
+		error,
+		success,
+		formData,
+		updateFormData,
+		handleSubmit,
+	} = usePreferences();
 
 	if (loading) {
 		return (
@@ -212,176 +26,64 @@ function PreferencesContent() {
 		);
 	}
 
-	if (error && !userData) {
-		return (
-			<div className="min-h-screen bg-black flex items-center justify-center p-4">
-				<div className="text-center max-w-md">
-					<div className="text-red-400 text-xl mb-4">{error}</div>
-					<Link
-						href="/"
-						className="text-brand-400 hover:text-brand-300 underline"
-					>
-						Return to homepage
-					</Link>
-				</div>
-			</div>
-		);
-	}
-
 	return (
-		<div className="min-h-screen bg-black text-white py-12">
-			<div className="container-page max-w-4xl">
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="mb-8"
-				>
-					<h1 className="text-4xl font-black mb-2">Update Your Preferences</h1>
-					<p className="text-zinc-400">
-						Keep your job matches relevant to your goals
+		<div className="min-h-screen bg-black text-white py-8">
+			<div className="container mx-auto px-4 max-w-4xl">
+				<div className="text-center mb-8">
+					<h1 className="text-3xl font-bold mb-4">Set Your Job Preferences</h1>
+					<p className="text-lg text-content-secondary">
+						Help us find the perfect job matches for you
 					</p>
-				</motion.div>
+				</div>
 
-				{success && (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						className="mb-6 p-4 bg-green-500/10 border-2 border-green-500/50 rounded-xl text-green-400"
-					>
-						Preferences saved successfully!
-					</motion.div>
-				)}
-
-				{error && (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						className="mb-6 p-4 bg-red-500/10 border-2 border-red-500/50 rounded-xl text-red-400"
-					>
-						{error}
-					</motion.div>
-				)}
-
-				<div className="glass-card rounded-3xl p-8 space-y-8">
-					{/* Cities */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Preferred Cities{" "}
-							<span className="text-zinc-400 font-normal">
-								(Select up to 3)
-							</span>
-						</label>
-						<EuropeMap
-							selectedCities={formData.cities}
-							onCityClick={(city) => {
-								if (
-									formData.cities.length < 3 ||
-									formData.cities.includes(city)
-								) {
-									setFormData({
-										...formData,
-										cities: toggleArray(formData.cities, city),
-									});
-								}
-							}}
-							maxSelections={3}
-							className="w-full mb-4"
-						/>
+				<form onSubmit={handleSubmit} className="space-y-8">
+					{/* Basic Info Section */}
+					<div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+						<h2 className="text-xl font-semibold mb-6">Basic Information</h2>
+						<BasicInfoSection formData={formData} onUpdate={updateFormData} />
 					</div>
 
-					{/* Languages */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Languages
-						</label>
-						<LanguageSelector
-							languages={LANGUAGES}
-							selected={formData.languages}
-							onChange={(lang) =>
-								setFormData({
-									...formData,
-									languages: toggleArray(formData.languages, lang),
-								})
-							}
-						/>
+					{/* Language & Location Section */}
+					<div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+						<h2 className="text-xl font-semibold mb-6">Language & Location</h2>
+						<LanguageLocationSection formData={formData} onUpdate={updateFormData} />
 					</div>
 
-					{/* Start Date */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Target Start Date
-						</label>
-						<CalendarPicker
-							value={formData.startDate}
-							onChange={(date) => setFormData({ ...formData, startDate: date })}
-						/>
+					{/* Career Preferences Section */}
+					<div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+						<h2 className="text-xl font-semibold mb-6">Career Preferences</h2>
+						<CareerPreferencesSection formData={formData} onUpdate={updateFormData} />
 					</div>
 
-					{/* Experience */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Professional Experience
-						</label>
-						<ExperienceTimeline
-							selected={formData.experience}
-							onChange={(exp) => setFormData({ ...formData, experience: exp })}
-						/>
-					</div>
+					{/* Error Display */}
+					{error && (
+						<div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+							<p className="text-red-400">{error}</p>
+						</div>
+					)}
 
-					{/* Work Environment */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Work Environment
-						</label>
-						<WorkEnvironmentSelector
-							selected={formData.workEnvironment}
-							onChange={(env) =>
-								setFormData({
-									...formData,
-									workEnvironment: toggleArray(formData.workEnvironment, env),
-								})
-							}
-						/>
-					</div>
+					{/* Success Display */}
+					{success && (
+						<div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+							<p className="text-green-400">
+								Preferences saved successfully! Redirecting to your matches...
+							</p>
+						</div>
+					)}
 
-					{/* Entry Level */}
-					<div>
-						<label className="block text-base font-bold text-white mb-3">
-							Entry Level Preference
-						</label>
-						<EntryLevelSelector
-							selected={formData.entryLevelPreferences}
-							onChange={(pref) =>
-								setFormData({
-									...formData,
-									entryLevelPreferences: toggleArray(
-										formData.entryLevelPreferences,
-										pref,
-									),
-								})
-							}
-						/>
-					</div>
-
-					{/* Save Button */}
-					<div className="pt-6">
-						<motion.button
-							onClick={handleSave}
-							disabled={saving}
-							whileHover={{ scale: saving ? 1 : 1.02 }}
-							whileTap={{ scale: saving ? 1 : 0.98 }}
-							className="w-full bg-gradient-to-r from-brand-500 to-purple-600 text-white py-4 px-6 rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+					{/* Submit Button */}
+					<div className="flex justify-center">
+						<Button
+							type="submit"
+							variant="primary"
+							size="lg"
+							disabled={saving || !formData.experience}
+							className="px-8 py-3"
 						>
-							{saving ? "Saving..." : "Save Preferences"}
-						</motion.button>
+							{saving ? "Saving Preferences..." : "Save & Find Matches →"}
+						</Button>
 					</div>
-				</div>
-
-				<div className="mt-8 text-center">
-					<Link href="/" className="text-zinc-400 hover:text-white underline">
-						Return to homepage
-					</Link>
-				</div>
+				</form>
 			</div>
 		</div>
 	);
@@ -392,7 +94,7 @@ export default function PreferencesPage() {
 		<Suspense
 			fallback={
 				<div className="min-h-screen bg-black flex items-center justify-center">
-					<div className="text-white text-xl">Loading preferences...</div>
+					<div className="text-white text-xl">Loading...</div>
 				</div>
 			}
 		>

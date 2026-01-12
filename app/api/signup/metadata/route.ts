@@ -4,9 +4,9 @@ import { getDatabaseClient } from "@/utils/core/database-pool";
 import { getProductionRateLimiter } from "@/utils/production-rate-limiter";
 
 // Simple replacement for getTargetCompaniesFromHistory
-async function getTargetCompaniesFromHistory(supabase: any, params: any) {
+async function getTargetCompaniesFromHistory() {
 	// Return empty result for now
-	return { companies: [], stats: { total: 0 } };
+	return { targetCompanies: [], stats: { total: 0 } };
 }
 
 export async function GET(request: NextRequest) {
@@ -50,19 +50,7 @@ export async function GET(request: NextRequest) {
 		}
 
 		// Get target companies (non-blocking, can be slow)
-		const targetCompaniesResult = await getTargetCompaniesFromHistory(
-			supabase,
-			{
-				email,
-				career_path: userPrefs.career_path
-					? Array.isArray(userPrefs.career_path)
-						? userPrefs.career_path
-						: [userPrefs.career_path]
-					: [],
-				target_cities: userPrefs.target_cities || [],
-				roles_selected: userPrefs.roles_selected || [],
-			},
-		);
+		const targetCompaniesResult = await getTargetCompaniesFromHistory();
 
 		// Get custom scan status
 		const { data: customScanData } = await supabase

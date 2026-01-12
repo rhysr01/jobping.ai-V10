@@ -1,16 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import {
-	type ChangeEvent,
-	Suspense,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
+import { motion } from "framer-motion";
+import { Suspense, useCallback } from "react";
 import AriaLiveRegion from "@/components/ui/AriaLiveRegion";
 import { BrandIcons } from "@/components/ui/BrandIcons";
 import Button from "@/components/ui/Button";
@@ -20,217 +11,40 @@ import {
 	FormFieldSuccess,
 } from "@/components/ui/FormFieldFeedback";
 import { useReducedMotion } from "@/components/ui/useReducedMotion";
-import {
-	useEmailValidation,
-	useRequiredValidation,
-} from "@/hooks/useFormValidation";
-// import { useStats } from "@/hooks/useStats"; // Kept for future use
-import { useFormPersistence } from "@/hooks/useFormPersistence";
-import { trackEvent } from "@/lib/analytics";
-import { ApiError, apiCall, apiCallJson } from "@/lib/api-client";
+import { useSignupForm } from "@/hooks/useSignupForm";
 import { showToast } from "@/lib/toast";
 import { LiveMatchingMessages } from "./LiveMatchingMessages";
 import { VisaSponsorshipSection } from "./VisaSponsorshipSection";
-import { CitySelectionSection } from "./CitySelectionSection";
-import { CareerPathSection } from "./CareerPathSection";
-import { ContactInfoSection } from "./ContactInfoSection";
+import { LiveMatchingOverlay } from "./LiveMatchingOverlay";
+import { PersonalInfoSection } from "./PersonalInfoSection";
 import { GDPRConsentSection } from "./GDPRConsentSection";
+import EuropeMap from "@/components/ui/EuropeMap";
 import { AgeVerificationSection } from "./AgeVerificationSection";
-
+import { CITIES, CAREER_PATHS } from "@/components/signup/constants";
 
 export default function SignupFormFree() {
-	const router = useRouter();
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [error, setError] = useState("");
-	const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 	const prefersReduced = useReducedMotion();
-	// const { stats, isLoading: isLoadingStats } = useStats(); // Kept for future use
 
-	const [formData, setFormData] = useState({
-		cities: [] as string[],
-		careerPath: "",
-		email: "",
-		fullName: "",
-		visaSponsorship: "", // Added visa sponsorship field
-		gdprConsent: false, // GDPR consent
-		// GDPR compliance fields
-		birthYear: undefined as number | undefined,
-		ageVerified: false,
-		termsAccepted: false,
-	});
-
-	const [jobCount, setJobCount] = useState<number | null>(null);
-	const [jobCountMetadata, setJobCountMetadata] = useState<{
-		isLowCount?: boolean;
-		suggestion?: string;
-	} | null>(null);
-	const [isLoadingJobCount, setIsLoadingJobCount] = useState(false);
-	const [matchCount, setMatchCount] = useState<number>(0);
-	const [showLiveMatching, setShowLiveMatching] = useState(false);
-
-	// Form persistence
-	const { clearProgress } = useFormPersistence(
+	const formState = useSignupForm();
+	const {
 		formData,
 		setFormData,
-		{ tier: 'free', hasStep: false },
-	);
+		setTouchedFields,
+		isFormValid,
+		formProgress,
+		jobCount,
+		jobCountMetadata,
+		isLoadingJobCount,
+		isSubmitting,
+		error,
+		showLiveMatching,
+		matchCount,
+		handleSubmit,
+		toggleArray,
+		citiesValidation,
+	} = formState;
 
-	// Form validation hooks
-	const emailValidation = useEmailValidation(formData.email);
-	const nameValidation = useRequiredValidation(formData.fullName, "Full name");
-	const citiesValidation = useRequiredValidation(
-		formData.cities,
-		"Preferred cities",
-	);
-	const visaSponsorshipValidation = useRequiredValidation(
-		formData.visaSponsorship,
-		"Visa sponsorship",
-	);
-
-	// Memoized helper functions
-	const toggleArray = useCallback((arr: string[], value: string) => {
-		return arr.includes(value)
-			? arr.filter((v) => v !== value)
-			: [...arr, value];
-	}, []);
-
-	const shouldShowError = useCallback(
-		(fieldName: string, hasValue: boolean, isValid: boolean) => {
-			// Show error if:
-			// 1. Field was touched (blurred at least once)
-			// 2. Field has value AND is invalid
-			// OR
-			// 3. Field has value longer than 3 chars and is invalid (show during typing)
-
-			if (fieldName === "email" && hasValue && !isValid) {
-				// For email, show error after @ is typed
-				return formData.email.includes("@") && formData.email.length > 3;
-			}
-
-			if (fieldName === "fullName" && hasValue && !isValid) {
-				// For name, show error after 3 characters typed
-				return formData.fullName.length > 3;
-			}
-
-			if (fieldName === "visaSponsorship" && hasValue && !isValid) {
-				return formData.visaSponsorship.length > 0;
-			}
-
-			return touchedFields.has(fieldName) && hasValue && !isValid;
-		},
-		[
-			touchedFields,
-			formData.email,
-			formData.fullName,
-			formData.visaSponsorship,
-		],
-	);
-
-	// Track when user completes step 1 (cities + career path selected)
-	useEffect(() => {
-		if (formData.cities.length > 0 && formData.careerPath) {
-			trackEvent("signup_step_completed", {
-				step: 1,
-				cities: formData.cities.length,
-				career_path: formData.careerPath,
-			});
-		}
-	}, [formData.cities.length, formData.careerPath]);
-
-	// Fetch job count when both cities and career path are selected
-	useEffect(() => {
-		const fetchJobCount = async () => {
-			if (formData.cities.length > 0 && formData.careerPath) {
-				setIsLoadingJobCount(true);
-				try {
-					const data = await apiCallJson<{
-						count?: number;
-						isLowCount?: boolean;
-						suggestion?: string;
-					}>("/api/preview-matches", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({
-							cities: formData.cities,
-							careerPath: formData.careerPath,
-							visaSponsorship: formData.visaSponsorship || undefined, // Optional: only send if selected
-						}),
-					});
-					setJobCount(data.count || 0);
-					setJobCountMetadata({
-						isLowCount: data.isLowCount,
-						suggestion: data.suggestion,
-					});
-				} catch (error) {
-					// Silently handle job count fetch failures
-					setJobCount(null);
-					setJobCountMetadata(null);
-				} finally {
-					setIsLoadingJobCount(false);
-				}
-			} else {
-				setJobCount(null);
-				setJobCountMetadata(null);
-			}
-		};
-
-		// Debounce the API call slightly to avoid too many requests
-		const timeoutId = setTimeout(fetchJobCount, 300);
-		return () => clearTimeout(timeoutId);
-	}, [formData.cities, formData.careerPath]);
-
-
-	// Calculate form completion percentage
-	const formProgress = useMemo(() => {
-		let completed = 0;
-		if (formData.cities.length > 0) completed++;
-		if (formData.careerPath) completed++;
-		if (formData.email && emailValidation.isValid) completed++;
-		if (formData.fullName && nameValidation.isValid) completed++;
-		if (formData.visaSponsorship && visaSponsorshipValidation.isValid)
-			completed++;
-		return (completed / 5) * 100; // Updated to 5 steps
-	}, [
-		formData,
-		emailValidation.isValid,
-		nameValidation.isValid,
-		visaSponsorshipValidation.isValid,
-	]);
-
-	// Memoized computed values
-	const isFormValid = useMemo(
-		() =>
-			formData.cities.length > 0 &&
-			formData.careerPath &&
-			emailValidation.isValid &&
-			nameValidation.isValid &&
-			visaSponsorshipValidation.isValid &&
-			formData.ageVerified &&
-			formData.termsAccepted &&
-			formData.gdprConsent,
-		[
-			formData.cities.length,
-			formData.careerPath,
-			emailValidation.isValid,
-			nameValidation.isValid,
-			visaSponsorshipValidation.isValid,
-			formData.ageVerified,
-			formData.termsAccepted,
-			formData.gdprConsent,
-		],
-	);
-
-	// Memoized event handlers
-	const handleEmailChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-		setFormData((prev) => ({ ...prev, email: e.target.value }));
-		setTouchedFields((prev) => new Set(prev).add("email"));
-	}, []);
-
-	const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-		setFormData((prev) => ({ ...prev, fullName: e.target.value }));
-		setTouchedFields((prev) => new Set(prev).add("fullName"));
-	}, []);
-
+	// Event handlers
 	const handleCityClick = useCallback(
 		(city: string) => {
 			setFormData((prev) => {
@@ -241,18 +55,16 @@ export default function SignupFormFree() {
 			});
 			setTouchedFields((prev) => new Set(prev).add("cities"));
 		},
-		[toggleArray],
+		[setFormData, setTouchedFields, toggleArray],
 	);
 
 	const handleCityToggle = useCallback(
 		(city: string) => {
-			// Trigger haptic feedback (if supported)
 			if ("vibrate" in navigator) {
-				navigator.vibrate(10); // 10ms subtle pulse
+				navigator.vibrate(10);
 			}
 			setFormData((prev) => {
-				const isDisabled =
-					!prev.cities.includes(city) && prev.cities.length >= 3;
+				const isDisabled = !prev.cities.includes(city) && prev.cities.length >= 3;
 				if (!isDisabled) {
 					return { ...prev, cities: toggleArray(prev.cities, city) };
 				}
@@ -260,182 +72,36 @@ export default function SignupFormFree() {
 			});
 			setTouchedFields((prev) => new Set(prev).add("cities"));
 		},
-		[toggleArray],
+		[setFormData, setTouchedFields, toggleArray],
 	);
 
 	const handleCareerPathChange = useCallback((pathValue: string) => {
 		setFormData((prev) => ({ ...prev, careerPath: pathValue }));
 		setTouchedFields((prev) => new Set(prev).add("careerPath"));
-	}, []);
+	}, [setFormData, setTouchedFields]);
 
 	const handleVisaSponsorshipChange = useCallback((value: string) => {
 		setFormData((prev) => ({ ...prev, visaSponsorship: value }));
 		setTouchedFields((prev) => new Set(prev).add("visaSponsorship"));
-	}, []);
+	}, [setFormData, setTouchedFields]);
 
 	const handleCitiesBlur = useCallback(() => {
 		setTouchedFields((prev) => new Set(prev).add("cities"));
-	}, []);
+	}, [setTouchedFields]);
 
 	const handleFormSubmit = useCallback(
 		async (e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault();
-
-			if (isSubmitting) return; // Prevent double submission
+			if (isSubmitting) return;
 
 			if (!isFormValid) {
-				setTouchedFields(
-					new Set([
-						"cities",
-						"careerPath",
-						"email",
-						"fullName",
-						"visaSponsorship",
-						"gdprConsent",
-					]),
-				);
-				// Find first invalid field and focus it
-				const firstErrorField = !formData.visaSponsorship
-					? document.querySelector<HTMLElement>(
-							'button[type="button"][onclick*="visaSponsorship"]',
-						) || document.getElementById("visa-field")
-					: formData.cities.length === 0
-						? document.getElementById("cities-field")
-						: !formData.careerPath
-							? document.querySelector<HTMLElement>(
-									'button[type="button"][onclick*="careerPath"]',
-								)
-							: !formData.email.trim() || !emailValidation.isValid
-								? document.getElementById("email")
-								: !formData.fullName.trim()
-									? document.getElementById("fullName")
-									: null;
-
-				if (firstErrorField) {
-					firstErrorField.focus();
-					// Fallback scrollIntoView for browsers that don't support scroll-margin
-					firstErrorField.scrollIntoView({
-						behavior: "smooth",
-						block: "center",
-					});
-				}
+				setTouchedFields(new Set(["cities", "careerPath", "email", "fullName", "visaSponsorship", "gdprConsent"]));
 				return;
 			}
 
-			setIsSubmitting(true);
-			setError("");
-			setShowLiveMatching(true); // Show live matching screen
-
-			// Track signup started
-			trackEvent("signup_started", { tier: "free" });
-
-			try {
-				const response = await apiCall("/api/signup/free", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						email: formData.email,
-						full_name: formData.fullName,
-						preferred_cities: formData.cities,
-						career_paths: [formData.careerPath],
-						visa_sponsorship: formData.visaSponsorship,
-						entry_level_preferences: ["graduate", "intern", "junior"],
-						// GDPR compliance fields
-						birth_year: formData.birthYear,
-						age_verified: formData.ageVerified,
-						terms_accepted: formData.termsAccepted,
-					}),
-				});
-
-				const data = await response.json();
-
-				if (response.status === 409) {
-					trackEvent("signup_failed", {
-						tier: "free",
-						error: "already_exists",
-					});
-
-					// If redirectToMatches flag is set, redirect to matches page
-					if (data.redirectToMatches) {
-						showToast.success("Redirecting to your matches...");
-						const existingMatchCount = data.matchCount || 5;
-						setTimeout(() => {
-							router.push(
-								`/matches?justSignedUp=true&matchCount=${existingMatchCount}`,
-							);
-						}, 1000);
-						return;
-					}
-
-					setError(
-						"You've already tried Free! Want 10 more jobs this week? Upgrade to Premium for 15 jobs/week (3x more).",
-					);
-					return;
-				}
-
-				if (!response.ok) {
-					// Show user-friendly error messages
-					const errorMsg = data.error || data.message || "Signup failed";
-					throw new Error(errorMsg);
-				}
-
-				// Check if matches were actually created
-				const matchCountValue = data.matchCount || 0;
-				setMatchCount(matchCountValue);
-
-				if (matchCountValue === 0) {
-					if (process.env.NODE_ENV === "development") {
-						console.warn("Signup succeeded but no matches created", data);
-					}
-					setError(
-						"We couldn't find any matches for your preferences. Try selecting different cities or career paths.",
-					);
-					trackEvent("signup_failed", { tier: "free", error: "no_matches" });
-					return;
-				}
-
-				// Track successful signup
-				trackEvent("signup_completed", {
-					tier: "free",
-					cities: formData.cities.length,
-					career_path: formData.careerPath,
-					matchCount: matchCountValue,
-				});
-
-				// Clear saved progress
-				clearProgress();
-				
-				// Hide live matching
-				setShowLiveMatching(false);
-
-				showToast.success(
-					`Account created! Found ${matchCountValue} perfect matches...`,
-				);
-
-				// IMMEDIATE REDIRECT - No countdown, no personalizing screen
-				router.push(
-					`/matches?justSignedUp=true&matchCount=${matchCountValue}`,
-				);
-			} catch (err) {
-				setShowLiveMatching(false); // Hide live matching on error
-				const errorMessage =
-					err instanceof ApiError
-						? err.message
-						: err instanceof Error
-							? err.message
-							: "Something went wrong. Please try again.";
-
-				trackEvent("signup_failed", {
-					tier: "free",
-					error: errorMessage,
-				});
-
-				setError(errorMessage);
-			} finally {
-				setIsSubmitting(false); // Always reset submission state
-			}
+			await handleSubmit(e);
 		},
-		[isFormValid, formData, router, isSubmitting, emailValidation.isValid],
+		[isFormValid, isSubmitting, setTouchedFields, handleSubmit],
 	);
 
 	return (
@@ -548,8 +214,8 @@ export default function SignupFormFree() {
 								{jobCount !== null &&
 									!isLoadingJobCount &&
 									`Found ${jobCount.toLocaleString()} ${jobCount === 1 ? "job" : "jobs"} matching your preferences`}
-								{emailValidation.error &&
-									`Email error: ${emailValidation.error}`}
+								{formState.emailValidation.error &&
+									`Email error: ${formState.emailValidation.error}`}
 								{formData.cities.length > 0 &&
 									`Selected ${formData.cities.length} ${formData.cities.length === 1 ? "city" : "cities"}`}
 								{formData.careerPath &&
@@ -562,10 +228,13 @@ export default function SignupFormFree() {
 
 							{/* VISA SPONSORSHIP - PRIMARY QUESTION (FIRST) */}
 							<VisaSponsorshipSection
-								visaSponsorship={formData.visaSponsorship}
+								visaSponsorship={formData.visaSponsorship as "yes" | "no" | ""}
 								onChange={handleVisaSponsorshipChange}
 								isSubmitting={isSubmitting}
 							/>
+
+							{/* Personal Information Section */}
+							<PersonalInfoSection formState={formState} isSubmitting={formState.isSubmitting} />
 
 							{/* Cities Selection with Map - KEPT AS REQUESTED */}
 							<div>
@@ -699,16 +368,16 @@ export default function SignupFormFree() {
 										/>
 									)}
 								</div>
-								{shouldShowError(
-									"cities",
-									formData.cities.length === 0,
-									citiesValidation.isValid,
-								) && (
-									<FormFieldError
-										error="Please select at least one city."
-										id="cities-error"
-									/>
-								)}
+							{formState.shouldShowError(
+								"cities",
+								formState.formData.cities.length === 0,
+								formState.citiesValidation.isValid,
+							) && (
+								<FormFieldError
+									error="Please select at least one city."
+									id="cities-error"
+								/>
+							)}
 							</div>
 
 							{/* Career Path */}
@@ -736,7 +405,7 @@ export default function SignupFormFree() {
 										</motion.button>
 									))}
 								</div>
-								{!formData.careerPath && touchedFields.has("careerPath") && (
+								{!formState.formData.careerPath && formState.touchedFields.has("careerPath") && (
 									<FormFieldError
 										error="Please select a career interest."
 										id="careerPath-error"
@@ -865,74 +534,6 @@ export default function SignupFormFree() {
 								</motion.div>
 							)}
 
-							{/* Email and Name - Combined Section */}
-							<div className="grid gap-6 sm:grid-cols-2">
-								<div>
-									<label
-										htmlFor="email"
-										className="block text-base font-bold text-white mb-3"
-									>
-										Email Address *
-									</label>
-									<input
-										id="email"
-										type="email"
-										required
-										disabled={isSubmitting}
-										value={formData.email}
-										onChange={handleEmailChange}
-										placeholder="you@example.com"
-										autoComplete="email"
-										inputMode="email"
-										className="w-full px-4 py-4 bg-black/50 border-2 rounded-xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base font-medium backdrop-blur-sm border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
-									/>
-									<p className="text-sm text-content-secondary mt-2">
-										We won't email you. Ever.
-									</p>
-									{shouldShowError(
-										"email",
-										!!formData.email,
-										emailValidation.isValid,
-									) && (
-										<FormFieldError
-											error={emailValidation.error || "Invalid email"}
-											id="email-error"
-										/>
-									)}
-								</div>
-
-								<div>
-									<label
-										htmlFor="fullName"
-										className="block text-base font-bold text-white mb-3"
-									>
-										Full Name *
-									</label>
-									<input
-										id="fullName"
-										type="text"
-										required
-										disabled={isSubmitting}
-										value={formData.fullName}
-										onChange={handleNameChange}
-										placeholder="Jane Doe"
-										autoComplete="name"
-										autoCorrect="off"
-										autoCapitalize="words"
-										className="w-full px-4 py-4 bg-black/50 border-2 rounded-xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base font-medium backdrop-blur-sm border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
-									/>
-									{shouldShowError(
-										"fullName",
-										!!formData.fullName,
-										nameValidation.isValid,
-									) && (
-										<FormFieldError
-											error={nameValidation.error || "Name is required"}
-											id="fullName-error"
-										/>
-									)}
-								</div>
-							</div>
 
 							{/* Age Verification and Terms - Required */}
 							<div className="mt-6">
@@ -955,56 +556,13 @@ export default function SignupFormFree() {
 							</div>
 
 							{/* GDPR Consent */}
-							<div className="mt-6 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-								<label className="flex items-start gap-3 cursor-pointer group">
-									<input
-										type="checkbox"
-										required
-										checked={formData.gdprConsent}
-										onChange={(e) =>
-											setFormData((prev) => ({
-												...prev,
-												gdprConsent: e.target.checked,
-											}))
-										}
-										onBlur={() =>
-											setTouchedFields((prev) =>
-												new Set(prev).add("gdprConsent"),
-											)
-										}
-										className="mt-1 w-5 h-5 rounded border-2 border-zinc-600 bg-zinc-800 checked:bg-brand-500 checked:border-brand-500 cursor-pointer"
-										aria-required="true"
-									/>
-									<span className="text-sm text-content-secondary">
-										I agree to the{" "}
-										<a
-											href="/legal/privacy"
-											target="_blank"
-											rel="noopener noreferrer"
-											className="text-brand-400 hover:text-brand-300 underline"
-										>
-											Privacy Policy
-										</a>{" "}
-										and consent to processing my data for job matching purposes. *
-									</span>
-								</label>
-								{shouldShowError(
-									"gdprConsent",
-									!formData.gdprConsent,
-									formData.gdprConsent,
-								) && (
-									<FormFieldError
-										error="Please accept the Privacy Policy to continue"
-										id="gdpr-error"
-									/>
-								)}
-							</div>
+							<GDPRConsentSection formState={formState} />
 
 							{/* Spacer for sticky button */}
 							<div className="h-32 sm:h-0" aria-hidden="true" />
 
 							{/* Sticky Submit Button */}
-							<div className="sticky bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
+							<div className="sticky bottom-0 left-0 right-0 z-40 md:z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
 								<Button
 									type="submit"
 									variant="primary"
@@ -1031,55 +589,11 @@ export default function SignupFormFree() {
 				</div>
 
 				{/* Live Matching Screen */}
-				<AnimatePresence mode="wait">
-					{showLiveMatching && isSubmitting ? (
-						<motion.div
-							key="live-matching"
-							initial={{ opacity: 0 }}
-							animate={{ opacity: 1 }}
-							exit={{ opacity: 0 }}
-							className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
-						>
-							<motion.div
-								initial={{ scale: 0.9, opacity: 0 }}
-								animate={{ scale: 1, opacity: 1 }}
-								className="text-center max-w-md px-4"
-							>
-								{/* Animated scanning lines */}
-								<motion.div
-									className="relative w-full h-2 bg-zinc-800 rounded-full mb-8 overflow-hidden"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-								>
-									<motion.div
-										className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-500 to-transparent"
-										animate={{
-											x: ["-100%", "200%"],
-										}}
-										transition={{
-											duration: 2,
-											repeat: Infinity,
-											ease: "linear",
-										}}
-									/>
-								</motion.div>
-
-								{/* Dynamic scanning messages */}
-								<LiveMatchingMessages />
-
-								{/* Job count ticker */}
-								<motion.div
-									className="mt-8 text-4xl font-bold text-brand-400"
-									key={matchCount}
-									initial={{ scale: 0.8, opacity: 0 }}
-									animate={{ scale: 1, opacity: 1 }}
-								>
-									{matchCount > 0 ? `${matchCount} matches found` : "Scanning..."}
-								</motion.div>
-							</motion.div>
-						</motion.div>
-					) : null}
-				</AnimatePresence>
+				<LiveMatchingOverlay
+					showLiveMatching={showLiveMatching}
+					isSubmitting={isSubmitting}
+					matchCount={matchCount}
+				/>
 
 			</div>
 		</div>

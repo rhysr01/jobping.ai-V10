@@ -2,8 +2,8 @@
 // Returns active job count and other public metrics
 
 import { type NextRequest, NextResponse } from "next/server";
-import { createSuccessResponse, createErrorResponse } from "@/lib/api-response";
-import { asyncHandler } from "@/lib/errors";
+import { createSuccessResponse } from "@/lib/api-response";
+import { asyncHandler, AppError } from "@/lib/errors";
 import { apiLogger } from "@/lib/api-logger";
 import { getDatabaseClient } from "@/utils/core/database-pool";
 import type { StatsCache } from "@/lib/stats-types";
@@ -60,7 +60,8 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 				cacheAge: Math.floor((now - lastFetch) / 1000 / 60), // minutes
 			},
 			undefined,
-			requestId,
+			undefined,
+			200
 		);
 		const response = NextResponse.json(successResponse, { status: 200 });
 		response.headers.set("x-request-id", requestId);
@@ -91,7 +92,8 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 						error: "Using cached data due to database error",
 					},
 					undefined,
-					requestId,
+					undefined,
+					200
 				),
 				{ status: 200 },
 			);
@@ -226,7 +228,8 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 			cached: false,
 		},
 		undefined,
-		requestId,
+		undefined,
+		200
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });
@@ -247,7 +250,8 @@ async function handleSignupStats(requestId: string) {
 				cacheAge: Math.floor((now - lastSignupFetch) / 1000), // seconds
 			},
 			undefined,
-			requestId,
+			undefined,
+			200
 		);
 		const response = NextResponse.json(successResponse, { status: 200 });
 		response.headers.set("x-request-id", requestId);
@@ -284,7 +288,8 @@ async function handleSignupStats(requestId: string) {
 			cached: false,
 		},
 		undefined,
-		requestId,
+		undefined,
+		200
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });
@@ -328,7 +333,8 @@ async function handleEUJobStats(requestId: string) {
 			timestamp: new Date().toISOString(),
 		},
 		undefined,
-		requestId,
+		undefined,
+		200
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });

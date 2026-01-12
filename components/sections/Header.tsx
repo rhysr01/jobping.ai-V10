@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import LogoWordmark from "@/components/logo-wordmark";
 import { BrandIcons } from "@/components/ui/BrandIcons";
 import Button from "@/components/ui/Button";
@@ -14,9 +14,29 @@ export default function Header() {
 	const [scrolled, setScrolled] = useState(false);
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [activeSection, setActiveSection] = useState<string>("");
+	const [isMobile, setIsMobile] = useState(false);
 	const pathname = usePathname();
 
+	// Initialize mobile state immediately with SSR safety
 	useEffect(() => {
+		const checkMobile = () => setIsMobile(window.innerWidth <= 1024);
+		checkMobile();
+
+		// Also listen for resize events
+		const handleResize = () => checkMobile();
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, []);
+
+	useEffect(() => {
+		// Mobile detection
+		const updateMobileState = () => {
+			setIsMobile(window.innerWidth <= 1024);
+		};
+
+		updateMobileState();
+		window.addEventListener("resize", updateMobileState);
+
 		const handleScroll = () => {
 			setScrolled(window.scrollY > 20);
 
@@ -36,7 +56,10 @@ export default function Header() {
 
 		window.addEventListener("scroll", handleScroll);
 		handleScroll(); // Initial check
-		return () => window.removeEventListener("scroll", handleScroll);
+		return () => {
+			window.removeEventListener("scroll", handleScroll);
+			window.removeEventListener("resize", updateMobileState);
+		};
 	}, []);
 
 	// Close mobile menu when route changes
@@ -60,6 +83,11 @@ export default function Header() {
 		{ label: "How It Works", href: "#how-it-works", scroll: true },
 		{ label: "Pricing", href: "#pricing", scroll: true },
 	];
+
+	// Always define the callback, regardless of mobile state
+	const toggleMobileMenu = useCallback(() => {
+		setMobileMenuOpen(prev => !prev);
+	}, []);
 
 	const handleNavClick = (
 		e: React.MouseEvent<HTMLAnchorElement>,
@@ -85,7 +113,6 @@ export default function Header() {
 						? "bg-black/70 backdrop-blur-xl border-b border-white/10 shadow-lg"
 						: "bg-black/50 backdrop-blur-xl border-b border-white/5"
 				}`}
-				style={{ overflow: "visible" }}
 			>
 				{/* Glassmorphic background with gradient glow */}
 				<div className="absolute inset-0">
@@ -205,8 +232,10 @@ export default function Header() {
 						{/* Mobile Menu Button - Enhanced */}
 						<button
 							type="button"
-							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-							className="md:hidden p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 text-content-secondary hover:text-white"
+							onClick={toggleMobileMenu}
+							className={`p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 text-content-secondary hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center ${
+								isMobile ? 'block' : 'hidden'
+							}`}
 							aria-label="Toggle menu"
 							aria-expanded={mobileMenuOpen}
 						>
@@ -222,7 +251,7 @@ export default function Header() {
 
 			{/* Mobile Menu */}
 			<AnimatePresence>
-				{mobileMenuOpen && (
+				{mobileMenuOpen && isMobile && (
 					<>
 						{/* Backdrop */}
 						<motion.button
@@ -231,8 +260,8 @@ export default function Header() {
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
-							onClick={() => setMobileMenuOpen(false)}
-							className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 md:hidden"
+							onClick={toggleMobileMenu}
+							className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
 						/>
 						{/* Menu Panel */}
 						<motion.div
@@ -240,14 +269,14 @@ export default function Header() {
 							animate={{ x: 0 }}
 							exit={{ x: "100%" }}
 							transition={{ type: "spring", damping: 25, stiffness: 200 }}
-							className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-black/95 backdrop-blur-xl border-l border-white/10 z-50 md:hidden overflow-y-auto"
+							className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-black/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto"
 						>
 							<div className="p-6">
 								<div className="flex items-center justify-between mb-8">
 									<LogoWordmark />
 									<button
 										type="button"
-										onClick={() => setMobileMenuOpen(false)}
+										onClick={toggleMobileMenu}
 										className="p-2 text-content-secondary hover:text-white transition-all duration-200"
 										aria-label="Close menu"
 									>

@@ -144,7 +144,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		visa_sponsorship,
 		birth_year: _birth_year,
 		age_verified: _age_verified,
-		terms_accepted,
 	} = validationResult.data;
 
 	// Map visa_sponsorship ('yes'/'no') to visa_status format
@@ -639,15 +638,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 						: String(matchingError),
 			});
 
-			// FALLBACK: Engine will use rule-based matching automatically
+			// FALLBACK: Use rule-based matching
 			apiLogger.warn(
-				"AI matching failed, engine will use rule-based fallback",
+				"AI matching failed, using rule-based fallback",
 				{ email: normalizedEmail },
 			);
-			const fallbackResult = await matcher.performMatching(
-				jobsForMatching as any[],
+			const fallbackResult = await simplifiedMatchingEngine.findMatchesForUser(
 				userPrefs as any,
-				true, // Force rule-based
+				jobsForMatching as any[],
+				{ useAI: false }, // Force rule-based matching
 			);
 			matchResult = fallbackResult;
 		}
@@ -705,10 +704,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// Step 2: Filter low-quality matches using business rules
-	const highQualityJobs = filterHighQualityJobs(
-		matchedJobsRaw,
-		QUALITY_THRESHOLDS.FREE_SIGNUP,
-	);
+	const highQualityJobs = filterHighQualityJobs(matchedJobsRaw);
 
 	// Step 3: Calculate quality metrics for logging using business rules
 	const qualityMetrics = calculateQualityMetrics(matchedJobsRaw);

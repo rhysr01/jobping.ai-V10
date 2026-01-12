@@ -5,7 +5,6 @@
 
 import { logger } from "@/lib/monitoring";
 import type { Job as ScrapersJob } from "@/scrapers/types";
-import { getDatabaseClient } from "@/utils/core/database-pool";
 import type { UserPreferences } from "@/utils/matching/types";
 
 export interface PrefilterResult {
@@ -16,9 +15,6 @@ export interface PrefilterResult {
 }
 
 export class PrefilterService {
-	private get supabase() {
-		return getDatabaseClient();
-	}
 
 	/**
 	 * Main prefilter method - simplified from the complex prefilter system
@@ -131,10 +127,10 @@ export class PrefilterService {
 		user: UserPreferences,
 	): (ScrapersJob & { freshnessTier: string })[] {
 		// If user specified languages, filter jobs that match
-		if (user.languages && user.languages.length > 0) {
+		if (user.languages_spoken && user.languages_spoken.length > 0) {
 			return jobs.filter((job) => {
 				const jobLangs = this.extractJobLanguages(job);
-				return user.languages!.some((userLang) =>
+				return user.languages_spoken!.some((userLang) =>
 					jobLangs.some((jobLang) =>
 						jobLang.toLowerCase().includes(userLang.toLowerCase()),
 					),
@@ -160,8 +156,8 @@ export class PrefilterService {
 
 			// Filter out very old jobs (older than 30 days for free users)
 			if (user.subscription_tier === "free") {
-				const jobDate = job.posted_date
-					? new Date(job.posted_date)
+				const jobDate = job.posted_at
+					? new Date(job.posted_at)
 					: new Date();
 				const daysOld =
 					(Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -171,10 +167,10 @@ export class PrefilterService {
 			}
 
 			// Filter by experience level if specified
-			if (user.experience_level && job.experience_required) {
+			if (user.entry_level_preference && job.experience_required) {
 				if (
 					!this.isExperienceMatch(
-						user.experience_level,
+						user.entry_level_preference,
 						job.experience_required,
 					)
 				) {
@@ -210,10 +206,10 @@ export class PrefilterService {
 				if (this.isTopCompany(job.company)) score += 10;
 
 				// Experience match bonus
-				if (user.experience_level && job.experience_required) {
+				if (user.entry_level_preference && job.experience_required) {
 					if (
 						this.isExperienceMatch(
-							user.experience_level,
+							user.entry_level_preference,
 							job.experience_required,
 						)
 					) {
@@ -222,13 +218,13 @@ export class PrefilterService {
 				}
 
 				// Keyword matching bonus
-				if (user.keywords && job.description) {
-					const keywordMatches = user.keywords.filter((keyword) =>
+				if (user.career_keywords && job.description) {
+					const keywords = user.career_keywords.split(",").map(k => k.trim());
+					const keywordMatches = keywords.filter((keyword) =>
 						job.description!.toLowerCase().includes(keyword.toLowerCase()),
 					);
 					score += keywordMatches.length * 5;
 				}
-
 				return { ...job, prefilterScore: Math.min(score, 100) };
 			})
 			.sort((a, b) => b.prefilterScore - a.prefilterScore);

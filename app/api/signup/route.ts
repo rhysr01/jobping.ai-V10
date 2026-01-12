@@ -1,12 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "@/lib/api-logger";
-import { asyncHandler, AppError } from "@/lib/errors";
+import { asyncHandler } from "@/lib/errors";
 import type { JobWithMetadata } from "@/lib/types/job";
 import { getDatabaseClient } from "@/utils/core/database-pool";
 import { sendMatchedJobsEmail, sendWelcomeEmail } from "@/utils/email/sender";
 // Pre-filtering removed - AI handles semantic matching
 import { getDistributionStats } from "@/utils/matching/jobDistribution";
 import { getProductionRateLimiter } from "@/utils/production-rate-limiter";
+import { simplifiedMatchingEngine } from "@/utils/matching/core/matching-engine";
 
 // Helper function to safely send welcome email and update tracking
 async function sendWelcomeEmailAndTrack(
@@ -514,16 +515,8 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 						}
 
 						// Use simplified matching engine for guaranteed matching
-						const { simplifiedMatchingEngine } = await import(
-							"@/utils/matching/core/matching-engine"
-						);
 
-						// Extract work environment preferences from form data
-						const targetWorkEnvironments: string[] =
-							Array.isArray(data.workEnvironment) &&
-							data.workEnvironment.length > 0
-								? data.workEnvironment // Form values: ['Office', 'Hybrid', 'Remote']
-								: [];
+						// Extract work environment preferences from form data (unused for now)
 
 						// Normalize jobs to ensure language_requirements is always an array
 						const normalizedJobs = jobsForMatching.map((job) => ({
@@ -591,11 +584,30 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 									},
 								);
 
-								distributedJobs = guaranteedResult.matches.map((m) => ({
-									...m.job,
-									match_score: m.match_score,
-									match_reason: m.match_reason,
-								}));
+								distributedJobs = guaranteedResult.matches.map((m) => {
+									const job = m.job || ({} as any);
+									return {
+										...job,
+										job_hash: job.job_hash || "",
+										title: job.title || "",
+										company: job.company || "",
+										location: job.location || "",
+										job_url: job.job_url || "",
+										description: job.description || "",
+										experience_required: job.experience_required || "",
+										work_environment: job.work_environment || "",
+										source: job.source || "",
+										categories: job.categories || [],
+										language_requirements: job.language_requirements || [],
+										company_profile_url: job.company_profile_url || "",
+										scrape_timestamp: job.scrape_timestamp || "",
+										original_posted_date: job.original_posted_date || "",
+										posted_at: job.posted_at || "",
+										last_seen_at: job.last_seen_at || "",
+										match_score: m.match_score,
+										match_reason: m.match_reason,
+									} as JobWithMetadata;
+								});
 
 								coordinatedResult = guaranteedResult;
 							}
@@ -620,8 +632,8 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 							const stats = getDistributionStats(distributedJobs);
 							apiLogger.info("Job distribution stats", {
 								email: data.email,
-								sourceDistribution: stats.sourceDistribution,
-								cityDistribution: stats.cityDistribution,
+								categoryBreakdown: stats.categoryBreakdown,
+								locationBreakdown: stats.locationBreakdown,
 								totalJobs: stats.totalJobs,
 								matchingMethod:
 									coordinatedResult?.metadata?.matchingMethod || "unknown",
@@ -630,7 +642,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 							});
 							if (process.env.NODE_ENV === "development") {
 								apiLogger.info(
-									`[SIGNUP] Distribution: Sources=${JSON.stringify(stats.sourceDistribution)}, Cities=${JSON.stringify(stats.cityDistribution)}`,
+									`[SIGNUP] Distribution: Categories=${JSON.stringify(stats.categoryBreakdown)}, Locations=${JSON.stringify(stats.locationBreakdown)}`,
 								);
 							}
 						}
@@ -811,7 +823,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 													user_email: verifyMatches[0].user_email,
 													job_hash: verifyMatches[0].job_hash,
 													match_score: verifyMatches[0].match_score,
-													match_algorithm: verifyMatches[0].match_algorithm,
+													match_reason: verifyMatches[0].match_reason,
 												});
 
 												// Also check if the job exists in jobs table

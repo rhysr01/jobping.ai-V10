@@ -66,23 +66,24 @@ export class FallbackService {
 		};
 
 		// Skills matching (keywords)
-		if (user.keywords && user.keywords.length > 0) {
+		if (user.career_keywords) {
 			const jobText = `${job.title} ${job.description}`.toLowerCase();
+			const keywords = user.career_keywords.split(',').map(k => k.trim());
 			let keywordMatches = 0;
 
-			user.keywords.forEach(keyword => {
-				if (jobText.includes(keyword.toLowerCase())) {
+			keywords.forEach(keyword => {
+				if (keyword && jobText.includes(keyword.toLowerCase())) {
 					keywordMatches++;
 				}
 			});
 
-			breakdown.skills = Math.min(100, (keywordMatches / user.keywords.length) * 100);
+			breakdown.skills = Math.min(100, (keywordMatches / keywords.length) * 100);
 		}
 		totalScore += breakdown.skills * 0.4;
 
 		// Experience level matching
-		if (user.experience_level && job.experience_required) {
-			breakdown.experience = this.calculateExperienceMatch(user.experience_level, job.experience_required);
+		if (user.entry_level_preference && job.experience_required) {
+			breakdown.experience = this.calculateExperienceMatch(user.entry_level_preference, job.experience_required);
 		}
 		totalScore += breakdown.experience * 0.25;
 
@@ -181,7 +182,7 @@ export class FallbackService {
 	 * Calculate recency score
 	 */
 	private calculateRecencyScore(job: Job): number {
-		const postedDate = job.posted_date ? new Date(job.posted_date) : new Date();
+		const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
 		const daysSincePosted = (Date.now() - postedDate.getTime()) / (1000 * 60 * 60 * 24);
 
 		if (daysSincePosted <= 1) return 100; // Today

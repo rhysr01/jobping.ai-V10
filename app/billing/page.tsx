@@ -512,7 +512,7 @@ export default function BillingPage({
 							<GlassCard intent="subtle" className="p-12">
 								<div className="text-center">
 									<Skeleton className="h-12 w-12 mx-auto mb-4 rounded-full" />
-									<SkeletonText lines={2} className="max-w-md mx-auto" />
+									<Skeleton lines={2} className="max-w-md mx-auto" />
 								</div>
 							</GlassCard>
 						</motion.div>

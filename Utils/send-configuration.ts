@@ -85,13 +85,13 @@ export function getCurrentWeekStart(): string {
 export function isSendDay(tier: "free" | "premium"): boolean {
 	const today = new Date().toLocaleDateString("en-US", {
 		weekday: "short",
-	}) as string;
+	}) as "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 	const config = SEND_CONFIG[tier];
 	// Free tier has no send days (empty array)
 	if (config.sendDays.length === 0) {
 		return false;
 	}
-	return config.sendDays.includes(today);
+	return config.sendDays.includes(today as any);
 }
 
 /**

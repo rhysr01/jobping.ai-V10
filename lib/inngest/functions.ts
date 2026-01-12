@@ -80,7 +80,7 @@ export const performAIMatching = inngest.createFunction(
 				const result = await simplifiedMatchingEngine.findMatchesForUser(
 					userPrefs as any,
 					jobs as any[],
-					{ useAI: hasOpenAIKey }
+					{ useAI: !!hasOpenAIKey }
 				);
 
 				const duration = Date.now() - startTime;
@@ -104,10 +104,10 @@ export const performAIMatching = inngest.createFunction(
 					email: userPrefs.email,
 				});
 
-				const fallbackResult = await matcher.performMatching(
-					jobs as any[],
+				const fallbackResult = await simplifiedMatchingEngine.findMatchesForUser(
 					userPrefs as any,
-					true, // Force rule-based
+					jobs as any[],
+					{ useAI: false }, // Force rule-based matching
 				);
 
 				return fallbackResult;

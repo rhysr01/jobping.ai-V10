@@ -1,17 +1,16 @@
 // PRODUCTION-READY EMAIL TEMPLATES (Premium Design)
 // Safe for major clients: Gmail, Outlook, Apple Mail
 
+import { issueSecureToken } from "@/utils/authentication/secureTokens";
+import {
+	calculateVisaConfidence,
+	// getVisaConfidenceStyle, // Kept for future use
+} from "@/utils/matching/visa-confidence";
 import {
 	FREE_ROLES_PER_SEND,
 	PREMIUM_ROLES_PER_MONTH,
 	PREMIUM_ROLES_PER_WEEK,
 } from "../../lib/productMetrics";
-import {
-	calculateVisaConfidence,
-	getVisaConfidenceLabel,
-	// getVisaConfidenceStyle, // Kept for future use
-} from "../../Utils/matching/visa-confidence";
-import { issueSecureToken } from "@/utils/authentication/secureTokens";
 import { buildPreferencesLink } from "../preferences/links";
 import { getBaseUrl } from "../url-helpers";
 import type { EmailJobCard } from "./types";
@@ -783,21 +782,22 @@ export function createJobMatchesEmail(
 				: "";
 
 			// Calculate visa confidence for this job (still need description for visa detection)
-			const visaConfidence = calculateVisaConfidence({
-				description: c.job.description || "",
-				title: c.job.title,
-				company: c.job.company,
-				visa_friendly: c.job.visa_friendly,
-				visa_sponsorship: c.job.visa_sponsorship,
-			});
+			const visaConfidence = calculateVisaConfidence(
+				{
+					description: c.job.description || "",
+					title: c.job.title,
+					company: c.job.company,
+					visa_friendly: c.job.visa_friendly,
+					visa_sponsorship: c.job.visa_sponsorship,
+				},
+				{},
+			); // Empty user object since we don't have user context in emails
 
 			// Add visa confidence to job object for formatTagsMarkup
 			const jobWithVisaConfidence = {
 				...c.job,
-				visa_confidence: visaConfidence.confidence,
-				visa_confidence_label: getVisaConfidenceLabel(
-					visaConfidence.confidence,
-				),
+				visa_confidence: visaConfidence.level,
+				visa_confidence_label: visaConfidence.label,
 			};
 
 			// Short description (max 140 chars for better readability)
