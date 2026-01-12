@@ -7,6 +7,7 @@ import Button from "./Button";
 
 export default function CookieBanner() {
 	const [isVisible, setIsVisible] = useState(false);
+	const [mobileCTAVisible, setMobileCTAVisible] = useState(false);
 
 	useEffect(() => {
 		// Check if user has already made a choice
@@ -20,6 +21,33 @@ export default function CookieBanner() {
 		}
 		// Return undefined cleanup function if consent exists
 		return undefined;
+	}, []);
+
+	// Detect when mobile CTA should be visible to avoid overlap
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		const checkMobileCTA = () => {
+			if (window.innerWidth <= 1024) {
+				// Show mobile CTA after scrolling past hero section
+				const scrollY = window.scrollY;
+				const windowHeight = window.innerHeight;
+				setMobileCTAVisible(scrollY > windowHeight * 0.8);
+			} else {
+				setMobileCTAVisible(false);
+			}
+		};
+
+		window.addEventListener("scroll", checkMobileCTA, { passive: true });
+		window.addEventListener("resize", checkMobileCTA, { passive: true });
+
+		// Initial check
+		checkMobileCTA();
+
+		return () => {
+			window.removeEventListener("scroll", checkMobileCTA);
+			window.removeEventListener("resize", checkMobileCTA);
+		};
 	}, []);
 
 	const handleAccept = () => {
@@ -69,7 +97,9 @@ export default function CookieBanner() {
 					animate={{ y: 0, opacity: 1 }}
 					exit={{ y: 100, opacity: 0 }}
 					transition={{ type: "spring", damping: 25, stiffness: 200 }}
-					className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 pointer-events-none"
+					className={`fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 pointer-events-none ${
+						mobileCTAVisible ? 'pb-24' : ''
+					}`}
 					role="dialog"
 					aria-label="Cookie consent"
 					aria-modal="true"

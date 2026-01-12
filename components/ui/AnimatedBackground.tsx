@@ -1,33 +1,42 @@
 "use client";
 
 import { motion, useScroll, useTransform, useMotionValue } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function AnimatedBackground() {
 	const { scrollY } = useScroll();
+	const [isMobile, setIsMobile] = useState(false);
+	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-	// Parallax transforms based on scroll
-	const parallaxSlow = useTransform(scrollY, [0, 1000], [0, 200]);
-	const parallaxMedium = useTransform(scrollY, [0, 1000], [0, 400]);
-	const parallaxFast = useTransform(scrollY, [0, 1000], [0, 600]);
+	useEffect(() => {
+		setIsMobile(window.innerWidth < 768);
+		setPrefersReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+	}, []);
+
+	// Optimized parallax transforms based on device
+	const parallaxSlow = useTransform(scrollY, [0, 1000], [0, isMobile ? 100 : 200]);
+	const parallaxMedium = useTransform(scrollY, [0, 1000], [0, isMobile ? 200 : 400]);
+	const parallaxFast = useTransform(scrollY, [0, 1000], [0, isMobile ? 300 : 600]);
 	const opacityTransform = useTransform(scrollY, [0, 500], [1, 0.3]);
 
-	// Mouse parallax values
+	// Mouse parallax values - only on desktop
 	const mouseX = useMotionValue(0);
 	const mouseY = useMotionValue(0);
 
-	// Mouse parallax effect
+	// Mouse parallax effect - disabled on mobile
 	useEffect(() => {
+		if (isMobile || prefersReducedMotion) return;
+
 		const handleMouseMove = (e: MouseEvent) => {
-			const x = (e.clientX / window.innerWidth - 0.5) * 50;
-			const y = (e.clientY / window.innerHeight - 0.5) * 50;
+			const x = (e.clientX / window.innerWidth - 0.5) * 30; // Reduced multiplier
+			const y = (e.clientY / window.innerHeight - 0.5) * 30;
 			mouseX.set(x);
 			mouseY.set(y);
 		};
 
-		window.addEventListener("mousemove", handleMouseMove);
+		window.addEventListener("mousemove", handleMouseMove, { passive: true });
 		return () => window.removeEventListener("mousemove", handleMouseMove);
-	}, [mouseX, mouseY]);
+	}, [mouseX, mouseY, isMobile, prefersReducedMotion]);
 
 	return (
 		<div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
@@ -47,64 +56,68 @@ export default function AnimatedBackground() {
 				<div className="absolute bottom-0 left-1/2 w-full h-full bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(139,92,246,0.10),transparent_60%)]" />
 			</motion.div>
 			
-			{/* Moving animated orbs with scroll and mouse parallax */}
-			<motion.div
-				className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-emerald-500/20 rounded-full blur-[120px]"
-				style={{
-					x: useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx as number) * 0.3 + ((sy as number) / 1000) * 200),
-					y: useTransform([mouseY, parallaxSlow], ([my, ps]: number[]) => (my as number) * 0.3 + (ps as number)),
-					scale: useTransform(scrollY, [0, 1000], [1, 1.15]),
-				}}
-				animate={{
-					scale: [1, 1.1, 1],
-				}}
-				transition={{
-					duration: 20,
-					repeat: Infinity,
-					ease: "easeInOut",
-				}}
-			/>
-			<motion.div
-				className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-blue-500/15 rounded-full blur-[100px]"
-				style={{
-					x: useTransform([mouseX, scrollY], ([mx, sy]: number[]) => -(mx as number) * 0.2 - ((sy as number) / 1000) * 160),
-					y: useTransform([mouseY, parallaxMedium], ([my, pm]: number[]) => -(my as number) * 0.2 + (pm as number)),
-					scale: useTransform(scrollY, [0, 1000], [1, 1.2]),
-				}}
-				animate={{
-					scale: [1, 1.15, 1],
-				}}
-				transition={{
-					duration: 25,
-					repeat: Infinity,
-					ease: "easeInOut",
-					delay: 2,
-				}}
-			/>
-			<motion.div
-				className="absolute bottom-0 left-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[90px]"
-				style={{
-					x: useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx as number) * 0.15 + ((sy as number) / 1000) * 120),
-					y: useTransform([mouseY, parallaxFast], ([my, pf]: number[]) => (my as number) * 0.15 + (pf as number)),
-					scale: useTransform(scrollY, [0, 1000], [1, 1.25]),
-				}}
-				animate={{
-					scale: [1, 1.2, 1],
-				}}
-				transition={{
-					duration: 30,
-					repeat: Infinity,
-					ease: "easeInOut",
-					delay: 4,
-				}}
-			/>
+			{/* Optimized moving orbs - smaller blur on mobile, no mouse tracking on mobile */}
+			{!prefersReducedMotion && (
+				<>
+					<motion.div
+						className={`absolute top-0 left-1/4 ${isMobile ? 'w-[400px] h-[400px] blur-[80px]' : 'w-[600px] h-[600px] blur-[120px]'} bg-emerald-500/20 rounded-full`}
+						style={{
+							x: isMobile ? parallaxSlow : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.2) + (sy / 1000) * 150),
+							y: isMobile ? parallaxSlow : useTransform([mouseY, parallaxSlow], ([my, ps]: number[]) => (my * 0.2) + ps),
+							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.1 : 1.15]),
+						}}
+						animate={isMobile ? undefined : {
+							scale: [1, 1.05, 1],
+						}}
+						transition={isMobile ? undefined : {
+							duration: 25,
+							repeat: Infinity,
+							ease: "easeInOut",
+						}}
+					/>
+					<motion.div
+						className={`absolute top-1/3 right-0 ${isMobile ? 'w-[300px] h-[300px] blur-[60px]' : 'w-[500px] h-[500px] blur-[100px]'} bg-blue-500/15 rounded-full`}
+						style={{
+							x: isMobile ? useTransform(scrollY, [0, 1000], [0, -100]) : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => -(mx * 0.15) - (sy / 1000) * 120),
+							y: isMobile ? parallaxMedium : useTransform([mouseY, parallaxMedium], ([my, pm]: number[]) => -(my * 0.15) + pm),
+							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.15 : 1.2]),
+						}}
+						animate={isMobile ? undefined : {
+							scale: [1, 1.1, 1],
+						}}
+						transition={isMobile ? undefined : {
+							duration: 30,
+							repeat: Infinity,
+							ease: "easeInOut",
+							delay: 3,
+						}}
+					/>
+					<motion.div
+						className={`absolute bottom-0 left-1/2 ${isMobile ? 'w-[250px] h-[250px] blur-[50px]' : 'w-[400px] h-[400px] blur-[90px]'} bg-purple-500/10 rounded-full`}
+						style={{
+							x: isMobile ? useTransform(scrollY, [0, 1000], [0, 80]) : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.1) + (sy / 1000) * 90),
+							y: isMobile ? parallaxFast : useTransform([mouseY, parallaxFast], ([my, pf]: number[]) => (my * 0.1) + pf),
+							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.2 : 1.25]),
+						}}
+						animate={isMobile ? undefined : {
+							scale: [1, 1.15, 1],
+						}}
+						transition={isMobile ? undefined : {
+							duration: 35,
+							repeat: Infinity,
+							ease: "easeInOut",
+							delay: 6,
+						}}
+					/>
+				</>
+			)}
 
-			{/* Additional depth layer - floating particles (simplified) */}
+			{/* Reduced particle count on mobile */}
 			<div className="absolute inset-0">
-				{Array.from({ length: 15 }).map((_, i) => {
-					const baseDelay = i * 0.3;
-					const baseDuration = 8 + (i % 3) * 4;
-					
+				{Array.from({ length: isMobile ? 8 : 15 }).map((_, i) => {
+					const baseDelay = i * (isMobile ? 0.5 : 0.3);
+					const baseDuration = isMobile ? 12 + (i % 2) * 6 : 8 + (i % 3) * 4;
+
 					return (
 						<motion.div
 							key={i}
@@ -114,12 +127,12 @@ export default function AnimatedBackground() {
 								y: `${(i * 11) % 100}%`,
 								opacity: 0,
 							}}
-							animate={{
-								y: [`${(i * 11) % 100}%`, `${((i * 11) % 100) - 20}%`, `${(i * 11) % 100}%`],
+							animate={prefersReducedMotion ? undefined : {
+								y: [`${(i * 11) % 100}%`, `${((i * 11) % 100) - (isMobile ? 15 : 20)}%`, `${(i * 11) % 100}%`],
 								opacity: [0, 0.4, 0],
-								scale: [0.5, 1.2, 0.5],
+								scale: [0.5, isMobile ? 1 : 1.2, 0.5],
 							}}
-							transition={{
+							transition={prefersReducedMotion ? undefined : {
 								duration: baseDuration,
 								repeat: Infinity,
 								delay: baseDelay,
@@ -130,18 +143,18 @@ export default function AnimatedBackground() {
 				})}
 			</div>
 			
-			{/* Enhanced noise texture with parallax */}
-			<motion.div 
-				className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
+			{/* Simplified noise texture */}
+			<motion.div
+				className="absolute inset-0 opacity-[0.03] mix-blend-overlay"
 				style={{
 					backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
 					y: parallaxSlow,
 				}}
 			/>
-			
-			{/* Subtle animated grid with parallax */}
-			<motion.div 
-				className="absolute inset-0 opacity-[0.03] animated-grid"
+
+			{/* Animated grid with reduced complexity on mobile */}
+			<motion.div
+				className={`absolute inset-0 ${isMobile ? 'opacity-[0.01]' : 'opacity-[0.03]'} ${prefersReducedMotion ? '' : 'animated-grid'}`}
 				aria-hidden="true"
 				style={{ y: parallaxFast }}
 			/>

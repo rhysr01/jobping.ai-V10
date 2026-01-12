@@ -652,3 +652,51 @@ form select {
 .hero-logo-capsule {
 	will-change: auto;
 }
+
+/* ========== MOBILE PERFORMANCE OPTIMIZATIONS ========== */
+
+/* Performance optimizations for mobile */
+@media (max-width: 767px) {
+	.premium-bg {
+		contain: layout style paint; /* CSS containment for better performance */
+	}
+
+	/* Reduce motion for small screens */
+	.animated-grid {
+		animation-duration: 30s; /* Slower animation on mobile */
+	}
+
+	/* Reduce particle animations on mobile */
+	.absolute.w-1.h-1 {
+		animation-duration: 12s; /* Longer duration = less CPU */
+	}
+}
+
+/* Hardware acceleration hints */
+.glass-card,
+.btn-cta-enhanced,
+.feature-card {
+	transform: translateZ(0);
+	backface-visibility: hidden;
+	perspective: 1000px;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+	.animated-grid {
+		animation: none !important;
+	}
+}
+
+/* Optimize font loading performance */
+@font-face {
+	font-family: 'Clash Display';
+	font-display: swap; /* Better performance */
+	font-weight: 400 700;
+}
+
+@font-face {
+	font-family: 'Inter';
+	font-display: swap;
+	font-weight: 400 600;
+}

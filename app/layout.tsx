@@ -120,11 +120,6 @@ export default async function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Clash+Display:opsz,wght@40..72,400..700&family=Inter:wght@400;500;600;700&display=swap"
 					rel="stylesheet"
 				/>
-				<link
-					rel="preload"
-					href="https://fonts.googleapis.com/css2?family=Clash+Display:opsz,wght@40..72,400..700&family=Inter:wght@400;500;600;700&display=swap"
-					as="style"
-				/>
 				<StructuredData />
 				<FAQSchema />
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: Schema.org structured data */}
@@ -158,10 +153,10 @@ export default async function RootLayout({
 				<ErrorBoundary>{children}</ErrorBoundary>
 				<Toaster />
 				<CookieBanner />
-				{/* Google Analytics - inline script will work with CSP nonce via Next.js */}
+				{/* Google Analytics - deferred for better performance */}
 				<Script
 					src="https://www.googletagmanager.com/gtag/js?id=G-G40ZHDYNL6"
-					strategy="afterInteractive"
+					strategy="lazyOnload"
 				/>
 				<Script id="google-analytics" strategy="afterInteractive">
 					{`
@@ -186,16 +181,17 @@ export default async function RootLayout({
 					/* biome-ignore lint/security/noDangerouslySetInnerHtml: Internal tracking script */
 					<Script
 						id="posthog"
-						strategy="afterInteractive"
+						strategy="lazyOnload"
 						nonce={nonce}
 						dangerouslySetInnerHTML={{
 							__html: `
                 !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
                 var consent = typeof localStorage !== 'undefined' ? localStorage.getItem('cookie-consent') : null;
+                var isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                 posthog.init('${process.env.NEXT_PUBLIC_POSTHOG_KEY}',{
                   api_host:'https://app.posthog.com',
                   autocapture:false,
-                  disable_session_recording:consent !== 'accepted',
+                  disable_session_recording:consent !== 'accepted' || isMobile,
                   ip:false,
                   loaded:function(posthog){
                     if(consent !== 'accepted'){posthog.opt_out_capturing();}

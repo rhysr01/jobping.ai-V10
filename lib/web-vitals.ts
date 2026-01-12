@@ -3,16 +3,19 @@
  */
 
 export function reportWebVitals(metric: any) {
-	// Send to analytics endpoint in production
+	// Send to analytics endpoint in production with mobile context
 	if (process.env.NODE_ENV === "production") {
-		// Send to analytics endpoint
+		const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 		fetch("/api/analytics/web-vitals", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 				"x-csrf-token": "jobping-request",
 			},
-			body: JSON.stringify(metric),
+			body: JSON.stringify({
+				...metric,
+				deviceType: isMobile ? 'mobile' : 'desktop'
+			}),
 			keepalive: true,
 		}).catch(() => {
 			// Silently fail if analytics endpoint doesn't exist

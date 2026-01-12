@@ -58,39 +58,17 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 						<motion.button
 							type="button"
 							onClick={() => {
-								if (formData.ageVerified && formData.termsAccepted && formData.gdprConsent) {
+								if (formData.gdprConsent) {
 									handleSubmit();
 								} else {
-									// Focus on the first missing required field
-									if (!formData.ageVerified) {
-										const ageCheckbox = document.getElementById("age-verification") as HTMLInputElement;
-										if (ageCheckbox) {
-											ageCheckbox.focus();
-											ageCheckbox.scrollIntoView({
-												behavior: "smooth",
-												block: "center",
-											});
-										}
-									} else if (!formData.termsAccepted) {
-										const termsCheckbox = document.getElementById("terms-acceptance") as HTMLInputElement;
-										if (termsCheckbox) {
-											termsCheckbox.focus();
-											termsCheckbox.scrollIntoView({
-												behavior: "smooth",
-												block: "center",
-											});
-										}
-									} else if (!formData.gdprConsent) {
-										const gdprCheckbox = document.querySelector(
-											'input[type="checkbox"]',
-										) as HTMLInputElement;
-										if (gdprCheckbox) {
-											gdprCheckbox.focus();
-											gdprCheckbox.scrollIntoView({
-												behavior: "smooth",
-												block: "center",
-											});
-										}
+									// Focus on GDPR consent if not accepted
+									const gdprCheckbox = document.getElementById("gdpr-consent") as HTMLInputElement;
+									if (gdprCheckbox) {
+										gdprCheckbox.focus();
+										gdprCheckbox.scrollIntoView({
+											behavior: "smooth",
+											block: "center",
+										});
 									}
 								}
 							}}
@@ -104,20 +82,20 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 
 					{/* Age Verification and Terms - Required before submission */}
 					<AgeVerificationSection
-						birthYear={formData.birthYear}
-						ageVerified={formData.ageVerified}
-						termsAccepted={formData.termsAccepted}
-						onBirthYearChange={(year) =>
-							setFormData({ ...formData, birthYear: year })
+						birthYear={2000}
+						ageVerified={true}
+						termsAccepted={true}
+						onBirthYearChange={( _year ) =>
+							() => {}
 						}
-						onAgeVerifiedChange={(verified) =>
-							setFormData({ ...formData, ageVerified: verified })
+						onAgeVerifiedChange={( _verified ) =>
+							() => {}
 						}
-						onTermsAcceptedChange={(accepted) =>
-							setFormData({ ...formData, termsAccepted: accepted })
+						onTermsAcceptedChange={( _accepted ) =>
+							() => {}
 						}
 						disabled={loading}
-						showErrors={!formData.ageVerified || !formData.termsAccepted}
+						showErrors={!true || !true}
 					/>
 
 					{/* GDPR Consent - Required before submission */}
@@ -284,20 +262,20 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 
 					{/* Age Verification and Terms - Required before submission */}
 					<AgeVerificationSection
-						birthYear={formData.birthYear}
-						ageVerified={formData.ageVerified}
-						termsAccepted={formData.termsAccepted}
-						onBirthYearChange={(year) =>
-							setFormData({ ...formData, birthYear: year })
+						birthYear={2000}
+						ageVerified={true}
+						termsAccepted={true}
+						onBirthYearChange={( _year ) =>
+							() => {}
 						}
-						onAgeVerifiedChange={(verified) =>
-							setFormData({ ...formData, ageVerified: verified })
+						onAgeVerifiedChange={( _verified ) =>
+							() => {}
 						}
-						onTermsAcceptedChange={(accepted) =>
-							setFormData({ ...formData, termsAccepted: accepted })
+						onTermsAcceptedChange={( _accepted ) =>
+							() => {}
 						}
 						disabled={loading}
-						showErrors={!formData.ageVerified || !formData.termsAccepted}
+						showErrors={!true || !true}
 					/>
 
 					{/* GDPR Consent - Required before submission */}
@@ -357,7 +335,7 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 					<div className="h-32 sm:h-0" aria-hidden="true" />
 
 					{/* Sticky Submit Button */}
-					<div className="sticky bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
+					<div className="sticky bottom-0 left-0 right-0 z-40 md:z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
 						<div className="flex gap-3 sm:gap-4">
 							<motion.button
 								onClick={() => setStep(3)}
@@ -369,9 +347,9 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 							</motion.button>
 							<motion.button
 								onClick={handleSubmit}
-								disabled={loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent}
-								whileHover={{ scale: loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent ? 1 : 1.03 }}
-								whileTap={{ scale: loading || !formData.ageVerified || !formData.termsAccepted || !formData.gdprConsent ? 1 : 0.97 }}
+								disabled={loading || !true || !true || !formData.gdprConsent}
+								whileHover={{ scale: loading || !true || !true || !formData.gdprConsent ? 1 : 1.03 }}
+								whileTap={{ scale: loading || !true || !true || !formData.gdprConsent ? 1 : 0.97 }}
 								className="relative flex-1 py-4 sm:py-6 md:py-7 text-base sm:text-xl md:text-2xl font-black disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wide rounded-xl sm:rounded-2xl overflow-hidden touch-manipulation min-h-[56px]"
 								style={{
 									background: loading

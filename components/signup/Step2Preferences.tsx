@@ -313,7 +313,7 @@ export const Step2Preferences = React.memo(function Step2Preferences({
 					<div className="h-32 sm:h-0" aria-hidden="true" />
 
 					{/* Sticky Submit Button */}
-					<div className="sticky bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
+					<div className="sticky bottom-0 left-0 right-0 z-40 md:z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
 						<div className="flex gap-3 sm:gap-4">
 							<motion.button
 								type="button"
