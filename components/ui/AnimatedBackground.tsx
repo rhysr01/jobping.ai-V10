@@ -30,6 +30,22 @@ export default function AnimatedBackground() {
 	const mouseX = useMotionValue(0);
 	const mouseY = useMotionValue(0);
 
+	// All transform hooks must be called unconditionally (Rules of Hooks)
+	const orb1X = useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.2) + (sy / 1000) * 150);
+	const orb1Y = useTransform([mouseY, parallaxSlow], ([my, ps]: number[]) => (my * 0.2) + ps);
+	const orb1Scale = useTransform(scrollY, [0, 1000], [1, isMobile ? 1.1 : 1.15]);
+
+	const orb2X = useTransform([mouseX, scrollY], ([mx, sy]: number[]) => -(mx * 0.15) - (sy / 1000) * 120);
+	const orb2Y = useTransform([mouseY, parallaxMedium], ([my, pm]: number[]) => -(my * 0.15) + pm);
+	const orb2Scale = useTransform(scrollY, [0, 1000], [1, isMobile ? 1.15 : 1.2]);
+
+	const orb2MobileX = useTransform(scrollY, [0, 1000], [0, -100]);
+	const orb3MobileX = useTransform(scrollY, [0, 1000], [0, 80]);
+
+	const orb3X = useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.1) + (sy / 1000) * 90);
+	const orb3Y = useTransform([mouseY, parallaxFast], ([my, pf]: number[]) => (my * 0.1) + pf);
+	const orb3Scale = useTransform(scrollY, [0, 1000], [1, isMobile ? 1.2 : 1.25]);
+
 	// Mouse parallax effect - disabled on mobile
 	useEffect(() => {
 		if (isMobile || prefersReducedMotion) return;
@@ -74,9 +90,9 @@ export default function AnimatedBackground() {
 					<motion.div
 						className={`absolute top-0 left-1/4 ${isMobile ? 'w-[400px] h-[400px] blur-[80px]' : 'w-[600px] h-[600px] blur-[120px]'} bg-emerald-500/20 rounded-full`}
 						style={{
-							x: isMobile ? parallaxSlow : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.2) + (sy / 1000) * 150),
-							y: isMobile ? parallaxSlow : useTransform([mouseY, parallaxSlow], ([my, ps]: number[]) => (my * 0.2) + ps),
-							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.1 : 1.15]),
+							x: isMobile ? parallaxSlow : orb1X,
+							y: isMobile ? parallaxSlow : orb1Y,
+							scale: orb1Scale,
 						}}
 						animate={isMobile ? undefined : {
 							scale: [1, 1.05, 1],
@@ -90,9 +106,9 @@ export default function AnimatedBackground() {
 					<motion.div
 						className={`absolute top-1/3 right-0 ${isMobile ? 'w-[300px] h-[300px] blur-[60px]' : 'w-[500px] h-[500px] blur-[100px]'} bg-blue-500/15 rounded-full`}
 						style={{
-							x: isMobile ? useTransform(scrollY, [0, 1000], [0, -100]) : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => -(mx * 0.15) - (sy / 1000) * 120),
-							y: isMobile ? parallaxMedium : useTransform([mouseY, parallaxMedium], ([my, pm]: number[]) => -(my * 0.15) + pm),
-							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.15 : 1.2]),
+							x: isMobile ? orb2MobileX : orb2X,
+							y: isMobile ? parallaxMedium : orb2Y,
+							scale: orb2Scale,
 						}}
 						animate={isMobile ? undefined : {
 							scale: [1, 1.1, 1],
@@ -107,9 +123,9 @@ export default function AnimatedBackground() {
 					<motion.div
 						className={`absolute bottom-0 left-1/2 ${isMobile ? 'w-[250px] h-[250px] blur-[50px]' : 'w-[400px] h-[400px] blur-[90px]'} bg-purple-500/10 rounded-full`}
 						style={{
-							x: isMobile ? useTransform(scrollY, [0, 1000], [0, 80]) : useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.1) + (sy / 1000) * 90),
-							y: isMobile ? parallaxFast : useTransform([mouseY, parallaxFast], ([my, pf]: number[]) => (my * 0.1) + pf),
-							scale: useTransform(scrollY, [0, 1000], [1, isMobile ? 1.2 : 1.25]),
+							x: isMobile ? orb3MobileX : orb3X,
+							y: isMobile ? parallaxFast : orb3Y,
+							scale: orb3Scale,
 						}}
 						animate={isMobile ? undefined : {
 							scale: [1, 1.15, 1],

@@ -48,7 +48,7 @@ export function EUJobStats() {
 				}
 
 				const data = await response.json();
-				if (data.success && data.data) {
+				if (data.data) {
 					setStats(data.data);
 					setHasError(false);
 				} else {
