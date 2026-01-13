@@ -115,7 +115,7 @@ export default function BillingPage({
 			try {
 				const response = await apiCallJson("/api/user/verification-status", {
 					method: "GET",
-				});
+				}) as { verified: boolean; email?: string };
 				setEmailVerified(response.verified);
 			} catch (err) {
 				console.error("Failed to check verification status:", err);
@@ -488,7 +488,7 @@ export default function BillingPage({
 						<div className="bg-white/5 rounded-2xl p-8 border border-white/10 mb-8">
 							<div className="flex items-start gap-4 mb-6">
 								<div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-									<BrandIcons.Mail className="w-6 h-6 text-purple-400" />
+									<FileText className="w-6 h-6 text-purple-400" />
 								</div>
 								<div className="text-left">
 									<h3 className="text-xl font-bold mb-2">Check Your Email</h3>
@@ -513,7 +513,7 @@ export default function BillingPage({
 								</Button>
 								<Button
 									onClick={() => window.open("mailto:contact@getjobping.com", "_blank")}
-									variant="outline"
+									variant="secondary"
 									size="sm"
 								>
 									Contact Support

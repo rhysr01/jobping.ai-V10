@@ -239,6 +239,8 @@ const getCurrentQuerySet = () => {
 	return "SET_C";
 };
 
+console.log("🚀 Adzuna scraper starting...");
+
 const currentSet = getCurrentQuerySet();
 // Note: QUERY_SETS and CORE_ENGLISH_TERMS are no longer used in generateCityQueries
 // but kept for backward compatibility if referenced elsewhere

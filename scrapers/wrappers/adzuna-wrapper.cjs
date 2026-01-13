@@ -40,7 +40,9 @@ async function main() {
 		const targetIndustries = parseJson(process.env.TARGET_INDUSTRIES);
 		const targetRoles = parseJson(process.env.TARGET_ROLES);
 
+		console.log("🔄 Loading Adzuna scraper module...");
 		const adzunaModule = require("../../scripts/adzuna-categories-scraper.cjs");
+		console.log("✅ Adzuna module loaded, calling scrapeAllCitiesCategories...");
 		const includeRemote =
 			String(process.env.INCLUDE_REMOTE).toLowerCase() === "true";
 		const result = await adzunaModule.scrapeAllCitiesCategories({
@@ -51,6 +53,7 @@ async function main() {
 			targetRoles,
 			includeRemote,
 		});
+		console.log(`📊 Adzuna scraper returned ${result?.jobs?.length || 0} jobs`);
 
 		// Save jobs to database
 		const { createClient } = require("@supabase/supabase-js");

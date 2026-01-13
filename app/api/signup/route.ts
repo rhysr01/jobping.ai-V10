@@ -287,7 +287,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		// Send email verification for premium users (required before payment)
 		try {
-			await sendVerificationEmail(normalizedEmail, userData.full_name);
+			await sendVerificationEmail(normalizedEmail);
 			apiLogger.info("Verification email sent to premium user", { email: normalizedEmail });
 		} catch (emailError) {
 			apiLogger.error("Failed to send verification email", emailError as Error, {

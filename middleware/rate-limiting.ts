@@ -21,7 +21,6 @@ export function handleRateLimiting(request: NextRequest): NextResponse | null {
 	const clientIP =
 		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
 		request.headers.get("x-real-ip") ||
-		request.ip ||
 		"unknown";
 
 	const pathname = request.nextUrl.pathname;

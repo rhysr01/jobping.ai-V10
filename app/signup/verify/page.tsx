@@ -9,7 +9,6 @@ import Button from "../../../components/ui/Button";
 
 export default function EmailVerificationPage() {
 	const searchParams = useSearchParams();
-	const tier = searchParams.get("tier") || "premium";
 	const email = searchParams.get("email") || "";
 	const [isResending, setIsResending] = useState(false);
 	const [resendMessage, setResendMessage] = useState("");
@@ -91,7 +90,7 @@ export default function EmailVerificationPage() {
 								{isResending ? "Sending..." : "Resend Email"}
 							</Button>
 							<Link href="/signup">
-								<Button variant="outline" size="sm">
+								<Button variant="secondary" size="sm">
 									Start Over
 								</Button>
 							</Link>

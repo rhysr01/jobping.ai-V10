@@ -19,7 +19,6 @@ function SignupSuccessContent() {
 		email,
 		matchCount,
 		isFree,
-		isPremium,
 		handleSetAlert,
 		handleResendEmail,
 	} = useSignupSuccess();

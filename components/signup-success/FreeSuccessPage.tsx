@@ -48,7 +48,7 @@ export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPag
 						<p className="text-sm text-content-secondary mb-4">
 							We've sent your first {matchCount} job matches to:
 						</p>
-						<p className="text-emerald-400 font-medium">{email}</p>
+						<p className="text-emerald-400 font-medium">{userEmail}</p>
 					</div>
 				</div>
 

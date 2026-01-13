@@ -68,7 +68,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Send verification email
 	try {
-		await sendVerificationEmail(normalizedEmail, user.full_name);
+		await sendVerificationEmail(normalizedEmail);
 
 		apiLogger.info("Verification email resent", {
 			email: normalizedEmail,
