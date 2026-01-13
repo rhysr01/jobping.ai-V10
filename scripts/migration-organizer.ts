@@ -76,12 +76,12 @@ class MigrationOrganizer {
 
     console.log("\\n📁 Category Breakdown:");
     Object.entries(categories).forEach(([category, count]) => {
-      console.log(\`   \${category}: \${count} files\`);
+      console.log(`   ${category}: ${count} files`);
     });
 
     // Size analysis
     const totalSize = files.reduce((sum, file) => sum + file.size, 0);
-    console.log(\`\\n💾 Total Size: \${(totalSize / 1024).toFixed(2)} KB\`);
+    console.log(`\\n💾 Total Size: ${(totalSize / 1024).toFixed(2)} KB`);
 
     // Timeline analysis
     const timeline = files.reduce((acc, file) => {
@@ -96,7 +96,7 @@ class MigrationOrganizer {
     Object.entries(timeline)
       .sort(([a], [b]) => b.localeCompare(a))
       .forEach(([year, count]) => {
-        console.log(\`   \${year}: \${count} migrations\`);
+        console.log(`   ${year}: ${count} migrations`);
       });
 
     // Identify issues
@@ -107,25 +107,25 @@ class MigrationOrganizer {
     const timestamps = files.map(f => f.timestamp).filter(t => t !== 'unknown');
     const duplicates = timestamps.filter((t, i) => timestamps.indexOf(t) !== i);
     if (duplicates.length > 0) {
-      issues.push(\`Duplicate timestamps: \${[...new Set(duplicates)].join(', ')}\`);
+      issues.push(`Duplicate timestamps: ${[...new Set(duplicates)].join(', ')}`);
     }
 
     // Check for very large files
     const largeFiles = files.filter(f => f.size > 50000); // 50KB
     if (largeFiles.length > 0) {
-      issues.push(\`\${largeFiles.length} files larger than 50KB (may be too complex)\`);
+      issues.push(`${largeFiles.length} files larger than 50KB (may be too complex)`);
     }
 
     // Check for unknown categories
     const unknownCount = categories.unknown || 0;
     if (unknownCount > 0) {
-      issues.push(\`\${unknownCount} files with unknown category\`);
+      issues.push(`${unknownCount} files with unknown category`);
     }
 
     if (issues.length === 0) {
       console.log("   ✅ No major issues found");
     } else {
-      issues.forEach(issue => console.log(\`   • \${issue}\`));
+      issues.forEach(issue => console.log(`   • ${issue}`));
     }
   }
 
@@ -155,13 +155,13 @@ class MigrationOrganizer {
         const content = readFileSync(sourcePath, 'utf-8');
         writeFileSync(destPath, content);
         organizedCount++;
-        console.log(\`   📄 \${file.filename} → \${file.category}/\`);
+        console.log(`   📄 ${file.filename} → ${file.category}/`);
       } catch (error: any) {
-        console.error(\`   ❌ Failed to organize \${file.filename}: \${error.message}\`);
+        console.error(`   ❌ Failed to organize ${file.filename}: ${error.message}`);
       }
     });
 
-    console.log(\`\\n✅ Organized \${organizedCount} migration files\`);
+    console.log(`\\n✅ Organized ${organizedCount} migration files`);
 
     // Generate README
     this.generateReadme(files);
