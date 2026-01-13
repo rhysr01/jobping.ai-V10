@@ -225,10 +225,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/wrappers/adzuna-wrapper.cjs", {
 					cwd: process.cwd(),
-					timeout: 120000, // 2 minutes - reduced from 10min, if API doesn't respond in 2min it's broken
+					timeout: 300000, // 5 minutes - increased from 2min for Adzuna's comprehensive processing
 					env,
 				}),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				300000, // Increased from 120000 (2min) to 300000 (5min) for Adzuna
 				"Adzuna scraper",
 			);
 
@@ -415,11 +415,11 @@ class RealJobRunner {
 					"NODE_ENV=production node scripts/jobspy-internships-only.cjs",
 					{
 						cwd: process.cwd(),
-						timeout: 600000, // 10 minutes timeout (reduced from 20)
+						timeout: 1200000, // 20 minutes timeout for JobSpy
 						env: { ...process.env },
 					},
 				),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				600000, // Increased from 120000 (2min) to 600000 (10min)
 				"JobSpy Internships scraper",
 			);
 
@@ -517,11 +517,11 @@ class RealJobRunner {
 					"NODE_ENV=production node scripts/jobspy-career-path-roles.cjs",
 					{
 						cwd: process.cwd(),
-						timeout: 600000, // 10 minutes timeout (reduced from 20)
+						timeout: 1200000, // 20 minutes timeout for JobSpy
 						env,
 					},
 				),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				600000, // Increased from 120000 (2min) to 600000 (10min)
 				"Career Path Roles scraper",
 			);
 

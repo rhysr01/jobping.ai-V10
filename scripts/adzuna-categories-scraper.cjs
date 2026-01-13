@@ -406,103 +406,106 @@ const HIGH_PERFORMING_SECTORS = [
 // supply chain, logistics, data analytics, sustainability
 
 /**
- * Generate career path-based queries rotating between internship, graduate programme, and early career
- * Rotates every 8 hours: SET_A (internship), SET_B (graduate programme), SET_C (early career)
+ * Generate OPTIMIZED queries for maximum job return within API limits
+ * OPTIMIZED 2026-01-13: Uses proven high-performing broad terms instead of overly specific career path combinations
+ * Strategy: Broad terms (graduate programme, internship) = HIGH volume, Sector-specific (marketing) = proven winner
+ * API Budget: 8 queries × 5 pages × 2 runs/day × 30 days = 2,400 requests/month (96% of 2,500 limit) ✅
+ * Expected: 260-540 jobs/run (vs previous 0 jobs with 2 narrow queries)
  */
 function generateCityQueries(countryCode) {
-	const queries = [];
-	const currentSet = getCurrentQuerySet();
-
-	// Career paths from signup form
-	const careerPaths = [
-		"strategy",
-		"finance",
-		"sales",
-		"marketing",
-		"data",
-		"operations",
-		"product",
-		"tech",
-		"sustainability",
-		"people-hr",
-		"legal",
-		"creative",
-		"general-management",
-	];
-
-	// Determine query type based on rotation set
-	let queryType;
-	let localQueryType;
+	// OPTIMIZED QUERIES: Use proven high-performers based on actual data
+	// Marketing is top sector (24 jobs Madrid), broad terms cast wide net (50-100 jobs each)
 	
-	if (currentSet === "SET_A") {
-		// Internship queries
-		queryType = "internship";
-		// Local language internship terms
-		if (countryCode === "es") {
-			localQueryType = "prácticas";
-		} else if (countryCode === "fr") {
-			localQueryType = "stagiaire";
-		} else if (countryCode === "de") {
-			localQueryType = "praktikum";
-		} else if (countryCode === "it") {
-			localQueryType = "stage";
-		} else if (countryCode === "nl") {
-			localQueryType = "stage";
-		} else {
-			localQueryType = "internship";
-		}
-	} else if (currentSet === "SET_B") {
-		// Graduate programme queries
-		queryType = "graduate programme";
-		// Local language graduate terms
-		if (countryCode === "es") {
-			localQueryType = "programa de graduados";
-		} else if (countryCode === "fr") {
-			localQueryType = "programme graduate";
-		} else if (countryCode === "de") {
-			localQueryType = "absolventenprogramm";
-		} else if (countryCode === "it") {
-			localQueryType = "programma per neolaureati";
-		} else if (countryCode === "nl") {
-			localQueryType = "traineeship";
-		} else {
-			localQueryType = "graduate programme";
-		}
+	if (countryCode === "gb" || countryCode === "ie") {
+		// UK/Ireland: English queries only
+		return [
+			// Tier 1: Broad terms (highest volume) - 4 queries
+			"graduate programme",      // UK standard - VERY HIGH VOLUME
+			"internship",             // Universal - VERY HIGH VOLUME
+			"graduate",               // Broad catch-all - HIGH VOLUME
+			"entry level",            // Junior roles - HIGH VOLUME
+			
+			// Tier 2: Sector-specific (proven winners) - 2 queries
+			"marketing graduate",      // Top sector from HIGH_PERFORMING_SECTORS
+			"finance graduate",        // Proven performer
+			
+			// Tier 3: Role-specific (quality) - 2 queries
+			"business analyst",        // Popular early-career role
+			"graduate analyst",        // Clear early-career signal
+		];
+	} else if (countryCode === "es") {
+		// Spain: Spanish queries (prácticas is THE winner - 24 jobs Madrid!)
+		return [
+			"prácticas",               // Generic Spanish internship - HIGHEST VOLUME
+			"prácticas marketing",     // PROVEN WINNER (24 jobs Madrid!)
+			"prácticas finance",       // Proven (8 jobs Madrid)
+			"programa de graduados",   // Graduate program
+			"becario",                 // Intern
+			"junior",                  // Junior roles
+			"graduado",                // Graduate
+			"recién graduado",         // Recent graduate
+		];
+	} else if (countryCode === "fr") {
+		// France: French queries
+		return [
+			"stage",                   // Internship (French) - HIGH VOLUME
+			"alternance",              // Work-study program - HIGH VOLUME
+			"jeune diplômé",           // Recent graduate
+			"stagiaire",               // Intern
+			"programme graduate",      // Graduate program
+			"junior",                  // Junior roles
+			"débutant",                // Beginner
+			"assistant",               // Assistant roles
+		];
+	} else if (countryCode === "de") {
+		// Germany: German queries
+		return [
+			"praktikum",               // Internship (German) - HIGH VOLUME
+			"trainee",                 // Trainee program - HIGH VOLUME
+			"absolvent",               // Graduate
+			"junior",                  // Junior roles
+			"berufseinsteiger",        // Career starter
+			"werkstudent",             // Working student
+			"praktikum marketing",     // Marketing internship
+			"praktikum finance",       // Finance internship
+		];
+	} else if (countryCode === "it") {
+		// Italy: Italian queries
+		return [
+			"stage",                   // Internship (Italian) - HIGH VOLUME
+			"tirocinio",               // Internship formal - HIGH VOLUME
+			"neolaureato",             // Recent graduate
+			"junior",                  // Junior roles
+			"laureato",                // Graduate
+			"primo lavoro",            // First job
+			"stage marketing",         // Marketing internship
+			"stage finance",           // Finance internship
+		];
+	} else if (countryCode === "nl") {
+		// Netherlands: Dutch queries
+		return [
+			"stage",                   // Internship (Dutch) - HIGH VOLUME
+			"traineeship",             // Trainee program - HIGH VOLUME
+			"afgestudeerde",           // Graduate
+			"junior",                  // Junior roles
+			"starter",                 // Starter
+			"werkstudent",             // Working student
+			"stage marketing",         // Marketing internship
+			"stage finance",           // Finance internship
+		];
 	} else {
-		// Early career queries
-		queryType = "early career";
-		// Local language early career terms
-		if (countryCode === "es") {
-			localQueryType = "inicio de carrera";
-		} else if (countryCode === "fr") {
-			localQueryType = "début de carrière";
-		} else if (countryCode === "de") {
-			localQueryType = "berufseinstieg";
-		} else if (countryCode === "it") {
-			localQueryType = "inizio carriera";
-		} else if (countryCode === "nl") {
-			localQueryType = "startersfunctie";
-		} else {
-			localQueryType = "early career";
-		}
+		// Other countries: Default to English broad terms
+		return [
+			"graduate programme",
+			"internship",
+			"graduate",
+			"entry level",
+			"marketing graduate",
+			"finance graduate",
+			"business analyst",
+			"graduate analyst",
+		];
 	}
-
-	// EMERGENCY REDUCTION: Adzuna free tier is 2,500/month (83/day), not 250/day
-	// PREVIOUS: Would have been 9 cities × ~234 requests/run × 2 runs/day = 468/day = 14,040/month (5.6x over limit)
-	// NEW: 1 city × ~22 requests/run × 2 runs/day = 44/day = 1,320/month (SAFE for 2,500 limit)
-	const topCareerPaths = careerPaths.slice(0, 2); // Limited to 2 career paths to stay within monthly limits
-	
-	for (const path of topCareerPaths) {
-		// Use local language if available, otherwise English
-		if (localQueryType !== queryType && countryCode !== "gb" && countryCode !== "ie") {
-			queries.push(`${path} ${localQueryType}`);
-		} else {
-			queries.push(`${path} ${queryType}`);
-		}
-	}
-
-	// Remove duplicates and return
-	return [...new Set(queries)];
 }
 
 /**
