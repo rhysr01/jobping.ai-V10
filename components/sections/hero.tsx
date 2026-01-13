@@ -179,6 +179,47 @@ function Hero() {
 							personalized matches delivered to your inbox.
 						</motion.p>
 
+						{/* Social Proof for Free Instant Matches */}
+						<motion.div
+							initial={{ opacity: 0, scale: 0.95 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ delay: 0.28, duration: 0.6 }}
+							className="mb-6"
+						>
+							<div className="inline-flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-emerald-500/10 via-blue-500/8 to-purple-500/10 border border-emerald-500/20 rounded-full backdrop-blur-sm">
+								{/* Animated pulse dot */}
+								<motion.div
+									className="relative flex h-3 w-3"
+									animate={{ scale: [1, 1.2, 1] }}
+									transition={{ duration: 2, repeat: Infinity }}
+								>
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+									<span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+								</motion.div>
+
+								{/* Live counter effect */}
+								<motion.span
+									className="text-sm font-semibold text-emerald-300"
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									transition={{ delay: 0.5 }}
+								>
+									1,247 students got matches
+								</motion.span>
+
+								{/* Trending indicator */}
+								<motion.div
+									className="flex items-center gap-1 text-emerald-400"
+									initial={{ opacity: 0, x: -10 }}
+									animate={{ opacity: 1, x: 0 }}
+									transition={{ delay: 0.7 }}
+								>
+									<BrandIcons.TrendingUp className="h-3 w-3" />
+									<span className="text-xs font-medium">+23 today</span>
+								</motion.div>
+							</div>
+						</motion.div>
+
 						{/* CTAs */}
 						<motion.div
 							initial={{ opacity: 0, y: 16 }}
@@ -262,7 +303,7 @@ function Hero() {
 												Career Path
 											</span>
 											<p className="text-xs sm:text-sm text-white/70 leading-relaxed">
-												Strategy, Product, Data, Marketing, Engineering...
+												Strategy, Product, Data, Marketing, Tech...
 											</p>
 										</div>
 									</motion.div>
@@ -286,7 +327,7 @@ function Hero() {
 												Visa Status
 											</span>
 											<p className="text-xs sm:text-sm text-white/70 leading-relaxed">
-												EU citizen or non-EU requiring sponsorship?
+												EU/EEA/Swiss citizen, work permit, student visa, or need sponsorship?
 											</p>
 										</div>
 									</motion.div>
