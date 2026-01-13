@@ -24,21 +24,21 @@ export default function SocialProofRow() {
 	const items = [
 		{
 			icon: <BrandIcons.Mail className="h-5 w-5" />,
-			eyebrow: "",
-			title: `5 roles you actually qualify for (filtered by visa, location, experience)`,
-			description: "",
+			eyebrow: "Premium",
+			title: `15 fresh matches in your inbox every week`,
+			description: "Never miss opportunities - delivered Mon/Wed/Fri while they're still available",
 		},
 		{
 			icon: <BrandIcons.CheckCircle className="h-5 w-5" />,
-			eyebrow: "",
-			title: `Salary range and visa status upfront - no surprises`,
-			description: "",
+			eyebrow: "Premium",
+			title: `Complete salary & visa details upfront`,
+			description: "Know exactly what you're applying for - no hidden requirements or surprise rejections",
 		},
 		{
 			icon: <BrandIcons.Target className="h-5 w-5" />,
-			eyebrow: "",
-			title: `One-click feedback to improve future matches`,
-			description: "",
+			eyebrow: "Premium",
+			title: `AI learns from your feedback instantly`,
+			description: "Thumbs up/down on any match improves your recommendations - better jobs, faster",
 		},
 	];
 

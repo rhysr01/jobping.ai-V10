@@ -152,9 +152,9 @@ export const EMAIL_SHOWCASE_TITLE = "Your Matches, Delivered";
 export const EMAIL_SHOWCASE_SUBTITLE =
 	"Every role includes salary range, visa info, and why it's a match for you - so you can decide in seconds.";
 export const EMAIL_SHOWCASE_POINTS = [
-	`✓ 5 roles you actually qualify for (filtered by visa, location, experience)`,
-	"✓ Salary range and visa status upfront - no surprises",
-	"✓ One-click feedback to improve future matches",
+	`✓ 15 fresh matches in your inbox every week`,
+	"✓ Complete salary & visa details upfront",
+	"✓ AI learns from your feedback instantly",
 ];
 
 // Weekly stats prefix for dynamic display
