@@ -39,7 +39,7 @@ export function EUJobStats() {
 	useEffect(() => {
 		async function fetchStats() {
 			try {
-				const response = await fetch("/api/stats/eu-jobs", {
+				const response = await fetch("/api/stats?type=eu-jobs", {
 					signal: AbortSignal.timeout(10000),
 				});
 

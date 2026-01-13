@@ -4,6 +4,13 @@ import { motion, useScroll, useTransform, useMotionValue } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function AnimatedBackground() {
+	// Prevent SSR issues by ensuring we're on client
+	const [isClient, setIsClient] = useState(false);
+
+	useEffect(() => {
+		setIsClient(true);
+	}, []);
+
 	const { scrollY } = useScroll();
 	const [isMobile, setIsMobile] = useState(false);
 	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -37,6 +44,11 @@ export default function AnimatedBackground() {
 		window.addEventListener("mousemove", handleMouseMove, { passive: true });
 		return () => window.removeEventListener("mousemove", handleMouseMove);
 	}, [mouseX, mouseY, isMobile, prefersReducedMotion]);
+
+	// Prevent SSR hydration issues
+	if (!isClient) {
+		return <div className="fixed inset-0 -z-50 bg-gradient-to-br from-zinc-950 via-black to-zinc-950" />;
+	}
 
 	return (
 		<div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
