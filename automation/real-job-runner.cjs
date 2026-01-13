@@ -675,10 +675,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/careerjet.cjs", {
 					cwd: process.cwd(),
-					timeout: 600000, // 10 minutes timeout
+					timeout: 180000, // 3 minutes timeout - increased from 2min but still reasonable
 					env: { ...process.env },
 				}),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				180000, // Increased to 3 minutes to match exec timeout
 				"CareerJet scraper",
 			);
 
@@ -775,10 +775,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/arbeitnow.cjs", {
 					cwd: process.cwd(),
-					timeout: 600000, // 10 minutes timeout
+					timeout: 180000, // 3 minutes timeout - increased but reasonable
 					env: { ...process.env },
 				}),
-				120000, // Reduced from 600000 (10min) to 120000 (2min)
+				180000, // Increased to 3 minutes to match exec timeout
 				"Arbeitnow scraper",
 			);
 
@@ -868,10 +868,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/jooble.cjs", {
 					cwd: process.cwd(),
-					timeout: 600000, // 10 minutes timeout
+					timeout: 240000, // 4 minutes timeout - more reasonable
 					env: { ...process.env },
 				}),
-				300000, // Increased from 120000 (2min) to 300000 (5min) for 54 queries
+				240000, // Reduced to 4 minutes for better reliability
 				"Jooble scraper",
 			);
 

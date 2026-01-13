@@ -1,5 +1,5 @@
 import "./globals.css";
-import "@/lib/web-vitals";
+import "../lib/web-vitals";
 import type { Metadata } from "next";
 
 // TODO: Add Axiom Web Vitals export once URL is properly configured

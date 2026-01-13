@@ -11,17 +11,19 @@ export function addSecurityHeaders(response: NextResponse): void {
 	// Set nonce in response header for Next.js to use
 	response.headers.set("x-nonce", nonce);
 
-	// Enhanced security headers with strict CSP (no unsafe-inline or unsafe-eval)
+	// Enhanced security headers with strict CSP (no unsafe-inline or unsafe-eval in production)
 	// Using nonces for dynamic scripts and hashes for static inline scripts
-	// Hash for Google Analytics inline script: kqFzuQJivdoTtSFw6wC6ycybBAlKswA7hJ7PojqXc7Q=
-	// Hash for Structured Data JSON-LD: sha256-S/UEtrQCu6TgVoi5WG9EmfntThy9qa0ZZqFKfu1n76w=
-	// Hash for FAQ JSON-LD: sha256-K2qBnrJSupBJBzTvPD141bNBx/+m8R4iJQNj2EHmozM=
-	// Hash for Organization JSON-LD: sha256-6BVL0DgOeCbtUrFGJAsqrMsuY26fcarXXnMdHEfKW3Y=
-	// Hash for Next.js HMR inline script (dev only): sha256-gjKA4KaUqCuh6Z8uiLLjc/ejIMPbHQttPwGl2h8rL9g=
+	// In development, allow unsafe-inline for Next.js dev scripts
+	const isDevelopment = process.env.NODE_ENV !== "production";
+
+	const scriptSrc = isDevelopment
+		? `'self' 'nonce-${nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io`
+		: `'self' 'nonce-${nonce}' 'sha256-kqFzuQJivdoTtSFw6wC6ycybBAlKswA7hJ7PojqXc7Q=' 'sha256-S/UEtrQCu6TgVoi5WG9EmfntThy9qa0ZZqFKfu1n76w=' 'sha256-K2qBnrJSupBJBzTvPD141bNBx/+m8R4iJQNj2EHmozM=' 'sha256-6BVL0DgOeCbtUrFGJAsqrMsuY26fcarXXnMdHEfKW3Y=' 'sha256-gjKA4KaUqCuh6Z8uiLLjc/ejIMPbHQttPwGl2h8rL9g=' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io`;
+
 	response.headers.set(
 		"Content-Security-Policy",
 		"default-src 'self'; " +
-			`script-src 'self' 'nonce-${nonce}' 'sha256-kqFzuQJivdoTtSFw6wC6ycybBAlKswA7hJ7PojqXc7Q=' 'sha256-S/UEtrQCu6TgVoi5WG9EmfntThy9qa0ZZqFKfu1n76w=' 'sha256-K2qBnrJSupBJBzTvPD141bNBx/+m8R4iJQNj2EHmozM=' 'sha256-6BVL0DgOeCbtUrFGJAsqrMsuY26fcarXXnMdHEfKW3Y=' 'sha256-gjKA4KaUqCuh6Z8uiLLjc/ejIMPbHQttPwGl2h8rL9g=' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io; ` +
+			`script-src ${scriptSrc}; ` +
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; " +
 			"font-src 'self' https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com; " +
 			"img-src 'self' data: https: blob:; " +

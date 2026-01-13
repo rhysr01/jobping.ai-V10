@@ -467,9 +467,9 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 	const BATCH_SIZE = 50; // Batch size for database saves
 	const jobBatch = []; // Accumulate jobs for batch saving
 
-	// UNLIMITED: Fetch as many pages as available (no artificial limit)
-	// Only stop when API indicates no more pages or returns empty results
-	const MAX_PAGES = parseInt(process.env.CAREERJET_MAX_PAGES || "1000", 10); // Very high limit, effectively unlimited
+	// OPTIMIZED: Limit pages to prevent timeouts while getting good coverage
+	// Stop when API indicates no more pages or returns empty results, but cap at reasonable limit
+	const MAX_PAGES = parseInt(process.env.CAREERJET_MAX_PAGES || "5", 10); // Reduced from 1000 to 5
 	let page = 1;
 	let hasMorePages = true;
 	let savedCount = 0;
@@ -756,12 +756,11 @@ async function scrapeCareerJet() {
 
 	const baseQueries = generateSearchQueries();
 
-	// EXPANDED: Maximize early career queries within CareerJet API limits
-	// CareerJet Free Tier: Generous limits with adaptive rate limiting
-	// Strategy: 12 cities × 25 queries × 2-3 pages = ~600-900 requests per run
-	// Increased from 20 to 25 queries per city for better early career coverage
-	// Adaptive rate limiting handles API throttling automatically
-	const limitedBaseQueries = baseQueries.slice(0, 25); // EXPANDED from 20 to 25
+	// OPTIMIZED: Reduce queries to prevent timeouts while maintaining coverage
+	// Strategy: 12 cities × 15 queries × 2 pages = ~360 requests per run (much safer)
+	// Reduced from 25 to 15 queries per city to prevent timeouts
+	// Still good coverage with adaptive rate limiting
+	const limitedBaseQueries = baseQueries.slice(0, 15); // REDUCED from 25 to 15
 
 	let totalSaved = 0;
 	let errors = 0;

@@ -102,10 +102,18 @@ jobs:
         # Optional secrets (warn only)
         if [ -z "${{ secrets.ADZUNA_APP_ID }}" ]; then
           echo "⚠️  ADZUNA_APP_ID secret is missing (Adzuna scraper will skip)"
+          echo "   🔗 Get credentials: https://developer.adzuna.com/"
         else
           echo "✅ ADZUNA_APP_ID is set"
         fi
-        
+
+        if [ -z "${{ secrets.ADZUNA_APP_KEY }}" ]; then
+          echo "⚠️  ADZUNA_APP_KEY secret is missing (Adzuna scraper will skip)"
+          echo "   🔗 Get credentials: https://developer.adzuna.com/"
+        else
+          echo "✅ ADZUNA_APP_KEY is set"
+        fi
+
         if [ -z "${{ secrets.REED_API_KEY }}" ]; then
           echo "⚠️  REED_API_KEY secret is missing (Reed scraper will skip)"
         else
@@ -119,6 +127,21 @@ jobs:
         fi
         
         echo "✅ Required secrets validated"
+
+        # Test Adzuna credentials if present
+        if [ -n "${{ secrets.ADZUNA_APP_ID }}" ] && [ -n "${{ secrets.ADZUNA_APP_KEY }}" ]; then
+          echo "🔍 Testing Adzuna API credentials..."
+          # Simple curl test to validate credentials
+          TEST_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null "https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${{ secrets.ADZUNA_APP_ID }}&app_key=${{ secrets.ADZUNA_APP_KEY }}&what=developer&results_per_page=1")
+          if [ "$TEST_RESPONSE" = "200" ]; then
+            echo "✅ Adzuna API credentials are valid"
+          else
+            echo "❌ Adzuna API credentials are INVALID (HTTP $TEST_RESPONSE)"
+            echo "   📝 Please update ADZUNA_APP_ID and ADZUNA_APP_KEY in GitHub secrets"
+            echo "   🔗 Renew credentials: https://developer.adzuna.com/"
+            echo "   💡 The workflow will continue but Adzuna scraping will be skipped"
+          fi
+        fi
       
     - name: Run scraping
       env:
@@ -144,6 +167,11 @@ jobs:
         # Scraper Configuration
         SCRAPER_CYCLE_JOB_TARGET: 5000
         JOB_TTL_DAYS: 10
+
+        # OPTIMIZED: Reduce EU scraper load to prevent timeouts
+        CAREERJET_MAX_PAGES: 3
+        JOOBLE_MAX_REQUESTS: 100
+        ARBEITNOW_MAX_REQUESTS: 50
         
         # Environment
         NODE_ENV: production
@@ -201,3 +229,27 @@ jobs:
 
     # Note: Cleanup is already handled by real-job-runner.cjs (deactivateStaleJobs)
     # The separate cleanup job was removed as it's redundant
+
+    # Add troubleshooting information
+    - name: Troubleshooting Info
+      if: failure()
+      run: |
+        echo "🔧 TROUBLESHOOTING GUIDANCE:"
+        echo ""
+        echo "1. ADZUNA API CREDENTIALS:"
+        echo "   - If Adzuna fails with HTTP 401, credentials are expired/invalid"
+        echo "   - Go to: https://developer.adzuna.com/"
+        echo "   - Update ADZUNA_APP_ID and ADZUNA_APP_KEY in GitHub secrets"
+        echo ""
+        echo "2. EU SCRAPER TIMEOUTS:"
+        echo "   - CareerJet, Arbeitnow, Jooble timing out after 2-3 minutes"
+        echo "   - This is expected due to API limits and network latency"
+        echo "   - The workflow continues with other scrapers (JobSpy, Reed)"
+        echo ""
+        echo "3. JOB VALIDATION ISSUES:"
+        echo "   - Some jobs missing title/company/job_url fields"
+        echo "   - This is normal - invalid jobs are filtered out automatically"
+        echo ""
+        echo "4. WORKFLOW SUCCESS:"
+        echo "   - Even with some scraper failures, the workflow succeeds if at least one scraper works"
+        echo "   - Check the final stats for actual jobs processed"
