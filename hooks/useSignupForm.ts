@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { trackEvent } from "../lib/analytics";
 import { apiCallJson } from "../lib/api-client";
-import { useEmailValidation, useRequiredValidation } from "@/hooks/useFormValidation";
-import { useFormPersistence } from "@/hooks/useFormPersistence";
-import { signupService } from "@/services/signupService";
+import { useEmailValidation, useRequiredValidation } from "./useFormValidation";
+import { useFormPersistence } from "./useFormPersistence";
+import { signupService } from "../services/signupService";
 
 export interface SignupFormData {
 	cities: string[];

@@ -1,5 +1,5 @@
 import { apiCall } from "../lib/api-client";
-import { SignupFormData } from "@/hooks/useSignupForm";
+import { SignupFormData } from "../hooks/useSignupForm";
 
 export interface SignupResult {
 	matchCount?: number;
