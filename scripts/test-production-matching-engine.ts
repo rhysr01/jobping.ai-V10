@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+
 /**
  * PRODUCTION MATCHING ENGINE TESTS
  *
@@ -14,8 +15,8 @@
  * 6. Correct match counts (5 free, 10 premium)
  */
 
+import { resolve } from "node:path";
 import { config } from "dotenv";
-import { resolve } from "path";
 
 // Load environment variables from .env.local
 const envResult = config({ path: resolve(process.cwd(), ".env.local") });
@@ -38,11 +39,13 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 
 import type { Job } from "../scrapers/types";
 // Now import after environment is set up
-import {
-	type MatchingOptions,
-	simplifiedMatchingEngine,
-} from "../Utils/matching/core/matching-engine";
 import type { UserPreferences } from "../Utils/matching/types";
+
+interface TestResult {
+	testName: string;
+	passed: boolean;
+	details: Record<string, any>;
+}
 
 // Test data that represents real production scenarios
 const PRODUCTION_TEST_JOBS: Job[] = [
@@ -290,7 +293,6 @@ const FREE_USER_LONDON: UserPreferences = {
 	career_path: ["tech-transformation"], // Database format, not form format
 	roles_selected: ["software-engineer"],
 	// NEW MATCHING PREFERENCES (from signup route)
-	remote_preference: "hybrid",
 	industries: ["technology"],
 	company_size_preference: "any",
 	skills: ["javascript", "react"],
@@ -327,18 +329,15 @@ const FREE_USER_VISA_NEED: UserPreferences = {
 };
 
 class ProductionMatchingEngineTester {
-	private matcher: any;
-
 	constructor() {
 		if (!process.env.OPENAI_API_KEY) {
 			throw new Error("OPENAI_API_KEY required for production testing");
 		}
-		this.matcher = simplifiedMatchingEngine;
 	}
 
 	async runProductionTests(): Promise<{
 		allTestsPassed: boolean;
-		testResults: any[];
+		testResults: TestResult[];
 		productionInsights: any;
 	}> {
 		console.log("🚀 PRODUCTION MATCHING ENGINE TESTS\n");
@@ -347,7 +346,7 @@ class ProductionMatchingEngineTester {
 		);
 		console.log("=".repeat(70));
 
-		const testResults = [];
+		const testResults: TestResult[] = [];
 
 		// Test 1: Free user gets exactly 5 matches
 		const freeUserTest = await this.testFreeUserMatchCount();
@@ -384,7 +383,7 @@ class ProductionMatchingEngineTester {
 		const allTestsPassed = testResults.every((test) => test.passed);
 		const productionInsights = this.analyzeProductionInsights(testResults);
 
-		this.displayResults(allTestsPassed, testResults, productionInsights);
+		this.displayResults(testResults, productionInsights);
 
 		return {
 			allTestsPassed,
@@ -393,7 +392,7 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testFreeUserMatchCount(): Promise<any> {
+	private async testFreeUserMatchCount(): Promise<TestResult> {
 		console.log("🆓 Testing Free User: Should return EXACTLY 5 matches...");
 
 		// Debug: Check user preferences
@@ -410,11 +409,11 @@ class ProductionMatchingEngineTester {
 			(job) => job.city === "London",
 		);
 		console.log(`   London jobs available: ${londonJobs.length}`);
-		londonJobs.forEach((job) =>
+		londonJobs.forEach((job) => {
 			console.log(
 				`     - ${job.title} @ ${job.city} (languages: ${JSON.stringify(job.language_requirements)})`,
-			),
-		);
+			);
+		});
 
 		// Debug: Simulate hard filtering logic
 		console.log(`   Simulating hard filtering logic:`);
@@ -469,15 +468,20 @@ class ProductionMatchingEngineTester {
 			);
 		});
 
-
 		// For now, test the fallback service directly since prefilter is too restrictive for test data
 		// This tests what users experience when AI matching fails
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(testJobsWithFlags.slice(0, 10), FREE_USER_LONDON, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			testJobsWithFlags.slice(0, 10),
+			FREE_USER_LONDON,
+			5,
+		);
 
 		// Convert to the expected format
 		const result = {
-			matches: fallbackResult.map(match => ({
+			matches: fallbackResult.map((match) => ({
 				job_hash: match.job.job_hash,
 				match_score: match.matchScore,
 				match_reason: match.matchReason,
@@ -485,7 +489,12 @@ class ProductionMatchingEngineTester {
 			})),
 			method: "fallback",
 			totalJobsProcessed: testJobsWithFlags.length,
-			prefilterResults: { jobs: [], matchLevel: "broad", filteredCount: 0, sourceDistribution: {} },
+			prefilterResults: {
+				jobs: [],
+				matchLevel: "broad",
+				filteredCount: 0,
+				sourceDistribution: {},
+			},
 			processingTime: 100,
 		};
 		const passed = result.matches.length === 5;
@@ -494,7 +503,9 @@ class ProductionMatchingEngineTester {
 			`   Result: ${result.matches.length} matches ${passed ? "✅" : "❌"}`,
 		);
 		console.log(`   Method: ${result.method}`);
-		console.log(`   Confidence: ${Math.round(result.confidence * 100)}%`);
+		console.log(
+			`   Average Score: ${Math.round(result.matches.reduce((sum, m) => sum + m.match_score, 0) / result.matches.length)}%`,
+		);
 
 		return {
 			testName: "Free User Match Count",
@@ -503,11 +514,14 @@ class ProductionMatchingEngineTester {
 				expectedMatches: 5,
 				actualMatches: result.matches.length,
 				method: result.method,
-				confidence: result.confidence,
+				averageScore:
+					result.matches.length > 0
+						? Math.round(
+								result.matches.reduce((sum, m) => sum + m.match_score, 0) /
+									result.matches.length,
+							)
+						: 0,
 				processingTime: result.processingTime,
-				aiModel: result.aiModel,
-				aiTokens: result.aiTokensUsed,
-				aiCost: result.aiCostUsd,
 				debugInfo: {
 					userCities: FREE_USER_LONDON.target_cities,
 					userLanguages: FREE_USER_LONDON.languages_spoken,
@@ -517,17 +531,23 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testPremiumUserMatchCount(): Promise<any> {
+	private async testPremiumUserMatchCount(): Promise<TestResult> {
 		console.log(
 			"💎 Testing Premium User: Should return multiple matches (up to available eligible jobs)...",
 		);
 
 		// Test fallback service for premium user
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS.slice(0, 10), PREMIUM_USER_LONDON, 6);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS.slice(0, 10),
+			PREMIUM_USER_LONDON,
+			6,
+		);
 
 		const result = {
-			matches: fallbackResult.map(match => ({
+			matches: fallbackResult.map((match) => ({
 				job_hash: match.job.job_hash,
 				match_score: match.matchScore,
 				match_reason: match.matchReason,
@@ -535,7 +555,12 @@ class ProductionMatchingEngineTester {
 			})),
 			method: "fallback",
 			totalJobsProcessed: PRODUCTION_TEST_JOBS.length,
-			prefilterResults: { jobs: [], matchLevel: "broad", filteredCount: 0, sourceDistribution: {} },
+			prefilterResults: {
+				jobs: [],
+				matchLevel: "broad",
+				filteredCount: 0,
+				sourceDistribution: {},
+			},
 			processingTime: 100,
 		};
 		// With only 6 eligible jobs in test data, expect reasonable number of matches
@@ -556,24 +581,36 @@ class ProductionMatchingEngineTester {
 				expectedMatches: "3+ (from 6 eligible jobs)",
 				actualMatches: result.matches.length,
 				method: result.method,
-				confidence: result.confidence,
+				averageScore:
+					result.matches.length > 0
+						? Math.round(
+								result.matches.reduce((sum, m) => sum + m.match_score, 0) /
+									result.matches.length,
+							)
+						: 0,
 				processingTime: result.processingTime,
 				eligibleJobsAvailable: 6,
 			},
 		};
 	}
 
-	private async testLocationHardFiltering(): Promise<any> {
+	private async testLocationHardFiltering(): Promise<TestResult> {
 		console.log(
 			"📍 Testing Location Filtering: London user should get balanced London matches...",
 		);
 
 		// Test location filtering via fallback service
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 
 		const result = {
-			matches: fallbackResult.map(match => ({
+			matches: fallbackResult.map((match) => ({
 				job_hash: match.job.job_hash,
 				match_score: match.matchScore,
 				match_reason: match.matchReason,
@@ -581,7 +618,12 @@ class ProductionMatchingEngineTester {
 			})),
 			method: "fallback",
 			totalJobsProcessed: PRODUCTION_TEST_JOBS.length,
-			prefilterResults: { jobs: [], matchLevel: "broad", filteredCount: 0, sourceDistribution: {} },
+			prefilterResults: {
+				jobs: [],
+				matchLevel: "broad",
+				filteredCount: 0,
+				sourceDistribution: {},
+			},
 			processingTime: 100,
 		};
 
@@ -611,7 +653,7 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testVisaHardFiltering(): Promise<any> {
+	private async testVisaHardFiltering(): Promise<TestResult> {
 		console.log(
 			"🇪🇺 Testing Visa Filtering: Should prioritize visa-friendly jobs...",
 		);
@@ -645,11 +687,17 @@ class ProductionMatchingEngineTester {
 		});
 
 		// Test visa filtering via fallback service
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(jobsWithVisa, FREE_USER_VISA_NEED, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			jobsWithVisa,
+			FREE_USER_VISA_NEED,
+			5,
+		);
 
 		const result = {
-			matches: fallbackResult.map(match => ({
+			matches: fallbackResult.map((match) => ({
 				job_hash: match.job.job_hash,
 				match_score: match.matchScore,
 				match_reason: match.matchReason,
@@ -657,7 +705,12 @@ class ProductionMatchingEngineTester {
 			})),
 			method: "fallback",
 			totalJobsProcessed: jobsWithVisa.length,
-			prefilterResults: { jobs: [], matchLevel: "broad", filteredCount: 0, sourceDistribution: {} },
+			prefilterResults: {
+				jobs: [],
+				matchLevel: "broad",
+				filteredCount: 0,
+				sourceDistribution: {},
+			},
 			processingTime: 100,
 		};
 
@@ -681,20 +734,32 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testCircuitBreakerBehavior(): Promise<any> {
+	private async testCircuitBreakerBehavior(): Promise<TestResult> {
 		console.log(
 			"🔄 Testing Fallback Reliability: Should consistently return matches...",
 		);
 
 		// Test fallback service reliability
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const result1 = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
-		const result2 = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const result1 = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
+		const result2 = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 
 		// Both should return matches (fallback service working)
 		const passed = result1.length > 0 && result2.length > 0;
 
-		console.log(`   Fallback service handled requests: ${passed ? "✅" : "❌"}`);
+		console.log(
+			`   Fallback service handled requests: ${passed ? "✅" : "❌"}`,
+		);
 		console.log(
 			`   Request 1: ${result1.length} matches, Request 2: ${result2.length} matches`,
 		);
@@ -718,17 +783,28 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testFallbackChain(): Promise<any> {
-		console.log("🔗 Testing Fallback Service: Should provide reliable matches...");
+	private async testFallbackChain(): Promise<TestResult> {
+		console.log(
+			"🔗 Testing Fallback Service: Should provide reliable matches...",
+		);
 
 		// Test fallback service directly
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 
 		// Check if fallback service returns valid results
-		const hasValidResults = fallbackResult.length > 0 && fallbackResult.every(match =>
-			match.matchScore >= 0 && match.matchScore <= 100 && match.matchReason
-		);
+		const hasValidResults =
+			fallbackResult.length > 0 &&
+			fallbackResult.every(
+				(match) =>
+					match.matchScore >= 0 && match.matchScore <= 100 && match.matchReason,
+			);
 
 		console.log(
 			`   Fallback service working: ${hasValidResults ? "✅" : "❌"} (${fallbackResult.length} matches)`,
@@ -746,17 +822,23 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testPostAIValidation(): Promise<any> {
+	private async testPostAIValidation(): Promise<TestResult> {
 		console.log(
 			"✅ Testing Fallback Quality: Should provide well-scored matches...",
 		);
 
 		// Test fallback service quality
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
-		const fallbackResult = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
+		const fallbackResult = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 
 		const result = {
-			matches: fallbackResult.map(match => ({
+			matches: fallbackResult.map((match) => ({
 				job_hash: match.job.job_hash,
 				match_score: match.matchScore,
 				match_reason: match.matchReason,
@@ -764,7 +846,12 @@ class ProductionMatchingEngineTester {
 			})),
 			method: "fallback",
 			totalJobsProcessed: PRODUCTION_TEST_JOBS.length,
-			prefilterResults: { jobs: [], matchLevel: "broad", filteredCount: 0, sourceDistribution: {} },
+			prefilterResults: {
+				jobs: [],
+				matchLevel: "broad",
+				filteredCount: 0,
+				sourceDistribution: {},
+			},
 			processingTime: 100,
 		};
 
@@ -801,22 +888,32 @@ class ProductionMatchingEngineTester {
 		};
 	}
 
-	private async testProductionCaching(): Promise<any> {
+	private async testProductionCaching(): Promise<TestResult> {
 		console.log(
 			"💾 Testing Fallback Consistency: Should return consistent results...",
 		);
 
 		// Test fallback service consistency
-		const { fallbackService } = await import("../utils/matching/core/fallback.service");
+		const { fallbackService } = await import(
+			"../Utils/matching/core/fallback.service"
+		);
 
 		// First request
 		const start1 = Date.now();
-		const result1 = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const result1 = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 		const time1 = Date.now() - start1;
 
 		// Second request (should be similar)
 		const start2 = Date.now();
-		const result2 = fallbackService.generateFallbackMatches(PRODUCTION_TEST_JOBS, FREE_USER_LONDON, 5);
+		const result2 = fallbackService.generateFallbackMatches(
+			PRODUCTION_TEST_JOBS,
+			FREE_USER_LONDON,
+			5,
+		);
 		const time2 = Date.now() - start2;
 
 		// Check consistency
@@ -915,12 +1012,8 @@ class ProductionMatchingEngineTester {
 		return insights;
 	}
 
-	private displayResults(
-		allPassed: boolean,
-		testResults: any[],
-		insights: any,
-	): void {
-		console.log("\n" + "=".repeat(70));
+	private displayResults(testResults: TestResult[], insights: any): void {
+		console.log(`\n${"=".repeat(70)}`);
 		console.log("📊 PRODUCTION MATCHING ENGINE TEST RESULTS");
 		console.log("=".repeat(70));
 
@@ -987,7 +1080,7 @@ class ProductionMatchingEngineTester {
 			console.log("   - Quality validation active");
 		}
 
-		console.log("\n" + "=".repeat(70));
+		console.log(`\n${"=".repeat(70)}`);
 	}
 }
 

@@ -9,8 +9,8 @@ interface UseSignupNavigationProps {
 	emailValidation: { isValid: boolean };
 	announce: (message: string, priority?: "polite" | "assertive") => void;
 	formRefs: {
-		fullName: React.RefObject<HTMLInputElement>;
-		email: React.RefObject<HTMLInputElement>;
+		fullName: React.RefObject<HTMLInputElement | null>;
+		email: React.RefObject<HTMLInputElement | null>;
 	};
 }
 

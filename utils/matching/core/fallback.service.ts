@@ -23,7 +23,8 @@ export interface FallbackMatch {
 
 export class FallbackService {
 	/**
-	 * Generate fallback matches using rule-based logic with balanced distribution
+	 * Generate fallback matches using sophisticated rule-based logic
+	 * Implements proper semantic matching, weighted scoring, and balanced distribution
 	 */
 	generateFallbackMatches(
 		jobs: Job[],
@@ -32,20 +33,21 @@ export class FallbackService {
 	): FallbackMatch[] {
 		const startTime = Date.now();
 
-		// Score all jobs using rule-based logic
-		const scoredJobs = jobs.map(job => this.scoreJob(job, user));
+		// Score all jobs using advanced rule-based logic
+		const scoredJobs = jobs.map(job => this.scoreJobAdvanced(job, user));
 
-		// Sort by match score
+		// Sort by match score (highest first)
 		scoredJobs.sort((a, b) => b.matchScore - a.matchScore);
 
 		// Apply balanced distribution to ensure all user preferences are represented
 		const matches = this.applyBalancedDistribution(scoredJobs, user, maxMatches);
 
-		logger.info("Fallback matching completed", {
+		logger.info("Advanced fallback matching completed", {
 			metadata: {
 				userEmail: user.email,
 				jobsProcessed: jobs.length,
 				matchesFound: matches.length,
+				averageScore: matches.length > 0 ? matches.reduce((sum, m) => sum + m.matchScore, 0) / matches.length : 0,
 				processingTime: Date.now() - startTime,
 			},
 		});
@@ -53,10 +55,11 @@ export class FallbackService {
 		return matches;
 	}
 
+
 	/**
-	 * Score a single job using rule-based logic
+	 * Advanced job scoring with proper semantic matching - NEW IMPROVED ALGORITHM
 	 */
-	private scoreJob(job: Job, user: UserPreferences): FallbackMatch {
+	private scoreJobAdvanced(job: Job, user: UserPreferences): FallbackMatch {
 		let totalScore = 0;
 		const breakdown = {
 			skills: 0,
@@ -66,208 +69,399 @@ export class FallbackService {
 			careerPath: 0,
 		};
 
-		// Skills matching (keywords)
-		if (user.career_keywords) {
-			const jobText = `${job.title} ${job.description}`.toLowerCase();
-			const keywords = user.career_keywords.split(',').map(k => k.trim());
-			let keywordMatches = 0;
+		// 1. SKILLS MATCHING (35% weight) - Semantic keyword matching with synonyms
+		breakdown.skills = this.calculateSemanticSkillsMatch(job, user);
+		totalScore += breakdown.skills * 0.35;
 
-			keywords.forEach(keyword => {
-				if (keyword && jobText.includes(keyword.toLowerCase())) {
-					keywordMatches++;
-				}
-			});
-
-			breakdown.skills = Math.min(100, (keywordMatches / keywords.length) * 100);
-		}
-		totalScore += breakdown.skills * 0.4;
-
-		// Experience level matching
-		if (user.entry_level_preference && job.experience_required) {
-			breakdown.experience = this.calculateExperienceMatch(user.entry_level_preference, job.experience_required);
-		}
+		// 2. EXPERIENCE MATCHING (25% weight) - Sophisticated level analysis
+		breakdown.experience = this.calculateAdvancedExperienceMatch(job, user);
 		totalScore += breakdown.experience * 0.25;
 
-		// Location matching
-		const targetCities = Array.isArray(user.target_cities)
-			? user.target_cities
-			: user.target_cities ? [user.target_cities] : [];
+		// 3. LOCATION MATCHING (20% weight) - Multi-tier location scoring
+		breakdown.location = this.calculateAdvancedLocationMatch(job, user);
+		totalScore += breakdown.location * 0.20;
 
-		if (targetCities.length > 0) {
-			breakdown.location = this.calculateLocationMatch(job, targetCities);
-		}
-		totalScore += breakdown.location * 0.2;
-
-		// Career path matching - more balanced approach
-		const userCareerPaths = Array.isArray(user.career_path)
-			? user.career_path
-			: user.career_path ? [user.career_path] : [];
-
-		if (userCareerPaths.length > 0 && job.categories && job.categories.length > 0) {
-			// Calculate how many of the job's categories are relevant to user's career paths
-			let relevantJobCategories = 0;
-			let totalJobCategories = job.categories.length;
-
-			for (const jobCategory of job.categories) {
-				const matchesAnyUserPath = userCareerPaths.some(userPath =>
-					this.categoryMatchesCareerPath(jobCategory, userPath)
-				);
-				if (matchesAnyUserPath) {
-					relevantJobCategories++;
-				}
-			}
-
-			// Use 40% relevance threshold with sliding scale (not hard cutoff)
-			const relevanceRatio = relevantJobCategories / totalJobCategories;
-			if (relevanceRatio >= 0.4) {
-				// Score based on both coverage and user career path matches
-				const userPathMatches = userCareerPaths.filter(path =>
-					job.categories!.some(category =>
-						this.categoryMatchesCareerPath(category, path)
-					)
-				).length;
-
-				// Combine relevance ratio with user path coverage
-				breakdown.careerPath = (relevanceRatio * 0.7 + (userPathMatches / userCareerPaths.length) * 0.3) * 100;
-			} else {
-				// Below 40% still gets partial score (sliding scale, not zero)
-				breakdown.careerPath = relevanceRatio * 30;
-			}
-		}
+		// 4. CAREER PATH MATCHING (15% weight) - Intelligent category alignment
+		breakdown.careerPath = this.calculateAdvancedCareerPathMatch(job, user);
 		totalScore += breakdown.careerPath * 0.15;
 
-		// Recency bonus
-		breakdown.recency = this.calculateRecencyScore(job);
-		totalScore += breakdown.recency * 0.1;
+		// 5. RECENCY BONUS (5% weight) - Freshness factor
+		breakdown.recency = this.calculateAdvancedRecencyScore(job);
+		totalScore += breakdown.recency * 0.05;
 
-		// Determine match quality
+		// Determine match quality with more nuanced thresholds
 		let matchQuality: "excellent" | "good" | "fair" | "low";
-		if (totalScore >= 80) matchQuality = "excellent";
-		else if (totalScore >= 65) matchQuality = "good";
-		else if (totalScore >= 45) matchQuality = "fair";
+		const finalScore = Math.min(100, Math.max(0, totalScore));
+
+		if (finalScore >= 75) matchQuality = "excellent";
+		else if (finalScore >= 60) matchQuality = "good";
+		else if (finalScore >= 40) matchQuality = "fair";
 		else matchQuality = "low";
 
-		// Generate match reason
-		const matchReason = this.generateMatchReason(breakdown, matchQuality);
+		// Generate detailed match reason
+		const matchReason = this.generateDetailedMatchReason(breakdown, matchQuality, job, user);
 
 		return {
 			job,
-			matchScore: Math.round(totalScore),
+			matchScore: Math.round(finalScore),
 			matchReason,
 			matchQuality,
-			confidenceScore: 75, // Rule-based matching has decent confidence
+			confidenceScore: Math.min(90, Math.round(finalScore + 3)), // Conservative confidence for rule-based
 			scoreBreakdown: breakdown,
 		};
 	}
 
 	/**
-	 * Calculate experience level match
+	 * Semantic skills matching with synonym recognition and skill importance
 	 */
-	private calculateExperienceMatch(userLevel: string, jobLevel: string): number {
-		const levelMap: Record<string, number> = {
-			"entry-level": 1,
-			"junior": 1,
-			"graduate": 1,
-			"mid-level": 2,
-			"intermediate": 2,
-			"senior": 3,
-			"lead": 3,
-			"principal": 3,
+	private calculateSemanticSkillsMatch(job: Job, user: UserPreferences): number {
+		if (!user.career_keywords) return 0;
+
+		const jobText = `${job.title} ${job.description}`.toLowerCase();
+		const userKeywords = user.career_keywords.split(',').map(k => k.trim().toLowerCase());
+		const jobWords = jobText.split(/\s+/);
+
+		let totalScore = 0;
+		let matchedKeywords = 0;
+
+		// Skill synonym mapping for better matching
+		const skillSynonyms: Record<string, string[]> = {
+			'javascript': ['js', 'es6', 'es2015', 'typescript', 'ts', 'node', 'nodejs', 'react', 'vue', 'angular'],
+			'python': ['django', 'flask', 'pandas', 'numpy', 'tensorflow', 'pytorch'],
+			'react': ['reactjs', 'nextjs', 'redux', 'hooks', 'jsx'],
+			'node': ['nodejs', 'express', 'npm', 'javascript'],
+			'aws': ['amazon web services', 'ec2', 's3', 'lambda', 'cloudformation'],
+			'docker': ['kubernetes', 'k8s', 'containers', 'microservices'],
+			'sql': ['mysql', 'postgresql', 'mongodb', 'database', 'oracle'],
+			'marketing': ['growth', 'seo', 'content', 'social media', 'analytics'],
+			'finance': ['accounting', 'investment', 'fp&a', 'analysis', 'banking'],
+			'design': ['ui', 'ux', 'figma', 'sketch', 'photoshop', 'illustrator'],
 		};
 
-		const userScore = levelMap[userLevel.toLowerCase()] || 2;
-		const jobScore = levelMap[jobLevel.toLowerCase()] || 2;
+		for (const keyword of userKeywords) {
+			if (!keyword) continue;
 
-		// Perfect match
-		if (userScore === jobScore) return 100;
+			let keywordScore = 0;
 
-		// Close match (adjacent levels)
-		if (Math.abs(userScore - jobScore) === 1) return 75;
+			// Direct match in job text
+			if (jobText.includes(keyword)) {
+				keywordScore = 100;
+			}
+			// Synonym match
+			else if (skillSynonyms[keyword]) {
+				const synonyms = skillSynonyms[keyword];
+				const synonymMatches = synonyms.filter(synonym => jobText.includes(synonym));
+				if (synonymMatches.length > 0) {
+					keywordScore = 85; // High score for synonyms
+				}
+			}
+			// Partial word match (for compound terms)
+			else {
+				const partialMatches = jobWords.filter(word =>
+					word.includes(keyword) || keyword.includes(word) && word.length > 3
+				);
+				if (partialMatches.length > 0) {
+					keywordScore = 70; // Good score for partial matches
+				}
+			}
 
-		// Distant match
-		return 25;
+			if (keywordScore > 0) {
+				totalScore += keywordScore;
+				matchedKeywords++;
+			}
+		}
+
+		// Return weighted average with bonus for multiple matches
+		if (matchedKeywords === 0) return 0;
+
+		const averageScore = totalScore / userKeywords.length;
+		const coverageBonus = Math.min(25, matchedKeywords * 4); // Bonus for covering multiple keywords
+
+		return Math.min(100, averageScore + coverageBonus);
 	}
 
 	/**
-	 * Calculate location match
+	 * Advanced experience matching considering level hierarchy and compatibility
 	 */
-	private calculateLocationMatch(job: Job, targetCities: string[]): number {
+	private calculateAdvancedExperienceMatch(job: Job, user: UserPreferences): number {
+		if (!user.entry_level_preference || !job.experience_required) return 50; // Neutral score
+
+		const userLevel = user.entry_level_preference.toLowerCase();
+		const jobLevel = job.experience_required.toLowerCase();
+
+		// Experience level hierarchy (from junior to senior)
+		const levelHierarchy: Record<string, number> = {
+			'internship': 0,
+			'intern': 0,
+			'entry-level': 1,
+			'junior': 1,
+			'graduate': 1,
+			'mid-level': 2,
+			'intermediate': 2,
+			'senior': 3,
+			'lead': 4,
+			'principal': 4,
+			'manager': 5,
+			'director': 6,
+		};
+
+		const userScore = levelHierarchy[userLevel] ?? 2;
+		const jobScore = levelHierarchy[jobLevel] ?? 2;
+
+		const levelDifference = Math.abs(userScore - jobScore);
+
+		// Perfect match
+		if (levelDifference === 0) return 100;
+
+		// Good match (adjacent levels)
+		if (levelDifference === 1) return 80;
+
+		// Acceptable match (2 levels apart, user can grow into role)
+		if (levelDifference === 2 && userScore < jobScore) return 65;
+
+		// Poor match (too senior for user or too junior for experienced user)
+		if (levelDifference >= 2) return 25;
+
+		return 50; // Fallback
+	}
+
+	/**
+	 * Advanced location matching with multiple preference tiers
+	 */
+	private calculateAdvancedLocationMatch(job: Job, user: UserPreferences): number {
+		const targetCities = Array.isArray(user.target_cities)
+			? user.target_cities
+			: user.target_cities ? [user.target_cities] : [];
+
+		if (targetCities.length === 0) return 50; // Neutral if no preferences
+
 		const jobCity = job.city?.toLowerCase() || "";
 		const jobCountry = job.country?.toLowerCase() || "";
+		const jobLocation = job.location?.toLowerCase() || "";
 
-		// Exact city match
-		if (targetCities.some(city => jobCity === city.toLowerCase())) {
+		// Primary preferences (exact city match)
+		const primaryMatches = targetCities.filter(city =>
+			jobCity === city.toLowerCase() ||
+			jobCity.includes(city.toLowerCase()) ||
+			jobLocation.includes(city.toLowerCase())
+		);
+
+		if (primaryMatches.length > 0) return 100;
+
+		// Secondary preferences (country match)
+		const countryMatches = targetCities.filter(city =>
+			jobCountry.includes(city.toLowerCase()) ||
+			jobLocation.includes(city.toLowerCase())
+		);
+
+		if (countryMatches.length > 0) return 75;
+
+		// Tertiary preferences (region/cultural proximity)
+		const regionMatches = targetCities.filter(city => {
+			// European cities get regional bonus
+			const europeanCities = ['london', 'paris', 'berlin', 'amsterdam', 'barcelona', 'madrid', 'rome', 'munich'];
+			const targetIsEuropean = europeanCities.some(ec => city.toLowerCase().includes(ec));
+			const jobIsEuropean = europeanCities.some(ec =>
+				jobCity.includes(ec) || jobCountry.includes('europe') || jobCountry.includes('germany') ||
+				jobCountry.includes('france') || jobCountry.includes('spain') || jobCountry.includes('italy') ||
+				jobCountry.includes('netherlands')
+			);
+
+			return targetIsEuropean && jobIsEuropean;
+		});
+
+		if (regionMatches.length > 0) return 50;
+
+		// Remote work consideration
+		if (job.work_environment?.toLowerCase().includes('remote') ||
+			job.work_environment?.toLowerCase().includes('hybrid')) {
+			return 35; // Some value for remote flexibility
+		}
+
+		// No strong match but not a complete penalty
+		return 15;
+	}
+
+	/**
+	 * Advanced career path matching with semantic understanding
+	 */
+	private calculateAdvancedCareerPathMatch(job: Job, user: UserPreferences): number {
+		const userCareerPaths = Array.isArray(user.career_path)
+			? user.career_path
+			: user.career_path ? [user.career_path] : [];
+
+		if (userCareerPaths.length === 0 || !job.categories || job.categories.length === 0) {
+			return 40; // Neutral score
+		}
+
+		let totalRelevance = 0;
+		let matchedCategories = 0;
+		let strongMatches = 0;
+
+		for (const jobCategory of job.categories) {
+			let categoryScore = 0;
+			let bestMatch = 0;
+
+			// Check each user career path
+			for (const userPath of userCareerPaths) {
+				const matchScore = this.calculateCategoryMatchScore(jobCategory, userPath);
+				bestMatch = Math.max(bestMatch, matchScore);
+
+				if (matchScore >= 80) strongMatches++;
+				if (matchScore >= 60) matchedCategories++;
+			}
+
+			categoryScore = bestMatch;
+			totalRelevance += categoryScore;
+		}
+
+		// Calculate overall career path compatibility
+		const averageRelevance = totalRelevance / job.categories.length;
+		const coverageBonus = Math.min(25, (matchedCategories / userCareerPaths.length) * 25);
+		const strongMatchBonus = Math.min(20, strongMatches * 5);
+
+		return Math.min(100, averageRelevance + coverageBonus + strongMatchBonus);
+	}
+
+	/**
+	 * Calculate match score between job category and user career path
+	 */
+	private calculateCategoryMatchScore(jobCategory: string, userPath: string): number {
+		// First try exact mapping
+		if (this.categoryMatchesCareerPath(jobCategory, userPath)) {
 			return 100;
 		}
 
-		// Country match
-		if (targetCities.some(city => jobCountry.includes(city.toLowerCase()))) {
-			return 75;
+		// Try advanced matching with synonyms and related terms
+		const careerPathMapping: Record<string, string[]> = {
+			"Strategy & Business Design": ["strategy", "business-design", "consulting", "management", "planning"],
+			"Data & Analytics": ["data", "analytics", "data-science", "bi", "business intelligence", "insights"],
+			"Sales & Client Success": ["sales", "business-development", "client-success", "account management", "revenue"],
+			"Marketing & Growth": ["marketing", "growth", "brand", "content", "social", "campaign"],
+			"Finance & Investment": ["finance", "accounting", "investment", "fp&a", "financial", "budget"],
+			"Operations & Supply Chain": ["operations", "supply-chain", "logistics", "procurement", "efficiency"],
+			"Product & Innovation": ["product", "product-management", "innovation", "roadmap", "features"],
+			"Tech & Transformation": ["tech", "technology", "transformation", "it", "digital", "software"],
+			"Sustainability & ESG": ["sustainability", "esg", "environmental", "social", "governance", "csr"],
+			"Not Sure Yet / General": ["general", "graduate", "trainee", "rotational", "development"],
+		};
+
+		const synonyms = careerPathMapping[userPath] || [userPath.toLowerCase()];
+		const jobCategoryLower = jobCategory.toLowerCase();
+
+		// Check for strong synonym matches
+		for (const synonym of synonyms) {
+			if (jobCategoryLower.includes(synonym)) {
+				return 90;
+			}
 		}
 
-		// Partial match (city name in location string)
-		if (targetCities.some(city =>
-			jobCity.includes(city.toLowerCase()) ||
-			(job.location && job.location.toLowerCase().includes(city.toLowerCase()))
-		)) {
-			return 60;
+		// Check for partial matches
+		for (const synonym of synonyms) {
+			const words = synonym.split('-');
+			const partialMatch = words.some(word => jobCategoryLower.includes(word) && word.length > 3);
+			if (partialMatch) {
+				return 70;
+			}
 		}
 
-		// No match
 		return 0;
 	}
 
 	/**
-	 * Calculate recency score
+	 * Enhanced recency scoring with more granular tiers
 	 */
-	private calculateRecencyScore(job: Job): number {
-		const postedDate = job.posted_at ? new Date(job.posted_at) : new Date();
-		const daysSincePosted = (Date.now() - postedDate.getTime()) / (1000 * 60 * 60 * 24);
+	private calculateAdvancedRecencyScore(job: Job): number {
+		const postedAt = job.posted_at ? new Date(job.posted_at) : new Date();
+		const daysSincePosted = (Date.now() - postedAt.getTime()) / (1000 * 60 * 60 * 24);
 
-		if (daysSincePosted <= 1) return 100; // Today
-		if (daysSincePosted <= 3) return 90;  // This week
-		if (daysSincePosted <= 7) return 75;  // This week
-		if (daysSincePosted <= 14) return 50; // Two weeks
-		if (daysSincePosted <= 30) return 25; // This month
-
-		return 0; // Older than a month
+		if (daysSincePosted <= 1) return 100;  // Today
+		if (daysSincePosted <= 2) return 95;   // Yesterday
+		if (daysSincePosted <= 3) return 85;   // This week
+		if (daysSincePosted <= 7) return 70;   // This week
+		if (daysSincePosted <= 14) return 50;  // Two weeks
+		if (daysSincePosted <= 21) return 35;  // Three weeks
+		if (daysSincePosted <= 30) return 20;  // This month
+		if (daysSincePosted <= 60) return 10;  // Two months
+		return 5; // Older posts
 	}
 
 	/**
-	 * Generate human-readable match reason
+	 * Generate detailed, contextual match reasons
 	 */
-	private generateMatchReason(
-		breakdown: { skills: number; experience: number; location: number; recency: number },
-		quality: string
+	private generateDetailedMatchReason(
+		breakdown: any,
+		quality: string,
+		job: Job,
+		user: UserPreferences
 	): string {
-		const reasons = [];
+		const reasons: string[] = [];
 
-		if (breakdown.skills >= 70) {
+		// Skills analysis
+		if (breakdown.skills >= 80) {
+			reasons.push("excellent skills alignment");
+		} else if (breakdown.skills >= 60) {
 			reasons.push("strong skills match");
 		} else if (breakdown.skills >= 40) {
-			reasons.push("some skills alignment");
+			reasons.push("relevant skills found");
+		} else if (breakdown.skills >= 20) {
+			reasons.push("some skill overlap");
 		}
 
-		if (breakdown.experience >= 70) {
-			reasons.push("experience level match");
+		// Experience analysis
+		if (breakdown.experience >= 90) {
+			reasons.push("perfect experience level match");
+		} else if (breakdown.experience >= 70) {
+			reasons.push("suitable experience level");
+		} else if (breakdown.experience >= 50) {
+			reasons.push("reasonable experience fit");
 		}
 
-		if (breakdown.location >= 80) {
-			reasons.push("perfect location match");
-		} else if (breakdown.location >= 50) {
-			reasons.push("reasonable location");
+		// Location analysis
+		if (breakdown.location >= 90) {
+			reasons.push("ideal location match");
+		} else if (breakdown.location >= 70) {
+			reasons.push("good location fit");
+		} else if (breakdown.location >= 40) {
+			reasons.push("acceptable location");
 		}
 
+		// Career path analysis
+		if (breakdown.careerPath >= 80) {
+			reasons.push("excellent career path alignment");
+		} else if (breakdown.careerPath >= 60) {
+			reasons.push("strong career area match");
+		} else if (breakdown.careerPath >= 40) {
+			reasons.push("relevant career area");
+		}
+
+		// Recency bonus
 		if (breakdown.recency >= 80) {
+			reasons.push("very recently posted");
+		} else if (breakdown.recency >= 60) {
 			reasons.push("recently posted");
 		}
 
+		// Work environment consideration
+		if (user.work_environment && job.work_environment) {
+			const userEnv = user.work_environment.toLowerCase();
+			const jobEnv = job.work_environment.toLowerCase();
+
+			if (userEnv === jobEnv || (userEnv === 'hybrid' && jobEnv === 'remote')) {
+				reasons.push("work environment match");
+			}
+		}
+
 		if (reasons.length === 0) {
-			return "General job opportunity";
+			return `${job.title} opportunity at ${job.company} (${quality} match)`;
 		}
 
 		return reasons.join(", ") + ` (${quality} match)`;
 	}
+
+
+
+
 
 	/**
 	 * Check if a job category matches a user's career path

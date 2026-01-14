@@ -74,7 +74,8 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 				title: job.title || "",
 				company: job.company || "",
 				location: job.location || "",
-								matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 85,
+				// FIX: API returns percentages (0-100), don't multiply by 100
+				matchScore: job.matchScore || 85,
 				matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
 				workEnvironment: job.workEnvironment || "Hybrid",
 				type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",
@@ -105,7 +106,8 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 								title: job.title || "",
 								company: job.company || "",
 								location: job.location || "",
-								matchScore: job.matchScore ? Math.round(job.matchScore * 100) : 85,
+								// FIX: API returns percentages (0-100), don't multiply by 100
+								matchScore: job.matchScore || 85,
 								matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
 								workEnvironment: job.workEnvironment || "Hybrid",
 								type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",

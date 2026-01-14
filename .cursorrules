@@ -1,0 +1,97 @@
+# JobPing - AI-Powered Job Matching Platform
+
+## Project Overview
+JobPing is an AI-powered job matching platform built with Next.js 14 App Router, React 19, and TypeScript. It scrapes jobs from European sources, uses OpenAI GPT-4 for semantic matching, and delivers personalized recommendations via email. Free users get 5 matches instantly; premium users receive 15 matches weekly (5 each Mon/Wed/Fri).
+
+## Tech Stack & Architecture
+- **Frontend**: Next.js 14 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend**: Vercel serverless, Supabase (PostgreSQL + RLS), Redis caching
+- **AI/ML**: OpenAI GPT-4 (job categorization) + text-embedding-3-small (similarity)
+- **External Services**: Resend (email), Stripe/Polar (payments), Sentry (monitoring), PostHog (analytics)
+- **Development**: Biome (linting/formatting), Jest (unit/integration), Playwright (E2E)
+- **Deployment**: Vercel with cron jobs (embedding processing, email delivery, maintenance)
+
+## Core Business Logic
+- **Free Tier**: 5 instant matches, one-time preview
+- **Premium Tier**: 15 matches/week (Mon/Wed/Fri delivery), €5/month
+- **Matching**: AI similarity scoring + business rules (location, experience, visa status)
+- **Email Delivery**: HTML templates with engagement tracking, unsubscribe handling
+- **Job Scraping**: Multi-source (Arbeitnow, Careerjet, Jooble, Reed, Adzuna) with deduplication
+
+## Code Standards & Patterns
+
+### TypeScript & Linting
+- **Biome configuration**: Double quotes, specific rules disabled (noExplicitAny, noArrayIndexKey)
+- **TypeScript**: Strict mode enabled, avoid `any` types
+- **Import organization**: Auto-organized by Biome
+- **Naming**: camelCase for variables/functions, PascalCase for components/types
+
+### Component Architecture
+- **Server Components**: Default approach (no 'use client' needed)
+- **Client Components**: Explicit 'use client' directive with memo() optimization
+- **Hooks**: Custom hooks in `/hooks/` directory with proper TypeScript typing
+- **UI Components**: Shadcn/ui based in `/components/ui/`, feature components in `/components/`
+
+### API Patterns
+- **Route Structure**: `/app/api/[endpoint]/route.ts` with named exports (GET, POST, etc.)
+- **Error Handling**: Standardized error responses with error codes and request IDs
+- **Authentication**: HMAC signatures for internal APIs, Supabase auth for user APIs
+- **Timeouts**: Configured in vercel.json (match-users: 300s, signup: 90s)
+
+### Database & Data Flow
+- **Supabase Client**: Always use Row Level Security, never raw SQL in application code
+- **Caching Strategy**: Redis for embeddings (24h), user matches (5min)
+- **Migrations**: Generated via npm scripts, applied via Supabase CLI
+- **Types**: Auto-generated from database schema in `/lib/database.types.ts`
+
+### Constants & Configuration
+- **Centralized Constants**: `/lib/constants.ts` for all magic numbers, timeouts, UI values
+- **Copy/Marketing**: `/lib/copy.ts` for all user-facing text (10 hours/week savings)
+- **Environment**: Strict validation, separate configs for dev/staging/prod
+
+## Testing Strategy
+- **Production-First**: Primary focus on testing what users experience
+- **Coverage**: Strategic (not blanket) - critical paths, business logic, integrations
+- **Layers**: Production engine tests (8/8), API integration (40+), E2E (Playwright), security (48)
+- **Commands**: `npm run test:production-engine`, `npm run test:e2e`, `npm run test:ai-comprehensive`
+
+## Performance Considerations
+- **Batch Processing**: Users processed in batches of 50 for matching operations
+- **Caching**: LRU cache with proper TTL, Redis for distributed state
+- **Monitoring**: Sentry error tracking, performance metrics, business analytics
+- **Rate Limiting**: 1 request per 30 seconds for matching endpoint
+
+## File Organization
+- `/app`: Next.js App Router pages and API routes
+- `/components`: React components (ui/, marketing/, matches/, sections/)
+- `/lib`: Utilities, clients, business logic (constants.ts, copy.ts, supabase-client.ts)
+- `/hooks`: Custom hooks in `/hooks/` directory with proper TypeScript
+- `/scrapers`: Node.js/CommonJS job scraping scripts
+- `/automation`: Cron job scripts
+- `/supabase`: Database migrations and configuration
+- `/utils`: Helper functions (matching algorithms, email builders)
+- `/scripts`: Development and testing utilities
+
+## Critical Don'ts
+- Never expose API keys or sensitive environment variables in client code
+- Don't bypass Row Level Security policies
+- Don't send emails without proper unsubscribe handling and GDPR compliance
+- Don't modify job data without updating vector embeddings
+- Don't implement features without corresponding tests (TDD approach)
+- Don't use raw SQL queries in application code (always use Supabase client)
+- Don't hardcode values - use constants from `/lib/constants.ts`
+- Don't modify copy strings directly - use centralized strings from `/lib/copy.ts`
+
+## Development Workflow
+- **Local Setup**: `npm run dev`, environment variables in `.env.local`
+- **Code Quality**: `npm run lint:biome`, `npm run format`, `npm run type-check`
+- **Testing**: `npm run test:production-engine` first, then comprehensive suites
+- **Database**: `npm run db:generate` for migrations, `npm run db:migrate` to apply
+- **Deployment**: Vercel with automated CI/CD, cron jobs configured in `vercel.json`
+
+## Business Rules Validation
+- Free users: Exactly 5 matches, no email delivery automation
+- Premium users: 15 matches/week, automated Mon/Wed/Fri delivery at 9 AM CET
+- Job freshness: Premium gets 7-day old jobs, free gets 30-day old jobs
+- AI matching: 85-97% accuracy target, combine embeddings + business rules
+- Email compliance: Unsubscribe links, GDPR compliance, engagement tracking
