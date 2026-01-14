@@ -32,10 +32,10 @@ export function VisaSponsorshipSection({
 			subtitle: "Limited work rights",
 			description: "You have work authorization but may have restrictions",
 			icon: "🪪",
-			color: "from-blue-500 to-blue-600",
-			borderColor: "border-blue-500",
-			shadowColor: "rgba(59,130,246,0.3)",
-			hoverShadow: "rgba(59,130,246,0.1)",
+			color: "from-emerald-400 to-emerald-500",
+			borderColor: "border-emerald-400",
+			shadowColor: "rgba(16,185,129,0.25)",
+			hoverShadow: "rgba(16,185,129,0.08)",
 		},
 		{
 			value: "student-visa" as const,
@@ -43,10 +43,10 @@ export function VisaSponsorshipSection({
 			subtitle: "Limited work rights",
 			description: "You may be eligible for job seeker visa or graduate work permit",
 			icon: "🎓",
-			color: "from-purple-500 to-purple-600",
-			borderColor: "border-purple-500",
-			shadowColor: "rgba(147,51,234,0.3)",
-			hoverShadow: "rgba(147,51,234,0.1)",
+			color: "from-emerald-300 to-emerald-400",
+			borderColor: "border-emerald-300",
+			shadowColor: "rgba(16,185,129,0.2)",
+			hoverShadow: "rgba(16,185,129,0.06)",
 		},
 		{
 			value: "need-sponsorship" as const,
@@ -54,10 +54,10 @@ export function VisaSponsorshipSection({
 			subtitle: "Visa required",
 			description: "You'll need a company to sponsor your work visa",
 			icon: "✈️",
-			color: "from-orange-500 to-orange-600",
-			borderColor: "border-orange-500",
-			shadowColor: "rgba(249,115,22,0.3)",
-			hoverShadow: "rgba(249,115,22,0.1)",
+			color: "from-emerald-200 to-emerald-300",
+			borderColor: "border-emerald-200",
+			shadowColor: "rgba(16,185,129,0.15)",
+			hoverShadow: "rgba(16,185,129,0.04)",
 		},
 	];
 
@@ -69,13 +69,13 @@ export function VisaSponsorshipSection({
 			className="relative mb-8"
 		>
 			{/* Enhanced background effects */}
-			<div className="absolute -inset-6 bg-gradient-to-br from-emerald-500/8 via-blue-500/5 to-purple-500/8 rounded-3xl blur-3xl" />
+			<div className="absolute -inset-6 bg-gradient-to-br from-emerald-500/8 via-emerald-400/6 to-emerald-300/8 rounded-3xl blur-3xl" />
 			<div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.05),transparent_60%)]" />
 
 			<div className="relative bg-gradient-to-br from-zinc-900/70 via-zinc-900/50 to-zinc-800/70 backdrop-blur-sm border border-zinc-700/30 rounded-3xl p-6 sm:p-8 overflow-hidden">
 				{/* Animated background elements */}
 				<motion.div
-					className="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-emerald-500/15 to-blue-500/15 rounded-full blur-2xl"
+					className="absolute top-8 right-8 w-32 h-32 bg-gradient-to-br from-emerald-500/15 to-emerald-400/15 rounded-full blur-2xl"
 					animate={{
 						scale: [1, 1.4, 1],
 						opacity: [0.2, 0.5, 0.2],
@@ -88,7 +88,7 @@ export function VisaSponsorshipSection({
 					}}
 				/>
 				<motion.div
-					className="absolute bottom-8 left-8 w-24 h-24 bg-gradient-to-br from-purple-500/15 to-orange-500/15 rounded-full blur-xl"
+					className="absolute bottom-8 left-8 w-24 h-24 bg-gradient-to-br from-emerald-300/15 to-emerald-200/15 rounded-full blur-xl"
 					animate={{
 						scale: [1.3, 1, 1.3],
 						opacity: [0.3, 0.1, 0.3],
@@ -113,7 +113,7 @@ export function VisaSponsorshipSection({
 						<motion.div
 							animate={{ rotate: [0, -8, 8, 0] }}
 							transition={{ duration: 3, repeat: Infinity, repeatDelay: 5 }}
-							className="w-12 h-12 bg-gradient-to-br from-emerald-500 via-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl"
+							className="w-12 h-12 bg-gradient-to-br from-emerald-500 via-emerald-400 to-emerald-300 rounded-2xl flex items-center justify-center shadow-xl"
 						>
 							<BrandIcons.Passport className="w-6 h-6 text-white" />
 						</motion.div>
@@ -134,7 +134,7 @@ export function VisaSponsorshipSection({
 					>
 						{/* Subtle animated border */}
 						<motion.div
-							className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl"
+							className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 via-emerald-400/15 to-emerald-300/20 rounded-2xl"
 							animate={{
 								x: ["-100%", "100%"],
 							}}

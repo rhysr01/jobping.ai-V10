@@ -34,54 +34,39 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		apiLogger.info("Preview matches request", {
 			cities,
-			careerPath,
+			careerPath: careerPath || "not filtered (handled by AI)",
 			visaSponsorship,
 			requestId,
+			note: "Career path filtering handled by AI matching, not database",
 		});
 
 		const supabase = getDatabaseClient();
 
-		// Build the query for job matching
+		// Build the query for job matching - match free signup filtering logic
+		const sixtyDaysAgo = new Date();
+		sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
 		let query = supabase
 			.from("jobs")
 			.select("id", { count: "exact", head: true })
-			.eq("is_active", true);
+			.eq("is_active", true)
+			.eq("status", "active")
+			.is("filtered_reason", null)
+			.gte("created_at", sixtyDaysAgo.toISOString());
 
 		// Filter by cities - match any of the selected cities
 		if (cities.length > 0) {
 			query = query.in("city", cities);
 		}
 
-		// Filter by career path - balanced matching approach
-		if (careerPath) {
-			const careerPathMapping: Record<string, string[]> = {
-				"Strategy & Business Design": ["strategy", "business-design", "consulting"],
-				"Data & Analytics": ["data", "analytics", "data-science"],
-				"Sales & Client Success": ["sales", "business-development", "client-success"],
-				"Marketing & Growth": ["marketing", "growth", "brand"],
-				"Finance & Investment": ["finance", "accounting", "investment"],
-				"Operations & Supply Chain": ["operations", "supply-chain", "logistics"],
-				"Product & Innovation": ["product", "product-management", "innovation"],
-				"Tech & Transformation": ["tech", "technology", "transformation", "it"],
-				"Sustainability & ESG": ["sustainability", "esg", "environmental", "social"],
-				"Not Sure Yet / General": ["general", "graduate", "trainee", "rotational"],
-			};
+		// DON'T filter by career path at DB level - too restrictive for preview
+		// Career path filtering is handled by AI matching in the actual signup process
+		// Preview should show all early-career jobs in selected cities, regardless of category
 
-			// Normalize to array for consistent processing
-			const careerPaths = Array.isArray(careerPath) ? careerPath : [careerPath];
-
-			// Get all categories for all selected career paths
-			const allCareerCategories = careerPaths.flatMap(path =>
-				careerPathMapping[path] || [path.toLowerCase()]
-			);
-
-			// Remove duplicates
-			const uniqueCategories = [...new Set(allCareerCategories)];
-
-			// Use overlaps to find jobs that match at least one category,
-			// but we'll filter further in the application layer for balance
-			query = query.overlaps("categories", uniqueCategories);
-		}
+		// Filter for early-career roles (same as free signup API)
+		query = query.or(
+			"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
+		);
 
 		// Filter by visa sponsorship if specified
 		if (visaSponsorship) {
@@ -110,6 +95,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 				careerPath,
 				visaSponsorship,
 				requestId,
+				filters: "active + status + recent + early-career + cities + visa (no career path filtering)",
 			});
 			throw new AppError("Failed to fetch job count", 500, "DATABASE_ERROR", error);
 		}

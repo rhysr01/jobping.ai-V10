@@ -153,17 +153,16 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
 
-	// Check if email already used for Free tier
-	const { data: existingFreeUser } = await supabase
+	// Check if email already used (any tier)
+	const { data: existingUser } = await supabase
 		.from("users")
 		.select("id, subscription_tier")
 		.eq("email", normalizedEmail)
-		.eq("subscription_tier", "free")
 		.maybeSingle();
 
-	if (existingFreeUser) {
-		// User already exists - set cookie and check if they have matches
-		// This allows them to access /matches even if cookie was lost
+	if (existingUser) {
+		// User already exists - redirect to matches regardless of tier
+		// This prevents duplicate accounts and ensures users can access their matches
 		const response = NextResponse.json(
 			{
 				error: "account_already_exists",

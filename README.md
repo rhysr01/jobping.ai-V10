@@ -92,6 +92,71 @@ AI-powered job matching platform built with Next.js, TypeScript, and Supabase.
 - **System health**: Database connections, API availability
 - **Security auditing**: Rate limiting, authentication logs
 
+## Signup Flows
+
+### Free Signup Flow
+
+**Status**: ✅ CORRECTLY WIRED END-TO-END
+
+#### Flow Chain
+**Form** → **useSignupForm** → **signupService** → **`/api/signup/free`** → **DB** → **Cookie** → **`/matches`** → **Display**
+
+- **Frontend**: Single-step form collects basic info, redirects to `/matches` immediately
+- **Backend**: Creates user, finds matches, saves to DB, sets session cookie
+- **Result**: User sees 5 matches instantly, can upgrade to premium
+
+---
+
+### Premium Signup Flow
+
+**Status**: ✅ FIXED - CORRECTLY WIRED END-TO-END
+
+#### Flow Chain
+**Form** → **`/api/signup`** → **Email Sent** → **`/signup/verify`** → **Email Verified** → **`/billing`** → **Payment** → **`/success`**
+
+**1. Multi-Step Form** (`/app/signup/page.tsx`)
+- 4-step progressive form: Basics → Preferences → Career Path → Matching
+- Collects comprehensive data: personal info, preferences, skills, career details
+- Validates GDPR compliance, redirects to `/signup/verify` after submission
+
+**2. Premium API** (`/api/signup/route.ts`)
+- Validates input, checks for existing users (upgrades free to premium)
+- Creates user with `subscription_tier: "premium_pending"`, `subscription_active: false`
+- Runs AI matching, saves matches, sends welcome email with jobs
+- Returns `{ userId, matchesCount, emailSent, verificationRequired, redirectUrl }`
+
+**3. Email Verification** (`/app/signup/verify/page.tsx`)
+- Shows "Email Verification Required" with resend functionality
+- Expires in 24 hours, guides user through verification process
+
+**4. Billing Page** (`/app/billing/page.tsx`)
+- Email verification gate prevents access until verified
+- Shows subscription status, payment methods, billing history
+- Checkout integration with Polar payment processor
+
+**5. Payment Success** (`/app/success/page.tsx`)
+- Only shown after actual payment completion
+- Confirms premium activation with next steps
+
+#### Key Differences from Free
+
+| Aspect | Free Tier | Premium Tier |
+|--------|-----------|--------------|
+| **Form Steps** | 1-step (basic) | 4-step (comprehensive) |
+| **Data Collection** | Basic preferences | Skills, industries, company size |
+| **User Creation** | `subscription_tier: "free"` | `subscription_tier: "premium_pending"` |
+| **Subscription Active** | `true` (immediate) | `false` (activated after payment) |
+| **Email Verification** | Not required | Required before payment |
+| **Post-Signup** | Direct to matches | Email verification → Payment → Success |
+| **Delivery Model** | Instant matches | Weekly email delivery (Mon/Wed/Fri) |
+
+#### Fixed Issues (Post-Audit)
+- ✅ Form now redirects to `/signup/verify` instead of `/success`
+- ✅ Database sets `subscription_active: false` until payment
+- ✅ Uses `premium_pending` tier for pre-payment state
+- ✅ API response includes `userId` field
+- ✅ Success page only shown after actual payment |
+
 ## API Reference
 
 ### Authentication

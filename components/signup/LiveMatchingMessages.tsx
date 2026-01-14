@@ -3,16 +3,25 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 
-const SCANNING_MESSAGES = [
-	"Scanning 4,200+ active jobs...",
-	"Filtering by your cities...",
-	"Matching career paths...",
-	"Checking visa requirements...",
-	"Calculating match scores...",
-	"Finding your top 5 matches...",
-];
+interface LiveMatchingMessagesProps {
+	estimatedJobCount?: number;
+}
 
-export function LiveMatchingMessages() {
+const DEFAULT_JOB_COUNT = 4200;
+
+export function LiveMatchingMessages({ estimatedJobCount = DEFAULT_JOB_COUNT }: LiveMatchingMessagesProps) {
+	const formattedJobCount = estimatedJobCount >= 1000
+		? `${Math.floor(estimatedJobCount / 1000)},${(estimatedJobCount % 1000).toString().padStart(3, '0')}+`
+		: `${estimatedJobCount}+`;
+
+	const SCANNING_MESSAGES = [
+		`Scanning ${formattedJobCount} active jobs...`,
+		"Filtering by your cities...",
+		"Matching career paths...",
+		"Checking visa requirements...",
+		"Calculating match scores...",
+		"Finding your top 5 matches...",
+	];
 	const [currentIndex, setCurrentIndex] = useState(0);
 
 	useEffect(() => {

@@ -34,6 +34,7 @@ export default function SignupFormFree() {
 		jobCount,
 		jobCountMetadata,
 		isLoadingJobCount,
+		previewError,
 		isSubmitting,
 		error,
 		showLiveMatching,
@@ -468,7 +469,7 @@ export default function SignupFormFree() {
 										{/* Dynamic scanning animation */}
 										{isLoadingJobCount ? (
 											<div className="space-y-4">
-												<LiveMatchingMessages />
+												<LiveMatchingMessages estimatedJobCount={jobCount || undefined} />
 												<div className="flex items-center gap-2 text-sm text-content-secondary">
 													<span className="inline-block h-3 w-3 animate-pulse rounded-full bg-brand-400" />
 													Scanning {formData.cities.join(", ")}...
@@ -520,6 +521,19 @@ export default function SignupFormFree() {
 														</p>
 													</div>
 												)}
+											</motion.div>
+										) : previewError ? (
+											<motion.div
+												initial={{ opacity: 0, y: 10 }}
+												animate={{ opacity: 1, y: 0 }}
+												className="text-center p-6"
+											>
+												<div className="text-amber-400 text-sm">
+													⚠️ {previewError}
+												</div>
+												<div className="mt-2 text-xs text-content-secondary">
+													You can still proceed with signup - we'll find matches for you!
+												</div>
 											</motion.div>
 										) : null}
 									</div>
@@ -590,6 +604,7 @@ export default function SignupFormFree() {
 					showLiveMatching={showLiveMatching}
 					isSubmitting={isSubmitting}
 					matchCount={matchCount}
+					estimatedJobCount={jobCount || undefined}
 				/>
 
 			</div>

@@ -105,20 +105,58 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		const normalizedEmail = data.email.toLowerCase().trim();
 		const { data: existingUser } = await supabase
 			.from("users")
-			.select("email, last_email_sent, email_count")
+			.select("id, email, last_email_sent, email_count")
 			.eq("email", normalizedEmail)
 			.single();
 
 		if (existingUser) {
-			apiLogger.info("User already exists", { email: normalizedEmail });
-			return NextResponse.json(
-				{
-					error: "account_already_exists",
-					message: "An account with this email already exists. Try signing in instead, or use a different email.",
-					code: "DUPLICATE_EMAIL",
-				},
-				{ status: 409 },
-			);
+			// Check if it's a free user upgrading to premium
+			const { data: userDetails } = await supabase
+				.from("users")
+				.select("subscription_tier, active")
+				.eq("email", normalizedEmail)
+				.single();
+
+			if (userDetails?.subscription_tier === "free" && userDetails?.active) {
+				// Free user upgrading to premium - update their account
+				apiLogger.info("Free user upgrading to premium", { email: normalizedEmail });
+
+				const { error: upgradeError } = await supabase
+					.from("users")
+					.update({
+						subscription_tier: "premium",
+						subscription_active: true,
+						email_verified: false, // Require verification for premium features
+						updated_at: new Date().toISOString(),
+					})
+					.eq("email", normalizedEmail);
+
+				if (upgradeError) {
+					apiLogger.error("Failed to upgrade free user to premium", upgradeError as Error, {
+						email: normalizedEmail,
+					});
+					throw upgradeError;
+				}
+
+				// Return success for upgrade
+				return NextResponse.json({
+					success: true,
+					message: "Successfully upgraded to premium!",
+					userId: existingUser.id,
+					wasUpgrade: true,
+				});
+			} else {
+				// Existing premium user or inactive account
+				apiLogger.info("Existing premium user tried to sign up again", { email: normalizedEmail });
+				return NextResponse.json(
+					{
+						error: "account_already_exists",
+						message: "An account with this email already exists. Try signing in instead, or use a different email.",
+						code: "DUPLICATE_EMAIL",
+					},
+					{ status: 409 },
+				);
+			}
 		}
 
 		// Check for pending promo code
@@ -134,7 +172,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			new Date(pendingPromo.expires_at) > new Date();
 
 		// This is the premium signup API - free users use /api/signup/free
-		const subscriptionTier: "premium" = "premium";
+		const subscriptionTier: "premium_pending" = "premium_pending";
 
 		// Create user in database
 		const userData = {
@@ -172,7 +210,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			career_keywords: data.careerKeywords || null,
 			subscription_tier: subscriptionTier,
 			email_verified: false, // Premium users need email verification before accessing paid features
-			subscription_active: true,
+			subscription_active: false, // Only activate after successful payment
 			email_phase: "welcome", // Start in welcome phase
 			onboarding_complete: false, // Will be set to true after first email
 			email_count: 0, // Will increment after first email
@@ -184,7 +222,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			created_at: new Date().toISOString(),
 		};
 
-		const { error: userError } = await supabase
+		const { data: insertedUserData, error: userError } = await supabase
 			.from("users")
 			.insert([userData])
 			.select()
@@ -1079,6 +1117,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		const responseData: any = {
 			success: true,
 			message: "Signup successful! Please check your email and click the verification link before continuing to payment.",
+			userId: insertedUserData?.id,
 			matchesCount,
 			emailSent,
 			email: userData.email,

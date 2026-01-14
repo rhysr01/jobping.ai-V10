@@ -10,30 +10,88 @@ import type { UserPreferences } from "../../../../utils/matching/types";
 import type { MatchResult, User } from "./types";
 
 /**
- * Fetch users and jobs - Simplified
+ * Fetch users and jobs - Real implementation
  */
 export async function fetchUsersAndJobs(
-	_supabase: SupabaseClient,
-	_userCap: number,
-	_jobCap: number,
+	supabase: SupabaseClient,
+	userCap: number,
+	jobCap: number,
 ): Promise<{
 	users: User[];
 	jobs: ScrapersJob[];
 	transformedUsers: Array<{ email?: string; preferences: UserPreferences }>;
 	isSemanticAvailable: boolean;
 }> {
-	const users: User[] = [];
-	const jobs: ScrapersJob[] = [];
-	const transformedUsers: Array<{
-		email?: string;
-		preferences: UserPreferences;
-	}> = [];
+	// Fetch free users who signed up but haven't been matched yet
+	const { data: users, error: usersError } = await supabase
+		.from("users")
+		.select("*")
+		.eq("subscription_tier", "free")
+		.is("matched_at", null) // Not yet matched
+		.limit(userCap);
+
+	if (usersError) {
+		throw new Error(`Failed to fetch users: ${usersError.message}`);
+	}
+
+	if (!users || users.length === 0) {
+		throw new Error("No users found");
+	}
+
+	apiLogger.info("Fetched users for batch matching", {
+		count: users.length,
+	});
+
+	// Fetch recent active jobs
+	const thirtyDaysAgo = new Date();
+	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+	const { data: jobs, error: jobsError } = await supabase
+		.from("jobs")
+		.select("*")
+		.eq("is_active", true)
+		.eq("status", "active")
+		.is("filtered_reason", null)
+		.gte("created_at", thirtyDaysAgo.toISOString())
+		.limit(jobCap);
+
+	if (jobsError) {
+		throw new Error(`Failed to fetch jobs: ${jobsError.message}`);
+	}
+
+	if (!jobs || jobs.length === 0) {
+		throw new Error("No active jobs to process");
+	}
+
+	apiLogger.info("Fetched jobs for batch matching", {
+		count: jobs.length,
+	});
+
+	// Transform users to preferences format
+	const transformedUsers = users.map((user: any) => ({
+		email: user.email,
+		preferences: {
+			email: user.email,
+			target_cities: user.target_cities || [],
+			career_path: user.career_path ? [user.career_path] : [],
+			entry_level_preference: user.entry_level_preference || "graduate, intern, junior",
+			work_environment: user.work_environment,
+			languages_spoken: user.languages_spoken || [],
+			roles_selected: user.roles_selected || [],
+			company_types: user.company_types || [],
+			visa_status: user.visa_status,
+			professional_expertise: user.career_path || "",
+			subscription_tier: user.subscription_tier as const,
+			career_keywords: user.career_keywords,
+			industries: user.industries,
+		} as UserPreferences,
+	}));
 
 	return {
 		users,
-		jobs,
+		jobs: jobs as ScrapersJob[],
 		transformedUsers,
-		isSemanticAvailable: true,
+		isSemanticAvailable: !!process.env.OPENAI_API_KEY,
 	};
 }
 
@@ -42,20 +100,94 @@ export async function fetchUsersAndJobs(
  */
 export async function processUsers(
 	transformedUsers: Array<{ email?: string; preferences: UserPreferences }>,
-	_jobs: ScrapersJob[],
-	_supabase: SupabaseClient,
-	_startTime: number,
+	jobs: ScrapersJob[],
+	supabase: SupabaseClient,
+	startTime: number,
 ): Promise<MatchResult[]> {
+	const { simplifiedMatchingEngine } = await import(
+		"@/utils/matching/core/matching-engine"
+	);
 	const results: MatchResult[] = [];
 
 	for (const userData of transformedUsers) {
 		const userEmail = userData.email || "";
 
-		results.push({
-			user: userEmail,
-			success: true,
-			matches: 0,
-		});
+		try {
+			apiLogger.info("Processing user for batch matching", {
+				userEmail,
+				jobsCount: jobs.length,
+			});
+
+			// Run matching
+			const matchResult = await simplifiedMatchingEngine.findMatchesForUser(
+				userData.preferences,
+				jobs,
+				{ useAI: true },
+			);
+
+			// Save matches to database
+			if (matchResult.matches && matchResult.matches.length > 0) {
+				const matchRecords = matchResult.matches.map((match: any) => ({
+					user_email: userEmail,
+					job_hash: match.job_hash,
+					match_score: match.match_score,
+					match_reason: match.match_reason,
+					matched_at: new Date().toISOString(),
+					created_at: new Date().toISOString(),
+				}));
+
+				const { error: saveError } = await supabase
+					.from("matches")
+					.upsert(matchRecords, { onConflict: "user_email,job_hash" });
+
+				if (saveError) {
+					apiLogger.error("Failed to save matches for user", saveError as Error, {
+						userEmail,
+						matchCount: matchResult.matches.length,
+					});
+
+					results.push({
+						user: userEmail,
+						success: false,
+						matches: 0,
+					});
+				} else {
+					// Mark user as matched
+					await supabase
+						.from("users")
+						.update({ matched_at: new Date().toISOString() })
+						.eq("email", userEmail);
+
+					results.push({
+						user: userEmail,
+						success: true,
+						matches: matchResult.matches.length,
+					});
+
+					apiLogger.info("User batch matching completed", {
+						userEmail,
+						matches: matchResult.matches.length,
+						method: matchResult.method,
+					});
+				}
+			} else {
+				results.push({
+					user: userEmail,
+					success: false,
+					matches: 0,
+				});
+			}
+		} catch (error) {
+			apiLogger.error("Error processing user", error as Error, {
+				userEmail,
+			});
+
+			results.push({
+				user: userEmail,
+				success: false,
+				matches: 0,
+			});
+		}
 	}
 
 	return results;

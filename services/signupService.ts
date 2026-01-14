@@ -33,7 +33,9 @@ export class SignupService {
 					matchCount: data.matchCount || 5,
 				};
 			}
-			throw new Error("You've already tried Free! Want 10 more jobs this week? Upgrade to Premium for 15 jobs/week (3x more).");
+			// If 409 but no redirectToMatches, show the API error message
+			const errorMsg = data.error || data.message || "Account already exists";
+			throw new Error(errorMsg);
 		}
 
 		if (!response.ok) {

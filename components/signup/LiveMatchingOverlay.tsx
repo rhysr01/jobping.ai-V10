@@ -5,9 +5,10 @@ interface LiveMatchingOverlayProps {
 	showLiveMatching: boolean;
 	isSubmitting: boolean;
 	matchCount: number;
+	estimatedJobCount?: number;
 }
 
-export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount }: LiveMatchingOverlayProps) {
+export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount, estimatedJobCount }: LiveMatchingOverlayProps) {
 	if (!showLiveMatching && !isSubmitting) return null;
 
 	return (
@@ -15,8 +16,12 @@ export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount
 			key="live-matching"
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
+			exit={{ opacity: 0, transition: { duration: 0.3 } }}
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="matching-status"
+			aria-live="polite"
 		>
 			<motion.div
 				initial={{ scale: 0.9, opacity: 0 }}
@@ -43,16 +48,24 @@ export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount
 				</motion.div>
 
 				{/* Dynamic scanning messages */}
-				<LiveMatchingMessages />
+				<LiveMatchingMessages estimatedJobCount={estimatedJobCount} />
 
 				{/* Job count ticker */}
 				<motion.div
+					id="matching-status"
 					className="mt-8 text-4xl font-bold text-brand-400"
 					key={matchCount}
 					initial={{ scale: 0.8, opacity: 0 }}
 					animate={{ scale: 1, opacity: 1 }}
+					aria-live="polite"
+					aria-atomic="true"
 				>
-					{matchCount > 0 ? `${matchCount} matches found` : "Scanning..."}
+					{matchCount > 0
+						? `${matchCount} ${matchCount === 1 ? 'match' : 'matches'} found`
+						: isSubmitting
+							? "Scanning..."
+							: "Processing..."
+					}
 				</motion.div>
 			</motion.div>
 		</motion.div>

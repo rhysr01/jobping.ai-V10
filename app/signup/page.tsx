@@ -130,7 +130,7 @@ function SignupForm() {
 			clearProgress();
 
 			setTimeout(() => {
-				router.push(`/success?matches=${response.matchesCount}&email=${encodeURIComponent(response.email)}`);
+				router.push(`/signup/verify?tier=premium&email=${encodeURIComponent(response.email)}`);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			const errorMessage =

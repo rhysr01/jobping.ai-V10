@@ -44,6 +44,7 @@ export interface UseSignupFormReturn {
 	jobCount: number | null;
 	jobCountMetadata: JobCountMetadata | null;
 	isLoadingJobCount: boolean;
+	previewError: string | null;
 
 	// Submission
 	isSubmitting: boolean;
@@ -83,8 +84,23 @@ export function useSignupForm(): UseSignupFormReturn {
 	const [jobCount, setJobCount] = useState<number | null>(null);
 	const [jobCountMetadata, setJobCountMetadata] = useState<JobCountMetadata | null>(null);
 	const [isLoadingJobCount, setIsLoadingJobCount] = useState(false);
+	const [previewError, setPreviewError] = useState<string | null>(null);
+	const [previewTimeoutId, setPreviewTimeoutId] = useState<NodeJS.Timeout | null>(null);
 	const [matchCount, setMatchCount] = useState<number>(0);
 	const [showLiveMatching, setShowLiveMatching] = useState(false);
+	const [overlayStartTime, setOverlayStartTime] = useState<number | null>(null);
+
+	// Ensure overlay shows for minimum time to prevent flash
+	const dismissOverlayWithMinimumTime = useCallback((callback?: () => void) => {
+		const elapsed = Date.now() - (overlayStartTime || 0);
+		const remainingTime = Math.max(0, 2000 - elapsed); // Minimum 2s display
+
+		setTimeout(() => {
+			setShowLiveMatching(false);
+			setOverlayStartTime(null);
+			callback?.();
+		}, remainingTime);
+	}, [overlayStartTime]);
 
 	// Form persistence
 	const { clearProgress } = useFormPersistence(
@@ -149,11 +165,17 @@ export function useSignupForm(): UseSignupFormReturn {
 		}
 	}, [formData.cities.length, formData.careerPath]);
 
-	// Fetch job count when both cities and career path are selected
+	// Fetch job count when both cities and career path are selected (with debouncing)
 	useEffect(() => {
+		// Clear existing timeout
+		if (previewTimeoutId) {
+			clearTimeout(previewTimeoutId);
+		}
+
 		const fetchJobCount = async () => {
 			if (formData.cities.length > 0 && formData.careerPath) {
 				setIsLoadingJobCount(true);
+				setPreviewError(null); // Clear previous errors
 				try {
 					const data = await apiCallJson<{
 						count?: number;
@@ -173,20 +195,30 @@ export function useSignupForm(): UseSignupFormReturn {
 						isLowCount: data.isLowCount,
 						suggestion: data.suggestion,
 					});
+					setPreviewError(null); // Clear any previous errors
 				} catch (error) {
 					setJobCount(null);
 					setJobCountMetadata(null);
+					setPreviewError("Unable to check job availability right now");
 				} finally {
 					setIsLoadingJobCount(false);
 				}
 			} else {
 				setJobCount(null);
 				setJobCountMetadata(null);
+				setPreviewError(null);
 			}
 		};
 
-		const timeoutId = setTimeout(fetchJobCount, 300);
-		return () => clearTimeout(timeoutId);
+		// Debounce for 500ms to avoid excessive API calls
+		const newTimeoutId = setTimeout(fetchJobCount, 500);
+		setPreviewTimeoutId(newTimeoutId);
+
+		return () => {
+			if (newTimeoutId) {
+				clearTimeout(newTimeoutId);
+			}
+		};
 	}, [formData.cities, formData.careerPath, formData.visaSponsorship]);
 
 	// Calculate form completion percentage
@@ -251,6 +283,7 @@ export function useSignupForm(): UseSignupFormReturn {
 			setIsSubmitting(true);
 			setError("");
 			setShowLiveMatching(true);
+			setOverlayStartTime(Date.now());
 
 			trackEvent("signup_started", { tier: "free" });
 
@@ -258,9 +291,11 @@ export function useSignupForm(): UseSignupFormReturn {
 				const result = await signupService.submitFreeSignup(formData);
 
 				if (result.redirectToMatches) {
-					setTimeout(() => {
-						router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount || 5}`);
-					}, 1000);
+					dismissOverlayWithMinimumTime(() => {
+						setTimeout(() => {
+							router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount || 5}`);
+						}, 500); // Small delay after overlay disappears
+					});
 					return;
 				}
 
@@ -280,11 +315,11 @@ export function useSignupForm(): UseSignupFormReturn {
 				});
 
 				clearProgress();
-				setShowLiveMatching(false);
-
-				router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount}`);
+				dismissOverlayWithMinimumTime(() => {
+					router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount}`);
+				});
 			} catch (err) {
-				setShowLiveMatching(false);
+				dismissOverlayWithMinimumTime();
 				const errorMessage = err instanceof Error ? err.message : "Something went wrong. Please try again.";
 				trackEvent("signup_failed", { tier: "free", error: errorMessage });
 				setError(errorMessage);
@@ -310,6 +345,7 @@ export function useSignupForm(): UseSignupFormReturn {
 		jobCount,
 		jobCountMetadata,
 		isLoadingJobCount,
+		previewError,
 		isSubmitting,
 		error,
 		setError,
