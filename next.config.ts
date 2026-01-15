@@ -1,14 +1,16 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
 	// Force unique build ID to prevent cache issues during TDZ fix
 	generateBuildId: async () => {
 		return `build-${Date.now()}`;
 	},
-	// Turbopack configuration with path aliases
+	// Performance optimizations - bundle splitting and mobile-first
 	experimental: {
-		optimizePackageImports: ["framer-motion"],
+		optimizePackageImports: ["framer-motion", "lucide-react", "@tsparticles/react"],
+		scrollRestoration: true, // Better mobile UX
 	},
 	// Remove console logs in production (keep errors and warnings)
 	compiler: {
@@ -23,7 +25,8 @@ const nextConfig: NextConfig = {
 	serverExternalPackages: ["stripe"],
 	images: {
 		formats: ["image/webp", "image/avif"],
-		deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+		// Mobile-first device sizes - prioritize mobile breakpoints
+		deviceSizes: [375, 414, 640, 750, 828, 1080, 1200, 1920],
 		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
 		minimumCacheTTL: 60,
 		dangerouslyAllowSVG: true,
@@ -149,7 +152,12 @@ const nextConfig: NextConfig = {
 	},
 };
 
-export default withSentryConfig(nextConfig, {
+// Bundle analyzer configuration
+const bundleAnalyzerConfig = withBundleAnalyzer({
+	enabled: process.env.ANALYZE === "true",
+});
+
+export default bundleAnalyzerConfig(withSentryConfig(nextConfig, {
 	// For all available options, see:
 	// https://github.com/getsentry/sentry-webpack-plugin#options
 
@@ -163,4 +171,4 @@ export default withSentryConfig(nextConfig, {
 	authToken: process.env.SENTRY_AUTH_TOKEN,
 	// Automatically upload source maps (Vercel integration handles this)
 	widenClientFileUpload: true,
-});
+}));

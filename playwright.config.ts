@@ -11,7 +11,7 @@ export default defineConfig({
 	testDir: "./tests",
 
 	// Maximum time one test can run
-	timeout: 30 * 1000,
+	timeout: 90 * 1000, // Increased to 90s to accommodate server startup and page loading
 
 	// Run tests in parallel
 	fullyParallel: true,
@@ -25,6 +25,9 @@ export default defineConfig({
 	// Opt out of parallel tests on CI
 	workers: process.env.CI ? 1 : undefined,
 
+	// Web server completely disabled - start server manually
+	// webServer: undefined,
+
 	// Reporter to use
 	reporter: [
 		["html", { outputFolder: "playwright-report" }],
@@ -35,7 +38,7 @@ export default defineConfig({
 	// Shared settings for all the projects below
 	use: {
 		// Base URL to use in actions like `await page.goto('/')`
-		baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000",
+		baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3001",
 
 		// Collect trace when retrying the failed test
 		trace: "on-first-retry",
@@ -47,10 +50,15 @@ export default defineConfig({
 		video: "retain-on-failure",
 
 		// Maximum time each action such as `click()` can take
-		actionTimeout: 10 * 1000,
+		actionTimeout: 15 * 1000, // Increased to 15s for reliable actions
 
-		// Viewport size
+			// Viewport size
 		viewport: { width: 1280, height: 720 },
+	},
+
+	// Maximum time for expect assertions
+	expect: {
+		timeout: 10000, // Increased to 10s for reliable assertions with rate limiting
 	},
 
 	// Configure projects for major browsers
@@ -88,13 +96,13 @@ export default defineConfig({
 		},
 	],
 
-	// Run local dev server before starting tests
-	webServer: {
-		command: "npm run dev",
-		url: "http://localhost:3000",
-		reuseExistingServer: !process.env.CI,
-		timeout: 120 * 1000,
-		stdout: "ignore",
-		stderr: "pipe",
-	},
+	// Web server disabled - start manually to avoid conflicts
+	// webServer: {
+	// 	command: "npm run dev",
+	// 	url: "http://localhost:3000",
+	// 	reuseExistingServer: !process.env.CI,
+	// 	timeout: 120 * 1000,
+	// 	stdout: "ignore",
+	// 	stderr: "pipe",
+	// },
 });

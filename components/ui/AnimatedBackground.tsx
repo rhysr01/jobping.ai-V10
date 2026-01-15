@@ -39,8 +39,6 @@ export default function AnimatedBackground() {
 	const orb2Y = useTransform([mouseY, parallaxMedium], ([my, pm]: number[]) => -(my * 0.15) + pm);
 	const orb2Scale = useTransform(scrollY, [0, 1000], [1, isMobile ? 1.15 : 1.2]);
 
-	const orb2MobileX = useTransform(scrollY, [0, 1000], [0, -100]);
-	const orb3MobileX = useTransform(scrollY, [0, 1000], [0, 80]);
 
 	const orb3X = useTransform([mouseX, scrollY], ([mx, sy]: number[]) => (mx * 0.1) + (sy / 1000) * 90);
 	const orb3Y = useTransform([mouseY, parallaxFast], ([my, pf]: number[]) => (my * 0.1) + pf);
@@ -84,81 +82,95 @@ export default function AnimatedBackground() {
 				<div className="absolute bottom-0 left-1/2 w-full h-full bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(139,92,246,0.10),transparent_60%)]" />
 			</motion.div>
 			
-			{/* Optimized moving orbs - smaller blur on mobile, no mouse tracking on mobile */}
+			{/* Optimized moving orbs - much simpler on mobile */}
 			{!prefersReducedMotion && (
 				<>
-					<motion.div
-						className={`absolute top-0 left-1/4 ${isMobile ? 'w-[400px] h-[400px] blur-[80px]' : 'w-[600px] h-[600px] blur-[120px]'} bg-emerald-500/20 rounded-full`}
-						style={{
-							x: isMobile ? parallaxSlow : orb1X,
-							y: isMobile ? parallaxSlow : orb1Y,
-							scale: orb1Scale,
-						}}
-						animate={isMobile ? undefined : {
-							scale: [1, 1.05, 1],
-						}}
-						transition={isMobile ? undefined : {
-							duration: 25,
-							repeat: Infinity,
-							ease: "easeInOut",
-						}}
-					/>
-					<motion.div
-						className={`absolute top-1/3 right-0 ${isMobile ? 'w-[300px] h-[300px] blur-[60px]' : 'w-[500px] h-[500px] blur-[100px]'} bg-blue-500/15 rounded-full`}
-						style={{
-							x: isMobile ? orb2MobileX : orb2X,
-							y: isMobile ? parallaxMedium : orb2Y,
-							scale: orb2Scale,
-						}}
-						animate={isMobile ? undefined : {
-							scale: [1, 1.1, 1],
-						}}
-						transition={isMobile ? undefined : {
-							duration: 30,
-							repeat: Infinity,
-							ease: "easeInOut",
-							delay: 3,
-						}}
-					/>
-					<motion.div
-						className={`absolute bottom-0 left-1/2 ${isMobile ? 'w-[250px] h-[250px] blur-[50px]' : 'w-[400px] h-[400px] blur-[90px]'} bg-purple-500/10 rounded-full`}
-						style={{
-							x: isMobile ? orb3MobileX : orb3X,
-							y: isMobile ? parallaxFast : orb3Y,
-							scale: orb3Scale,
-						}}
-						animate={isMobile ? undefined : {
-							scale: [1, 1.15, 1],
-						}}
-						transition={isMobile ? undefined : {
-							duration: 35,
-							repeat: Infinity,
-							ease: "easeInOut",
-							delay: 6,
-						}}
-					/>
+					{/* Only show one orb on mobile for performance */}
+					{!isMobile ? (
+						<>
+							<motion.div
+								className="absolute top-0 left-1/4 w-[600px] h-[600px] blur-[120px] bg-emerald-500/20 rounded-full"
+								style={{
+									x: orb1X,
+									y: orb1Y,
+									scale: orb1Scale,
+								}}
+								animate={{
+									scale: [1, 1.05, 1],
+								}}
+								transition={{
+									duration: 25,
+									repeat: Infinity,
+									ease: "easeInOut",
+								}}
+							/>
+							<motion.div
+								className="absolute top-1/3 right-0 w-[500px] h-[500px] blur-[100px] bg-blue-500/15 rounded-full"
+								style={{
+									x: orb2X,
+									y: orb2Y,
+									scale: orb2Scale,
+								}}
+								animate={{
+									scale: [1, 1.1, 1],
+								}}
+								transition={{
+									duration: 30,
+									repeat: Infinity,
+									ease: "easeInOut",
+									delay: 3,
+								}}
+							/>
+							<motion.div
+								className="absolute bottom-0 left-1/2 w-[400px] h-[400px] blur-[90px] bg-purple-500/10 rounded-full"
+								style={{
+									x: orb3X,
+									y: orb3Y,
+									scale: orb3Scale,
+								}}
+								animate={{
+									scale: [1, 1.15, 1],
+								}}
+								transition={{
+									duration: 35,
+									repeat: Infinity,
+									ease: "easeInOut",
+									delay: 6,
+								}}
+							/>
+						</>
+					) : (
+						/* Single static orb on mobile */
+						<motion.div
+							className="absolute top-0 right-0 w-[300px] h-[300px] blur-[60px] bg-brand-500/10 rounded-full"
+							style={{
+								x: parallaxSlow,
+								y: parallaxSlow,
+							}}
+						/>
+					)}
 				</>
 			)}
 
-			{/* Reduced particle count on mobile */}
+			{/* Optimized particle count - significantly reduced on mobile */}
 			<div className="absolute inset-0">
-				{Array.from({ length: isMobile ? 8 : 15 }).map((_, i) => {
-					const baseDelay = i * (isMobile ? 0.5 : 0.3);
-					const baseDuration = isMobile ? 12 + (i % 2) * 6 : 8 + (i % 3) * 4;
+				{Array.from({ length: isMobile ? 3 : 8 }).map((_, i) => {
+					const baseDelay = i * (isMobile ? 1 : 0.5); // Slower, less frequent on mobile
+					const baseDuration = isMobile ? 20 + (i % 2) * 10 : 12 + (i % 3) * 6; // Much slower on mobile
 
 					return (
 						<motion.div
 							key={i}
-							className="absolute w-1 h-1 bg-emerald-400/15 rounded-full blur-sm"
+							className="absolute w-1 h-1 bg-emerald-400/10 rounded-full blur-sm"
 							initial={{
-								x: `${(i * 7) % 100}%`,
-								y: `${(i * 11) % 100}%`,
+								x: `${(i * 13) % 100}%`, // More spread out
+								y: `${(i * 17) % 100}%`,
 								opacity: 0,
 							}}
 							animate={prefersReducedMotion ? undefined : {
-								y: [`${(i * 11) % 100}%`, `${((i * 11) % 100) - (isMobile ? 15 : 20)}%`, `${(i * 11) % 100}%`],
-								opacity: [0, 0.4, 0],
-								scale: [0.5, isMobile ? 1 : 1.2, 0.5],
+								y: [`${(i * 17) % 100}%`, `${((i * 17) % 100) - (isMobile ? 10 : 15)}%`, `${(i * 17) % 100}%`],
+								opacity: [0, isMobile ? 0.2 : 0.4, 0], // Much more subtle on mobile
+								scale: [0.3, isMobile ? 0.8 : 1.2, 0.3], // Smaller scale changes
 							}}
 							transition={prefersReducedMotion ? undefined : {
 								duration: baseDuration,
@@ -180,12 +192,14 @@ export default function AnimatedBackground() {
 				}}
 			/>
 
-			{/* Animated grid with reduced complexity on mobile */}
-			<motion.div
-				className={`absolute inset-0 ${isMobile ? 'opacity-[0.01]' : 'opacity-[0.03]'} ${prefersReducedMotion ? '' : 'animated-grid'}`}
-				aria-hidden="true"
-				style={{ y: parallaxFast }}
-			/>
+			{/* Animated grid - completely disabled on mobile for performance */}
+			{!isMobile && (
+				<motion.div
+					className={`absolute inset-0 opacity-[0.03] ${prefersReducedMotion ? '' : 'animated-grid'}`}
+					aria-hidden="true"
+					style={{ y: parallaxFast }}
+				/>
+			)}
 
 			{/* Radial gradient overlay for depth */}
 			<motion.div

@@ -6,6 +6,8 @@ export function reportWebVitals(metric: any) {
 	// Send to analytics endpoint in production with mobile context
 	if (process.env.NODE_ENV === "production") {
 		const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+		const isPoorPerformance = metric.value > (isMobile ? 3000 : 2500); // Mobile has higher tolerance
+
 		fetch("/api/analytics/web-vitals", {
 			method: "POST",
 			headers: {
@@ -14,7 +16,9 @@ export function reportWebVitals(metric: any) {
 			},
 			body: JSON.stringify({
 				...metric,
-				deviceType: isMobile ? 'mobile' : 'desktop'
+				deviceType: isMobile ? 'mobile' : 'desktop',
+				isPoorPerformance,
+				userAgent: navigator?.userAgent || 'unknown',
 			}),
 			keepalive: true,
 		}).catch(() => {
@@ -22,9 +26,11 @@ export function reportWebVitals(metric: any) {
 		});
 	}
 
-	// Log in development
+	// Enhanced logging in development
 	if (process.env.NODE_ENV === "development") {
-		console.log("[Web Vitals]", metric.name, metric.value, metric.id);
+		const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+		const status = metric.value > (isMobile ? 3000 : 2500) ? '❌ POOR' : '✅ GOOD';
+		console.log(`[Web Vitals ${status}]`, metric.name, `${metric.value}ms`, `(${isMobile ? 'mobile' : 'desktop'})`, metric.id);
 	}
 }
 
