@@ -232,37 +232,19 @@ export class AIMatchingService {
 
 					if (!job) return null;
 
-					// Extract component scores from AI response
-					const relevance =
-						match.scoreBreakdown?.skills ||
-						match.unifiedScore.overall * 0.4 ||
-						50;
-					const quality =
-						match.scoreBreakdown?.company ||
-						match.unifiedScore.overall * 0.3 ||
-						50;
-					const opportunity =
-						match.scoreBreakdown?.experience ||
-						match.unifiedScore.overall * 0.2 ||
-						50;
-					const timing =
-						match.scoreBreakdown?.location ||
-						match.unifiedScore.overall * 0.1 ||
-						50;
-
-					// Create unified score components
-					const components: ScoreComponents = {
-						relevance: Math.max(0, Math.min(100, relevance)),
-						quality: Math.max(0, Math.min(100, quality)),
-						opportunity: Math.max(0, Math.min(100, opportunity)),
-						timing: Math.max(0, Math.min(100, timing)),
-					};
-
-					// Calculate overall score from components
+					// Extract scores from FreeMatchBuilder format
 					const overallScore = Math.max(
 						0,
 						Math.min(100, match.matchScore || 0),
 					);
+
+					// Distribute overall score across components
+					const components: ScoreComponents = {
+						relevance: Math.max(0, Math.min(100, overallScore * 0.4)), // Skills/career alignment
+						quality: Math.max(0, Math.min(100, overallScore * 0.3)), // Company quality
+						opportunity: Math.max(0, Math.min(100, overallScore * 0.2)), // Career opportunity
+						timing: Math.max(0, Math.min(100, overallScore * 0.1)), // Location/freshness
+					};
 
 					// Create unified score object
 					const unifiedScore: UnifiedScore = {

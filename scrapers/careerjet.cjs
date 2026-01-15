@@ -493,12 +493,28 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 
 			const url = `${BASE_URL}?${params.toString()}`;
 			const startTime = Date.now();
-			const response = await fetch(url, {
-				headers: {
-					"User-Agent": "Mozilla/5.0 JobPing/1.0",
-					Accept: "application/json",
-				},
-			});
+
+			// Add 30-second timeout to prevent hanging requests
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+			let response;
+			try {
+				response = await fetch(url, {
+					headers: {
+						"User-Agent": "Mozilla/5.0 JobPing/1.0",
+						Accept: "application/json",
+					},
+					signal: controller.signal,
+				});
+				clearTimeout(timeoutId);
+			} catch (error) {
+				clearTimeout(timeoutId);
+				if (error.name === 'AbortError') {
+					throw new Error(`Request timed out after 30s for ${keyword} in ${city.name}`);
+				}
+				throw error;
+			}
 			const responseTime = Date.now() - startTime;
 			totalResponseTime += responseTime;
 
@@ -649,7 +665,7 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 				if (jobBatch.length >= BATCH_SIZE) {
 					const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
 						onConflict: "job_hash",
-						ignoreDuplicates: false,
+						ignoreDuplicates: true, // Skip duplicates instead of expensive updates
 					});
 
 					if (error) {
@@ -695,7 +711,7 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 	if (jobBatch.length > 0) {
 		const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
 			onConflict: "job_hash",
-			ignoreDuplicates: false,
+			ignoreDuplicates: true, // Skip duplicates instead of expensive updates
 		});
 
 		if (error) {
@@ -757,10 +773,10 @@ async function scrapeCareerJet() {
 	const baseQueries = generateSearchQueries();
 
 	// OPTIMIZED: Reduce queries to prevent timeouts while maintaining coverage
-	// Strategy: 12 cities × 15 queries × 2 pages = ~360 requests per run (much safer)
-	// Reduced from 25 to 15 queries per city to prevent timeouts
+	// Strategy: 12 cities × 8 queries × 2 pages = ~192 requests per run (much safer)
+	// Reduced from 25 to 8 queries per city to prevent timeouts
 	// Still good coverage with adaptive rate limiting
-	const limitedBaseQueries = baseQueries.slice(0, 15); // REDUCED from 25 to 15
+	const limitedBaseQueries = baseQueries.slice(0, 8); // REDUCED from 15 to 8
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -816,6 +832,16 @@ async function scrapeCareerJet() {
 					error.message,
 				);
 				errors++;
+
+				// Fail fast on critical errors to prevent timeouts
+				if (error.message.includes('timed out') ||
+					error.message.includes('API access forbidden') ||
+					error.message.includes('ECONNREFUSED') ||
+					error.message.includes('ENOTFOUND')) {
+					console.error(`[CareerJet] Critical error detected, stopping ${city.name} processing`);
+					break; // Stop processing this city
+				}
+
 				// Slow down on errors too
 				currentDelay = Math.min(currentDelay * 1.2, 3000);
 			}

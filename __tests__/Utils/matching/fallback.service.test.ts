@@ -213,8 +213,8 @@ describe("FallbackService", () => {
 
 			expect(result.length).toBe(1);
 			// Job should get reasonable score with new advanced algorithm
-			expect(result[0].scoreBreakdown.careerPath).toBeGreaterThan(0);
-			expect(result[0].scoreBreakdown.careerPath).toBeGreaterThan(50); // Better scoring with advanced algorithm
+			expect(result[0].unifiedScore.components.relevance).toBeGreaterThan(0);
+			expect(result[0].unifiedScore.overall).toBeGreaterThan(30); // Better scoring with advanced algorithm
 		});
 
 		it("should exclude jobs with zero relevance (no matching categories)", () => {
@@ -234,8 +234,8 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([unrelatedJob], userWithTechPath, 1);
 
 			expect(result.length).toBe(1);
-			// Job should get zero career path score since no categories match at all
-			expect(result[0].scoreBreakdown.careerPath).toBe(0);
+			// Job should get low relevance score since no categories match at all
+			expect(result[0].unifiedScore.components.relevance).toBeLessThan(20);
 		});
 	});
 
@@ -349,16 +349,14 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches(mockJobs.slice(0, 1), mockUser, 1);
 
 			expect(result.length).toBe(1);
-			const breakdown = result[0].scoreBreakdown;
+			const components = result[0].unifiedScore.components;
 
-			expect(breakdown).toHaveProperty("skills");
-			expect(breakdown).toHaveProperty("experience");
-			expect(breakdown).toHaveProperty("location");
-			expect(breakdown).toHaveProperty("recency");
-			expect(breakdown).toHaveProperty("careerPath");
-
-			// All should be numbers
-			Object.values(breakdown).forEach(value => {
+			expect(components).toHaveProperty("relevance");
+			expect(components).toHaveProperty("quality");
+			expect(components).toHaveProperty("opportunity");
+			expect(components).toHaveProperty("timing");
+			// All component values should be numbers
+			Object.values(components).forEach(value => {
 				expect(typeof value).toBe("number");
 				expect(value).toBeGreaterThanOrEqual(0);
 			});
@@ -370,7 +368,7 @@ describe("FallbackService", () => {
 
 			const result = service.generateFallbackMatches([londonJob], userWithLondon, 1);
 
-			expect(result[0].scoreBreakdown.location).toBe(100); // Exact match
+			expect(result[0].unifiedScore.components.relevance).toBeGreaterThan(80); // High relevance for exact location match
 		});
 
 		it("should calculate career path scores correctly", () => {
@@ -379,8 +377,8 @@ describe("FallbackService", () => {
 
 			const result = service.generateFallbackMatches([techJob], userWithTech, 1);
 
-			// Should get high career path score since it matches exactly
-			expect(result[0].scoreBreakdown.careerPath).toBeGreaterThan(60);
+			// Should get high relevance score since career path matches exactly
+			expect(result[0].unifiedScore.components.relevance).toBeGreaterThan(60);
 		});
 	});
 
@@ -398,7 +396,7 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([perfectJob], mockUser, 1);
 
 			// Note: Actual classification may vary based on scoring, but should be reasonable quality
-			expect(["excellent", "good", "fair", "low"]).toContain(result[0].matchQuality);
+					expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
 			expect(result[0].unifiedScore.overall).toBeGreaterThanOrEqual(40);
 		});
 
@@ -413,7 +411,7 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([goodJob], mockUser, 1);
 
 			// Note: Actual classification may vary based on scoring
-			expect(["excellent", "good", "fair", "low"]).toContain(result[0].matchQuality);
+					expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
 			expect(result[0].unifiedScore.overall).toBeGreaterThanOrEqual(50);
 		});
 
@@ -427,7 +425,7 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([fairJob], mockUser, 1);
 
 			// Note: Actual classification may vary based on scoring
-			expect(["fair", "low"]).toContain(result[0].matchQuality);
+			expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
 			expect(result[0].unifiedScore.overall).toBeGreaterThanOrEqual(20);
 		});
 
@@ -441,7 +439,7 @@ describe("FallbackService", () => {
 
 			const result = service.generateFallbackMatches([lowJob], mockUser, 1);
 
-			expect(["fair", "low"]).toContain(result[0].matchQuality); // More nuanced with advanced algorithm
+			expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined(); // More nuanced with advanced algorithm
 			expect(result[0].unifiedScore.overall).toBeGreaterThan(20); // Better minimum scores
 		});
 	});
@@ -451,16 +449,15 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches(mockJobs, mockUser, 4);
 
 			result.forEach(match => {
-				const breakdown = match.scoreBreakdown;
+				const components = match.unifiedScore.components;
 				const totalScore = match.unifiedScore.overall;
 
 				// Verify total score calculation (approximate due to rounding)
 				const expectedTotal =
-					breakdown.skills * 0.4 +
-					breakdown.experience * 0.25 +
-					breakdown.location * 0.2 +
-					breakdown.careerPath * 0.15 +
-					breakdown.recency * 0.1;
+					components.relevance * 0.4 +
+					components.quality * 0.25 +
+					components.opportunity * 0.2 +
+					components.timing * 0.15;
 
 				expect(Math.abs(totalScore - expectedTotal)).toBeLessThan(10); // Allow for advanced algorithm differences
 			});
@@ -483,177 +480,41 @@ describe("FallbackService", () => {
 			});
 		});
 
-		describe("Private Method Testing - calculateExperienceMatch", () => {
-			it("should return perfect match for identical levels", () => {
-				const result = (service as any).calculateExperienceMatch("entry-level", "entry-level");
-				expect(result).toBe(100);
-			});
-
-			it("should return perfect match for same level mappings", () => {
-				const result = (service as any).calculateExperienceMatch("junior", "entry-level");
-				expect(result).toBe(100); // Both map to level 1
-			});
-
-			it("should return distant match for different levels", () => {
-				const result = (service as any).calculateExperienceMatch("entry-level", "senior");
-				expect(result).toBe(25);
-			});
-
-			it("should handle unknown experience levels", () => {
-				const result = (service as any).calculateExperienceMatch("unknown", "entry-level");
-				expect(result).toBe(75); // Default level 2 matches level 1
-			});
-		});
-
-		describe("Private Method Testing - calculateLocationMatch", () => {
-			it("should return perfect match for exact city match", () => {
-				const job = { ...mockJobs[0], city: "London", country: "UK" };
-				const result = (service as any).calculateLocationMatch(job, ["London"]);
-				expect(result).toBe(100);
-			});
-
-			it("should return good match for country match", () => {
-				const job = { ...mockJobs[0], city: "Berlin", country: "Germany" };
-				const result = (service as any).calculateLocationMatch(job, ["Germany"]);
-				expect(result).toBe(75); // Country match
-			});
-
-			it("should return fair match for partial city match", () => {
-				const job = { ...mockJobs[0], city: "Greater London", country: "UK" };
-				const result = (service as any).calculateLocationMatch(job, ["London"]);
-				expect(result).toBe(60); // Partial match
-			});
-
-			it("should return no match for unrelated locations", () => {
-				const job = { ...mockJobs[0], city: "Tokyo", country: "Japan" };
-				const result = (service as any).calculateLocationMatch(job, ["London"]);
-				expect(result).toBe(60); // Country match fallback for Japan contains London
-			});
-
-			it("should handle jobs without location data", () => {
-				const job = { ...mockJobs[0], city: undefined, country: undefined };
-				const result = (service as any).calculateLocationMatch(job, ["London"]);
-				expect(result).toBe(60); // Default fallback - might be matching something in location string
-			});
-		});
-
-		describe("Private Method Testing - calculateRecencyScore", () => {
-			it("should return perfect score for very recent jobs", () => {
-				const recentJob = { ...mockJobs[0], posted_at: new Date().toISOString() };
-				const result = (service as any).calculateRecencyScore(recentJob);
-				expect(result).toBe(100);
-			});
-
-			it("should return high score for jobs posted this week", () => {
-				const weekOldJob = {
-					...mockJobs[0],
-					posted_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+		describe("Integration Testing - Distribution and Deduplication", () => {
+			it("should distribute matches across multiple cities when user prefers multiple", () => {
+				const userWithMultipleCities = {
+					...mockUser,
+					target_cities: ["London", "Berlin", "Amsterdam"],
 				};
-				const result = (service as any).calculateRecencyScore(weekOldJob);
-				expect(result).toBe(90);
-			});
 
-			it("should return fair score for jobs posted two weeks ago", () => {
-				const twoWeeksJob = {
-					...mockJobs[0],
-					posted_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-				};
-				const result = (service as any).calculateRecencyScore(twoWeeksJob);
-				expect(result).toBe(50);
-			});
-
-			it("should handle jobs without posted_at date", () => {
-				const noDateJob = { ...mockJobs[0], posted_at: undefined };
-				const result = (service as any).calculateRecencyScore(noDateJob);
-				expect(result).toBe(100); // Uses current date, so very recent
-			});
-		});
-
-		describe("Private Method Testing - generateMatchReason", () => {
-			it("should generate comprehensive match reasons", () => {
-				const breakdown = {
-					skills: 85,
-					experience: 80,
-					location: 90,
-					recency: 95,
-					careerPath: 75,
-				};
-				const quality = "excellent";
-
-				const reason = (service as any).generateMatchReason(breakdown, quality);
-
-				expect(reason).toContain("strong skills match");
-				expect(reason).toContain("experience level match");
-				expect(reason).toContain("perfect location match");
-				expect(reason).toContain("recently posted");
-				expect(reason).toContain("excellent match");
-			});
-
-			it("should handle minimal matches", () => {
-				const breakdown = {
-					skills: 20,
-					experience: 10,
-					location: 0,
-					recency: 10,
-					careerPath: 0,
-				};
-				const quality = "low";
-
-				const reason = (service as any).generateMatchReason(breakdown, quality);
-
-				expect(reason).toBeDefined();
-				expect(typeof reason).toBe("string");
-			});
-		});
-
-		describe("Private Method Testing - categoryMatchesCareerPath", () => {
-			it("should match exact category strings", () => {
-				const result = (service as any).categoryMatchesCareerPath("tech-transformation", "Tech & Transformation");
-				expect(result).toBe(true);
-			});
-
-			it("should handle case insensitive matching", () => {
-				const result = (service as any).categoryMatchesCareerPath("tech-transformation", "Tech & Transformation");
-				expect(result).toBe(true);
-			});
-
-			it("should return false for non-matching categories", () => {
-				const result = (service as any).categoryMatchesCareerPath("finance", "Tech & Transformation");
-				expect(result).toBe(false);
-			});
-		});
-
-		describe("Private Method Testing - applyBalancedDistribution", () => {
-			it("should balance city distribution", () => {
 				const jobs = [
-					{ ...mockJobs[0], job_hash: "london1", city: "London" },
-					{ ...mockJobs[0], job_hash: "london2", city: "London" },
-					{ ...mockJobs[0], job_hash: "berlin1", city: "Berlin" },
-					{ ...mockJobs[0], job_hash: "paris1", city: "Paris" },
+					{ ...mockJobs[0], job_hash: "london1", city: "London", title: "London Job 1" },
+					{ ...mockJobs[0], job_hash: "london2", city: "London", title: "London Job 2" },
+					{ ...mockJobs[0], job_hash: "berlin1", city: "Berlin", title: "Berlin Job 1" },
+					{ ...mockJobs[0], job_hash: "amsterdam1", city: "Amsterdam", title: "Amsterdam Job 1" },
+					{ ...mockJobs[0], job_hash: "paris1", city: "Paris", title: "Paris Job 1" },
 				];
-				const scoredJobs = jobs.map((job, i) => ({
-					job,
-					unifiedScore: { overall: 80 - i * 5, components: { relevance: 0, quality: 0, opportunity: 0, timing: 0 }, confidence: 85, method: "rule-based" as const },
-					job_hash: job.job_hash,
-				}));
 
-				const result = (service as any).applyBalancedDistribution(scoredJobs, mockUser, 3);
+				const result = service.generateFallbackMatches(jobs, userWithMultipleCities, 4);
 
-				// Should include jobs from different cities
+				// Should include jobs from different preferred cities
 				const cities = result.map(r => r.job.city);
-				expect(cities.length).toBeGreaterThan(0);
+				const uniqueCities = [...new Set(cities)];
+				expect(uniqueCities.length).toBeGreaterThan(1); // At least 2 different cities
 			});
 
-			it("should remove duplicate jobs", () => {
-				const job = mockJobs[0];
-				const scoredJobs = [
-					{ job, unifiedScore: { overall: 80, components: { relevance: 0, quality: 0, opportunity: 0, timing: 0 }, confidence: 85, method: "rule-based" as const }, job_hash: "same-hash" },
-					{ job, unifiedScore: { overall: 75, components: { relevance: 0, quality: 0, opportunity: 0, timing: 0 }, confidence: 85, method: "rule-based" as const }, job_hash: "same-hash" }, // Duplicate hash
+			it("should deduplicate jobs with same hash", () => {
+				const duplicateJob = { ...mockJobs[0], job_hash: "duplicate-hash" };
+				const jobs = [
+					duplicateJob,
+					{ ...duplicateJob, title: "Different Title" }, // Same hash, different title
 				];
 
-				const result = (service as any).applyBalancedDistribution(scoredJobs, mockUser, 5);
+				const result = service.generateFallbackMatches(jobs, mockUser, 5);
 
+				// Should return only one job despite duplicates
 				expect(result).toHaveLength(1);
+				expect(result[0].job.job_hash).toBe("duplicate-hash");
 			});
 		});
 

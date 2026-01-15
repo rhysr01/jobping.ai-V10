@@ -27,17 +27,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "london-software-eng-1",
 				title: "Software Engineer",
-				company: "TechCorp London",
+				company: "Google",
 				location: "London, UK",
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/london-software-1",
-				description: "Entry-level software engineering role with mentorship",
+				description: "React, TypeScript, Node.js software engineering role with mentorship and growth opportunities",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
 				categories: ["early-career", "tech-transformation"],
 				language_requirements: ["English"],
+				visa_friendly: true, // Production field: visa sponsorship available
+				salary_min: 55000, // Production field: salary data
+				salary_max: 75000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -48,17 +51,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "london-software-eng-2",
 				title: "Junior Developer",
-				company: "StartupTech London",
+				company: "Microsoft",
 				location: "London, UK",
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/london-software-2",
-				description: "Junior developer position for recent graduates",
+				description: "Junior developer position for recent graduates with Python, JavaScript, and SQL skills",
 				experience_required: "entry-level",
 				work_environment: "remote",
 				source: "test",
 				categories: ["early-career", "tech-transformation"],
 				language_requirements: ["English"],
+				visa_friendly: true, // Production field: visa sponsorship available
+				salary_min: 45000, // Production field: salary data
+				salary_max: 60000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -70,17 +76,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "berlin-data-analyst-1",
 				title: "Data Analyst",
-				company: "DataCorp Berlin",
+				company: "Amazon",
 				location: "Berlin, Germany",
 				city: "Berlin",
 				country: "Germany",
 				job_url: "https://example.com/berlin-data-1",
-				description: "Data analysis role for graduates with SQL skills",
+				description: "Data analysis role for graduates with SQL, Python, and Excel skills",
 				experience_required: "entry-level",
 				work_environment: "office",
 				source: "test",
 				categories: ["early-career", "data-analytics"],
 				language_requirements: ["English", "German"],
+				visa_friendly: true, // Production field: visa sponsorship available
+				salary_min: 48000, // Production field: salary data
+				salary_max: 65000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -91,17 +100,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "berlin-data-analyst-2",
 				title: "Junior Data Scientist",
-				company: "Analytics GmbH",
+				company: "Meta",
 				location: "Berlin, Germany",
 				city: "Berlin",
 				country: "Germany",
 				job_url: "https://example.com/berlin-data-2",
-				description: "Junior data scientist with Python experience",
+				description: "Junior data scientist with Python, pandas, and machine learning experience",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
 				categories: ["early-career", "data-analytics"],
 				language_requirements: ["English"],
+				visa_friendly: true, // Production field: visa sponsorship available
+				salary_min: 52000, // Production field: salary data
+				salary_max: 70000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -113,17 +125,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "paris-marketing-coord-1",
 				title: "Digital Marketing Coordinator",
-				company: "Marketing Paris",
+				company: "L'Oréal",
 				location: "Paris, France",
 				city: "Paris",
 				country: "France",
 				job_url: "https://example.com/paris-marketing-1",
-				description: "Digital marketing role for recent graduates",
+				description: "Digital marketing role for recent graduates with SEO, content, and social media skills",
 				experience_required: "entry-level",
 				work_environment: "office",
 				source: "test",
 				categories: ["early-career", "marketing-growth"],
 				language_requirements: ["English", "French"],
+				visa_friendly: false, // Production field: no visa sponsorship mentioned
+				salary_min: 38000, // Production field: salary data
+				salary_max: 48000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -135,17 +150,20 @@ describe("Matching Algorithm Integration", () => {
 			{
 				job_hash: "mixed-role-tech-marketing",
 				title: "Growth Hacker",
-				company: "TechMarketing Ltd",
+				company: "Stripe",
 				location: "London, UK",
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/mixed-role",
-				description: "Role combining technical and marketing skills",
+				description: "Role combining technical and marketing skills with analytics and growth expertise",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
 				categories: ["early-career", "tech-transformation", "marketing-growth"], // 2/3 relevant for tech-only user
 				language_requirements: ["English"],
+				visa_friendly: true, // Production field: visa sponsorship available
+				salary_min: 50000, // Production field: salary data
+				salary_max: 65000, // Production field: salary data
 				scrape_timestamp: new Date().toISOString(),
 				original_posted_date: new Date().toISOString(),
 				posted_at: new Date().toISOString(),
@@ -168,6 +186,7 @@ describe("Matching Algorithm Integration", () => {
 			company_types: ["tech"],
 			roles_selected: ["software-engineer"],
 			subscription_tier: "free",
+			career_keywords: "javascript,react,python,sql,data analysis,machine learning", // Production field: specific skills
 		};
 
 		// User with single preferences (baseline test)
@@ -183,6 +202,7 @@ describe("Matching Algorithm Integration", () => {
 			company_types: ["tech"],
 			roles_selected: ["software-engineer"],
 			subscription_tier: "free",
+			career_keywords: "javascript,react,typescript,node.js,python,git,agile", // Production field: specific skills
 		};
 	});
 
@@ -198,8 +218,8 @@ describe("Matching Algorithm Integration", () => {
 			const results = fallbackService.generateFallbackMatches([partialJob], userWithTechOnly, 1);
 
 			expect(results.length).toBe(1);
-			expect(results[0].matchScore).toBeGreaterThan(0);
-			expect(results[0].scoreBreakdown.careerPath).toBeGreaterThan(0);
+			expect(results[0].unifiedScore.overall).toBeGreaterThan(0);
+			expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
 		});
 
 		it("should give partial scores to jobs below 100% relevance", () => {
@@ -211,9 +231,9 @@ describe("Matching Algorithm Integration", () => {
 
 			const results = fallbackService.generateFallbackMatches([partialJob], userWithTechOnly, 1);
 
-			// Job has 2/3 relevant categories, so should get partial career path score
-			expect(results[0].scoreBreakdown.careerPath).toBeGreaterThan(0);
-			expect(results[0].scoreBreakdown.careerPath).toBeLessThan(100);
+			// Job has 2/3 relevant categories, so should get partial relevance score
+			expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
+			expect(results[0].unifiedScore.components.relevance).toBeLessThan(100);
 		});
 
 		it("should exclude jobs with very low relevance", () => {
@@ -233,8 +253,8 @@ describe("Matching Algorithm Integration", () => {
 			const results = fallbackService.generateFallbackMatches([irrelevantJob], userWithTechOnly, 1);
 
 			expect(results.length).toBe(1);
-			// Should get zero career path score
-			expect(results[0].scoreBreakdown.careerPath).toBe(0);
+			// Should get low relevance score (less than 50)
+			expect(results[0].unifiedScore.components.relevance).toBeLessThan(50);
 		});
 	});
 
@@ -296,31 +316,34 @@ describe("Matching Algorithm Integration", () => {
 			results.forEach(match => {
 				// Validate match structure
 				expect(match).toHaveProperty("job");
-				expect(match).toHaveProperty("matchScore");
+				expect(match).toHaveProperty("unifiedScore");
 				expect(match).toHaveProperty("matchReason");
-				expect(match).toHaveProperty("matchQuality");
-				expect(match).toHaveProperty("confidenceScore");
-				expect(match).toHaveProperty("scoreBreakdown");
+
+				// Validate unifiedScore structure
+				expect(match.unifiedScore).toHaveProperty("overall");
+				expect(match.unifiedScore).toHaveProperty("components");
+				expect(match.unifiedScore).toHaveProperty("confidence");
+				expect(match.unifiedScore).toHaveProperty("method");
 
 				// Validate score ranges
-				expect(match.matchScore).toBeGreaterThanOrEqual(0);
-				expect(match.matchScore).toBeLessThanOrEqual(100);
-				expect(match.confidenceScore).toBeGreaterThan(0);
-				expect(match.confidenceScore).toBeLessThanOrEqual(100);
+				expect(match.unifiedScore.overall).toBeGreaterThanOrEqual(0);
+				expect(match.unifiedScore.overall).toBeLessThanOrEqual(100);
+				expect(match.unifiedScore.confidence).toBeGreaterThan(0);
+				expect(match.unifiedScore.confidence).toBeLessThanOrEqual(100);
 
-				// Validate score breakdown
-				expect(match.scoreBreakdown).toHaveProperty("skills");
-				expect(match.scoreBreakdown).toHaveProperty("experience");
-				expect(match.scoreBreakdown).toHaveProperty("location");
-				expect(match.scoreBreakdown).toHaveProperty("recency");
-				expect(match.scoreBreakdown).toHaveProperty("careerPath");
+				// Validate unifiedScore components
+				expect(match.unifiedScore.components).toHaveProperty("relevance");
+				expect(match.unifiedScore.components).toHaveProperty("quality");
+				expect(match.unifiedScore.components).toHaveProperty("opportunity");
+				expect(match.unifiedScore.components).toHaveProperty("timing");
 
 				// Validate match reason
 				expect(typeof match.matchReason).toBe("string");
 				expect(match.matchReason.length).toBeGreaterThan(10);
 
-				// Validate match quality
-				expect(["excellent", "good", "fair", "low"]).toContain(match.matchQuality);
+				// Validate match quality from unified score
+				expect(match.unifiedScore.explanation?.scoreMeaning).toBeDefined();
+				expect(["excellent", "good", "fair", "low", "poor"]).toContain(match.unifiedScore.explanation?.scoreMeaning);
 			});
 		});
 
@@ -346,8 +369,8 @@ describe("Matching Algorithm Integration", () => {
 			expect(results1.length).toBe(results2.length);
 
 			// Compare scores (allowing for small timing variations)
-			const scores1 = results1.map(m => m.matchScore).sort();
-			const scores2 = results2.map(m => m.matchScore).sort();
+			const scores1 = results1.map(m => m.unifiedScore.overall).sort();
+			const scores2 = results2.map(m => m.unifiedScore.overall).sort();
 
 			expect(scores1.length).toBe(scores2.length);
 			scores1.forEach((score, index) => {
@@ -374,9 +397,9 @@ describe("Matching Algorithm Integration", () => {
 			const results = fallbackService.generateFallbackMatches([borderlineJob], userWithTechFocus, 1);
 
 			expect(results.length).toBe(1);
-			// With new 40% threshold, this job should be included with partial scoring
-			expect(results[0].matchScore).toBeGreaterThan(0);
-			expect(results[0].scoreBreakdown.careerPath).toBeGreaterThan(0);
+					// With new 40% threshold, this job should be included with partial scoring
+					expect(results[0].unifiedScore.overall).toBeGreaterThan(0);
+					expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
 		});
 
 		it("should show balanced results across diverse job pool", () => {

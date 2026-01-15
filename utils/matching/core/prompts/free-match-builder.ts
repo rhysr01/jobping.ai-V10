@@ -39,9 +39,9 @@ ${jobList}`;
 	 */
 	static getConfig() {
 		return {
-			useAI: true,
+			useAI: true, // Re-enable AI
 			maxJobsForAI: 10,
-			fallbackThreshold: 2,
+			fallbackThreshold: 1, // Low threshold to ensure AI is attempted
 			includePrefilterScore: false,
 		};
 	}
@@ -50,13 +50,13 @@ ${jobList}`;
 	 * System prompt - career counselor for business students (free tier)
 	 */
 	private static get systemPrompt(): string {
-		return `You are JobPing's career counselor for business students starting their careers.
-Your free service helps students find their first professional roles.
+		return `You are JobPing's AI career counselor specializing in entry-level job matching.
+Your free service helps graduates find their first professional roles with high success rates.
 
-STUDENT PERSPECTIVE: "I'm a business graduate looking for my first job. What roles should I actually apply for?"
-YOUR ROLE: Find 5 realistic entry-level positions this student would genuinely consider and have a chance of getting.
+STUDENT PERSPECTIVE: "I'm a recent graduate looking for my first job. What roles should I actually apply for and get interviews?"
+YOUR ROLE: Find 5 REALISTIC entry-level positions this student has strong qualifications for and would genuinely consider.
 
-This isn't about perfect matches - it's about jobs they would actually pursue in their job search.`;
+CRITICAL: Focus on JOBS THEY CAN ACTUALLY GET based on their career focus and qualifications. Prioritize roles where they meet 70%+ of requirements.`;
 	}
 
 	/**
@@ -86,43 +86,60 @@ NOTE: This student used JobPing's simple form - focus on one clear career direct
 	 * Task instruction for free tier - career counselor approach
 	 */
 	private static taskInstruction(_user: UserPreferences): string {
-		return `As this student's career counselor, select 5 REALISTIC entry-level positions they would genuinely apply for. Consider what a business graduate would actually pursue:
+		return `As this student's career counselor, select EXACTLY 5 entry-level positions from the provided job list that match their profile. Use this scoring system:
 
-REALITY CHECKS FOR BUSINESS STUDENTS:
-- Entry-level roles in their chosen career path
-- Graduate programs, internships and early career rolesin their specific field
-- Locations they're willing to work in
-- Roles where they have reasonable qualifications for their single career direction
+JOB SELECTION CRITERIA (must meet ALL):
+1. LOCATION: Job city matches student's target cities
+2. CAREER: Job categories align with student's career path
+3. LEVEL: Entry-level, graduate, or internship roles only
+4. REALISM: Student meets 70%+ of stated requirements
 
-Focus on TRUST: These should be jobs they would confidently apply for in their chosen career path and discuss in interviews as "good fits" for their focused career interests and experience level.
+SCORING WEIGHTS:
+- Career alignment: 40% (primary factor)
+- Location match: 30% (critical for applications)
+- Experience fit: 20% (entry-level focus)
+- Company reputation: 10% (bonus factor)
 
-Return JSON with practical matches that build confidence in JobPing's understanding of their specific career direction.`;
+Output EXACTLY 5 matches ranked by overall fit score. Focus on jobs where the student has genuine qualifications and would realistically apply and interview for.`;
 	}
 
 	/**
-	 * Output schema for free tier - career counselor reasoning
+	 * Output schema for free tier - structured JSON for reliable parsing
 	 */
 	private static get outputSchema(): string {
 		return `{
   "matches": [
     {
       "jobIndex": 0,
-      "matchScore": 78,
+      "matchScore": 85,
+      "confidenceScore": 90,
+      "matchReason": "Software Engineer at TechCorp London - matches tech career path, London location, entry-level with Node.js/React skills mentioned, excellent fit for graduate developer"
+    },
+    {
+      "jobIndex": 3,
+      "matchScore": 82,
       "confidenceScore": 85,
-      "matchReason": "Business Analyst role at consulting firm - perfect for business graduate with analytical skills, realistic entry-level position with growth potential"
+      "matchReason": "Data Analyst at DataCo London - aligns with tech career, London location, SQL/Python skills match graduate profile, realistic entry position"
     }
   ]
-}`;
+}
+
+REQUIREMENTS:
+- EXACTLY 5 matches from the JOBS list
+- jobIndex must be a valid index from the provided jobs array
+- matchScore: 0-100 (higher = better fit)
+- confidenceScore: 0-100 (higher = more certain about fit)
+- matchReason: Specific explanation why this job fits their career + location + experience`;
 	}
 
 	/**
-	 * Format job list for prompt
+	 * Format job list for prompt - clear structure for AI matching
 	 */
 	private static formatJobList(jobs: Job[]): string {
 		return jobs
 			.map(
 				(job, i) =>
-					`${i}: ${job.title} | ${job.company} | ${job.city} | Posted: ${job.created_at || "Recent"}`,
+					`${i}: ${job.title} | ${job.company} | ${job.city} | Categories: ${job.categories?.join(", ") || "N/A"} | Level: ${job.experience_required || "Not specified"}`,
 			)
 			.join("\n");
 	}

@@ -359,6 +359,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			email: normalizedEmail,
 			cities: targetCities,
 			careerPath: userData.career_path,
+			jobsError: jobsError?.message,
+			jobsCount: allJobs?.length || 0,
 		});
 		return NextResponse.json(
 			{ error: "No jobs found. Try different cities or career paths." },
@@ -409,6 +411,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Check for matches
 	if (matchesCount === 0) {
+		apiLogger.info("Free signup - no matches found for user criteria", {
+			email: normalizedEmail,
+			jobsAvailable: jobsForMatching.length,
+			userCriteria: {
+				cities: targetCities,
+				careerPath: userData.career_path,
+				visaStatus: userData.visa_status,
+			}
+		});
 		return NextResponse.json(
 			{ error: "No matches found. Try different cities or career paths." },
 			{ status: 404 },

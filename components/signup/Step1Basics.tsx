@@ -3,7 +3,16 @@
 import { motion } from "framer-motion";
 import React, { useRef } from "react";
 import { CityChip } from "../ui/CityChip";
-import EuropeMap from "../ui/EuropeMap";
+// Lazy load EuropeMap for desktop only - major performance win on mobile
+import dynamic from "next/dynamic";
+const EuropeMap = dynamic(() => import("../ui/EuropeMap"), {
+	ssr: false,
+	loading: () => (
+		<div className="flex items-center justify-center h-64 bg-black/20 rounded-lg border border-zinc-700">
+			<div className="text-zinc-400 text-sm">Loading map...</div>
+		</div>
+	),
+});
 import {
 	FormFieldError,
 	FormFieldSuccess,
@@ -313,7 +322,7 @@ export const Step1Basics = React.memo(function Step1Basics({
 					</div>
 				)}
 
-				{/* Mobile-friendly city chips */}
+				{/* Mobile-friendly city selector - improved for touch */}
 				<div
 					className="flex overflow-x-auto pb-4 gap-2 scrollbar-hide -mx-4 px-4 snap-x snap-mandatory sm:hidden"
 					role="group"

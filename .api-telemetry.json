@@ -48,5 +48,15 @@
     "total": 918,
     "success": 918,
     "errors": 0
+  },
+  "adzuna__2026-01-15": {
+    "total": 1215,
+    "success": 1215,
+    "errors": 0
+  },
+  "jooble__2026-01-15": {
+    "total": 893,
+    "success": 893,
+    "errors": 0
   }
 }

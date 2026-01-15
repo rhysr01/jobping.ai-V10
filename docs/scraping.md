@@ -1,0 +1,151 @@
+## Job Scraping System
+
+### Architecture Overview
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Job Sources   │───►│   Scrapers      │───►│   Processing    │
+│                 │    │   (Node.js)     │    │   Pipeline      │
+│ • Arbeitnow     │    │                 │    │                 │
+│ • Careerjet     │    │ • Data Cleaning │    │ • Deduplication │
+│ • Jooble        │    │ • Normalization │    │ • AI Labeling   │
+│ • Reed          │    │ • Validation    │    │ • Embeddings    │
+│ • Adzuna        │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Scraper Implementation
+
+Each scraper follows a standardized pattern:
+
+```javascript
+// scrapers/arbeitnow.cjs
+const { createClient } = require("@supabase/supabase-js");
+const {
+  processIncomingJob,
+  makeJobHash,
+  classifyEarlyCareer
+} = require("./shared/processor.cjs");
+
+async function scrapeArbeitnow() {
+  const supabase = createClient(url, key);
+
+  // 1. Fetch jobs from API
+  const jobs = await fetchFromArbeitnow();
+
+  // 2. Process each job
+  for (const jobData of jobs) {
+    try {
+      // Generate unique hash
+      const jobHash = makeJobHash(jobData);
+
+      // Check for duplicates
+      const existing = await supabase
+        .from('jobs')
+        .select('id')
+        .eq('job_hash', jobHash)
+        .single();
+
+      if (existing.data) continue;
+
+      // AI-powered processing
+      const processedJob = await processIncomingJob(jobData);
+
+      // Insert into database
+      await supabase.from('jobs').insert(processedJob);
+
+    } catch (error) {
+      console.error(`Failed to process job:`, error);
+    }
+  }
+}
+```
+
+### Data Processing Pipeline
+
+#### 1. Job Normalization
+- **Location standardization**: City/country mapping
+- **Company name cleaning**: Remove suffixes, standardize formats
+- **Date parsing**: Handle various date formats
+- **Salary extraction**: Parse compensation data
+
+#### 2. AI Labeling
+```javascript
+// AI-powered job categorization
+const labels = await openai.chat.completions.create({
+  model: "gpt-4",
+  messages: [{
+    role: "system",
+    content: `Categorize this job for early-career professionals.
+    Return JSON with: skills[], industries[], experience_level, work_environment`
+  }, {
+    role: "user",
+    content: job.description
+  }]
+});
+```
+
+#### 3. Deduplication
+- **Hash-based deduplication**: SHA-256 of title + company + location
+- **Similarity matching**: Fuzzy matching for near-duplicates
+- **Temporal filtering**: Prefer newer job postings
+
+#### 4. Embedding Generation
+```javascript
+// Generate vector embeddings for similarity matching
+const embedding = await openai.embeddings.create({
+  model: "text-embedding-3-small",
+  input: `${job.title} ${job.description} ${job.skills.join(' ')}`
+});
+
+// Store in database
+await supabase.from('job_embeddings').insert({
+  job_id: job.id,
+  embedding: embedding.data[0].embedding,
+  model: 'text-embedding-3-small'
+});
+```
+
+### Scraper Configuration
+
+#### Query Rotation System
+Scrapers use rotating query sets to avoid rate limits:
+
+```javascript
+const QUERY_SETS = {
+  SET_A: ['praktikum', 'werkstudent', 'absolventenprogramm'],
+  SET_B: ['internship', 'graduate program', 'junior developer'],
+  SET_C: ['trainee', 'entry level', 'early career']
+};
+
+// Rotate every 8 hours
+const currentSet = Math.floor(Date.now() / (8 * 60 * 60 * 1000)) % 3;
+```
+
+#### Rate Limiting
+- **Per-source limits**: Respect API rate limits
+- **Backoff strategies**: Exponential backoff on failures
+- **Concurrent requests**: Limited parallelism per scraper
+
+### Monitoring & Reliability
+
+#### Telemetry Collection
+```javascript
+const telemetry = {
+  scraper_run_id: crypto.randomUUID(),
+  source: 'arbeitnow',
+  jobs_found: jobs.length,
+  jobs_processed: processedCount,
+  duration_ms: Date.now() - startTime,
+  errors: errorCount
+};
+
+await supabase.from('scraper_runs').insert(telemetry);
+```
+
+#### Health Checks
+- **Job source availability**: API endpoint monitoring
+- **Data quality**: Validation of processed jobs
+- **Performance**: Processing time per job
+- **Error rates**: Failure tracking and alerting
+

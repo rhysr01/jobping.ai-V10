@@ -144,16 +144,45 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 					wasUpgrade: true,
 				});
 			} else {
-				// Existing premium user or inactive account
-				apiLogger.info("Existing premium user tried to sign up again", { email: normalizedEmail });
-				return NextResponse.json(
+				// Existing premium user - allow access to matches
+				// Similar to free signup behavior
+				const response = NextResponse.json(
 					{
 						error: "account_already_exists",
-						message: "An account with this email already exists. Try signing in instead, or use a different email.",
-						code: "DUPLICATE_EMAIL",
+						message: "Looks like you already have a premium JobPing account! Taking you to your enhanced matches...",
+						redirectToMatches: true,
 					},
 					{ status: 409 },
 				);
+
+				// Set cookie so they can access premium matches
+				const isProduction = process.env.NODE_ENV === "production";
+				const isHttps =
+					req.headers.get("x-forwarded-proto") === "https" ||
+					req.url.startsWith("https://");
+
+				response.cookies.set("premium_user_email", normalizedEmail, {
+					httpOnly: true,
+					secure: isProduction && isHttps,
+					sameSite: "lax",
+					maxAge: 60 * 60 * 24 * 30, // 30 days
+					path: "/",
+				});
+
+				// Check if they have matches
+				const { data: existingMatches } = await supabase
+					.from("matches")
+					.select("job_hash")
+					.eq("user_email", normalizedEmail)
+					.limit(1);
+
+				apiLogger.info("Existing premium user tried to sign up again", {
+					email: normalizedEmail,
+					hasMatches: (existingMatches?.length || 0) > 0,
+					matchCount: existingMatches?.length || 0,
+				});
+
+				return response;
 			}
 		}
 

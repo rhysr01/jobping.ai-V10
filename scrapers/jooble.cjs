@@ -37,8 +37,9 @@ const { processIncomingJob } = require("./shared/processor.cjs");
 // Note: Jooble may require API key registration for production use
 const BASE_URL = "https://jooble.org/api/";
 
-// EU Cities - MAJOR MARKETS coverage
-// Based on Jooble's primary operations: DE, FR, NL, ES, IT, AT, GB
+// EU Cities - MAJOR MARKETS coverage (optimized for speed)
+// Based on Jooble's primary operations: DE, FR, NL, ES, IT, GB
+// Reduced from 10 to 8 cities to prevent timeouts
 const CITIES = [
 	{ name: "London", country: "gb", locale: "en" }, // UK
 	{ name: "Berlin", country: "de", locale: "de" }, // Germany
@@ -46,9 +47,7 @@ const CITIES = [
 	{ name: "Amsterdam", country: "nl", locale: "nl" }, // Netherlands
 	{ name: "Munich", country: "de", locale: "de" }, // Germany
 	{ name: "Milan", country: "it", locale: "it" }, // Italy
-	{ name: "Frankfurt", country: "de", locale: "de" }, // Germany (major financial hub)
 	{ name: "Madrid", country: "es", locale: "es" }, // Spain
-	{ name: "Vienna", country: "at", locale: "de" }, // Austria
 	{ name: "Rome", country: "it", locale: "it" }, // Italy
 ];
 
@@ -297,21 +296,36 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 			// Jooble API requires POST requests to /api/{api_key} endpoint
 			const url = `${BASE_URL}${apiKey}`;
 
-			const response = await fetch(url, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"User-Agent": "JobPing/1.0 (job aggregator)",
-					Accept: "application/json",
-				},
-				body: JSON.stringify({
-					keywords: keyword,
-					location: location.name,
-					country: location.country || "gb", // Required country parameter
-					page: page,
-					radius: 25,
-				}),
-			});
+			// Add 30-second timeout to prevent hanging requests
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+			let response;
+			try {
+				response = await fetch(url, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"User-Agent": "JobPing/1.0 (job aggregator)",
+						Accept: "application/json",
+					},
+					body: JSON.stringify({
+						keywords: keyword,
+						location: location.name,
+						country: location.country || "gb", // Required country parameter
+						page: page,
+						radius: 25,
+					}),
+					signal: controller.signal,
+				});
+				clearTimeout(timeoutId);
+			} catch (error) {
+				clearTimeout(timeoutId);
+				if (error.name === 'AbortError') {
+					throw new Error(`Request timed out after 30s for ${keyword} in ${location.name}`);
+				}
+				throw error;
+			}
 
 			// Track API request
 			recordApiRequest("jooble", url, response.ok);
@@ -459,7 +473,7 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 							.from("jobs")
 							.upsert(jobBatch, {
 								onConflict: "job_hash",
-								ignoreDuplicates: false,
+								ignoreDuplicates: true, // Skip duplicates instead of expensive updates
 							});
 
 						if (error) {
@@ -500,7 +514,7 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 	if (jobBatch.length > 0) {
 		const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
 			onConflict: "job_hash",
-			ignoreDuplicates: false,
+			ignoreDuplicates: true, // Skip duplicates instead of expensive updates
 		});
 
 		if (error) {
@@ -559,9 +573,9 @@ async function scrapeJooble() {
 	// EXPANDED: Maximize early career queries within API limits
 	// Jooble Free Tier: Generous limits, focus on quality over quantity
 	// Strategy: 10 cities × 12 queries × 3 pages = ~360 requests per run
-	// Increased from 6 to 12 queries per city for better early career coverage
-	// Reduced cities to focus on major EU markets for quality over quantity
-	const limitedQueries = queries.slice(0, 12); // EXPANDED from 6 to 12 queries per city
+	// Optimized: Reduced from 12 to 8 queries per city for speed
+	// Reduced cities to 8 for quality over quantity
+	const limitedQueries = queries.slice(0, 8); // REDUCED from 12 to 8 queries per city
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -581,6 +595,15 @@ async function scrapeJooble() {
 					error.message,
 				);
 				errors++;
+
+				// Fail fast on critical errors to prevent timeouts
+				if (error.message.includes('timed out') ||
+					error.message.includes('API key missing') ||
+					error.message.includes('ECONNREFUSED') ||
+					error.message.includes('ENOTFOUND')) {
+					console.error(`[Jooble] Critical error detected, stopping ${city.name} processing`);
+					break; // Stop processing this city
+				}
 			}
 		}
 	}

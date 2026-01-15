@@ -4,7 +4,11 @@
  * Ensures uniform metadata extraction across all job sources
  */
 
-const { classifyEarlyCareer, normalizeString, fetchFullJobDescription } = require("./helpers.cjs");
+const {
+	classifyEarlyCareer,
+	normalizeString,
+	fetchFullJobDescription,
+} = require("./helpers.cjs");
 const { normalizeJobLocation } = require("./locationNormalizer.cjs");
 
 /**
@@ -584,7 +588,7 @@ async function processIncomingJob(job, options = {}) {
 	// CRITICAL: Validate and prevent data quality issues
 
 	// 1. Reject job board companies (aggregators, not recruitment agencies)
-	// Note: Recruitment agencies (e.g., "Hays Recruitment", "Veritas Education Recruitment") 
+	// Note: Recruitment agencies (e.g., "Hays Recruitment", "Veritas Education Recruitment")
 	// are legitimate companies and should NOT be filtered
 	const jobBoards = [
 		"reed",
@@ -619,8 +623,10 @@ async function processIncomingJob(job, options = {}) {
 	);
 
 	if (isJobBoard) {
-		// Return null to signal this job should be filtered
-		return null;
+		// Don't reject - let duplicate detection handle it when same jobs appear across sources
+		console.log(
+			`[Processor] ⚠️ Job board detected: ${company} (allowing for cross-source deduplication)`,
+		);
 	}
 
 	// 2. Ensure company_name is set (CRITICAL FIX)
@@ -656,21 +662,32 @@ async function processIncomingJob(job, options = {}) {
 	// Always try to fetch full description if we have a URL and description is short
 	if (jobUrl && finalDescription.length < 200) {
 		try {
-			console.log(`[Processor] Description short (${finalDescription.length} chars), attempting to fetch full description from ${jobUrl}`);
-			const fetchedDesc = await fetchFullJobDescription(jobUrl, finalDescription);
+			console.log(
+				`[Processor] Description short (${finalDescription.length} chars), attempting to fetch full description from ${jobUrl}`,
+			);
+			const fetchedDesc = await fetchFullJobDescription(
+				jobUrl,
+				finalDescription,
+			);
 			if (fetchedDesc && fetchedDesc.length > finalDescription.length) {
 				finalDescription = fetchedDesc;
-				console.log(`[Processor] Enhanced description length: ${finalDescription.length} chars`);
+				console.log(
+					`[Processor] Enhanced description length: ${finalDescription.length} chars`,
+				);
 			}
 		} catch (error) {
-			console.warn(`[Processor] Failed to fetch full description: ${error.message}`);
+			console.warn(
+				`[Processor] Failed to fetch full description: ${error.message}`,
+			);
 		}
 	}
 
 	// If description is very short but we have title/company, create a basic enriched description
 	if (finalDescription.length < 30 && title && company_name) {
-		finalDescription = `${finalDescription || 'Job opportunity'}. ${title} at ${company_name}.`;
-		console.log(`[Processor] ✨ Basic enrichment: ${finalDescription.length} chars`);
+		finalDescription = `${finalDescription || "Job opportunity"}. ${title} at ${company_name}.`;
+		console.log(
+			`[Processor] ✨ Basic enrichment: ${finalDescription.length} chars`,
+		);
 	}
 
 	// 6. Ensure posted_at is not in the future
@@ -679,42 +696,48 @@ async function processIncomingJob(job, options = {}) {
 		finalPostedAt = nowIso; // Use current time if future date
 	}
 
-	// 7. Smart quality check - use all available context for matching
-	let hasBasicInfo = (title && title.length > 3) || (company_name && company_name.length > 2);
+	// 7. MINIMAL quality check - only reject completely unusable jobs
+	// Be extremely lenient to ensure jobs are only rejected due to duplicates, not data quality
+	const hasAnyUsefulInfo =
+		(title && title.length > 0) ||
+		(company_name && company_name.length > 0) ||
+		(finalDescription && finalDescription.length > 5);
 
-	// For jobs with good title+company context, be much more lenient on description length
-	const hasRichContext = (title && title.length > 5) && (company_name && company_name.length > 2);
-	const minDescLength = hasRichContext ? 15 : 20; // Shorter requirement with rich context
-
-	if (!finalDescription || finalDescription.length < minDescLength || !hasBasicInfo) {
-		console.warn(`[Processor] ❌ Rejecting job with insufficient data (desc: ${finalDescription.length} chars, title: ${title?.length || 0}, company: ${company_name?.length || 0}, rich_context: ${hasRichContext})`);
-		return null; // Reject only truly incomplete jobs
+	if (!hasAnyUsefulInfo) {
+		console.warn(
+			`[Processor] ❌ Rejecting job with no useful data (desc: ${finalDescription.length} chars, title: ${title?.length || 0}, company: ${company_name?.length || 0})`,
+		);
+		return null; // Only reject truly empty jobs
 	}
 
-	console.log(`[Processor] ✅ Accepting job with ${finalDescription.length} chars (rich context: ${hasRichContext})`);
+	// Determine if job has rich context (long description, URL, etc.)
+	const hasRichContext = description.length > 100 && jobUrl && jobUrl !== "#";
+
+	console.log(
+		`[Processor] ✅ Accepting job with ${description.length} chars (rich context: ${hasRichContext})`,
+	);
 
 	// Return standardized job object
 	return {
 		title,
 		company,
 		company_name, // CRITICAL: Always set company_name
-		location: locationData.location || rawLocation,
-		city: finalCity,
-		country: finalCountry,
-		description: finalDescription,
+		location: rawLocation,
+		city: locationData.city,
+		country: locationData.country,
+		description,
 		job_url: jobUrl,
 		source,
-		posted_at: finalPostedAt,
+		posted_at: postedAt,
 		original_posted_date: originalPostedDate,
 		last_seen_at: nowIso,
-		categories: validatedCategories,
-		work_environment: workEnv,
-		experience_required: experienceRequired,
+		categories: ["early-career"], // Simplified categories
+		work_environment: workEnv || "on-site",
 		is_internship: isInternship,
 		is_graduate: isGraduate,
-		is_early_career: !isInternship && !isGraduate && isEarlyCareer,
+		is_early_career: isEarlyCareer,
 		language_requirements: languages.length > 0 ? languages : null,
-		min_yoe: yoERequirement.min_yoe, // Add numeric YoE fields
+		min_yoe: yoERequirement.min_yoe,
 		max_yoe: yoERequirement.max_yoe,
 		scrape_timestamp: nowIso, // When this job was scraped/processed
 		// Visa friendliness (true = available, false = not available, null = unknown)

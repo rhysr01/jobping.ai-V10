@@ -70,10 +70,17 @@ export async function runFreeMatching(
 
 			const careerMatch = !userPrefs.career_path || // If no career specified, include
 				!job.categories || job.categories.length === 0 || // or if job has no categories, include
-				job.categories.some(
-					(cat) =>
-						cat.toLowerCase().includes(userPrefs.career_path?.toLowerCase() || ""),
-				);
+				job.categories.some((cat) => {
+					const catLower = cat.toLowerCase();
+					// Handle both array and string career_path formats
+					if (Array.isArray(userPrefs.career_path)) {
+						return userPrefs.career_path.some(userCareer =>
+							catLower.includes(userCareer.toLowerCase())
+						);
+					} else {
+						return userPrefs.career_path && catLower.includes(userPrefs.career_path.toLowerCase());
+					}
+				});
 
 			return cityMatch && careerMatch;
 		});

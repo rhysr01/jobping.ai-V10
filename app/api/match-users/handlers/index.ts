@@ -34,8 +34,15 @@ export async function matchUsersHandler(req: NextRequest) {
 		return authResult.error!;
 	}
 
-	// Parse request body
-	const body = await (authResult.authenticatedReq || req).json();
+	// Parse request body (avoid double consumption)
+	let body;
+	if (authResult.authenticatedReq?._rawBody) {
+		// Use raw body from authenticated request to avoid double consumption
+		body = JSON.parse(authResult.authenticatedReq._rawBody);
+	} else {
+		// Fallback for requests without authentication
+		body = await req.json();
+	}
 
 	// Validate request
 	const validationResult = validateMatchUsersRequest(body);

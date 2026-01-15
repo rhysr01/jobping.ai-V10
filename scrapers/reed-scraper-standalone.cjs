@@ -716,7 +716,7 @@ async function saveJobsToDB(jobs) {
 		const batch = unique.slice(i, i + BATCH_SIZE);
 		const { data, error } = await supabase
 			.from("jobs")
-			.upsert(batch, { onConflict: "job_hash", ignoreDuplicates: false })
+			.upsert(batch, { onConflict: "job_hash", ignoreDuplicates: true }) // Skip duplicates instead of expensive updates
 			.select("job_hash");
 
 		if (error) {

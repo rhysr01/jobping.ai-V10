@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BrandIcons } from "./BrandIcons";
@@ -8,7 +9,7 @@ interface ExperienceOption {
 	value: string;
 	label: string;
 	months: number;
-	Icon: (props: { className?: string }) => JSX.Element;
+	Icon: (props: { className?: string }) => React.JSX.Element;
 	description: string;
 }
 

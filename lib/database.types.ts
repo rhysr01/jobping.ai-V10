@@ -125,6 +125,7 @@ export type Database = {
 					status: string;
 					title: string;
 					updated_at: string | null;
+					visa_friendly: boolean | null;
 					work_environment: string | null;
 					work_location: string;
 				};
@@ -167,6 +168,7 @@ export type Database = {
 					status?: string;
 					title: string;
 					updated_at?: string | null;
+					visa_friendly?: boolean | null;
 					work_environment?: string | null;
 					work_location?: string;
 				};
@@ -209,6 +211,7 @@ export type Database = {
 					status?: string;
 					title?: string;
 					updated_at?: string | null;
+					visa_friendly?: boolean | null;
 					work_environment?: string | null;
 					work_location?: string;
 				};
