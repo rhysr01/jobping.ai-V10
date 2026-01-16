@@ -87,21 +87,6 @@ export const COMPANY_LOGOS: CompanyLogo[] = [
 		domain: "github.com",
 	},
 	{
-		name: "OpenAI",
-		logoPath: "/logos/companies/openai.svg",
-		domain: "openai.com",
-	},
-	{
-		name: "Anthropic",
-		logoPath: "/logos/companies/anthropic.svg",
-		domain: "anthropic.com",
-	},
-	{
-		name: "Discord",
-		logoPath: "/logos/companies/discord.svg",
-		domain: "discord.com",
-	},
-	{
 		name: "Figma",
 		logoPath: "/logos/companies/figma.svg",
 		domain: "figma.com",

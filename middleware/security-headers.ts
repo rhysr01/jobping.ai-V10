@@ -27,7 +27,7 @@ export function addSecurityHeaders(response: NextResponse): void {
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; " +
 			"font-src 'self' https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com; " +
 			"img-src 'self' data: https: blob:; " +
-			"connect-src 'self' https://*.supabase.co https://api.resend.com https://api.openai.com https://www.google-analytics.com https://www.googletagmanager.com https://*.sentry.io; " +
+			"connect-src 'self' https://*.supabase.co https://api.resend.com https://api.openai.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io; " +
 			"object-src 'none'; " +
 			"base-uri 'self'; " +
 			"form-action 'self'",
