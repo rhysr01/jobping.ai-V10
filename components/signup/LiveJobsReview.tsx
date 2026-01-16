@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { BrandIcons } from "../ui/BrandIcons";
 import { HotMatchBadge } from "../ui/HotMatchBadge";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 import { trackEvent } from "../../lib/analytics";
 
 interface LiveJobsReviewProps {
@@ -264,7 +264,7 @@ export function LiveJobsReview({
 										<span className="text-xs text-content-secondary">
 											{job.posted_at ? `${new Date(job.posted_at).toLocaleDateString()}` : 'Recent'}
 										</span>
-										<Button
+										<CustomButton
 											variant="secondary"
 											size="sm"
 											className="text-xs px-3 py-1 h-auto opacity-0 group-hover:opacity-100 transition-opacity"
@@ -279,7 +279,7 @@ export function LiveJobsReview({
 											}}
 										>
 											Quick View →
-										</Button>
+										</CustomButton>
 									</div>
 								</motion.div>
 							))}

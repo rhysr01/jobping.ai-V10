@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 import { BrandIcons } from "../ui/BrandIcons";
 
 interface UpgradeBannerProps {
@@ -34,14 +34,14 @@ export function UpgradeBanner({ showUpgradeBanner, jobsViewed }: UpgradeBannerPr
 
 					<div className="flex gap-3">
 						<Link href="/pricing" className="flex-1">
-							<Button variant="primary" size="sm" className="w-full">
+							<CustomButton variant="primary" size="sm" className="w-full">
 								Upgrade Now
-							</Button>
+							</CustomButton>
 						</Link>
 						<Link href="/preferences">
-							<Button variant="secondary" size="sm">
+							<CustomButton variant="secondary" size="sm">
 								Refine Search
-							</Button>
+							</CustomButton>
 						</Link>
 					</div>
 

@@ -3,7 +3,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ErrorBoundary from "../../../components/error-boundary";
-import Button from "../../../components/ui/Button";
+import CustomButton from "../../../components/ui/CustomButton";
 import JobClosedModal from "../../../components/ui/JobClosedModal";
 import { apiCall } from "../../../lib/api-client";
 
@@ -189,9 +189,9 @@ function MatchEvidencePageContent() {
 				<div className="max-w-md text-center">
 					<h1 className="text-2xl font-bold mb-4 text-red-400">Error</h1>
 					<p className="text-gray-300 mb-6">{error}</p>
-					<Button href="/signup/free" variant="primary">
+					<CustomButton href="/signup/free" variant="primary">
 						Sign Up for JobPing
-					</Button>
+					</CustomButton>
 				</div>
 			</div>
 		);
@@ -311,7 +311,7 @@ function MatchEvidencePageContent() {
 
 				{/* Apply Button */}
 				<div className="flex gap-4">
-					<Button
+					<CustomButton
 						onClick={handleApply}
 						disabled={applying || !evidence.job.is_active}
 						variant="primary"
@@ -322,7 +322,7 @@ function MatchEvidencePageContent() {
 							: evidence.job.is_active
 								? "Apply on Source →"
 								: "Job May Be Filled"}
-					</Button>
+					</CustomButton>
 				</div>
 
 				{/* Footer */}

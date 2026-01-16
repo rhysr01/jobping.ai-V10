@@ -13,8 +13,12 @@ import ExitIntentPopup from "../components/ui/ExitIntentPopup";
 import ScrollCTA from "../components/ui/ScrollCTA";
 import StickyMobileCTA from "../components/ui/StickyMobileCTA";
 import { initializeScrollDepthTracking } from "../lib/scroll-tracking";
+import { useMobilePerformance } from "../hooks/useMobilePerformance";
 
 export default function Page() {
+	// Mobile performance monitoring
+	useMobilePerformance();
+
 	useEffect(() => {
 		const cleanup = initializeScrollDepthTracking();
 		return cleanup;

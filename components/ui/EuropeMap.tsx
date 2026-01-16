@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMapProjection } from "@/hooks/useMapProjection";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import { TIMING } from "../../lib/constants";
 
 // Smart label collision detection - dynamically positions labels to avoid overlaps
@@ -160,6 +161,11 @@ const CITY_COORDINATES: Record<string, CityCoordinate> = {
 	Warsaw: { lat: 52.2297, lon: 21.0122, country: "Poland" },
 };
 
+// Mobile-optimized city list - show only 8 most popular cities on mobile
+const MOBILE_CITIES = [
+	'London', 'Paris', 'Berlin', 'Amsterdam', 'Madrid', 'Milan', 'Dublin', 'Zurich'
+];
+
 interface EuropeMapProps {
 	selectedCities: string[];
 	onCityClick: (city: string) => void;
@@ -183,6 +189,7 @@ const EuropeMap = memo(
 		onMaxSelectionsReached,
 	}: EuropeMapProps) {
 		const { project } = useMapProjection();
+		const { isMobile } = useWindowSize();
 		const [hoveredCity, setHoveredCity] = useState<string | null>(null);
 		const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 		const [focusedCity, setFocusedCity] = useState<string | null>(null);
@@ -387,10 +394,19 @@ const EuropeMap = memo(
 		);
 
 		const cityEntries = useMemo<[string, ProjectedCity][]>(() => {
+			// Mobile optimization: show only essential cities on mobile
+			const citiesToShow = isMobile
+				? Object.fromEntries(
+					Object.entries(CITY_COORDINATES).filter(([name]) =>
+						MOBILE_CITIES.includes(name)
+					)
+				)
+				: CITY_COORDINATES;
+
 			// Check if both Dublin and Belfast are selected
 			const bothSelected = selectedCities.includes("Dublin") && selectedCities.includes("Belfast");
-			
-			return Object.entries(CITY_COORDINATES).map(([name, city]) => {
+
+			return Object.entries(citiesToShow).map(([name, city]) => {
 				const { x, y } = project(city.lat, city.lon);
 				// Use overlap offsets if both Dublin and Belfast are selected
 				const offset = bothSelected && OVERLAP_OFFSETS[name]
@@ -398,7 +414,7 @@ const EuropeMap = memo(
 					: OFFSET[name] ?? { dx: 0, dy: 0 };
 				return [name, { ...city, x: x + offset.dx, y: y + offset.dy }];
 			});
-		}, [project, selectedCities]);
+		}, [project, selectedCities, isMobile]);
 
 		// Smart collision detection for selected city labels - dynamically avoids overlaps
 		const selectedLabelPositions = useMemo(() => {
@@ -438,7 +454,7 @@ const EuropeMap = memo(
 
 		return (
 			<div
-				className={`relative w-full h-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] lg:min-h-[600px] rounded-2xl border-2 border-brand-500/30 overflow-hidden shadow-[0_0_60px_rgba(109,90,143,0.12),inset_0_0_100px_rgba(109,90,143,0.04)] touch-manipulation ${className}`}
+				className={`relative w-full h-full min-h-[420px] sm:min-h-[480px] md:min-h-[540px] lg:min-h-[600px] rounded-2xl border-2 border-brand-500/30 overflow-hidden shadow-[0_0_60px_rgba(20,184,166,0.12),inset_0_0_100px_rgba(20,184,166,0.04)] touch-manipulation ${className}`}
 				role="img"
 				aria-label="Map of Europe showing available cities"
 				aria-describedby="map-instructions"
@@ -470,7 +486,7 @@ const EuropeMap = memo(
 
 				{/* Subtle grid overlay for depth */}
 				<div
-					className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-40"
+					className="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-40"
 					aria-hidden="true"
 				/>
 
@@ -525,10 +541,10 @@ const EuropeMap = memo(
 							x2="100%"
 							y2="100%"
 						>
-							<stop offset="0%" stopColor="#D4C5FF" />
-							<stop offset="30%" stopColor="#C9B6FF" />
-							<stop offset="60%" stopColor="#A58BFF" />
-							<stop offset="100%" stopColor="#8B6FFF" />
+							<stop offset="0%" stopColor="#5EEAD4" />
+							<stop offset="30%" stopColor="#34D399" />
+							<stop offset="60%" stopColor="#2DD4BF" />
+							<stop offset="100%" stopColor="#14B8A6" />
 						</linearGradient>
 
 						{/* Hover gradient */}
@@ -539,8 +555,8 @@ const EuropeMap = memo(
 							x2="100%"
 							y2="100%"
 						>
-							<stop offset="0%" stopColor="#E6D9FF" />
-							<stop offset="100%" stopColor="#C2A8FF" />
+							<stop offset="0%" stopColor="#99F6E4" />
+							<stop offset="100%" stopColor="#5EEAD4" />
 						</linearGradient>
 					</defs>
 
@@ -553,7 +569,7 @@ const EuropeMap = memo(
 						height={800}
 						opacity="0.92"
 						style={{
-							filter: "drop-shadow(0 0 2px rgba(99,102,241,0.2))",
+							filter: "drop-shadow(0 0 2px rgba(20,184,166,0.2))",
 						}}
 					/>
 
@@ -631,8 +647,8 @@ const EuropeMap = memo(
 										onTouchStart={(e) => !disabled && handleCityTouch(city, e)}
 									/>
 
-									{/* Enhanced multi-layer pulsing glow for selected cities */}
-									{selected && (
+									{/* Enhanced multi-layer pulsing glow for selected cities - disabled on mobile */}
+									{selected && !isMobile && (
 										<>
 											{/* Outer glow ring - larger pulse with enhanced visibility */}
 											<motion.circle
@@ -700,8 +716,8 @@ const EuropeMap = memo(
 										</>
 									)}
 
-									{/* Enhanced touch feedback ring */}
-									{touchedCity === city && (
+									{/* Enhanced touch feedback ring - disabled on mobile */}
+									{touchedCity === city && !isMobile && (
 										<>
 											<motion.circle
 												cx={coords.x}
@@ -759,9 +775,9 @@ const EuropeMap = memo(
 										}
 										stroke={
 											selected
-												? "#8B6FFF"
+												? "#14B8A6"
 												: hovered || focused || touchedCity === city
-													? "#C2A8FF"
+													? "#5EEAD4"
 													: "#52525b"
 										}
 										strokeWidth={
@@ -785,11 +801,11 @@ const EuropeMap = memo(
 										}
 										style={{ willChange: "transform, opacity" }}
 										whileHover={
-											!disabled && supportsHover
+											!disabled && supportsHover && !isMobile
 												? { scale: 1.4, strokeWidth: 4 }
 												: {}
 										}
-										whileTap={!disabled ? { scale: 0.9 } : {}}
+										whileTap={!disabled && !isMobile ? { scale: 0.9 } : {}}
 										onClick={() => {
 											if (disabled) {
 												triggerShake(city);
@@ -840,42 +856,77 @@ const EuropeMap = memo(
 
 									{/* Enhanced city label with premium styling */}
 									{(showLabel || touched) && (
-										<motion.text
-											id={`city-label-${city.replace(/\s+/g, "-")}`}
-											x={labelX}
-											y={labelY}
-											textAnchor="middle"
-											fill={selected ? "#D4C5FF" : "#F3E8FF"} // Lighter, more vibrant colors
-											fontSize={selected ? "14" : "13"}
-											fontWeight={selected ? "800" : "700"}
-											className="pointer-events-none select-none"
-											aria-hidden="true"
-											initial={{ opacity: 0, y: 2 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ duration: 0.3, ease: "easeOut" }}
-											style={{
-												willChange: "transform, opacity",
-												...(selected
-													? {
-															filter:
-																"drop-shadow(0 0 3px rgba(255,255,255,0.4)) drop-shadow(0 0 6px rgba(168,155,184,0.25))",
-															textShadow:
-																"0 0 8px rgba(212,197,255,0.5), 0 0 4px rgba(139,111,255,0.4)",
-															paintOrder: "stroke fill",
-															stroke: "rgba(12,0,40,0.65)",
-															strokeWidth: 0.5,
-														}
-													: {
-															paintOrder: "stroke fill",
-															stroke: "rgba(8,0,32,0.55)",
-															strokeWidth: 0.4,
-															textShadow:
-																"0 0 6px rgba(243,232,255,0.3), 0 0 3px rgba(194,168,255,0.2)",
-														}),
-											}}
-										>
-											{city}
-										</motion.text>
+										isMobile ? (
+											<text
+												id={`city-label-${city.replace(/\s+/g, "-")}`}
+												x={labelX}
+												y={labelY}
+												textAnchor="middle"
+												fill={selected ? "#5EEAD4" : "#CCFBF1"}
+												fontSize={selected ? "14" : "13"}
+												fontWeight={selected ? "800" : "700"}
+												className="pointer-events-none select-none"
+												aria-hidden="true"
+												style={{
+													...(selected
+														? {
+																filter:
+																	"drop-shadow(0 0 3px rgba(255,255,255,0.4)) drop-shadow(0 0 6px rgba(20,184,166,0.25))",
+																textShadow:
+																	"0 0 8px rgba(212,197,255,0.5), 0 0 4px rgba(139,111,255,0.4)",
+																paintOrder: "stroke fill",
+																stroke: "rgba(12,0,40,0.65)",
+																strokeWidth: 0.5,
+															}
+														: {
+																paintOrder: "stroke fill",
+																stroke: "rgba(8,0,32,0.55)",
+																strokeWidth: 0.4,
+																textShadow:
+																	"0 0 6px rgba(243,232,255,0.3), 0 0 3px rgba(194,168,255,0.2)",
+															}),
+												}}
+											>
+												{city}
+											</text>
+										) : (
+											<motion.text
+												id={`city-label-${city.replace(/\s+/g, "-")}`}
+												x={labelX}
+												y={labelY}
+												textAnchor="middle"
+												fill={selected ? "#5EEAD4" : "#CCFBF1"}
+												fontSize={selected ? "14" : "13"}
+												fontWeight={selected ? "800" : "700"}
+												className="pointer-events-none select-none"
+												aria-hidden="true"
+												initial={{ opacity: 0, y: 2 }}
+												animate={{ opacity: 1, y: 0 }}
+												transition={{ duration: 0.3, ease: "easeOut" }}
+												style={{
+													willChange: "transform, opacity",
+													...(selected
+														? {
+																filter:
+																	"drop-shadow(0 0 3px rgba(255,255,255,0.4)) drop-shadow(0 0 6px rgba(20,184,166,0.25))",
+																textShadow:
+																	"0 0 8px rgba(212,197,255,0.5), 0 0 4px rgba(139,111,255,0.4)",
+																paintOrder: "stroke fill",
+																stroke: "rgba(12,0,40,0.65)",
+																strokeWidth: 0.5,
+															}
+														: {
+																paintOrder: "stroke fill",
+																stroke: "rgba(8,0,32,0.55)",
+																strokeWidth: 0.4,
+																textShadow:
+																	"0 0 6px rgba(243,232,255,0.3), 0 0 3px rgba(194,168,255,0.2)",
+															}),
+												}}
+											>
+												{city}
+											</motion.text>
+										)
 									)}
 								</g>
 							);
@@ -883,15 +934,11 @@ const EuropeMap = memo(
 					</g>
 				</svg>
 
-				{/* Enhanced premium tooltip */}
-				<AnimatePresence>
-					{tooltip && (hoveredCity || touchedCity) && (
-						<motion.div
-							initial={{ opacity: 0, y: 8, scale: 0.95 }}
-							animate={{ opacity: 1, y: 0, scale: 1 }}
-							exit={{ opacity: 0, y: 8, scale: 0.95 }}
-							transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-							className="absolute z-50 px-4 py-2.5 bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-zinc-900/98 backdrop-blur-xl rounded-xl border-2 border-brand-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_20px_rgba(109,90,143,0.2)] pointer-events-none touch-manipulation"
+				{/* Enhanced premium tooltip - static on mobile */}
+				{tooltip && (hoveredCity || touchedCity) && (
+					isMobile ? (
+						<div
+							className="absolute z-50 px-4 py-2.5 bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-zinc-900/98 backdrop-blur-xl rounded-xl border-2 border-brand-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_20px_rgba(20,184,166,0.2)] pointer-events-none touch-manipulation"
 							style={{
 								left: `${tooltip.x}px`,
 								top: `${tooltip.y}px`,
@@ -906,7 +953,7 @@ const EuropeMap = memo(
 								</div>
 								{selectedCities.includes(tooltip.city) && (
 									<div
-										className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"
+										className="w-1.5 h-1.5 rounded-full bg-brand-400"
 										aria-hidden="true"
 									/>
 								)}
@@ -933,13 +980,64 @@ const EuropeMap = memo(
 									</span>
 								</div>
 							)}
-						</motion.div>
-					)}
-				</AnimatePresence>
+						</div>
+					) : (
+						<AnimatePresence>
+							<motion.div
+								initial={{ opacity: 0, y: 8, scale: 0.95 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								exit={{ opacity: 0, y: 8, scale: 0.95 }}
+								transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+								className="absolute z-50 px-4 py-2.5 bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-zinc-900/98 backdrop-blur-xl rounded-xl border-2 border-brand-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_20px_rgba(20,184,166,0.2)] pointer-events-none touch-manipulation"
+								style={{
+									left: `${tooltip.x}px`,
+									top: `${tooltip.y}px`,
+									transform: "translateX(-50%) translateY(-100%)",
+								}}
+								role="tooltip"
+								aria-live="polite"
+							>
+								<div className="flex items-center gap-2">
+									<div className="text-white font-bold text-sm leading-tight">
+										{tooltip.city}
+									</div>
+									{selectedCities.includes(tooltip.city) && (
+										<div
+											className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"
+											aria-hidden="true"
+										/>
+									)}
+								</div>
+								<div className="text-content-secondary text-xs mt-1 font-medium">
+									{CITY_COORDINATES[tooltip.city]?.country}
+								</div>
+								{selectedCities.includes(tooltip.city) && (
+									<div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-brand-500/30">
+										<svg
+											className="w-3 h-3 text-brand-400"
+											fill="currentColor"
+											viewBox="0 0 20 20"
+											aria-hidden="true"
+										>
+											<path
+												fillRule="evenodd"
+												d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+												clipRule="evenodd"
+											/>
+										</svg>
+										<span className="text-brand-300 text-xs font-semibold">
+											Selected
+										</span>
+									</div>
+								)}
+							</motion.div>
+						</AnimatePresence>
+					)
+				)}
 
 				{/* Enhanced premium legend */}
 				<div
-					className="absolute bottom-4 left-4 right-4 sm:bottom-5 sm:left-5 sm:right-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-br from-zinc-900/90 via-zinc-800/85 to-zinc-900/90 backdrop-blur-xl rounded-xl px-5 py-3.5 sm:px-6 sm:py-4 border-2 border-brand-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_0_40px_rgba(109,90,143,0.08)]"
+					className="absolute bottom-4 left-4 right-4 sm:bottom-5 sm:left-5 sm:right-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-br from-zinc-900/90 via-zinc-800/85 to-zinc-900/90 backdrop-blur-xl rounded-xl px-5 py-3.5 sm:px-6 sm:py-4 border-2 border-brand-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_0_40px_rgba(20,184,166,0.08)]"
 					role="status"
 					aria-live="polite"
 					aria-label={`${selectedCities.length} of ${maxSelections} cities selected`}
@@ -947,7 +1045,7 @@ const EuropeMap = memo(
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
 						<div className="flex items-center gap-2.5">
 							<div
-								className="relative w-5 h-5 rounded-full bg-gradient-to-br from-brand-300 to-brand-500 shadow-[0_0_12px_rgba(168,155,184,0.3)]"
+								className="relative w-5 h-5 rounded-full bg-gradient-to-br from-brand-300 to-brand-500 shadow-[0_0_12px_rgba(20,184,166,0.3)]"
 								aria-hidden="true"
 							>
 								<div className="absolute inset-0 rounded-full bg-brand-400/60 animate-pulse" />

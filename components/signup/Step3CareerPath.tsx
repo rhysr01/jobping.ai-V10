@@ -70,7 +70,7 @@ export const Step3CareerPath = React.memo(function Step3CareerPath({
 						aria-hidden="true"
 					/>
 					<div
-						className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(99,102,241,0.08),transparent_70%)]"
+						className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(20,184,166,0.08),transparent_70%)]"
 						aria-hidden="true"
 					/>
 
@@ -146,7 +146,7 @@ export const Step3CareerPath = React.memo(function Step3CareerPath({
 							initial={{ opacity: 0, scale: 0.95 }}
 							animate={{ opacity: 1, scale: 1 }}
 							transition={{ delay: 0.6 }}
-							className="mt-8 rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-500/10 via-brand-700/10 to-purple-600/10 p-6 shadow-[0_0_40px_rgba(99,102,241,0.2)] backdrop-blur-sm"
+							className="mt-8 rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-500/10 via-brand-700/10 to-accent-600/10 p-6 shadow-[0_0_40px_rgba(20,184,166,0.2)] backdrop-blur-sm"
 						>
 							<div className="flex items-center gap-3 mb-4">
 								<motion.div
@@ -311,10 +311,10 @@ export const Step3CareerPath = React.memo(function Step3CareerPath({
 									whileTap={{ scale: 0.97 }}
 									className={`relative px-6 sm:px-8 py-6 sm:py-8 rounded-2xl border-2 transition-all duration-300 text-left overflow-hidden group touch-manipulation min-h-[100px] sm:min-h-[120px] ${
 										isSelected
-											? "border-brand-500 bg-gradient-to-br from-brand-500/20 via-brand-600/15 to-brand-700/10 shadow-[0_0_50px_rgba(99,102,241,0.4)]"
+											? "border-brand-500 bg-gradient-to-br from-brand-500/20 via-brand-600/15 to-brand-700/10 shadow-[0_0_50px_rgba(20,184,166,0.4)]"
 											: formData.careerPath.length >= maxSelections
 											? "border-zinc-700/60 bg-zinc-900/30 opacity-50 cursor-not-allowed"
-											: "border-zinc-700/60 bg-zinc-900/50 hover:border-brand-500/50 hover:bg-zinc-900/70 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]"
+											: "border-zinc-700/60 bg-zinc-900/50 hover:border-brand-500/50 hover:bg-zinc-900/70 hover:shadow-[0_0_30px_rgba(20,184,166,0.15)]"
 									}`}
 								>
 									{/* Enhanced background effects */}
@@ -505,7 +505,7 @@ export const Step3CareerPath = React.memo(function Step3CareerPath({
 												whileTap={{ scale: 0.98 }}
 												className={`px-3 sm:px-4 py-3 sm:py-3.5 rounded-xl border-2 transition-all font-semibold text-left text-sm relative overflow-hidden touch-manipulation min-h-[48px] ${
 													formData.roles.includes(role)
-														? "border-brand-500 bg-gradient-to-r from-brand-500/20 to-brand-700/15 text-white shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+														? "border-brand-500 bg-gradient-to-r from-brand-500/20 to-brand-700/15 text-white shadow-[0_0_20px_rgba(20,184,166,0.3)]"
 														: "border-zinc-700 bg-zinc-900/60 text-zinc-300 hover:border-brand-500/40 hover:bg-zinc-900/80"
 												}`}
 											>
@@ -597,10 +597,10 @@ export const Step3CareerPath = React.memo(function Step3CareerPath({
 								className="relative flex-1 py-4 sm:py-6 md:py-7 text-base sm:text-xl md:text-2xl font-black disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wide rounded-xl sm:rounded-2xl overflow-hidden touch-manipulation min-h-[56px]"
 								style={{
 									background: loading
-										? "linear-gradient(to right, #6366F1, #7C3AED, #8B5CF6)"
-										: "linear-gradient(135deg, #6366F1 0%, #7C3AED 50%, #8B5CF6 100%)",
+										? "linear-gradient(to right, #14B8A6, #0D9488, #0F766E)"
+										: "linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)",
 									boxShadow:
-										"0 0 60px rgba(99,102,241,0.8), 0 20px 60px -18px rgba(99,102,241,0.9), inset 0 1px 0 rgba(255,255,255,0.3)",
+										"0 0 60px rgba(20,184,166,0.8), 0 20px 60px -18px rgba(20,184,166,0.9), inset 0 1px 0 rgba(255,255,255,0.3)",
 									textShadow: "0 2px 8px rgba(0,0,0,0.4)",
 									transition: "all 0.3s ease",
 								}}

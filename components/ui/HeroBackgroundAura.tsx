@@ -17,7 +17,7 @@ export default function HeroBackgroundAura({
 		>
 			{/* Single static radial gradient aura - provides premium dark feel */}
 			<div
-				className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(139,92,246,0.2),transparent_50%)] opacity-20"
+				className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(20,184,166,0.2),transparent_50%)] opacity-20"
 				style={{
 					willChange: "auto",
 				}}

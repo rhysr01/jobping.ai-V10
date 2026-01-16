@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { BrandIcons } from "../../../components/ui/BrandIcons";
 import { SuccessAnimation } from "../../../components/ui/SuccessAnimation";
-import Button from "../../../components/ui/Button";
+import CustomButton from "../../../components/ui/CustomButton";
 
 export default function EmailVerificationPage() {
 	const searchParams = useSearchParams();
@@ -81,18 +81,18 @@ export default function EmailVerificationPage() {
 						)}
 
 						<div className="flex gap-4 justify-center">
-							<Button
+							<CustomButton
 								onClick={handleResend}
 								disabled={isResending || !email}
 								variant="secondary"
 								size="sm"
 							>
 								{isResending ? "Sending..." : "Resend Email"}
-							</Button>
+							</CustomButton>
 							<Link href="/signup">
-								<Button variant="secondary" size="sm">
+								<CustomButton variant="secondary" size="sm">
 									Start Over
-								</Button>
+								</CustomButton>
 							</Link>
 						</div>
 					</div>

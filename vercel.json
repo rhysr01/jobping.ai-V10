@@ -55,6 +55,10 @@
 		{
 			"path": "/api/cron/run-maintenance",
 			"schedule": "0 3 * * *"
+		},
+		{
+			"path": "/api/cron/run-filtering",
+			"schedule": "0 */6 * * *"
 		}
 	],
 	"headers": [

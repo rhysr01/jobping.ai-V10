@@ -2,20 +2,21 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Suspense, useCallback, useRef } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import ErrorBoundary from "../../components/error-boundary";
 import { useReducedMotion } from "../ui/useReducedMotion";
-import { useFormPersistence } from "../../hooks/useFormPersistence";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 import {
 	useEmailValidation,
 	useRequiredValidation,
-} from "../../hooks/useFormValidation";
-import { ApiError, apiCallJson } from "../../lib/api-client";
-import { TIMING } from "../../lib/constants";
-import { showToast } from "../../lib/toast";
-import { useSignupState } from "../../hooks/useSignupState";
-import { useSignupNavigation } from "../../hooks/useSignupNavigation";
+} from "@/hooks/useFormValidation";
+import { ApiError, apiCallJson } from "@/lib/api-client";
+import { TIMING } from "@/lib/constants";
+import { showToast } from "@/lib/toast";
+import { useSignupState } from "@/hooks/useSignupState";
+import { useSignupNavigation } from "@/hooks/useSignupNavigation";
 import { useAriaAnnounce } from "../ui/AriaLiveRegion";
+import { Progress } from "../ui/progress";
 import { HeroSectionFree } from "./HeroSectionFree";
 import { Step1FreeBasics } from "./Step1FreeBasics";
 import { Step2FreeCities } from "./Step2FreeCities";
@@ -56,6 +57,10 @@ function SignupFormFree() {
 		email: useRef<HTMLInputElement>(null),
 	};
 
+	// Submission progress state
+	const [submissionProgress, setSubmissionProgress] = useState(0);
+	const [submissionStage, setSubmissionStage] = useState<string>("");
+
 	// Form persistence hook
 	const { clearProgress } = useFormPersistence(
 		formData as any,
@@ -89,14 +94,24 @@ function SignupFormFree() {
 		formRefs,
 	});
 
-	// Submit handler
+	// Submit handler with progress tracking
 	const handleSubmit = useCallback(async () => {
 		if (loading) return;
 
 		setLoading(true);
 		setError("");
+		setSubmissionProgress(0);
+		setSubmissionStage("Validating your details...");
 
 		try {
+			// Stage 1: Validation (10% - 30%)
+			setSubmissionProgress(10);
+			await new Promise(resolve => setTimeout(resolve, 300));
+			setSubmissionProgress(30);
+			setSubmissionStage("Finding your perfect matches...");
+
+			// Stage 2: API Call (30% - 70%)
+			setSubmissionProgress(40);
 			const response = await apiCallJson<{
 				userId: string;
 				email: string;
@@ -110,10 +125,19 @@ function SignupFormFree() {
 				throw new Error("No response from server");
 			}
 
+			setSubmissionProgress(70);
+			setSubmissionStage("Preparing your matches...");
+
+			// Stage 3: Success (70% - 100%)
+			setSubmissionProgress(90);
+
 			setSuccessState({
 				show: true,
 				matchesCount: response.matchesCount,
 			});
+
+			setSubmissionProgress(100);
+			setSubmissionStage("Complete! Redirecting...");
 
 			clearProgress();
 
@@ -121,15 +145,14 @@ function SignupFormFree() {
 				router.push(`/matches?tier=free&email=${encodeURIComponent(response.email)}`);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
+			setSubmissionProgress(0);
+			setSubmissionStage("");
 			const errorMessage =
 				error instanceof ApiError
 					? error.message
 					: "Unable to connect. Please check your internet connection and try again.";
 			setError(errorMessage);
-			showToast.error(errorMessage, {
-				label: "Retry",
-				onClick: () => handleSubmit(),
-			});
+			showToast.error(errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -206,6 +229,21 @@ function SignupFormFree() {
 			{/* Form Steps Container */}
 			<div className="flex-1 flex items-center justify-center p-4">
 				<div className="w-full max-w-2xl">
+					{/* Submission Progress */}
+					{loading && submissionProgress > 0 && (
+						<motion.div
+							initial={{ opacity: 0, y: 10 }}
+							animate={{ opacity: 1, y: 0 }}
+							className="mb-6 glass-card elevation-1 p-6 text-center"
+						>
+							<div className="mb-4">
+								<Progress value={submissionProgress} className="h-2" />
+							</div>
+							<p className="text-white font-medium text-lg">{submissionStage}</p>
+							<p className="text-zinc-400 text-sm mt-1">Finding your perfect job matches...</p>
+						</motion.div>
+					)}
+
 					{/* Step content */}
 					<div className="text-white text-center">
 						{step === 1 && <Step1FreeBasics key="step1" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} shouldShowError={shouldShowError} getDisabledMessage={getDisabledMessage} />}

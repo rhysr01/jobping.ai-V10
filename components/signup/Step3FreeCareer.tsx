@@ -9,6 +9,12 @@ import {
 } from "../ui/FormFieldFeedback";
 import { MobileNavigation } from "./MobileNavigation";
 import { CAREER_PATHS } from "./constants";
+import { showToast } from "../../lib/toast";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import type { SignupFormData } from "./types";
 
 interface Step3FreeCareerProps {
@@ -37,6 +43,12 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 	const handleCareerPathSelect = (pathValue: string) => {
 		setFormData((prev) => ({ ...prev, careerPath: [pathValue] }));
 		setTouchedFields((prev) => new Set(prev).add("careerPath"));
+
+		// Show success feedback
+		const selectedPath = CAREER_PATHS.find(p => p.value === pathValue);
+		if (selectedPath) {
+			showToast.success(`Selected ${selectedPath.label} - great choice!`);
+		}
 	};
 
 	const handleCareerPathBlur = () => {
@@ -55,7 +67,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 			className="space-y-6 sm:space-y-8 md:space-y-10"
 		>
 			<div className="mb-6 sm:mb-8">
-				<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				<h2 className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 					What type of role are you looking for?
 				</h2>
 				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
@@ -88,38 +100,61 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					{CAREER_PATHS.map((path) => {
 						const isSelected = formData.careerPath.includes(path.value);
 						return (
-							<motion.button
-								key={path.value}
-								type="button"
-								onClick={() => handleCareerPathSelect(path.value)}
-								whileHover={{ scale: 1.02 }}
-								whileTap={{ scale: 0.98 }}
-								className={`w-full p-4 sm:p-5 text-left border-2 rounded-xl transition-all touch-manipulation min-h-[64px] ${
-									isSelected
-										? "border-brand-500 bg-brand-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
-										: "border-zinc-700 hover:border-zinc-600 bg-black/50 hover:bg-zinc-900/50"
-								}`}
-							>
-								<div className="flex items-center gap-3">
-									<div className={`p-2 rounded-lg ${
-										isSelected ? "bg-brand-500/20" : "bg-zinc-700/50"
-									}`}>
-										<BrandIcons.Briefcase className={`w-5 h-5 ${
-											isSelected ? "text-brand-300" : "text-zinc-400"
-										}`} />
+							<HoverCard key={path.value}>
+								<HoverCardTrigger asChild>
+									<motion.button
+										type="button"
+										onClick={() => handleCareerPathSelect(path.value)}
+										whileHover={{ scale: 1.02 }}
+										whileTap={{ scale: 0.98 }}
+										className={`w-full p-4 sm:p-5 text-left border-2 rounded-xl transition-all touch-manipulation min-h-[64px] ${
+											isSelected
+												? "border-brand-500 bg-brand-500/10 shadow-[0_0_20px_rgba(20,184,166,0.2)]"
+												: "border-zinc-700 hover:border-zinc-600 bg-black/50 hover:bg-zinc-900/50"
+										}`}
+									>
+										<div className="flex items-center gap-3">
+											<div className={`p-2 rounded-lg ${
+												isSelected ? "bg-brand-500/20" : "bg-zinc-700/50"
+											}`}>
+												<BrandIcons.Briefcase className={`w-5 h-5 ${
+													isSelected ? "text-brand-300" : "text-zinc-400"
+												}`} />
+											</div>
+											<div className="flex-1">
+															<h3 className={`font-semibold text-base sm:text-lg ${
+																isSelected ? "text-white" : "text-zinc-100"
+															}`}>
+																{path.label}
+															</h3>
+											</div>
+											{isSelected && (
+												<BrandIcons.Check className="w-6 h-6 text-brand-400" />
+											)}
+										</div>
+									</motion.button>
+								</HoverCardTrigger>
+								<HoverCardContent className="w-80 p-4" side="right">
+									<div className="space-y-3">
+										<h4 className="font-bold text-white">{path.label}</h4>
+										<div>
+											<p className="text-xs font-semibold text-zinc-400 mb-2">POPULAR ROLES:</p>
+											<div className="flex flex-wrap gap-1">
+												{path.popularRoles?.slice(0, 4).map((role) => (
+													<span key={role} className="text-xs bg-zinc-800 text-zinc-300 px-2 py-1 rounded">
+														{role}
+													</span>
+												))}
+												{(path.popularRoles?.length ?? 0) > 4 && (
+													<span className="text-xs text-zinc-500 px-2 py-1">
+														+{(path.popularRoles?.length ?? 0) - 4} more
+													</span>
+												)}
+											</div>
+										</div>
 									</div>
-									<div className="flex-1">
-													<h3 className={`font-semibold text-base sm:text-lg ${
-														isSelected ? "text-white" : "text-zinc-100"
-													}`}>
-														{path.label}
-													</h3>
-									</div>
-									{isSelected && (
-										<BrandIcons.Check className="w-6 h-6 text-brand-400" />
-									)}
-								</div>
-							</motion.button>
+								</HoverCardContent>
+							</HoverCard>
 						);
 					})}
 				</div>

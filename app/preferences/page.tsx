@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import Button from "../../components/ui/Button";
+import CustomButton from "../../components/ui/CustomButton";
 import { BasicInfoSection } from "../../components/preferences/BasicInfoSection";
 import { LanguageLocationSection } from "../../components/preferences/LanguageLocationSection";
 import { CareerPreferencesSection } from "../../components/preferences/CareerPreferencesSection";
@@ -73,7 +73,7 @@ function PreferencesContent() {
 
 					{/* Submit Button */}
 					<div className="flex justify-center">
-						<Button
+						<CustomButton
 							type="submit"
 							variant="primary"
 							size="lg"
@@ -81,7 +81,7 @@ function PreferencesContent() {
 							className="px-8 py-3"
 						>
 							{saving ? "Saving Preferences..." : "Save & Find Matches →"}
-						</Button>
+						</CustomButton>
 					</div>
 				</form>
 			</div>

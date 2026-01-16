@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { BrandIcons } from "./BrandIcons";
 
 interface FormFieldErrorProps {
@@ -15,21 +14,15 @@ export function FormFieldError({ error, id }: FormFieldErrorProps) {
 	if (!error) return null;
 
 	return (
-		<AnimatePresence>
-			<motion.p
-				id={id}
-				initial={{ opacity: 0, y: -5 }}
-				animate={{ opacity: 1, y: 0 }}
-				exit={{ opacity: 0, y: -5 }}
-				transition={{ duration: 0.2 }}
-				className="mt-2 text-sm text-red-400 flex items-center gap-2 font-medium"
-				role="alert"
-				aria-live="polite"
-			>
-				<BrandIcons.AlertCircle className="w-4 h-4 flex-shrink-0" />
-				{error}
-			</motion.p>
-		</AnimatePresence>
+		<p
+			id={id}
+			className="mt-2 text-sm text-red-400 flex items-center gap-2 font-medium animate-in slide-in-from-top-1 duration-200"
+			role="alert"
+			aria-live="polite"
+		>
+			<BrandIcons.AlertCircle className="w-4 h-4 flex-shrink-0" />
+			{error}
+		</p>
 	);
 }
 
@@ -45,17 +38,15 @@ export function FormFieldSuccess({ message, id }: FormFieldSuccessProps) {
 	if (!message) return null;
 
 	return (
-		<motion.p
+		<p
 			id={id}
-			initial={{ opacity: 0, y: -5 }}
-			animate={{ opacity: 1, y: 0 }}
-			className="mt-2 text-sm text-green-400 flex items-center gap-2 font-medium"
+			className="mt-2 text-sm text-green-400 flex items-center gap-2 font-medium animate-in slide-in-from-top-1 duration-200"
 			role="status"
 			aria-live="polite"
 		>
 			<BrandIcons.CheckCircle className="w-4 h-4 flex-shrink-0" />
 			{message}
-		</motion.p>
+		</p>
 	);
 }
 

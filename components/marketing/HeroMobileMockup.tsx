@@ -7,6 +7,7 @@ import Link from "next/link";
 import { BrandIcons } from "../ui/BrandIcons";
 import { CTA_GET_MY_5_FREE_MATCHES, CTA_GET_MY_5_FREE_MATCHES_ARIA } from "../../lib/copy";
 import { trackEvent } from "../../lib/analytics";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import { useEffect, useState } from "react";
 
 interface HeroMockupProps {
@@ -66,8 +67,15 @@ const FALLBACK_JOBS = [
 
 export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloadedJobs }: HeroMockupProps) {
 	const [jobs, setJobs] = useState<any[]>([]);
+	const { isMobile } = useWindowSize();
 
 	useEffect(() => {
+		// Mobile optimization: Skip expensive operations on mobile, use static data
+		if (isMobile && window.innerWidth < 640) {
+			setJobs(FALLBACK_JOBS.slice(0, 3)); // Use static data on small mobile screens
+			return;
+		}
+
 		// Use preloaded jobs if available, otherwise fetch
 		if (preloadedJobs && preloadedJobs.length > 0) {
 			const formattedJobs = preloadedJobs.slice(0, 5).map((job) => ({
@@ -220,7 +228,7 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 											location: "hero_mockup",
 										});
 									}}
-									className="inline-flex w-full min-h-[44px] items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold px-6 transition-all hover:from-brand-500 hover:to-indigo-500 shadow-lg hover:shadow-xl shadow-[0_4px_20px_rgba(139,92,246,0.5)] hover:shadow-[0_8px_40px_rgba(139,92,246,0.6)] text-sm"
+									className="inline-flex w-full min-h-[44px] items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-accent-600 text-white font-bold px-6 transition-all hover:from-brand-500 hover:to-accent-500 shadow-lg hover:shadow-xl shadow-[0_4px_20px_rgba(20,184,166,0.5)] hover:shadow-[0_8px_40px_rgba(20,184,166,0.6)] text-sm"
 									aria-label={CTA_GET_MY_5_FREE_MATCHES_ARIA}
 								>
 									<span className="flex items-center justify-center gap-2">

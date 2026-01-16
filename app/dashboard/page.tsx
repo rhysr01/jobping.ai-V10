@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import CustomButton from "../../components/ui/CustomButton";
 
 interface AccountStatus {
 	accountId: string | null;
@@ -127,7 +127,7 @@ function DashboardContent() {
 				<div className="text-center">
 					<XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
 					<p className="text-white text-lg mb-4">{error}</p>
-					<Button onClick={loadAccountStatus}>Retry</Button>
+					<CustomButton onClick={loadAccountStatus}>Retry</CustomButton>
 				</div>
 			</div>
 		);
@@ -187,14 +187,14 @@ function DashboardContent() {
 
 								{!accountStatus.onboardingComplete && onboardingUrl && (
 									<div className="mt-6 pt-6 border-t border-white/10">
-										<Button
+										<CustomButton
 											href={onboardingUrl}
 											target="_blank"
 											className="w-full"
 										>
 											Complete Onboarding
 											<ExternalLink className="w-4 h-4" />
-										</Button>
+										</CustomButton>
 									</div>
 								)}
 
@@ -220,22 +220,22 @@ function DashboardContent() {
 									</h2>
 
 									<div className="grid gap-4 md:grid-cols-2">
-										<Button
+										<CustomButton
 											href={`/store/${accountStatus.accountId}`}
 											variant="secondary"
 											className="w-full"
 										>
 											<Package className="w-4 h-4" />
 											View Storefront
-										</Button>
+										</CustomButton>
 
-										<Button
+										<CustomButton
 											onClick={loadAccountStatus}
 											variant="ghost"
 											className="w-full"
 										>
 											Refresh Status
-										</Button>
+										</CustomButton>
 									</div>
 								</div>
 							)}

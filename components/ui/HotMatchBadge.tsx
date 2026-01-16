@@ -1,6 +1,6 @@
 "use client";
 
-import { Zap } from "lucide-react";
+import { BrandIcons } from "./BrandIcons";
 
 /**
  * HotMatchBadge - Premium "Ping" indicator for high-quality matches (92%+)
@@ -15,7 +15,7 @@ export function HotMatchBadge() {
 				<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
 			</span>
 
-			<Zap className="w-3 h-3 text-white" />
+			<BrandIcons.Zap className="w-3 h-3 text-white" />
 			<span className="text-[10px] font-bold uppercase tracking-widest text-white">
 				Hot
 			</span>

@@ -2,7 +2,7 @@
 
 import { Component, type ReactNode } from "react";
 import * as Sentry from "@sentry/nextjs";
-import Button from "./ui/Button";
+import CustomButton from "./ui/CustomButton";
 
 interface Props {
 	children: ReactNode;
@@ -107,15 +107,15 @@ export default class ErrorBoundary extends Component<Props, State> {
 									</details>
 								)}
 							<div className="flex gap-4 justify-center">
-								<Button onClick={this.handleReset} variant="primary">
+								<CustomButton onClick={this.handleReset} variant="primary">
 									Try again
-								</Button>
-								<Button
+								</CustomButton>
+								<CustomButton
 									onClick={() => window.location.reload()}
 									variant="secondary"
 								>
 									Reload page
-								</Button>
+								</CustomButton>
 							</div>
 							<p className="text-xs text-content-400 mt-6">
 								If this problem persists, please contact support.

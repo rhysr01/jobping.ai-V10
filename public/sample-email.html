@@ -1,15 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
   <title>JobPing - Sample Email</title>
+  <!--[if mso]>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:AllowPNG/>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+  </xml>
+  <![endif]-->
   <style>
-* { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
+
+/* Outlook compatibility */
+table {
+  border-collapse: collapse;
+  mso-table-lspace: 0pt;
+  mso-table-rspace: 0pt;
+}
+.ReadMsgBody { width: 100%; }
+.ExternalClass { width: 100%; }
+.ExternalClass * { line-height: 100%; }
 
 body { 
   background: #0a0a0a; 
@@ -21,14 +41,22 @@ body {
   padding: 20px;
 }
 
-.email-container { 
-  max-width: 600px; 
-  margin: 0 auto; 
+.email-container {
+  max-width: 600px;
+  margin: 0 auto;
   background: #000;
-  box-shadow: 
+  box-shadow:
     0 0 60px rgba(91,33,182,0.15),
     0 20px 80px rgba(0,0,0,0.3);
 }
+</style>
+
+<!--[if mso]>
+<style type="text/css">
+.email-container { width: 600px !important; }
+.header { background: #5B21B6 !important; }
+</style>
+<![endif]-->
 
 /* Premium purple gradient header - matches website */
 .header { 

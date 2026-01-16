@@ -15,7 +15,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import CustomButton from "../../components/ui/CustomButton";
 import GlassCard from "../../components/ui/GlassCard";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ApiError, apiCall, apiCallJson } from "../../lib/api-client";
@@ -270,7 +270,7 @@ export default function BillingPage({
 				return;
 			}
 
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 			if (!emailRegex.test(promoEmail)) {
 				setPromoError("Please enter a valid email address");
 				return;
@@ -390,7 +390,7 @@ export default function BillingPage({
 						</motion.div>
 					)}
 
-					<Button
+					<CustomButton
 						type="submit"
 						variant="primary"
 						size="lg"
@@ -399,7 +399,7 @@ export default function BillingPage({
 						className="w-full"
 					>
 						Apply Promo Code
-					</Button>
+					</CustomButton>
 				</form>
 			</motion.div>
 		);
@@ -504,20 +504,20 @@ export default function BillingPage({
 							</div>
 
 							<div className="flex gap-4 justify-center">
-								<Button
+								<CustomButton
 									onClick={() => window.location.reload()}
 									variant="secondary"
 									size="sm"
 								>
 									I've Verified My Email
-								</Button>
-								<Button
+								</CustomButton>
+								<CustomButton
 									onClick={() => window.open("mailto:contact@getjobping.com", "_blank")}
 									variant="secondary"
 									size="sm"
 								>
 									Contact Support
-								</Button>
+								</CustomButton>
 							</div>
 						</div>
 
@@ -671,7 +671,7 @@ export default function BillingPage({
 													})()}
 												</div>
 											</div>
-											<Button
+											<CustomButton
 												onClick={handleManageBilling}
 												isLoading={processing}
 												disabled={processing}
@@ -681,7 +681,7 @@ export default function BillingPage({
 											>
 												<ExternalLink className="w-4 h-4" />
 												Manage Subscription
-											</Button>
+											</CustomButton>
 										</div>
 
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -768,7 +768,7 @@ export default function BillingPage({
 																	</span>
 																</div>
 																{invoice.hosted_invoice_url && (
-																	<Button
+																	<CustomButton
 																		variant="ghost"
 																		size="sm"
 																		href={invoice.hosted_invoice_url}
@@ -776,7 +776,7 @@ export default function BillingPage({
 																	>
 																		<Download className="w-4 h-4" />
 																		View
-																	</Button>
+																	</CustomButton>
 																)}
 															</div>
 														</motion.div>
@@ -789,14 +789,14 @@ export default function BillingPage({
 												<p className="mb-6 text-lg font-medium">
 													No invoices yet
 												</p>
-												<Button
+												<CustomButton
 													onClick={handleManageBilling}
 													disabled={processing}
 													variant="secondary"
 													size="lg"
 												>
 													Open Customer Portal
-												</Button>
+												</CustomButton>
 											</div>
 										)}
 									</div>
@@ -817,7 +817,7 @@ export default function BillingPage({
 												{error}
 											</div>
 										)}
-										<Button
+										<CustomButton
 											onClick={handleStartCheckout}
 											disabled={processing || loading}
 											variant="primary"
@@ -825,7 +825,7 @@ export default function BillingPage({
 											className="min-w-[240px]"
 										>
 											{processing ? "Processing..." : "Subscribe to Premium"}
-										</Button>
+										</CustomButton>
 									</div>
 
 									{/* Promo Code Section */}
@@ -861,7 +861,7 @@ export default function BillingPage({
 										Manage your payment methods securely through our billing
 										portal.
 									</p>
-									<Button
+									<CustomButton
 										onClick={handleManageBilling}
 										disabled={processing || !billingData?.currentSubscription}
 										isLoading={processing}
@@ -870,7 +870,7 @@ export default function BillingPage({
 										className="min-w-[240px]"
 									>
 										Manage Payment Methods
-									</Button>
+									</CustomButton>
 									{!billingData?.currentSubscription && (
 										<p className="text-sm font-medium text-zinc-300 mt-6">
 											Subscribe first to add payment methods

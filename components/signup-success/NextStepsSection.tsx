@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrandIcons } from "../ui/BrandIcons";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 
 interface NextStepsSectionProps {
 	email: string;
@@ -70,14 +70,14 @@ export function NextStepsSection({ email }: NextStepsSectionProps) {
 
 			<div className="mt-6 flex gap-3">
 				<Link href="/matches" className="flex-1">
-					<Button variant="primary" className="w-full">
+					<CustomButton variant="primary" className="w-full">
 						View My Matches →
-					</Button>
+					</CustomButton>
 				</Link>
 				<Link href="/preferences">
-					<Button variant="secondary">
+					<CustomButton variant="secondary">
 						Update Preferences
-					</Button>
+					</CustomButton>
 				</Link>
 			</div>
 

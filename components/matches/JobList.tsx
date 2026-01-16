@@ -2,10 +2,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Job } from "@/hooks/useMatches";
 import { BrandIcons } from "../ui/BrandIcons";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 import { HotMatchBadge } from "../ui/HotMatchBadge";
 import { trackEvent } from "../../lib/analytics";
 import { X } from "lucide-react";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface JobListProps {
 	jobs: Job[];
@@ -51,16 +56,18 @@ export function JobList({
 							}}
 							className="relative"
 						>
-							{/* Job Card */}
-							<motion.div
-								className={`group relative rounded-2xl border-2 p-6 transition-all duration-300 ${
-									isClicked
-										? "border-brand-500 bg-brand-500/5 shadow-[0_0_30px_rgba(109,90,143,0.3)]"
-										: "border-border-default bg-surface-elevated/40 hover:border-border-default hover:shadow-lg"
-								} ${isDismissing ? "opacity-50 scale-95" : ""}`}
-								whileHover={{ y: -2 }}
-								transition={{ duration: 0.2 }}
-							>
+							{/* Job Card with Hover Details */}
+							<HoverCard>
+								<HoverCardTrigger asChild>
+									<motion.div
+										className={`group relative rounded-2xl border-2 p-6 transition-all duration-300 cursor-pointer ${
+											isClicked
+												? "border-brand-500 bg-brand-500/5 shadow-[0_0_30px_rgba(20,184,166,0.3)]"
+												: "border-border-default bg-surface-elevated/40 hover:border-border-default hover:shadow-lg"
+										} ${isDismissing ? "opacity-50 scale-95" : ""}`}
+										whileHover={{ y: -2 }}
+										transition={{ duration: 0.2 }}
+									>
 								{/* Dismiss Button */}
 								<button
 									onClick={() => onJobDismiss(job)}
@@ -160,17 +167,17 @@ export function JobList({
 										}}
 										className="flex-1"
 									>
-										<Button
+										<CustomButton
 											variant="primary"
 											size="sm"
 											className="w-full"
 											disabled={isDismissing}
 										>
 											View Job →
-										</Button>
+										</CustomButton>
 									</Link>
 
-									<Button
+									<CustomButton
 										variant="secondary"
 										size="sm"
 										onClick={() => onJobDismiss(job)}
@@ -178,30 +185,113 @@ export function JobList({
 										className="px-4"
 									>
 										{isDismissing ? "..." : "Not for me"}
-									</Button>
+									</CustomButton>
 								</div>
+								</motion.div>
+							</HoverCardTrigger>
 
-								{/* Upgrade Banner */}
-								{showUpgradeBanner && index === 0 && (
-									<motion.div
-										initial={{ opacity: 0, y: 10 }}
-										animate={{ opacity: 1, y: 0 }}
-										className="mt-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-4"
-									>
-										<p className="text-sm text-amber-200">
-											🎯 <strong>Want more matches?</strong> Upgrade to Premium for
-											15 jobs/week instead of 5.
+							{/* Hover Card Content - Detailed Job Information */}
+							<HoverCardContent className="w-96 p-0" side="right" align="start">
+								<div className="p-6 space-y-4">
+									{/* Header */}
+									<div>
+										<h4 className="font-bold text-lg text-white mb-2">{job.title}</h4>
+										<p className="text-brand-400 font-semibold">{job.company_name || job.company}</p>
+										<p className="text-sm text-content-secondary">{job.location}</p>
+									</div>
+
+									{/* Match Details */}
+									{job.match_score && (
+										<div className="flex items-center gap-2 p-3 bg-emerald-500/10 rounded-lg">
+											<BrandIcons.CheckCircle className="h-5 w-5 text-emerald-400" />
+											<div>
+												<p className="font-semibold text-emerald-400">{job.match_score}% match</p>
+												{job.match_reason && (
+													<p className="text-xs text-emerald-300">{job.match_reason}</p>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Visa Status */}
+									{job.visa_confidence && job.visa_confidence !== "unknown" && (
+										<div className="flex items-center gap-2 p-3 bg-blue-500/10 rounded-lg">
+											<div className={`w-3 h-3 rounded-full ${
+												job.visa_confidence === "verified"
+													? "bg-green-400"
+													: job.visa_confidence === "likely"
+													? "bg-yellow-400"
+													: "bg-gray-400"
+											}`} />
+											<div>
+												<p className="font-semibold text-blue-400">
+													{job.visa_confidence === "verified"
+														? "Verified Visa Sponsor"
+														: job.visa_confidence === "likely"
+														? "Likely Visa Sponsor"
+														: "Local Only"}
+												</p>
+												{job.visa_confidence_percentage && (
+													<p className="text-xs text-blue-300">
+														{job.visa_confidence_percentage}% confidence
+													</p>
+												)}
+											</div>
+										</div>
+									)}
+
+									{/* Full Description */}
+									<div>
+										<h5 className="font-semibold text-white mb-2">Job Description</h5>
+										<p className="text-sm text-content-secondary leading-relaxed">
+											{job.description}
 										</p>
-										<Link href="/pricing" className="mt-2 inline-block">
-											<Button variant="secondary" size="sm">
-												Upgrade Now →
-											</Button>
-										</Link>
-									</motion.div>
-								)}
+									</div>
+
+									{/* Apply Button */}
+									<Link
+										href={job.job_url || job.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										onClick={() => {
+											onJobClick(job.id, job.company, index, job);
+											trackEvent("job_link_clicked", {
+												job_id: job.id,
+												company: job.company,
+												title: job.title,
+												url: job.job_url || job.url,
+											});
+										}}
+										className="block w-full"
+									>
+										<CustomButton variant="primary" size="sm" className="w-full">
+											Apply Now →
+										</CustomButton>
+									</Link>
+								</div>
+							</HoverCardContent>
+						</HoverCard>
+
+						{/* Upgrade Banner */}
+						{showUpgradeBanner && index === 0 && (
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								className="mt-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-4"
+							>
+								<p className="text-sm text-amber-200">
+									🎯 <strong>Want more matches?</strong> Upgrade to Premium for
+									15 jobs/week instead of 5.
+								</p>
+								<Link href="/pricing" className="mt-2 inline-block">
+									<CustomButton variant="secondary" size="sm">
+										Upgrade Now →
+									</CustomButton>
+								</Link>
 							</motion.div>
-						</motion.div>
-					</AnimatePresence>
+						)}
+					</motion.div>
+				</AnimatePresence>
 				);
 			})}
 
@@ -220,9 +310,9 @@ export function JobList({
 						You've reviewed all your current matches. New jobs arrive every few hours.
 					</p>
 					<Link href="/pricing">
-						<Button variant="primary">
+						<CustomButton variant="primary">
 							Get 15 Jobs/Week with Premium →
-						</Button>
+						</CustomButton>
 					</Link>
 				</motion.div>
 			)}

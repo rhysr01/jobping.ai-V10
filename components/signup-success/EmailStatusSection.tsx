@@ -1,5 +1,5 @@
 import { BrandIcons } from "../ui/BrandIcons";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 import { EmailStatus } from "@/hooks/useSignupSuccess";
 
 interface EmailStatusSectionProps {
@@ -50,7 +50,7 @@ export function EmailStatusSection({
 						)}
 					</div>
 					{!emailStatus.sent && !emailStatus.retrying && (
-						<Button
+						<CustomButton
 							variant="secondary"
 							size="sm"
 							onClick={onResendEmail}
@@ -58,7 +58,7 @@ export function EmailStatusSection({
 							className="text-xs"
 						>
 							{resending ? "Sending..." : "Resend"}
-						</Button>
+						</CustomButton>
 					)}
 				</div>
 
@@ -66,7 +66,7 @@ export function EmailStatusSection({
 					<p className="text-sm text-content-secondary mb-2">
 						Didn't receive the email? Check your spam folder or
 					</p>
-					<Button
+					<CustomButton
 						variant="secondary"
 						size="sm"
 						onClick={onResendEmail}
@@ -74,7 +74,7 @@ export function EmailStatusSection({
 						className="text-xs"
 					>
 						{resending ? "Sending..." : "Send Again"}
-					</Button>
+					</CustomButton>
 				</div>
 			</div>
 		</div>

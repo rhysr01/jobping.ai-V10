@@ -125,47 +125,47 @@ SET company = REGEXP_REPLACE(
                                                                         REGEXP_REPLACE(
                                                                             REGEXP_REPLACE(
                                                                                 TRIM(company),
-                                                                                '\s+Ltd\.?$', '', 'i'
+                                                                                '[ \t\n\r\f]+Ltd\.?$', '', 'i'
                                                                             ),
-                                                                            '\s+Limited$', '', 'i'
+                                                                            '[ \t\n\r\f]+Limited$', '', 'i'
                                                                         ),
-                                                                        '\s+Inc\.?$', '', 'i'
+                                                                        '[ \t\n\r\f]+Inc\.?$', '', 'i'
                                                                     ),
-                                                                    '\s+Incorporated$', '', 'i'
+                                                                    '[ \t\n\r\f]+Incorporated$', '', 'i'
                                                                 ),
-                                                                '\s+GmbH$', '', 'i'
+                                                                '[ \t\n\r\f]+GmbH$', '', 'i'
                                                             ),
-                                                            '\s+S\.A\.?$', '', 'i'
+                                                            '[ \t\n\r\f]+S\.A\.?$', '', 'i'
                                                         ),
-                                                        '\s+S\.L\.?$', '', 'i'
+                                                        '[ \t\n\r\f]+S\.L\.?$', '', 'i'
                                                     ),
-                                                    '\s+S\.R\.L\.?$', '', 'i'
+                                                    '[ \t\n\r\f]+S\.R\.L\.?$', '', 'i'
                                                 ),
-                                                '\s+LLC$', '', 'i'
+                                                '[ \t\n\r\f]+LLC$', '', 'i'
                                             ),
-                                            '\s+LLP$', '', 'i'
+                                            '[ \t\n\r\f]+LLP$', '', 'i'
                                         ),
-                                        '\s+PLC$', '', 'i'
+                                        '[ \t\n\r\f]+PLC$', '', 'i'
                                     ),
-                                    '\s+Corp\.?$', '', 'i'
+                                    '[ \t\n\r\f]+Corp\.?$', '', 'i'
                                 ),
-                                '\s+Corporation$', '', 'i'
+                                '[ \t\n\r\f]+Corporation$', '', 'i'
                             ),
-                            '\s+Co\.?$', '', 'i'
+                            '[ \t\n\r\f]+Co\.?$', '', 'i'
                         ),
-                        '\s+Company$', '', 'i'
+                        '[ \t\n\r\f]+Company$', '', 'i'
                     ),
-                    '\s+AG$', '', 'i'
+                    '[ \t\n\r\f]+AG$', '', 'i'
                 ),
-                '\s+BV$', '', 'i'
+                '[ \t\n\r\f]+BV$', '', 'i'
             ),
-            '\s+NV$', '', 'i'
+            '[ \t\n\r\f]+NV$', '', 'i'
         ),
-        '\s+AB$', '', 'i'
+        '[ \t\n\r\f]+AB$', '', 'i'
     ),
-    '\s+Oy$', '', 'i'
+    '[ \t\n\r\f]+Oy$', '', 'i'
 ),
-'\s+AS$', '', 'i'
+    '[ \t\n\r\f]+AS$', '', 'i'
 )
 WHERE company IS NOT NULL;
 
@@ -192,47 +192,47 @@ SET company_name = REGEXP_REPLACE(
                                                                         REGEXP_REPLACE(
                                                                             REGEXP_REPLACE(
                                                                                 TRIM(company_name),
-                                                                                '\s+Ltd\.?$', '', 'i'
+                                                                                '[ \t\n\r\f]+Ltd\.?$', '', 'i'
                                                                             ),
-                                                                            '\s+Limited$', '', 'i'
+                                                                            '[ \t\n\r\f]+Limited$', '', 'i'
                                                                         ),
-                                                                        '\s+Inc\.?$', '', 'i'
+                                                                        '[ \t\n\r\f]+Inc\.?$', '', 'i'
                                                                     ),
-                                                                    '\s+Incorporated$', '', 'i'
+                                                                    '[ \t\n\r\f]+Incorporated$', '', 'i'
                                                                 ),
-                                                                '\s+GmbH$', '', 'i'
+                                                                '[ \t\n\r\f]+GmbH$', '', 'i'
                                                             ),
-                                                            '\s+S\.A\.?$', '', 'i'
+                                                            '[ \t\n\r\f]+S\.A\.?$', '', 'i'
                                                         ),
-                                                        '\s+S\.L\.?$', '', 'i'
+                                                        '[ \t\n\r\f]+S\.L\.?$', '', 'i'
                                                     ),
-                                                    '\s+S\.R\.L\.?$', '', 'i'
+                                                    '[ \t\n\r\f]+S\.R\.L\.?$', '', 'i'
                                                 ),
-                                                '\s+LLC$', '', 'i'
+                                                '[ \t\n\r\f]+LLC$', '', 'i'
                                             ),
-                                            '\s+LLP$', '', 'i'
+                                            '[ \t\n\r\f]+LLP$', '', 'i'
                                         ),
-                                        '\s+PLC$', '', 'i'
+                                        '[ \t\n\r\f]+PLC$', '', 'i'
                                     ),
-                                    '\s+Corp\.?$', '', 'i'
+                                    '[ \t\n\r\f]+Corp\.?$', '', 'i'
                                 ),
-                                '\s+Corporation$', '', 'i'
+                                '[ \t\n\r\f]+Corporation$', '', 'i'
                             ),
-                            '\s+Co\.?$', '', 'i'
+                            '[ \t\n\r\f]+Co\.?$', '', 'i'
                         ),
-                        '\s+Company$', '', 'i'
+                        '[ \t\n\r\f]+Company$', '', 'i'
                     ),
-                    '\s+AG$', '', 'i'
+                    '[ \t\n\r\f]+AG$', '', 'i'
                 ),
-                '\s+BV$', '', 'i'
+                '[ \t\n\r\f]+BV$', '', 'i'
             ),
-            '\s+NV$', '', 'i'
+            '[ \t\n\r\f]+NV$', '', 'i'
         ),
-        '\s+AB$', '', 'i'
+        '[ \t\n\r\f]+AB$', '', 'i'
     ),
-    '\s+Oy$', '', 'i'
+    '[ \t\n\r\f]+Oy$', '', 'i'
 ),
-'\s+AS$', '', 'i'
+    '[ \t\n\r\f]+AS$', '', 'i'
 )
 WHERE company_name IS NOT NULL;
 
@@ -328,10 +328,10 @@ BEGIN
     END IF;
     
     -- Trim and normalize whitespace
-    company_text := TRIM(REGEXP_REPLACE(company_text, '\s+', ' ', 'g'));
+    company_text := TRIM(REGEXP_REPLACE(company_text, '[ \t\n\r\f]+', ' ', 'g'));
     
     -- Remove legal suffixes (same as your cleanCompany() function)
-    company_text := REGEXP_REPLACE(company_text, '\s+(Ltd\.?|Limited|Inc\.?|Incorporated|GmbH|S\.A\.?|S\.L\.?|S\.R\.L\.?|LLC|LLP|PLC|Corp\.?|Corporation|Co\.?|Company|AG|BV|NV|AB|Oy|AS)$', '', 'i');
+    company_text := REGEXP_REPLACE(company_text, '[ \t\n\r\f]+(Ltd\.?|Limited|Inc\.?|Incorporated|GmbH|S\.A\.?|S\.L\.?|S\.R\.L\.?|LLC|LLP|PLC|Corp\.?|Corporation|Co\.?|Company|AG|BV|NV|AB|Oy|AS)$', '', 'i');
     
     RETURN TRIM(company_text);
 END;

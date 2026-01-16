@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import {
 	FormFieldError,
 	FormFieldSuccess,
@@ -94,9 +95,26 @@ export const SharedFormField = React.memo(function SharedFormField({
 			{/* Error/Success Messages */}
 			{value && (
 				success && !error ? (
-					<FormFieldSuccess message={success} id={`${id}-success`} />
+					<motion.div
+						initial={{ opacity: 0, scale: 0.8, y: -10 }}
+						animate={{ opacity: 1, scale: 1, y: 0 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 25,
+							duration: 0.4
+						}}
+					>
+						<FormFieldSuccess message={success} id={`${id}-success`} />
+					</motion.div>
 				) : error ? (
-					<FormFieldError error={error} id={`${id}-error`} />
+					<motion.div
+						initial={{ opacity: 0, x: -10 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.3 }}
+					>
+						<FormFieldError error={error} id={`${id}-error`} />
+					</motion.div>
 				) : null
 			)}
 		</div>

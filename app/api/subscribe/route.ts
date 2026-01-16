@@ -10,7 +10,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const plan = formData.get("plan") as string;
 
 	// Validate email format
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 	if (!emailRegex.test(email)) {
 		throw new ValidationError("Invalid email format");
 	}

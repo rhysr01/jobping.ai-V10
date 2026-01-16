@@ -9,6 +9,11 @@ import {
 } from "../ui/FormFieldFeedback";
 import { MobileNavigation } from "./MobileNavigation";
 import { showToast } from "../../lib/toast";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { CITIES } from "./constants";
 import type { SignupFormData } from "./types";
 
@@ -56,11 +61,21 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			return;
 		}
 
+		const wasSelected = formData.cities.includes(city);
+		const newCities = toggleArray(formData.cities, city);
+
 		setFormData({
 			...formData,
-			cities: toggleArray(formData.cities, city),
+			cities: newCities,
 		});
 		setTouchedFields((prev) => new Set(prev).add("cities"));
+
+		// Show success feedback
+		if (!wasSelected) {
+			showToast.success(`Added ${city} to your preferences`);
+		} else {
+			showToast.info(`Removed ${city}`);
+		}
 	};
 
 	const handleCitiesBlur = () => {
@@ -79,7 +94,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			className="space-y-6 sm:space-y-8 md:space-y-10"
 		>
 			<div className="mb-6 sm:mb-8">
-				<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				<h2 className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 					Where do you want to work?
 				</h2>
 				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
@@ -88,15 +103,35 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			</div>
 
 			<div>
-				<label
-					id="cities-label"
-					htmlFor="cities-field"
-					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
-				>
-					<span>Preferred Cities</span>
-					<span className="text-red-400 text-sm" aria-label="required">*</span>
-					<span className="text-zinc-400 font-normal text-sm">(Select up to 3)</span>
-				</label>
+				<div className="flex items-center gap-2 mb-3">
+					<label
+						id="cities-label"
+						htmlFor="cities-field"
+						className="block text-base font-bold text-white flex items-center gap-2"
+					>
+						<span>Preferred Cities</span>
+						<span className="text-red-400 text-sm" aria-label="required">*</span>
+						<span className="text-zinc-400 font-normal text-sm">(Select up to 3)</span>
+					</label>
+					<HoverCard>
+						<HoverCardTrigger asChild>
+							<button className="text-zinc-400 hover:text-zinc-300 transition-colors">
+								<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+							</button>
+						</HoverCardTrigger>
+						<HoverCardContent className="w-80 p-4">
+							<div className="space-y-2">
+								<p className="text-sm font-semibold text-white">🌍 Choose your location preferences</p>
+								<p className="text-xs text-zinc-300 leading-relaxed">
+									We'll find job matches in all selected cities. Most roles are remote-friendly,
+									so you can work from anywhere. Start with your preferred locations!
+								</p>
+							</div>
+						</HoverCardContent>
+					</HoverCard>
+				</div>
 				<p id="cities-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
 					Choose cities where you'd like to work. We'll find the best matches instantly.
 				</p>

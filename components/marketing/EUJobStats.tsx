@@ -135,7 +135,7 @@ export function EUJobStats() {
 			iconBg: "bg-gradient-to-br from-purple-500/30 to-purple-600/20",
 			iconBorder: "border-purple-500/40",
 			iconText: "text-purple-200",
-			iconShadow: "shadow-[0_4px_16px_rgba(139,92,246,0.3)]",
+			iconShadow: "shadow-[0_4px_16px_rgba(20,184,166,0.3)]",
 			cardHover: "hover:border-purple-500/30",
 			gradient: "from-purple-400 to-purple-600",
 		},

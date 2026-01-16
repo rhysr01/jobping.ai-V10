@@ -416,3 +416,139 @@ jobs:
         with:
           file: ./coverage/lcov.info
 ```
+
+## AI Testing Setup & Validation
+
+### Environment Setup for AI Testing
+
+To run AI-related tests, you'll need to configure OpenAI API access:
+
+#### Required Environment Variables
+```bash
+# AI Testing Configuration
+OPENAI_API_KEY=sk-your-openai-api-key-here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+```
+
+#### Getting API Keys
+1. **OpenAI API Key**: Visit https://platform.openai.com/api-keys → Create new secret key
+2. **Supabase Keys**: Dashboard → Settings → API → Copy URLs and service_role key
+
+#### Setup Verification
+```bash
+# Test AI connectivity and environment
+npm run test:ai-check
+
+# Run comprehensive AI validation suite
+npm run test:ai-comprehensive
+```
+
+### Production AI vs Test AI Architecture
+
+**Critical Finding**: Test AI (`AIMatchingService`) ≠ Production AI (`ConsolidatedMatchingEngine`)
+
+#### Key Architecture Differences
+
+| Aspect | Test AI (AIMatchingService) | Production AI (ConsolidatedMatchingEngine) |
+|--------|----------------------------|-------------------------------------------|
+| **Architecture** | Direct OpenAI chat completions | Function calling with structured JSON |
+| **Model** | GPT-4o-mini | GPT-4o-mini |
+| **Prompt Style** | Conversational matching | Structured assessment criteria |
+| **Output Format** | Free-form JSON array | Function call with validation schema |
+| **Match Count** | Configurable (5 or 10) | Fixed by tier (5 free, 10 premium) |
+| **Scoring Logic** | Company + Title weighted | 7-10 assessment criteria |
+| **Error Handling** | Basic retries | Circuit breaker + exponential backoff |
+| **Caching** | Simple LRU | Shared LRU with TTL |
+| **Validation** | Basic structure check | Comprehensive schema validation |
+
+#### What Tests Actually Validated
+- ✅ OpenAI API connectivity
+- ✅ Environment variable loading
+- ✅ Basic JSON response parsing
+- ✅ Match count requirements (5 free, 10 premium)
+- ✅ Company/title prioritization logic
+
+#### Production-Specific Features Not Tested
+- ❌ Function calling reliability
+- ❌ Circuit breaker behavior
+- ❌ Assessment criteria scoring
+- ❌ Enriched job data processing
+- ❌ Error recovery mechanisms
+
+### Manual Production Testing Protocol
+
+#### Critical Pre-Launch Checks
+1. **Match Count Verification**: Free users get exactly 5 matches, premium get exactly 10
+2. **Company Quality Assessment**: Top matches from recognizable companies (Google, McKinsey > Unknown Corp)
+3. **Result Stability**: Same user gets consistent results across multiple runs
+
+#### Production Monitoring
+- **Performance**: First request <5s, cached <500ms
+- **Quality**: Location accuracy 100%, company prestige scoring
+- **Diversity**: Multiple companies per result set, varied experience levels
+
+#### Red Flag Alerts
+- ❌ Match count ≠ business requirements (5 free, 10 premium)
+- ❌ 100% location failures (Paris jobs for London users)
+- ❌ All matches from single company (diversity = 0)
+- ❌ Response time >30 seconds
+
+### AI Quality Metrics Dashboard
+
+#### Daily Monitoring
+```
+✅ Match Count Accuracy: 100% (5/5 free users correct)
+✅ Location Accuracy: 98% (2/100 wrong cities)
+✅ Response Time: <3s average
+✅ Error Rate: 0.1%
+✅ Diversity Score: 4.2/5 (companies per result set)
+```
+
+#### Weekly Quality Report
+```
+🎯 Overall AI Quality Score: 87/100
+📊 Match Consistency: 92% (stable across runs)
+🏢 Company Quality: 85/100 (real companies vs generic)
+📍 Location Accuracy: 96% (correct city targeting)
+⏱️ Performance: 2.3s average (within limits)
+🎲 Diversity: 4.1/5 (good variety)
+```
+
+### Emergency AI Response Protocol
+
+#### If AI Stops Working
+1. Check `curl https://getjobping.com/api/health/ai`
+2. Activate fallback rule-based matching
+3. Notify users of temporary issues
+4. Run full automated test suite
+5. Restart AI service or rotate OpenAI keys
+
+#### If Quality Drops
+1. Detect via automated quality metric alerts
+2. Manual testing with diverse user profiles
+3. Check for OpenAI model updates or prompt changes
+4. Mitigate with prompt engineering or fallback activation
+5. Deploy improved prompts/models
+
+### Production AI Testing Suite
+
+The `scripts/README-ai-reliability-testing.md` contains specialized testing for the production AI matching engine:
+
+#### What It Tests
+- **Production Code Path**: Tests actual `ConsolidatedMatchingEngine.performMatching()` method
+- **Hard Filtering**: Location, visa, language, and career path filtering
+- **Match Counts**: Free users get 5 matches, Premium get appropriate volume
+- **Caching**: Production LRU caching with shared cache instances
+- **Circuit Breaker**: Error handling and retry logic
+- **Validation**: Post-AI quality checks and hallucination prevention
+
+#### MCP Integration Features
+- **Supabase MCP**: Database state validation and table statistics
+- **Browser MCP**: UI testing and screenshot validation
+- **Enhanced Accuracy**: External validation of AI matching results
+
+### Testing Philosophy
+- **Prevention vs Detection**: Automated tests prevent issues, manual testing verifies fixes
+- **Quality Gates**: Automated tests must pass for deployment, manual verification for releases
+- **Continuous Improvement**: Track metrics, A/B test prompts, incorporate user feedback

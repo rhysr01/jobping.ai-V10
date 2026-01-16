@@ -78,9 +78,11 @@ export const Step1Basics = React.memo(function Step1Basics({
 			exit={{ opacity: 0, x: -20 }}
 			transition={{ duration: 0.4 }}
 			className="space-y-6 sm:space-y-8 md:space-y-10 lg:space-y-12"
+			role="region"
+			aria-labelledby="premium-step1-heading"
 		>
 			<div className="mb-6 sm:mb-8">
-				<h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				<h2 id="premium-step1-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
 					Let's get started
 				</h2>
 				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">

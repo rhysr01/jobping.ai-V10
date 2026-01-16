@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { memo, useEffect, useState } from "react";
-import { useStats } from "../../hooks/useStats";
-import { useWindowSize } from "../../hooks/useWindowSize";
+import { useStats } from "@/hooks/useStats";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import { trackEvent } from "../../lib/analytics";
 import {
 	CTA_GET_MY_5_FREE_MATCHES,
@@ -20,7 +20,7 @@ function Hero() {
 	const { stats } = useStats();
 	const { isMobile } = useWindowSize();
 
-	// Defer job pre-fetching to improve initial page load performance
+	// Mobile-optimized job pre-fetching to improve initial page load performance
 	useEffect(() => {
 		async function fetchJobs() {
 			try {
@@ -59,10 +59,27 @@ function Hero() {
 			}
 		}
 
-		const timeoutId = setTimeout(fetchJobs, 2000); // Defer by 2 seconds
+		// Mobile-specific optimization: longer delay or skip on slow connections
+		if (isMobile) {
+			// Check for slow connection (2G, slow-2g) and skip pre-fetching
+			const connection = (navigator as any).connection ||
+				(navigator as any).mozConnection ||
+				(navigator as any).webkitConnection;
 
-		return () => clearTimeout(timeoutId); // Cleanup timeout on unmount
-	}, []);
+			if (connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g')) {
+				// Skip pre-fetching entirely on very slow connections
+				return;
+			}
+
+			// Longer delay on mobile (5 seconds instead of 2)
+			const timeoutId = setTimeout(fetchJobs, 5000);
+			return () => clearTimeout(timeoutId);
+		} else {
+			// Normal desktop behavior
+			const timeoutId = setTimeout(fetchJobs, 2000);
+			return () => clearTimeout(timeoutId);
+		}
+	}, [isMobile]);
 
 	return (
 		<section
@@ -117,32 +134,9 @@ function Hero() {
 				{/* Split Grid Layout: Content Left, Mockup Right */}
 				<div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center mt-4 md:mt-8 overflow-visible">
 					{/* LEFT SIDE - Content */}
-					<motion.div
-						initial={{ opacity: 0, x: -20 }}
-						animate={{ opacity: 1, x: 0 }}
-						transition={{
-							duration: isMobile ? 0.4 : 0.6,
-							ease: "easeOut", // Better performance than easeInOut
-						}}
-						className="text-left space-y-4 sm:space-y-6 relative overflow-visible px-4 sm:pr-8 md:pr-10 sm:pl-6"
-						style={{
-							backgroundColor: "transparent",
-							overflow: "visible",
-							overflowX: "visible",
-							overflowY: "visible",
-							willChange: "transform, opacity", // Hint browser for optimization
-							backfaceVisibility: "hidden", // Prevent flickering
-							transform: "translateZ(0)", // Force hardware acceleration
-						}}
-					>
+					<div className="text-left space-y-4 sm:space-y-6 relative overflow-visible px-4 sm:pr-8 md:pr-10 sm:pl-6">
 						{/* Headline - "Silver Silk" gradient */}
-						<motion.h1
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.2, duration: 0.6 }}
-							className="font-display text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-extrabold tracking-tight mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible"
-							style={{ wordSpacing: "0.05em", letterSpacing: "-0.02em" }}
-						>
+						<h1 className="font-display text-display-xl font-black text-white text-depth-strong mb-3 max-w-full sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[760px] relative overflow-visible" style={{ wordSpacing: "0.05em" }}>
 							{/* Silver Silk gradient: purple-500/80 (20%) → zinc-100 (50%) → purple-500/80 (80%) */}
 							<GradientText variant="brand" className="inline-block">
 								Get 5 early-career
@@ -153,30 +147,13 @@ function Hero() {
 							<span className="text-content-primary inline-block">
 								instantly
 							</span>{" "}
-							<GradientText
-								variant="brand"
-								className={`inline-block text-[2.5rem] leading-[1.15] sm:text-5xl sm:leading-[1.15] md:text-6xl md:leading-[1.15] lg:text-7xl lg:leading-[1.15] font-black ${isMobile ? "" : "will-change-transform"}`}
-								style={
-									isMobile
-										? {}
-										: {
-												transform: "translateZ(0)",
-												backfaceVisibility: "hidden",
-											}
-								}
-							>
+							<GradientText variant="brand" className="inline-block text-display-xl font-black">
 								free
 							</GradientText>
-						</motion.h1>
+						</h1>
 
 						{/* Tagline - Emerald Green */}
-						<motion.p
-							initial={{ opacity: 0, y: 20 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.22, duration: 0.6 }}
-							className="text-base sm:text-lg md:text-xl text-emerald-400 leading-relaxed max-w-xl mb-4 mt-2 sm:mt-4 overflow-visible"
-							style={{ wordSpacing: "0.02em" }}
-						>
+						<p className="text-body-lg text-emerald-400 leading-relaxed max-w-xl mb-4 mt-2 sm:mt-4 overflow-visible" style={{ wordSpacing: "0.02em" }}>
 							<GradientText variant="brand" className="inline">
 								Skip
 							</GradientText>{" "}
@@ -207,62 +184,35 @@ function Hero() {
 								2 minutes
 							</GradientText>
 							.
-						</motion.p>
+						</p>
 
 						{/* Social Proof for Free Instant Matches */}
-						<motion.div
-							initial={{ opacity: 0, scale: 0.95 }}
-							animate={{ opacity: 1, scale: 1 }}
-							transition={{ delay: 0.28, duration: 0.6 }}
-							className="mb-6"
-						>
+						<div className="mb-6">
 							<div className="inline-flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-emerald-500/10 via-blue-500/8 to-purple-500/10 border border-emerald-500/20 rounded-full backdrop-blur-sm">
-								{/* Animated pulse dot */}
-								<motion.div
-									className="relative flex h-3 w-3"
-									animate={{ scale: [1, 1.2, 1] }}
-									transition={{ duration: 2, repeat: Infinity }}
-								>
-									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+								{/* Static elements for better mobile performance */}
+								<div className="relative flex h-3 w-3">
 									<span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
-								</motion.div>
+								</div>
 
-								{/* Live counter effect */}
-								<motion.span
-									className="text-sm font-semibold text-emerald-300"
-									initial={{ opacity: 0 }}
-									animate={{ opacity: 1 }}
-									transition={{ delay: 0.5 }}
-								>
+								<span className="text-sm font-semibold text-emerald-300">
 									1,247 students got matches
-								</motion.span>
+								</span>
 
-								{/* Trending indicator */}
-								<motion.div
-									className="flex items-center gap-1 text-emerald-400"
-									initial={{ opacity: 0, x: -10 }}
-									animate={{ opacity: 1, x: 0 }}
-									transition={{ delay: 0.7 }}
-								>
+								<div className="flex items-center gap-1 text-emerald-400">
 									<BrandIcons.TrendingUp className="h-3 w-3" />
 									<span className="text-xs font-medium">+23 today</span>
-								</motion.div>
+								</div>
 							</div>
-						</motion.div>
+						</div>
 
 						{/* CTAs */}
-						<motion.div
-							initial={{ opacity: 0, y: 16 }}
-							animate={{ opacity: 1, y: 0 }}
-							transition={{ delay: 0.3, duration: 0.6 }}
-							className="flex flex-col gap-3 pt-2"
-						>
+						<div className="flex flex-col gap-3 pt-2">
 							<a
 								href="/signup/free"
 								onClick={() => {
 									trackEvent("cta_clicked", { type: "free", location: "hero" });
 								}}
-								className="btn-cta-enhanced w-full sm:w-auto sm:max-w-xs hover:shadow-[0_8px_30px_rgba(139,92,246,0.4)]"
+								className="btn-cta-enhanced w-full sm:w-auto sm:max-w-xs hover:shadow-[0_8px_30px_rgba(20,184,166,0.4)]"
 								aria-label={CTA_GET_MY_5_FREE_MATCHES_ARIA}
 							>
 								<span className="flex items-center justify-center gap-2">
@@ -351,8 +301,8 @@ function Hero() {
 									</motion.div>
 								</div>
 							</motion.div>
-						</motion.div>
-					</motion.div>
+						</div>
+					</div>
 
 					{/* RIGHT SIDE - Mobile Mockup (3D Interactive) */}
 					<motion.div

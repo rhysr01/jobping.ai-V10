@@ -3,7 +3,7 @@
 import { Loader2, Package, ShoppingCart } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import Button from "../../../components/ui/Button";
+import CustomButton from "../../../components/ui/CustomButton";
 
 interface Product {
 	id: string;
@@ -153,7 +153,7 @@ export default function StorePage() {
 														</p>
 													)}
 												</div>
-												<Button
+												<CustomButton
 													onClick={() => handlePurchase(price.id, product.name)}
 													disabled={processing === price.id || !product.active}
 													isLoading={processing === price.id}
@@ -161,7 +161,7 @@ export default function StorePage() {
 												>
 													<ShoppingCart className="w-4 h-4" />
 													Buy
-												</Button>
+												</CustomButton>
 											</div>
 										))}
 									</div>

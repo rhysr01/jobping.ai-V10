@@ -96,7 +96,7 @@ const nextConfig: NextConfig = {
 		}
 		return [];
 	},
-	webpack: (config, { isServer, webpack }) => {
+	webpack: (config, { isServer, webpack, dev }) => {
 		// Force webpack aliases for Vercel compatibility
 		config.resolve = config.resolve || {};
 		// Ensure modules are resolved correctly
@@ -113,6 +113,41 @@ const nextConfig: NextConfig = {
 			'@/components': require('path').resolve(process.cwd(), 'components'),
 			'@/app': require('path').resolve(process.cwd(), 'app'),
 		};
+
+		// Mobile-specific optimizations
+		if (!isServer && !dev) {
+			// Aggressive code splitting for mobile bundles
+			config.optimization = {
+				...config.optimization,
+				splitChunks: {
+					...config.optimization?.splitChunks,
+					cacheGroups: {
+						...config.optimization?.splitChunks?.cacheGroups,
+						// Separate Framer Motion for conditional loading
+						framerMotion: {
+							test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+							name: 'framer-motion',
+							chunks: 'all',
+							priority: 10,
+						},
+						// Separate heavy UI libraries
+						uiLibs: {
+							test: /[\\/]node_modules[\\/](lucide-react|@radix-ui)[\\/]/,
+							name: 'ui-libs',
+							chunks: 'all',
+							priority: 5,
+						},
+						// Separate analytics for lazy loading
+						analytics: {
+							test: /[\\/]node_modules[\\/](posthog-js|@posthog)[\\/]/,
+							name: 'analytics',
+							chunks: 'all',
+							priority: 3,
+						},
+					},
+				},
+			};
+		}
 
 		// Always exclude problematic modules
 		config.externals = config.externals || [];

@@ -3,7 +3,7 @@
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import Button from "../../components/ui/Button";
+import CustomButton from "../../components/ui/CustomButton";
 
 function OnboardContent() {
 	const searchParams = useSearchParams();
@@ -69,9 +69,9 @@ function OnboardContent() {
 								Onboarding Incomplete
 							</h1>
 							<p className="text-xl text-zinc-300 mb-6">{error}</p>
-							<Button onClick={() => router.push("/dashboard")}>
+							<CustomButton onClick={() => router.push("/dashboard")}>
 								Go to Dashboard
-							</Button>
+							</CustomButton>
 						</>
 					) : refresh ? (
 						<>
@@ -92,7 +92,7 @@ function OnboardContent() {
 								You need to complete Stripe Connect onboarding to accept
 								payments.
 							</p>
-							<Button href="/dashboard">Go to Dashboard</Button>
+							<CustomButton href="/dashboard">Go to Dashboard</CustomButton>
 						</>
 					)}
 				</div>

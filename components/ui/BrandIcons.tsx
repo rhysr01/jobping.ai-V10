@@ -259,6 +259,36 @@ export const BrandIcons = {
 		</svg>
 	),
 
+	ChevronLeft: ({ className = "w-5 h-5" }: { className?: string }) => (
+		<svg
+			className={className}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M15 18l-6-6 6-6" />
+		</svg>
+	),
+
+	ChevronRight: ({ className = "w-5 h-5" }: { className?: string }) => (
+		<svg
+			className={className}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M9 18l6-6-6-6" />
+		</svg>
+	),
+
 	Menu: ({ className = "w-5 h-5" }: { className?: string }) => (
 		<svg
 			className={className}
@@ -373,6 +403,21 @@ export const BrandIcons = {
 			<path d="M10 22h4" />
 			<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
 			<path d="M12 2L13.09 8.26L22 9L13.09 9.74L12 16L10.91 9.74L2 9L10.91 8.26L12 2Z" />
+		</svg>
+	),
+
+	Loader: ({ className = "w-5 h-5" }: { className?: string }) => (
+		<svg
+			className={className}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M21 12a9 9 0 1 1-6.219-8.56" />
 		</svg>
 	),
 };

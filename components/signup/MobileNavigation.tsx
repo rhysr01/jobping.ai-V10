@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import React from "react";
-import { SharedButton } from "../ui/SharedButton";
+import CustomButton from "../ui/CustomButton";
 
 interface MobileNavigationProps {
 	currentStep: number;
@@ -52,7 +52,7 @@ export const MobileNavigation = React.memo(function MobileNavigation({
 			{/* Navigation Buttons */}
 			<div className="flex gap-3 sm:gap-4">
 				{currentStep > 1 && (
-					<SharedButton
+					<CustomButton
 						onClick={onBack}
 						disabled={backDisabled}
 						variant="secondary"
@@ -61,20 +61,20 @@ export const MobileNavigation = React.memo(function MobileNavigation({
 						className="flex-1"
 					>
 						{backLabel}
-					</SharedButton>
+					</CustomButton>
 				)}
 
-				<SharedButton
+				<CustomButton
 					onClick={onNext}
 					disabled={nextDisabled || loading}
 					variant="primary"
 					size="md"
 					fullWidth
-					loading={loading}
+					isLoading={loading}
 					className="flex-1"
 				>
 					{nextLabel}
-				</SharedButton>
+				</CustomButton>
 			</div>
 		</motion.div>
 	);

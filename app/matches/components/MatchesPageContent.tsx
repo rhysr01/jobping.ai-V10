@@ -9,6 +9,7 @@ import { UpgradeBanner } from "../../../components/matches/UpgradeBanner";
 import CustomScanTrigger from "../../../components/ui/CustomScanTrigger";
 import JobClosedModal from "../../../components/ui/JobClosedModal";
 import TargetCompaniesAlert from "../../../components/ui/TargetCompaniesAlert";
+import { SmartLoading } from "../../../components/ui/smart-loading";
 import { useMatches } from "../../../hooks/useMatches";
 
 export default function MatchesPageContent() {
@@ -18,7 +19,6 @@ export default function MatchesPageContent() {
 		customScan,
 		loading,
 		error,
-		loadingMessage,
 		showUpgradeBanner,
 		jobsViewed,
 		clickedJobId,
@@ -44,14 +44,27 @@ export default function MatchesPageContent() {
 	}, [handleScroll]);
 
 	if (loading && !showMatchingSuite) {
+		// Simple stage progression
+		const [currentStage, setCurrentStage] = useState<'validating' | 'matching' | 'preparing'>('validating');
+
+		useEffect(() => {
+			const stages = [
+				{ stage: 'validating' as const, delay: 0 },
+				{ stage: 'matching' as const, delay: 2000 },
+				{ stage: 'preparing' as const, delay: 6000 },
+			];
+
+			const timeouts = stages.map(({ stage, delay }) =>
+				setTimeout(() => setCurrentStage(stage), delay)
+			);
+
+			return () => timeouts.forEach(clearTimeout);
+		}, []);
+
 		return (
 			<div className="min-h-screen bg-black flex items-center justify-center p-4">
 				<div className="flex items-center justify-center py-8">
-					<div className="text-center">
-						<div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-						<p className="text-white font-medium">{loadingMessage}</p>
-						<p className="text-zinc-400 text-sm mt-1">This usually takes 5-10 seconds</p>
-					</div>
+					<SmartLoading stage={currentStage} />
 				</div>
 			</div>
 		);

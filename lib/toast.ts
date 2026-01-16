@@ -1,24 +1,17 @@
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export const showToast = {
 	success: (message: string) => {
-		toast.success(message, {
-			duration: 4000,
-		});
+		toast.success(message);
 	},
-	error: (message: string, action?: { label: string; onClick: () => void }) => {
-		toast.error(message, {
-			duration: 5000,
-			...(action && {
-				action: {
-					label: action.label,
-					onClick: action.onClick,
-				},
-			}),
-		});
+	error: (message: string) => {
+		toast.error(message);
 	},
 	loading: (message: string) => {
 		return toast.loading(message);
+	},
+	info: (message: string) => {
+		toast(message);
 	},
 	promise: <T>(
 		promise: Promise<T>,
@@ -28,16 +21,10 @@ export const showToast = {
 			error: string | ((error: Error) => string);
 		},
 	) => {
-		return toast.promise(
-			promise,
-			{
-				loading: messages.loading,
-				success: messages.success,
-				error: messages.error,
-			},
-			{
-				duration: 4000,
-			},
-		);
+		return toast.promise(promise, {
+			loading: messages.loading,
+			success: messages.success,
+			error: messages.error,
+		});
 	},
 };

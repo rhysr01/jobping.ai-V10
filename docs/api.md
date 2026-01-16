@@ -245,3 +245,78 @@ All endpoints return standardized error responses:
 - `DATABASE_ERROR` - Database connectivity issues
 - `EXTERNAL_SERVICE_ERROR` - Third-party API failures
 
+## Error Handling Implementation
+
+### Core Error Classes
+JobPing uses standardized error handling across all API routes:
+
+```typescript
+import { AppError, ValidationError, NotFoundError, asyncHandler } from "@/lib/errors";
+
+// Standard error types
+throw new AppError("Something went wrong", 500, "INTERNAL_ERROR");
+throw new ValidationError("Invalid input", { field: "email" });
+throw new NotFoundError("User");
+```
+
+### Async Handler Wrapper
+```typescript
+import { asyncHandler } from "@/lib/errors";
+
+export async function POST(request: NextRequest) {
+  return asyncHandler(async () => {
+    // Your route logic here
+    const data = await request.json();
+
+    if (!data.email) {
+      throw new ValidationError("Email is required", { field: "email" });
+    }
+
+    // Process request
+    return NextResponse.json({ success: true });
+  });
+}
+```
+
+### Error Response Structure
+All errors follow a consistent format:
+```json
+{
+  "error": "VALIDATION_ERROR",
+  "message": "Email is required",
+  "details": {
+    "field": "email"
+  },
+  "requestId": "req_123456"
+}
+```
+
+### Error Logging
+Errors are automatically logged with context:
+- Request ID for tracking
+- Stack traces in development
+- User context when available
+- Performance metrics
+
+### Client Error Handling
+Frontend should handle errors gracefully:
+```typescript
+try {
+  const response = await fetch('/api/signup', {
+    method: 'POST',
+    body: JSON.stringify(formData)
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    showError(error.message);
+
+    // Handle specific error types
+    if (error.error === 'VALIDATION_ERROR') {
+      highlightField(error.details.field);
+    }
+  }
+} catch (error) {
+  showError('Network error occurred');
+}
+```

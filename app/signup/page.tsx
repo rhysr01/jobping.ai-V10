@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useRef } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import ErrorBoundary from "../../components/error-boundary";
 import { CAREER_PATHS } from "../../components/signup/constants";
 import { HeroSection } from "../../components/signup/HeroSection";
@@ -15,6 +15,7 @@ import { TrustSignals } from "../../components/signup/TrustSignals";
 import { useAriaAnnounce } from "../../components/ui/AriaLiveRegion";
 import { useReducedMotion } from "../../components/ui/useReducedMotion";
 import { useFormPersistence } from "../../hooks/useFormPersistence";
+import { Progress } from "../../components/ui/progress";
 import {
 	useEmailValidation,
 	useRequiredValidation,
@@ -60,6 +61,10 @@ function SignupForm() {
 		email: useRef<HTMLInputElement>(null),
 	};
 
+	// Submission progress state
+	const [submissionProgress, setSubmissionProgress] = useState(0);
+	const [submissionStage, setSubmissionStage] = useState<string>("");
+
 	// Form persistence hook
 	const { clearProgress } = useFormPersistence(
 		formData as any,
@@ -101,14 +106,24 @@ function SignupForm() {
 		formRefs,
 	});
 
-	// Submit handler
+	// Submit handler with progress tracking
 	const handleSubmit = useCallback(async () => {
 		if (loading) return;
 
 		setLoading(true);
 		setError("");
+		setSubmissionProgress(0);
+		setSubmissionStage("Validating your details...");
 
 		try {
+			// Stage 1: Validation (10% - 30%)
+			setSubmissionProgress(10);
+			await new Promise(resolve => setTimeout(resolve, 300));
+			setSubmissionProgress(30);
+			setSubmissionStage("Analyzing your preferences...");
+
+			// Stage 2: API Call (30% - 80%)
+			setSubmissionProgress(40);
 			const response = await apiCallJson<{
 				userId: string;
 				email: string;
@@ -122,10 +137,19 @@ function SignupForm() {
 				throw new Error("No response from server");
 			}
 
+			setSubmissionProgress(70);
+			setSubmissionStage("Finding premium matches...");
+
+			// Stage 3: Success (80% - 100%)
+			setSubmissionProgress(90);
+
 			setSuccessState({
 				show: true,
 				matchesCount: response.matchesCount,
 			});
+
+			setSubmissionProgress(100);
+			setSubmissionStage("Complete! Sending verification...");
 
 			clearProgress();
 
@@ -133,15 +157,14 @@ function SignupForm() {
 				router.push(`/signup/verify?tier=premium&email=${encodeURIComponent(response.email)}`);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
+			setSubmissionProgress(0);
+			setSubmissionStage("");
 			const errorMessage =
 				error instanceof ApiError
 					? error.message
 					: "Unable to connect. Please check your internet connection and try again.";
 			setError(errorMessage);
-			showToast.error(errorMessage, {
-				label: "Retry",
-				onClick: () => handleSubmit(),
-			});
+			showToast.error(errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -208,9 +231,24 @@ function SignupForm() {
 				{/* Form Steps Container */}
 				<div className="flex-1 flex items-center justify-center p-4">
 					<div className="w-full max-w-2xl">
+						{/* Submission Progress */}
+						{loading && submissionProgress > 0 && (
+							<motion.div
+								initial={{ opacity: 0, y: 10 }}
+								animate={{ opacity: 1, y: 0 }}
+								className="mb-6 glass-card elevation-1 p-6 text-center"
+							>
+								<div className="mb-4">
+									<Progress value={submissionProgress} className="h-2" />
+								</div>
+								<p className="text-white font-medium text-lg">{submissionStage}</p>
+								<p className="text-zinc-400 text-sm mt-1">Creating your premium account...</p>
+							</motion.div>
+						)}
+
 						{/* Step content will be added here */}
 						<div className="text-white text-center">
-							{step === 1 && <Step1Basics key="step1" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} citiesValidation={citiesValidation} languagesValidation={languagesValidation} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 2 && <Step2Preferences key="step2" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 3 && <Step3CareerPath key="step3" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} selectAllRoles={selectAllRoles} clearAllRoles={clearAllRoles} tier="premium" />} {step === 4 && <Step4MatchingPreferences key="step4" formData={formData} setFormData={setFormData as any} loading={loading} setStep={navigation.navigateToStep} toggleArray={toggleArrayValue as any} handleSubmit={handleSubmit} />} 
+							{step === 1 && <Step1Basics key="step1" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} citiesValidation={citiesValidation} languagesValidation={languagesValidation} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 2 && <Step2Preferences key="step2" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 3 && <Step3CareerPath key="step3" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} selectAllRoles={selectAllRoles} clearAllRoles={clearAllRoles} tier="premium" />} {step === 4 && <Step4MatchingPreferences key="step4" formData={formData} setFormData={setFormData as any} loading={loading} setStep={navigation.navigateToStep} toggleArray={toggleArrayValue as any} handleSubmit={handleSubmit} />}
 						</div>
 					</div>
 				</div>

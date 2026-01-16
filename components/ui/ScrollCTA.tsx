@@ -130,7 +130,7 @@ export default function ScrollCTA() {
 							<button
 								type="button"
 								onClick={() => setIsVisible(false)}
-								className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+								className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all min-h-[48px] min-w-[48px] flex items-center justify-center"
 								aria-label="Close"
 							>
 								<BrandIcons.X className="h-4 w-4" />

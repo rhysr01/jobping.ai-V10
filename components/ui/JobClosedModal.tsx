@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Button from "./Button";
+import CustomButton from "./CustomButton";
 
 interface SimilarMatch {
 	job_hash: string;
@@ -115,7 +115,7 @@ export default function JobClosedModal({
 														</span>
 													</div>
 												</div>
-												<Button
+												<CustomButton
 													onClick={() => {
 														window.open(
 															match.job_url,
@@ -127,7 +127,7 @@ export default function JobClosedModal({
 													size="sm"
 												>
 													Apply →
-												</Button>
+												</CustomButton>
 											</div>
 										</motion.div>
 									))}
@@ -143,9 +143,9 @@ export default function JobClosedModal({
 
 							{/* Footer */}
 							<div className="p-6 border-t border-zinc-800 flex justify-end">
-								<Button onClick={onClose} variant="secondary">
+								<CustomButton onClick={onClose} variant="secondary">
 									Close
-								</Button>
+								</CustomButton>
 							</div>
 						</div>
 					</motion.div>

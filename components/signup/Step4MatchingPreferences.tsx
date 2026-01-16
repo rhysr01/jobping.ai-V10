@@ -33,7 +33,7 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 			transition={{ duration: 0.4 }}
 			className="relative"
 		>
-			<div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-[#0d0425]/45 to-brand-700/15 px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8">
+			<div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-brand-500/20 bg-gradient-to-br from-brand-500/10 via-[#0f172a]/45 to-brand-700/15 px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8">
 				<div
 					className="pointer-events-none absolute -top-28 right-8 h-52 w-52 rounded-full bg-brand-500/25 blur-[120px] hidden sm:block"
 					aria-hidden="true"
@@ -279,7 +279,7 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 					/>
 
 					{/* GDPR Consent - Required before submission */}
-					<div className="bg-gradient-to-r from-brand-500/15 via-brand-700/15 to-brand-500/15 border-2 border-brand-500/40 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[0_0_30px_rgba(99,102,241,0.2)]">
+					<div className="bg-gradient-to-r from-brand-500/15 via-brand-700/15 to-brand-500/15 border-2 border-brand-500/40 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-7 shadow-[0_0_30px_rgba(20,184,166,0.2)]">
 						<label className="flex items-start gap-3 sm:gap-4 cursor-pointer group touch-manipulation">
 							<input
 								type="checkbox"
@@ -353,10 +353,10 @@ export const Step4MatchingPreferences = React.memo(function Step4MatchingPrefere
 								className="relative flex-1 py-4 sm:py-6 md:py-7 text-base sm:text-xl md:text-2xl font-black disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wide rounded-xl sm:rounded-2xl overflow-hidden touch-manipulation min-h-[56px]"
 								style={{
 									background: loading
-										? "linear-gradient(to right, #6366F1, #7C3AED, #8B5CF6)"
-										: "linear-gradient(135deg, #6366F1 0%, #7C3AED 50%, #8B5CF6 100%)",
+										? "linear-gradient(to right, #14B8A6, #0D9488, #0F766E)"
+										: "linear-gradient(135deg, #14B8A6 0%, #0D9488 50%, #0F766E 100%)",
 									boxShadow:
-										"0 0 60px rgba(99,102,241,0.8), 0 20px 60px -18px rgba(99,102,241,0.9), inset 0 1px 0 rgba(255,255,255,0.3)",
+										"0 0 60px rgba(20,184,166,0.8), 0 20px 60px -18px rgba(20,184,166,0.9), inset 0 1px 0 rgba(255,255,255,0.3)",
 									textShadow: "0 2px 8px rgba(0,0,0,0.4)",
 									transition: "all 0.3s ease",
 								}}

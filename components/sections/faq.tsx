@@ -46,7 +46,7 @@ export default function FAQ() {
 	const [openIndex, setOpenIndex] = useState<number | null>(0);
 
 	return (
-		<section className="py-32 md:py-40 border-t border-white/10 bg-gradient-to-b from-zinc-950/50 via-black to-zinc-950/50 scroll-snap-section relative">
+		<section className="section-mobile-spacing border-t border-white/10 bg-gradient-to-b from-zinc-950/50 via-black to-zinc-950/50 scroll-snap-section relative">
 			{/* Scroll momentum fade */}
 			<div className="absolute left-0 right-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
 
@@ -58,7 +58,7 @@ export default function FAQ() {
 					transition={{ duration: 0.6 }}
 					className="max-w-3xl mx-auto"
 				>
-					<h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-2 text-center tracking-tight">
+					<h2 className="font-display text-display-md font-bold text-white mb-2 text-center tracking-tight">
 						Frequently Asked Questions
 					</h2>
 					<p className="text-sm text-content-muted text-center mb-6">

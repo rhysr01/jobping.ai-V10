@@ -2,12 +2,14 @@
 
 import { motion } from "framer-motion";
 import { memo } from "react";
-import { Check, Zap, Mail, Star, TrendingUp, Shield } from "lucide-react";
-import Link from "next/link";
+import { Zap, Star } from "lucide-react";
+import { BrandIcons } from "../ui/BrandIcons";
 import ErrorBoundary from "../error-boundary";
 import SocialProofTicker from "../ui/SocialProofTicker";
 import { TiltCard } from "../ui/TiltCard";
-import { useStats } from "../../hooks/useStats";
+import CustomButton from "../ui/CustomButton";
+import { useStats } from "@/hooks/useStats";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import * as Copy from "../../lib/copy";
 import { trackEvent } from "../../lib/analytics";
 
@@ -40,11 +42,12 @@ const TIERS = [
 
 function Pricing() {
 	const { stats } = useStats();
+	const { isMobile } = useWindowSize();
 
 	return (
 		<section
 			id="pricing"
-			className="py-32 md:py-40 relative overflow-hidden bg-gradient-to-b from-zinc-950/50 via-black to-zinc-950/50 scroll-snap-section"
+			className="section-mobile-spacing relative overflow-hidden bg-gradient-to-b from-zinc-950/50 via-black to-zinc-950/50 scroll-snap-section"
 		>
 			{/* Visual Depth Gradients */}
 			<div className="absolute left-0 right-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
@@ -61,10 +64,10 @@ function Pricing() {
 				className="mx-auto max-w-3xl text-center mb-10 sm:mb-12 px-4 sm:px-6"
 			>
 				<span className="font-display inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 sm:px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-300 mb-4">
-					<TrendingUp size={14} />
+					<BrandIcons.TrendingUp className="w-3.5 h-3.5" />
 					Join 1,000+ Students Landing EU Roles
 				</span>
-				<h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
+				<h2 className="font-display text-display-lg font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
 					Stop Scrolling LinkedIn.
 					<br />
 					<span className="bg-gradient-to-r from-brand-300 via-white to-brand-300 bg-clip-text text-transparent">
@@ -78,7 +81,11 @@ function Pricing() {
 				</p>
 			</motion.div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16">
+			<div className={`${
+				isMobile
+					? "flex flex-col gap-4" // Simpler stacking on mobile
+					: "grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8"
+			} max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16`}>
 					{TIERS.map((tier, index) => {
 						const Icon = tier.icon;
 						return (
@@ -92,13 +99,13 @@ function Pricing() {
 							>
 								{/* Premium Card Glow Effect */}
 								{tier.popular && (
-									<div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-500/30 to-purple-500/20 rounded-3xl blur-2xl opacity-75" />
+									<div className="absolute -inset-1 bg-gradient-to-r from-brand-500/20 via-brand-500/30 to-accent-500/20 rounded-3xl blur-2xl opacity-75" />
 								)}
 						<TiltCard>
 							<div
-								className={`relative flex flex-col h-full rounded-3xl border p-6 sm:p-8 transition-all ${
+								className={`relative flex flex-col h-full rounded-3xl border card-mobile-spacing transition-all ${
 									tier.popular
-										? "border-brand-500/30 bg-gradient-to-b from-zinc-900 to-black shadow-[0_20px_50px_rgba(139,92,246,0.15)]"
+										? "border-brand-500/30 bg-gradient-to-b from-zinc-900 to-black shadow-[0_20px_50px_rgba(20,184,166,0.15)]"
 										: "border-border-subtle bg-white/[0.02] backdrop-blur-xl hover:border-white/20"
 								}`}
 							>
@@ -126,7 +133,7 @@ function Pricing() {
 							</div>
 
 							<div className="mb-4 sm:mb-6">
-								<h3 className="font-display text-xl sm:text-2xl font-black text-white mb-1">
+								<h3 className="font-display text-display-sm font-black text-white mb-1">
 													{tier.name}
 												</h3>
 												<p className={`text-sm font-medium mb-3 ${
@@ -170,10 +177,8 @@ function Pricing() {
 																? "bg-brand-500/20 border border-brand-500/50"
 																: "bg-white/5 border border-white/10"
 														}`}>
-															<Check
-																size={14}
-																className={tier.popular ? "text-brand-400" : "text-zinc-400"}
-																strokeWidth={3}
+															<BrandIcons.Check
+																className={`w-3.5 h-3.5 ${tier.popular ? "text-brand-400" : "text-zinc-400"}`}
 															/>
 														</div>
 														<span className="text-zinc-300 leading-relaxed">{feature}</span>
@@ -182,7 +187,7 @@ function Pricing() {
 											</ul>
 
 							{/* CTA Button */}
-							<Link
+							<CustomButton
 								href={tier.href}
 								onClick={() =>
 									trackEvent("cta_clicked", {
@@ -190,25 +195,24 @@ function Pricing() {
 										location: "pricing",
 									})
 								}
-								className={`font-display block w-full py-3.5 sm:py-4 rounded-xl font-bold text-center transition-all overflow-hidden relative group text-base sm:text-base ${
-									tier.popular
-										? "btn-cta-enhanced"
-										: "btn-cta-secondary"
-								}`}
+								variant={tier.popular ? "gradient" : "secondary"}
+								size="lg"
+								fullWidth
+								className="relative group overflow-hidden"
 							>
-												{tier.popular && (
-													<div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/30 to-white/20 opacity-0 group-hover:opacity-30 transition-opacity pointer-events-none" />
-												)}
-												<span className="relative z-10 flex items-center justify-center gap-2">
-													{tier.cta}
-													<span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
-												</span>
-											</Link>
+								{tier.popular && (
+									<div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/30 to-white/20 opacity-0 group-hover:opacity-30 transition-opacity pointer-events-none" />
+								)}
+								<span className="relative z-10 flex items-center justify-center gap-2">
+									{tier.cta}
+									<span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+								</span>
+							</CustomButton>
 
 											{/* Guarantee badge for premium */}
 											{tier.popular && (
 												<div className="mt-4 flex items-center justify-center gap-2 text-xs text-zinc-400">
-													<Shield size={14} className="text-brand-500" />
+													<BrandIcons.Shield className="w-3.5 h-3.5 text-brand-500" />
 													<span>Cancel anytime • No questions asked</span>
 												</div>
 											)}
@@ -230,21 +234,21 @@ function Pricing() {
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6">
 						<div className="text-center">
 							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/30 mb-3">
-								<Mail className="text-brand-300" size={24} />
+								<BrandIcons.Mail className="w-6 h-6 text-brand-300" />
 							</div>
 							<h4 className="text-sm font-bold text-white mb-1">3× Per Week</h4>
 							<p className="text-xs text-zinc-500">Mon, Wed, Fri delivery</p>
 						</div>
 						<div className="text-center">
 							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/30 mb-3">
-								<TrendingUp className="text-brand-400" size={24} />
+								<BrandIcons.TrendingUp className="w-6 h-6 text-brand-400" />
 							</div>
 							<h4 className="text-sm font-bold text-white mb-1">95%+ Match Rate</h4>
 							<p className="text-xs text-zinc-500">AI-powered accuracy</p>
 						</div>
 						<div className="text-center">
 							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/30 mb-3">
-								<Shield className="text-brand-300" size={24} />
+								<BrandIcons.Shield className="w-6 h-6 text-brand-300" />
 							</div>
 							<h4 className="text-sm font-bold text-white mb-1">Zero Risk</h4>
 							<p className="text-xs text-zinc-500">Cancel anytime</p>
@@ -270,7 +274,7 @@ function Pricing() {
 					</ErrorBoundary>
 					<div className="mt-10 inline-flex items-center gap-3 text-xs text-zinc-500 font-medium">
 						<span className="flex items-center gap-1.5">
-							<Shield size={14} className="text-emerald-500" />
+							<BrandIcons.Shield className="w-3.5 h-3.5 text-emerald-500" />
 							Secure payment via Stripe
 						</span>
 						<span className="text-zinc-700">•</span>

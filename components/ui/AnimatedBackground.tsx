@@ -79,7 +79,7 @@ export default function AnimatedBackground() {
 			>
 				<div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_100%_50%_at_0%_0%,rgba(16,185,129,0.15),transparent_60%)]" />
 				<div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_100%_50%_at_100%_0%,rgba(59,130,246,0.12),transparent_60%)]" />
-				<div className="absolute bottom-0 left-1/2 w-full h-full bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(139,92,246,0.10),transparent_60%)]" />
+				<div className="absolute bottom-0 left-1/2 w-full h-full bg-[radial-gradient(ellipse_50%_100%_at_50%_100%,rgba(20,184,166,0.10),transparent_60%)]" />
 			</motion.div>
 			
 			{/* Optimized moving orbs - much simpler on mobile */}
@@ -154,7 +154,7 @@ export default function AnimatedBackground() {
 
 			{/* Optimized particle count - significantly reduced on mobile */}
 			<div className="absolute inset-0">
-				{Array.from({ length: isMobile ? 3 : 8 }).map((_, i) => {
+				{Array.from({ length: isMobile ? 1 : 8 }).map((_, i) => {
 					const baseDelay = i * (isMobile ? 1 : 0.5); // Slower, less frequent on mobile
 					const baseDuration = isMobile ? 20 + (i % 2) * 10 : 12 + (i % 3) * 6; // Much slower on mobile
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Button from "./Button";
+import CustomButton from "./CustomButton";
 
 interface TargetCompany {
 	company: string;
@@ -77,13 +77,13 @@ export default function TargetCompaniesAlert({
 										))}
 									</div>
 								</div>
-								<Button
+								<CustomButton
 									onClick={() => onSetAlert(company.company)}
 									variant="secondary"
 									size="sm"
 								>
 									Set Alert
-								</Button>
+								</CustomButton>
 							</div>
 						))}
 					</div>

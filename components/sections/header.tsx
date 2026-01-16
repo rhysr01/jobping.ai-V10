@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import LogoWordmark from "../logo-wordmark";
 import { BrandIcons } from "../ui/BrandIcons";
-import Button from "../ui/Button";
+import CustomButton from "../ui/CustomButton";
 import { trackEvent } from "../../lib/analytics";
 import { CTA_GET_MY_5_FREE_MATCHES } from "../../lib/copy";
 
@@ -15,6 +15,7 @@ export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [activeSection, setActiveSection] = useState<string>("");
 	const [isMobile, setIsMobile] = useState(false);
+	const [previouslyFocusedElement, setPreviouslyFocusedElement] = useState<Element | null>(null);
 	const pathname = usePathname();
 
 	// Initialize mobile state immediately with SSR safety
@@ -37,30 +38,46 @@ export default function Header() {
 		updateMobileState();
 		window.addEventListener("resize", updateMobileState);
 
+		// Throttled scroll handler for better mobile performance
 		const handleScroll = () => {
 			setScrolled(window.scrollY > 20);
 
-			// Detect active section based on scroll position
-			const howItWorks = document.getElementById("how-it-works");
-			const pricing = document.getElementById("pricing");
-			const scrollY = window.scrollY + 100; // Offset for header height
+			// Skip complex section detection on mobile for better performance
+			if (!isMobile) {
+				// Detect active section based on scroll position
+				const howItWorks = document.getElementById("how-it-works");
+				const pricing = document.getElementById("pricing");
+				const scrollY = window.scrollY + 100; // Offset for header height
 
-			if (pricing && scrollY >= pricing.offsetTop) {
-				setActiveSection("#pricing");
-			} else if (howItWorks && scrollY >= howItWorks.offsetTop) {
-				setActiveSection("#how-it-works");
+				if (pricing && scrollY >= pricing.offsetTop) {
+					setActiveSection("#pricing");
+				} else if (howItWorks && scrollY >= howItWorks.offsetTop) {
+					setActiveSection("#how-it-works");
+				} else {
+					setActiveSection("");
+				}
 			} else {
+				// On mobile, keep active section as empty for better performance
 				setActiveSection("");
 			}
 		};
 
-		window.addEventListener("scroll", handleScroll);
-		handleScroll(); // Initial check
-		return () => {
-			window.removeEventListener("scroll", handleScroll);
-			window.removeEventListener("resize", updateMobileState);
+		// Throttle scroll events for better mobile performance (60fps = ~16ms)
+		let scrollTimeout: NodeJS.Timeout;
+		const throttledScroll = () => {
+			if (scrollTimeout) clearTimeout(scrollTimeout);
+			scrollTimeout = setTimeout(handleScroll, 16);
 		};
-	}, []);
+
+		window.addEventListener("scroll", throttledScroll, { passive: true });
+		handleScroll(); // Initial check
+
+		return () => {
+			window.removeEventListener("scroll", throttledScroll);
+			window.removeEventListener("resize", updateMobileState);
+			if (scrollTimeout) clearTimeout(scrollTimeout);
+		};
+	}, [isMobile]);
 
 	// Close mobile menu when route changes
 	useEffect(() => {
@@ -78,6 +95,37 @@ export default function Header() {
 			document.body.style.overflow = "";
 		};
 	}, [mobileMenuOpen]);
+
+	// Focus management for mobile menu
+	useEffect(() => {
+		if (mobileMenuOpen && isMobile) {
+			// Store the currently focused element
+			setPreviouslyFocusedElement(document.activeElement);
+
+			// Focus the menu
+			const menuElement = document.querySelector('[role="dialog"]') as HTMLElement;
+			if (menuElement) {
+				menuElement.focus();
+			}
+
+			// Add keyboard listener for Escape key
+			const handleEscape = (e: KeyboardEvent) => {
+				if (e.key === 'Escape') {
+					setMobileMenuOpen(false);
+				}
+			};
+
+			document.addEventListener('keydown', handleEscape);
+			return () => document.removeEventListener('keydown', handleEscape);
+		} else if (!mobileMenuOpen && previouslyFocusedElement) {
+			// Restore focus when menu closes
+			(previouslyFocusedElement as HTMLElement).focus();
+			setPreviouslyFocusedElement(null);
+		}
+
+		// Always return something to satisfy TypeScript
+		return undefined;
+	}, [mobileMenuOpen, isMobile, previouslyFocusedElement]);
 
 	const navLinks = [
 		{ label: "How It Works", href: "#how-it-works", scroll: true },
@@ -268,8 +316,12 @@ export default function Header() {
 							initial={{ x: "100%" }}
 							animate={{ x: 0 }}
 							exit={{ x: "100%" }}
-							transition={{ type: "spring", damping: 25, stiffness: 200 }}
+							transition={isMobile ? { duration: 0.3, ease: "easeOut" } : { type: "spring", damping: 25, stiffness: 200 }}
 							className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-black/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto"
+							role="dialog"
+							aria-modal="true"
+							aria-label="Mobile navigation menu"
+							tabIndex={-1}
 						>
 							<div className="p-6">
 								<div className="flex items-center justify-between mb-8">
@@ -299,7 +351,7 @@ export default function Header() {
 											{link.label}
 										</Link>
 									))}
-									<Button
+									<CustomButton
 										href="/signup/free"
 										onClick={() => {
 											trackEvent("cta_clicked", {
@@ -316,7 +368,7 @@ export default function Header() {
 											{CTA_GET_MY_5_FREE_MATCHES}
 											<BrandIcons.ArrowRight className="h-5 w-5" />
 										</span>
-									</Button>
+									</CustomButton>
 								</nav>
 							</div>
 						</motion.div>

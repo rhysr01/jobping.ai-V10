@@ -298,6 +298,94 @@ Contributors will be recognized in:
 - Release notes for significant contributions
 - Project documentation
 
+## Development Setup
+
+### AI Testing Environment Setup
+
+For contributors working on AI matching features, you'll need to set up API keys for testing:
+
+#### Required Environment Variables
+```bash
+# AI Testing Environment Variables
+OPENAI_API_KEY=sk-your-openai-api-key-here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+```
+
+#### Getting API Keys
+
+1. **OpenAI API Key**:
+   - Visit https://platform.openai.com/api-keys
+   - Click "Create new secret key"
+   - Copy the key (starts with `sk-`)
+   - **Never commit this to git!**
+
+2. **Supabase Keys**:
+   - Go to https://supabase.com/dashboard
+   - Select your project → Settings → API
+   - Copy `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - Copy `service_role key` → `SUPABASE_SERVICE_ROLE_KEY`
+
+#### Setting Up Environment Variables
+
+**Option 1: .env.local file (Recommended)**
+```bash
+# Add to your .env.local file (already in .gitignore)
+OPENAI_API_KEY=sk-your-actual-openai-key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-actual-service-role-key
+```
+
+**Option 2: Terminal Export (Temporary)**
+```bash
+export OPENAI_API_KEY="sk-your-key"
+export NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_SERVICE_ROLE_KEY="your-service-key"
+```
+
+#### Testing Your Setup
+```bash
+# Quick health check
+npm run test:ai-check
+
+# Comprehensive AI testing
+npm run test:ai-comprehensive
+```
+
+**Cost Considerations**: ~$0.01-0.05 per test run. Monitor usage in your OpenAI dashboard.
+
+### Local Development Environment
+
+#### Multi-Environment Setup
+```bash
+# Create different .env files for various environments
+cp .env.example .env.local      # Development
+cp .env.example .env.staging    # Staging testing
+cp .env.example .env.production # Production simulation
+```
+
+#### Docker Development Environment
+```yaml
+# docker-compose.yml for full local stack
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: jobping_dev
+      POSTGRES_USER: jobping
+      POSTGRES_PASSWORD: dev_password
+    ports: ["5432:5432"]
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports: ["1025:1025", "8025:8025"]  # SMTP/Web interface
+```
+
 ## Getting Help
 
 - **Documentation**: Check `/docs` folder first

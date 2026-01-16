@@ -1,6 +1,6 @@
 import Footer from "../components/sections/footer";
 import Header from "../components/sections/header";
-import Button from "../components/ui/Button";
+import CustomButton from "../components/ui/CustomButton";
 
 export default function NotFound() {
 	return (
@@ -19,16 +19,16 @@ export default function NotFound() {
 					</p>
 
 					<div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-						<Button href="/" variant="gradient" size="lg">
+						<CustomButton href="/" variant="gradient" size="lg">
 							Go Home
-						</Button>
-						<Button
+						</CustomButton>
+						<CustomButton
 							href="/signup/free?city=Berlin"
 							variant="secondary"
 							size="lg"
 						>
 							See Berlin Jobs
-						</Button>
+						</CustomButton>
 					</div>
 				</div>
 			</main>

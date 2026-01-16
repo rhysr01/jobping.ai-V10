@@ -12,7 +12,9 @@ import Header from "../components/sections/header";
 import StructuredData from "../components/structured-data";
 import AnimatedBackground from "../components/ui/AnimatedBackground";
 import CookieBanner from "../components/ui/CookieBanner";
-import Toaster from "../components/ui/Toaster";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
 
 export const metadata: Metadata = {
 	title:
@@ -116,12 +118,26 @@ export default async function RootLayout({
 					href="https://fonts.gstatic.com"
 					crossOrigin="anonymous"
 				/>
+				{/* Mobile-optimized font loading - only essential weights */}
+				<link
+					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+					rel="stylesheet"
+					media="(max-width: 1024px)"
+				/>
 				<link
 					href="https://fonts.googleapis.com/css2?family=Clash+Display:opsz,wght@40..72,400..700&family=Inter:wght@400;500;600;700&display=swap"
 					rel="stylesheet"
+					media="(min-width: 1025px)"
 				/>
 				<StructuredData />
 				<FAQSchema />
+				{/* PWA Manifest */}
+				<link rel="manifest" href="/manifest.json" />
+				<meta name="theme-color" content="#6d28d9" />
+				<meta name="apple-mobile-web-app-capable" content="yes" />
+				<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+				<meta name="apple-mobile-web-app-title" content="JobPing" />
+				<link rel="apple-touch-icon" href="/og-image.png" />
 				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: Schema.org structured data */}
 				<script
 					type="application/ld+json"
@@ -138,20 +154,22 @@ export default async function RootLayout({
 					}}
 				/>
 			</head>
-			<body className="text-white premium-bg custom-scrollbar relative">
+			<body className="text-white premium-bg custom-scrollbar relative" role="application" aria-label="JobPing - AI Job Matching Platform">
 				{/* Enhanced animated background */}
 				<AnimatedBackground />
 
 				<a
 					href="#main-content"
-					className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3
-                     bg-black/80 border border-white/20 rounded-md px-3 py-2"
+					className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 bg-black/90 border border-white/20 rounded-md px-3 py-2 text-white text-sm font-medium backdrop-blur-sm shadow-lg hover:bg-black/95 transition-colors"
+					aria-label="Skip navigation to main content"
 				>
 					Skip to content
 				</a>
 				<Header />
 				<ErrorBoundary>{children}</ErrorBoundary>
 				<Toaster />
+				<Sonner />
+				<KeyboardShortcuts />
 				<CookieBanner />
 				{/* Google Analytics - deferred for better performance */}
 				<Script
@@ -201,6 +219,27 @@ export default async function RootLayout({
 						}}
 					/>
 				)}
+
+				{/* PWA Service Worker Registration - Only on mobile for better performance */}
+				<Script
+					id="pwa-registration"
+					strategy="afterInteractive"
+					dangerouslySetInnerHTML={{
+						__html: `
+              if ('serviceWorker' in navigator && window.innerWidth < 1024) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('[PWA] ServiceWorker registration successful');
+                    })
+                    .catch(function(error) {
+                      console.log('[PWA] ServiceWorker registration failed:', error);
+                    });
+                });
+              }
+            `,
+					}}
+				/>
 			</body>
 		</html>
 	);

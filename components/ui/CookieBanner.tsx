@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Button from "./Button";
+import CustomButton from "./CustomButton";
 
 export default function CookieBanner() {
 	const [isVisible, setIsVisible] = useState(false);
@@ -126,22 +126,22 @@ export default function CookieBanner() {
 									</p>
 								</div>
 								<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-									<Button
+									<CustomButton
 										variant="secondary"
 										size="md"
 										onClick={handleReject}
 										className="w-full sm:w-auto whitespace-nowrap"
 									>
 										Reject Non-Essential
-									</Button>
-									<Button
+									</CustomButton>
+									<CustomButton
 										variant="primary"
 										size="md"
 										onClick={handleAccept}
 										className="w-full sm:w-auto whitespace-nowrap"
 									>
 										Accept All Cookies
-									</Button>
+									</CustomButton>
 								</div>
 							</div>
 						</div>
