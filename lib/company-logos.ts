@@ -87,16 +87,6 @@ export const COMPANY_LOGOS: CompanyLogo[] = [
 		domain: "github.com",
 	},
 	{
-		name: "Figma",
-		logoPath: "/logos/companies/figma.svg",
-		domain: "figma.com",
-	},
-	{
-		name: "Linear",
-		logoPath: "/logos/companies/linear.svg",
-		domain: "linear.app",
-	},
-	{
 		name: "Vercel",
 		logoPath: "/logos/companies/vercel.svg",
 		domain: "vercel.com",
@@ -122,41 +112,6 @@ export const COMPANY_LOGOS: CompanyLogo[] = [
 		name: "IBM",
 		logoPath: "/logos/companies/ibm.svg",
 		domain: "ibm.com",
-	},
-	{
-		name: "Cisco",
-		logoPath: "/logos/companies/cisco.svg",
-		domain: "cisco.com",
-	},
-	{
-		name: "VMware",
-		logoPath: "/logos/companies/vmware.svg",
-		domain: "vmware.com",
-	},
-	{
-		name: "ServiceNow",
-		logoPath: "/logos/companies/servicenow.svg",
-		domain: "servicenow.com",
-	},
-	{
-		name: "Workday",
-		logoPath: "/logos/companies/workday.svg",
-		domain: "workday.com",
-	},
-	{
-		name: "Atlassian",
-		logoPath: "/logos/companies/atlassian.svg",
-		domain: "atlassian.com",
-	},
-	{
-		name: "Slack",
-		logoPath: "/logos/companies/slack.svg",
-		domain: "slack.com",
-	},
-	{
-		name: "Zoom",
-		logoPath: "/logos/companies/zoom.svg",
-		domain: "zoom.us",
 	},
 	{
 		name: "Dropbox",
