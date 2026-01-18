@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Mobile Optimization**: Touch target compliance (44px minimum), safe area handling, improved mobile menu
 - **Accessibility Compliance**: ARIA labels, keyboard navigation, screen reader support, WCAG AA standards
 - **Form UX Improvements**: Better validation states, enhanced focus indicators, improved error messaging
+- **JobStatsDisclaimer Component**: Unified job statistics and transparency display with live indicators
+- **Design System Standardization**: Consistent subtitle colors (`text-zinc-300`) across all components
+- **Hero Section Compliance**: Headline size aligned with design system tokens
+- **Component Architecture**: Improved import optimization and TypeScript cleanliness
 
 ### Changed
 - README restructured from 3,500+ lines to focused 200-line business overview
@@ -32,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API rate limiting with graceful mock data fallback
 - Production engine test syntax errors
 - Test infrastructure stability improvements
+- **TypeScript Compilation**: Removed unused imports causing build failures
+- **Component Navigation**: Fixed free signup flow "Continue" button functionality
+- **Subtitle Contrast**: Improved readability with consistent color hierarchy
+- **Build Performance**: Reduced compilation time through import optimization
 
 ## [1.0.0] - 2026-01-15
 
