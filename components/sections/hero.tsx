@@ -56,17 +56,14 @@ function Hero() {
 					<div className="text-center space-y-8 relative overflow-visible px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
 						{/* MASSIVE Headline - Clear hierarchy */}
 						<h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white leading-none mb-8 max-w-full overflow-visible" style={{ wordSpacing: "0.05em" }}>
-							Stop Scrolling.<br/>
-							<span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-								Start Applying.
-							</span>
+							Graduate Jobs Made Simple
 						</h1>
 
 						{/* Clear, impactful value proposition */}
 						<p className="text-base sm:text-lg md:text-xl text-zinc-300 leading-relaxed max-w-3xl mx-auto mb-12">
-							Get your perfect European job in{" "}
+							Get your perfect entry-level European position in just{" "}
 							<strong className="text-white font-bold">2 minutes</strong>
-							{", "}not 40+ hours of searching.
+							, skip the endless scrolling.
 						</p>
 
 						{/* SINGLE prominent CTA */}
