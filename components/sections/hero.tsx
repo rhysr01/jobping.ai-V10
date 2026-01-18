@@ -57,7 +57,7 @@ function Hero() {
 					{/* LEFT SIDE - Content */}
 					<div className="text-center space-y-8 relative overflow-visible px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
 						{/* IMPACTFUL Headline with Gradient */}
-						<h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 max-w-full overflow-visible" style={{ wordSpacing: "0.05em" }}>
+						<h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-6xl font-black text-white leading-none mb-6 max-w-full overflow-visible" style={{ wordSpacing: "0.05em" }}>
 							<span className="block">Graduate Jobs</span>
 							<span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
 								Made Simple
