@@ -5,19 +5,7 @@ import { apiCallJson } from "../lib/api-client";
 import { useEmailValidation, useRequiredValidation } from "./useFormValidation";
 import { useFormPersistence } from "./useFormPersistence";
 import { signupService } from "../services/signupService";
-
-export interface SignupFormData {
-	cities: string[];
-	careerPath: string;
-	email: string;
-	fullName: string;
-	university?: string;
-	visaSponsorship: string;
-	gdprConsent: boolean;
-	birthYear?: number;
-	ageVerified: boolean;
-	termsAccepted: boolean;
-}
+import type { SignupFormData } from "../components/signup/types";
 
 export interface JobCountMetadata {
 	isLowCount?: boolean;

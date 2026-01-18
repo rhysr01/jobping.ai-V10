@@ -15,4 +15,8 @@ export interface SignupFormData {
 	careerKeywords: string;
 	university?: string;
 	gdprConsent: boolean;
+	// GDPR compliance fields
+	birthYear?: number;
+	ageVerified: boolean;
+	termsAccepted: boolean;
 }

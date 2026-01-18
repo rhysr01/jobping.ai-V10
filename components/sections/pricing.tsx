@@ -8,7 +8,6 @@ import ErrorBoundary from "../error-boundary";
 import SocialProofTicker from "../ui/SocialProofTicker";
 import { TiltCard } from "../ui/TiltCard";
 import CustomButton from "../ui/CustomButton";
-import { useStats } from "@/hooks/useStats";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import * as Copy from "../../lib/copy";
 import { trackEvent } from "../../lib/analytics";
@@ -41,7 +40,6 @@ const TIERS = [
 ];
 
 function Pricing() {
-	const { stats } = useStats();
 	const { isMobile } = useWindowSize();
 
 	return (
@@ -259,29 +257,8 @@ function Pricing() {
 				{/* Social Proof Section */}
 				<div className="mt-16 text-center">
 					<ErrorBoundary fallback={null}>
-						<div className="space-y-6">
-							{stats && stats.totalUsers > 0 && (
-								<p className="text-base text-zinc-300">
-									Join{" "}
-									<span className="text-white font-black text-xl">
-										{stats.totalUsers.toLocaleString()}+
-									</span>{" "}
-									students who stopped wasting time on job boards
-								</p>
-							)}
-							<SocialProofTicker />
-						</div>
+						<SocialProofTicker />
 					</ErrorBoundary>
-					<div className="mt-10 inline-flex items-center gap-3 text-xs text-zinc-500 font-medium">
-						<span className="flex items-center gap-1.5">
-							<BrandIcons.Shield className="w-3.5 h-3.5 text-emerald-500" />
-							Secure payment via Stripe
-						</span>
-						<span className="text-zinc-700">•</span>
-						<span>No hidden fees</span>
-						<span className="text-zinc-700">•</span>
-						<span>Cancel anytime</span>
-					</div>
 				</div>
 			</div>
 		</section>

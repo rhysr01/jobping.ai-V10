@@ -21,6 +21,7 @@
 		"test:e2e:complete": "playwright test tests/e2e/complete-free-signup.spec.ts tests/e2e/complete-premium-signup.spec.ts",
 		"test:e2e:api-validation": "playwright test tests/e2e/api-endpoint-validation.spec.ts",
 		"test:e2e:performance": "playwright test tests/e2e/performance-validation.spec.ts",
+		"test:e2e:accessibility": "playwright test --grep \"accessibility\"",
 		"test:e2e:user-scenarios": "playwright test tests/e2e/real-user-scenarios.spec.ts tests/e2e/premium-user-scenarios.spec.ts",
 		"test:analysis": "playwright test tests/e2e/real-user-scenarios.spec.ts --grep \"COMPREHENSIVE MATCHING ALGORITHM ANALYSIS\"",
 		"test:security": "playwright test tests/security/input-validation.spec.ts",
@@ -124,6 +125,7 @@
 		"zod": "4.1.5"
 	},
 	"devDependencies": {
+		"@axe-core/playwright": "4.11.0",
 		"@biomejs/biome": "2.3.10",
 		"@jest/globals": "30.2.0",
 		"@next/bundle-analyzer": "16.1.2",

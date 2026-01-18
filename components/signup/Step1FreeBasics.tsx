@@ -9,7 +9,7 @@ import type { SignupFormData } from "./types";
 
 interface Step1FreeBasicsProps {
 	formData: SignupFormData;
-	setFormData: React.Dispatch<React.SetStateAction<SignupFormData>>;
+	setFormData: (updates: Partial<SignupFormData>) => void;
 	touchedFields: Set<string>;
 	setTouchedFields: React.Dispatch<React.SetStateAction<Set<string>>>;
 	fieldErrors: Record<string, string>;
@@ -55,7 +55,7 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === 'Enter' && !loading && isStepValid) {
 			e.preventDefault();
-			setStep(2); // Use navigation system's setStep
+			setStep(2);
 		}
 	};
 
@@ -162,14 +162,18 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 			<div className="h-32" />
 
 			{/* Mobile Navigation */}
-			<MobileNavigation
-				currentStep={1}
-				totalSteps={3}
-				onNext={() => setStep(2)}
-				nextDisabled={!isStepValid || loading}
-				nextLabel={isStepValid ? "Continue to Cities" : getDisabledMessage(1)}
-				loading={loading}
-			/>
+			<div className="flex justify-center mt-8">
+				<button
+					onClick={() => {
+						console.log('Button clicked');
+						// setStep(2);
+					}}
+					disabled={!isStepValid || loading}
+					className="px-6 py-3 bg-blue-500 text-white rounded disabled:opacity-50"
+				>
+					{isStepValid ? "Continue" : getDisabledMessage(1)}
+				</button>
+			</div>
 		</motion.div>
 	);
 });

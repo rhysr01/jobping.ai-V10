@@ -32,7 +32,7 @@ interface PremiumFormData extends BaseFormData {
 
 interface FreeFormData extends BaseFormData {
 	cities: string[];
-	careerPath: string;
+	careerPath: string[];
 	email: string;
 	fullName: string;
 	visaSponsorship: string;

@@ -33,7 +33,6 @@ function AnimatedNumber({ value, duration = 2 }: { value: number; duration?: num
 export function EUJobStats() {
 	const [stats, setStats] = useState<JobStats | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [isLoadingStats, setIsLoadingStats] = useState(true);
 	const [isInView, setIsInView] = useState(false);
 
 	useEffect(() => {
@@ -50,13 +49,11 @@ export function EUJobStats() {
 				const data = await response.json();
 				if (data.data) {
 					setStats(data.data);
-					setIsLoadingStats(false);
 				} else {
 					throw new Error("Invalid response format");
 				}
-			} catch (error) {
+			} catch (_error) {
 				// Silently handle API failures - use fallback data
-				setIsLoadingStats(false);
 				setStats({
 					internships: 2525,
 					graduateRoles: 366,
@@ -296,9 +293,6 @@ export function EUJobStats() {
 
 				{/* Job Stats & Disclaimer */}
 				<JobStatsDisclaimer
-					totalJobs={displayStats.total}
-					totalCities={21}
-					isLoadingStats={isLoadingStats}
 					className="mt-12 md:mt-16"
 				/>
 			</div>

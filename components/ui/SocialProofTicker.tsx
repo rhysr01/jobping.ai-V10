@@ -39,7 +39,7 @@ export default function SocialProofTicker() {
 			}
 			const data = await response.json();
 			setCurrentItem(data);
-		} catch (err) {
+		} catch (_err) {
 			// Silently handle API failures - this is expected during development
 			if (process.env.NODE_ENV === "development") {
 				console.debug("Recent matches API not available, using fallback");
@@ -83,21 +83,7 @@ export default function SocialProofTicker() {
 
 	// Show scanning message when no matches or scanning mode
 	if (currentItem.scanning || !currentItem.city || currentItem.count === 0) {
-		return (
-			<AnimatePresence mode="wait">
-				<motion.span
-					key="scanning"
-					initial={{ opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0, y: -10 }}
-					transition={{ duration: 0.3 }}
-					className="flex items-center gap-2 text-content-muted text-xs"
-				>
-					<div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-					Scanning 7+ job sources for today's matches...
-				</motion.span>
-			</AnimatePresence>
-		);
+		return null;
 	}
 
 	return (

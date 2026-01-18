@@ -1,27 +1,5 @@
 import { useState } from "react";
-
-export interface SignupFormData {
-	fullName: string;
-	email: string;
-	cities: string[];
-	languages: string[];
-	workEnvironment: string[];
-	visaStatus: string;
-	entryLevelPreferences: string[];
-	targetCompanies: string[];
-	careerPath: string[];
-	roles: string[];
-	industries: string[];
-	companySizePreference: string;
-	skills: string[];
-	careerKeywords: string;
-	university?: string;
-	gdprConsent: boolean;
-	// GDPR compliance fields
-	birthYear?: number;
-	ageVerified: boolean;
-	termsAccepted: boolean;
-}
+import type { SignupFormData } from "../components/signup/types";
 
 export interface SignupState {
 	step: number;
@@ -115,8 +93,11 @@ export function useSignupState(initialStep?: number) {
 		}));
 	};
 
-	const setFormData = (formData: SignupFormData) => {
-		setState(prev => ({ ...prev, formData }));
+	const setFormData: React.Dispatch<React.SetStateAction<SignupFormData>> = (formData) => {
+		setState(prev => ({
+			...prev,
+			formData: typeof formData === 'function' ? formData(prev.formData) : formData
+		}));
 	};
 
 	const toggleArrayValue = (field: keyof SignupFormData, value: string) => {

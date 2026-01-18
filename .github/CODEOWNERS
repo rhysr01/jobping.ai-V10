@@ -1,38 +1,40 @@
-# Code owners for JobPing repository
-# This file defines who owns which parts of the codebase
-# Format: <pattern> <owners>
+# JobPing Code Ownership
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# Default ownership - Rhys Rowland (maintainer)
+# Global owners - approve all changes
 * @rhysr01
 
-# Critical infrastructure and security
-/.github/ @rhysr01
-/package.json @rhysr01
-/package-lock.json @rhysr01
-/next.config.ts @rhysr01
-/middleware.ts @rhysr01
-/lib/env.ts @rhysr01
-/lib/config.ts @rhysr01
+# Frontend components
+/components/ @rhysr01
+/app/ @rhysr01
+/hooks/ @rhysr01
 
-# Database and migrations
-/supabase/ @rhysr01
+# Backend/API
+/lib/ @rhysr01
+/utils/ @rhysr01
+/scripts/ @rhysr01
 
-# Core business logic
-/Utils/matching/ @rhysr01
-/Utils/auth/ @rhysr01
-/Utils/security/ @rhysr01
+# Testing
+/tests/ @rhysr01
+__tests__/ @rhysr01
 
-# API endpoints
-/app/api/ @rhysr01
-
-# Email functionality
-/Utils/email/ @rhysr01
-
-# Scrapers and data sources
-/scrapers/ @rhysr01
+# CI/CD and Infrastructure
+.github/ @rhysr01
+.vercel/ @rhysr01
 
 # Documentation
-/docs/ @rhysr01
 *.md @rhysr01
-ARCHITECTURE.md @rhysr01
-README.md @rhysr01
+docs/ @rhysr01
+
+# Configuration files
+package.json @rhysr01
+tsconfig.json @rhysr01
+tailwind.config.js @rhysr01
+next.config.js @rhysr01
+playwright.config.ts @rhysr01
+
+# Automation scripts
+automation/ @rhysr01
+
+# MCP (Model Context Protocol) tools
+scripts/mcps/ @rhysr01

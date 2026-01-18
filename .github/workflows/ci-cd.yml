@@ -1,0 +1,326 @@
+name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ===== QUALITY GATES =====
+  quality-check:
+    name: 🔍 Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔬 Run Biome linter
+        run: npm run lint:biome
+
+      - name: 🔍 TypeScript type checking
+        run: npm run type-check
+
+      - name: 🧪 Run unit tests
+        run: npm test
+
+      - name: 📊 Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            coverage/
+            test-results/
+
+  # ===== SECURITY SCANNING =====
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run npm audit
+        run: npm audit --audit-level high
+
+      - name: 🛡️ CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+          queries: security-and-quality
+
+      - name: 🚀 CodeQL Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: 🔍 CodeQL Results
+        uses: github/codeql-action/analyze@v3
+
+  # ===== BUILD & TEST =====
+  build-and-test:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [quality-check]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+
+      - name: 📊 Bundle analysis
+        run: |
+          echo "📦 Build artifacts:"
+          du -sh .next/
+          echo "📄 Static files:"
+          find .next/static -name "*.js" -exec wc -c {} \; | awk '{sum += $1} END {print "Total JS size: " sum/1024 " KB"}'
+
+      - name: 🧪 Run E2E tests
+        run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+
+      - name: ⚡ Performance tests
+        run: npm run test:e2e:performance
+
+      - name: ♿ Accessibility tests
+        run: npm run test:e2e:accessibility
+
+      - name: 📸 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            .next/
+            !.next/cache/
+
+  # ===== DEPLOYMENT =====
+  deploy:
+    name: 🚀 Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🚀 Deploy to Vercel
+        id: deploy
+        run: |
+          # Install Vercel CLI
+          npm i -g vercel
+
+          # Deploy with environment variables
+          DEPLOY_URL=$(vercel --prod --yes --token ${{ secrets.VERCEL_ACCESS_TOKEN }} 2>&1 | grep -o 'https://[^"]*\.vercel\.app')
+
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "🚀 Deployed to: $DEPLOY_URL"
+
+      - name: 🔍 Health check
+        run: |
+          echo "⏳ Waiting for deployment to be ready..."
+          for i in {1..30}; do
+            if curl -f -s "$DEPLOY_URL/api/health" > /dev/null 2>&1; then
+              echo "✅ Deployment is healthy!"
+              break
+            fi
+            echo "⏳ Attempt $i/30 - waiting..."
+            sleep 10
+          done
+
+          # Final health check
+          if ! curl -f -s "$DEPLOY_URL/api/health" > /dev/null 2>&1; then
+            echo "❌ Health check failed!"
+            exit 1
+          fi
+
+  # ===== DEPLOYMENT MONITORING =====
+  monitor-deployment:
+    name: 👀 Monitor Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run deployment monitoring
+        run: npm run deploy:check
+        env:
+          VERCEL_ACCESS_TOKEN: ${{ secrets.VERCEL_ACCESS_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+
+  # ===== POST-DEPLOYMENT TESTS =====
+  post-deploy-tests:
+    name: 🧪 Post-Deploy Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run smoke tests against production
+        run: |
+          DEPLOY_URL="${{ needs.deploy.outputs.url }}"
+          echo "🧪 Testing production deployment: $DEPLOY_URL"
+
+          # Test homepage
+          if ! curl -f -s "$DEPLOY_URL" > /dev/null; then
+            echo "❌ Homepage test failed"
+            exit 1
+          fi
+
+          # Test health endpoint
+          if ! curl -f -s "$DEPLOY_URL/api/health" > /dev/null; then
+            echo "❌ Health check failed"
+            exit 1
+          fi
+
+          # Test signup page
+          if ! curl -f -s "$DEPLOY_URL/signup/free" > /dev/null; then
+            echo "❌ Signup page test failed"
+            exit 1
+          fi
+
+          echo "✅ All smoke tests passed!"
+
+  # ===== PERFORMANCE MONITORING =====
+  performance-check:
+    name: 📊 Performance Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📊 Lighthouse Performance Check
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: ${{ needs.deploy.outputs.url }}
+          configPath: .lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # ===== NOTIFICATION =====
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: [deploy, post-deploy-tests, performance-check]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📢 Deployment Status Notification
+        run: |
+          DEPLOY_URL="${{ needs.deploy.outputs.url }}"
+          STATUS="${{ needs.deploy.result }}"
+
+          if [ "$STATUS" = "success" ]; then
+            echo "🎉 Deployment successful!"
+            echo "🔗 $DEPLOY_URL"
+            # Here you could add Slack/Discord notifications
+          else
+            echo "❌ Deployment failed!"
+            echo "🔗 Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            # Here you could add failure notifications
+          fi
+
+      - name: 📊 Generate deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ needs.deploy.result == 'success' && '✅ Success' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ needs.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quality Gates:** ${{ needs.quality-check.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan:** ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build & Test:** ${{ needs.build-and-test.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Post-deploy:** ${{ needs.post-deploy-tests.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance:** ${{ needs.performance-check.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY

@@ -19,7 +19,7 @@ import type { SignupFormData } from "./types";
 
 interface Step2FreeCitiesProps {
 	formData: SignupFormData;
-	setFormData: React.Dispatch<React.SetStateAction<SignupFormData>>;
+	setFormData: (updates: Partial<SignupFormData>) => void;
 	touchedFields: Set<string>;
 	setTouchedFields: React.Dispatch<React.SetStateAction<Set<string>>>;
 	loading: boolean;

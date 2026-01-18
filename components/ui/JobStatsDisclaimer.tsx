@@ -5,16 +5,10 @@ import { Info } from "lucide-react";
 import { Badge } from "./badge";
 
 interface JobStatsDisclaimerProps {
-	totalJobs?: number;
-	totalCities?: number;
-	isLoadingStats?: boolean;
 	className?: string;
 }
 
 export function JobStatsDisclaimer({
-	totalJobs = 8958,
-	totalCities = 21,
-	isLoadingStats = false,
 	className = "",
 }: JobStatsDisclaimerProps) {
 	const jobSources = [
@@ -35,30 +29,6 @@ export function JobStatsDisclaimer({
 			transition={{ delay: 0.5, duration: 0.6 }}
 			className={`text-center space-y-4 ${className}`}
 		>
-			{/* Job Stats Banner */}
-			<div className="inline-flex items-center gap-3 px-6 py-4 rounded-full glass-card elevation-1 border border-white/10 bg-gradient-to-r from-zinc-900/60 to-zinc-800/60">
-				{/* Live indicator */}
-				<div className="flex items-center gap-2">
-					<div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
-					<span className="text-sm font-medium text-emerald-400">Live</span>
-				</div>
-
-				{/* Stats */}
-				<div className="flex items-center gap-1 text-lg md:text-xl">
-					<span className="text-zinc-300">Updated daily •</span>
-					<span className="text-white font-bold">
-						{isLoadingStats ? (
-							<span className="inline-block w-16 h-5 bg-zinc-600/30 rounded animate-pulse"></span>
-						) : (
-							`${totalJobs.toLocaleString()}+ roles`
-						)}
-					</span>
-					<span className="text-zinc-300">from</span>
-					<span className="text-white font-bold">{totalCities} cities</span>
-					<span className="text-zinc-300">across Europe</span>
-				</div>
-			</div>
-
 			{/* Enhanced Disclaimer */}
 			<div className="max-w-3xl mx-auto">
 				<div className="inline-flex items-start gap-3 px-6 py-4 rounded-xl glass-card elevation-1 border border-zinc-800/60 bg-zinc-900/40 backdrop-blur-sm">
