@@ -171,7 +171,7 @@ export default function HowItWorks() {
 								<h3 className="text-xl font-bold text-white mb-3 group-hover:text-info transition-colors">
 									{step.title}
 								</h3>
-								<p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
+								<p className="text-zinc-300 leading-relaxed group-hover:text-zinc-200 transition-colors">
 									{step.description}
 								</p>
 

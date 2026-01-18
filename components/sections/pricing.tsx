@@ -74,7 +74,7 @@ function Pricing() {
 						Let AI Find Your Jobs.
 					</span>
 				</h2>
-				<p className="text-zinc-400 text-base sm:text-lg md:text-xl">
+				<p className="text-zinc-300 text-base sm:text-lg md:text-xl">
 					Stop wasting hours scrolling job boards.
 					<br />
 					<span className="font-display text-emerald-400 font-semibold">We do it in seconds.</span>
@@ -141,7 +141,7 @@ function Pricing() {
 												}`}>
 													{tier.tagline}
 												</p>
-												<p className="text-zinc-400 text-sm leading-relaxed">
+												<p className="text-zinc-300 text-sm leading-relaxed">
 													{tier.description}
 												</p>
 											</div>
@@ -261,7 +261,7 @@ function Pricing() {
 					<ErrorBoundary fallback={null}>
 						<div className="space-y-6">
 							{stats && stats.totalUsers > 0 && (
-								<p className="text-base text-zinc-400">
+								<p className="text-base text-zinc-300">
 									Join{" "}
 									<span className="text-white font-black text-xl">
 										{stats.totalUsers.toLocaleString()}+

@@ -40,7 +40,7 @@ export function EmptyState({
 			<h3 className="text-xl font-bold text-white mb-2">
 				{title}
 			</h3>
-			<p className="text-zinc-400 mb-6 max-w-sm mx-auto leading-relaxed">
+			<p className="text-zinc-300 mb-6 max-w-sm mx-auto leading-relaxed">
 				{description}
 			</p>
 

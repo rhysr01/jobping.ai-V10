@@ -37,7 +37,7 @@ export default function Footer() {
 								<LogoWordmark />
 							</div>
 						</div>
-						<p className="text-sm text-zinc-400 max-w-md leading-relaxed">
+						<p className="text-sm text-zinc-300 max-w-md leading-relaxed">
 							AI-powered job matching for early-career roles across Europe. Get
 							personalized matches delivered to your inbox.
 						</p>

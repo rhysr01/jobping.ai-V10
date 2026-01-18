@@ -235,7 +235,7 @@ function SignupFormFree() {
 							<p className="text-white font-medium text-lg">
 								{submissionStage}
 							</p>
-							<p className="text-zinc-400 text-sm mt-1">
+							<p className="text-zinc-300 text-sm mt-1">
 								Finding your perfect job matches...
 							</p>
 							<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
