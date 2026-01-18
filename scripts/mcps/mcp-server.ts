@@ -10,6 +10,7 @@ import { VercelMCP } from "./vercel-mcp.ts";
 import { SupabaseMCP } from "./supabase-mcp.ts";
 import { BraveSearchMCP } from "./bravesearch-mcp.ts";
 import { PuppeteerMCP } from "./puppeteer-mcp.ts";
+import { PlaywrightMCP } from "./playwright-mcp.ts";
 
 // Load environment variables from .env.local
 dotenvConfig({ path: resolve(process.cwd(), ".env.local") });
@@ -22,6 +23,7 @@ class JobPingMCPServer {
   private supabase: SupabaseMCP;
   private bravesearch: BraveSearchMCP;
   private puppeteer: PuppeteerMCP;
+  private playwright: PlaywrightMCP;
 
   constructor() {
     try {
@@ -64,6 +66,13 @@ class JobPingMCPServer {
     } catch (error) {
       console.warn("⚠️  Failed to initialize Puppeteer MCP:", error.message);
       this.puppeteer = null as any;
+    }
+
+    try {
+      this.playwright = new PlaywrightMCP();
+    } catch (error) {
+      console.warn("⚠️  Failed to initialize Playwright MCP:", error.message);
+      this.playwright = null as any;
     }
 
     this.server = new Server(
@@ -373,6 +382,78 @@ class JobPingMCPServer {
               required: ["url1", "url2"],
             },
           },
+
+          // Playwright tools
+          {
+            name: "playwright_take_screenshot",
+            description: "Take a screenshot of a webpage using Playwright with customizable viewport and options",
+            inputSchema: {
+              type: "object",
+              properties: {
+                url: { type: "string" },
+                viewport: {
+                  type: "object",
+                  properties: {
+                    width: { type: "number", default: 1280 },
+                    height: { type: "number", default: 720 },
+                  },
+                  default: { width: 1280, height: 720 }
+                },
+                fullPage: { type: "boolean", default: false },
+                selector: { type: "string" },
+              },
+              required: ["url"],
+            },
+          },
+          {
+            name: "playwright_analyze_design",
+            description: "Analyze the design and UX of a webpage using Playwright, providing detailed metrics",
+            inputSchema: {
+              type: "object",
+              properties: {
+                url: { type: "string" },
+              },
+              required: ["url"],
+            },
+          },
+          {
+            name: "playwright_run_test_scenario",
+            description: "Execute a sequence of browser actions on a webpage for testing purposes",
+            inputSchema: {
+              type: "object",
+              properties: {
+                url: { type: "string" },
+                actions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      type: { type: "string", enum: ["click", "type", "wait", "waitForSelector", "assert"] },
+                      selector: { type: "string" },
+                      text: { type: "string" },
+                      ms: { type: "number" },
+                      timeout: { type: "number" },
+                      expected: { type: "string", enum: ["visible", "hidden"] },
+                    },
+                    required: ["type"],
+                  },
+                },
+              },
+              required: ["url", "actions"],
+            },
+          },
+          {
+            name: "playwright_compare_pages",
+            description: "Compare two webpages side by side using Playwright screenshots",
+            inputSchema: {
+              type: "object",
+              properties: {
+                url1: { type: "string" },
+                url2: { type: "string" },
+              },
+              required: ["url1", "url2"],
+            },
+          },
         ],
       };
     });
@@ -426,6 +507,15 @@ class JobPingMCPServer {
             return this.puppeteer ? await this.puppeteer.analyzePageDesign(args) : this.getServiceUnavailableResponse("Puppeteer");
           case "puppeteer_compare_pages":
             return this.puppeteer ? await this.puppeteer.comparePages(args) : this.getServiceUnavailableResponse("Puppeteer");
+
+          case "playwright_take_screenshot":
+            return this.playwright ? await this.playwright.takeScreenshot(args) : this.getServiceUnavailableResponse("Playwright");
+          case "playwright_analyze_design":
+            return this.playwright ? await this.playwright.analyzePageDesign(args) : this.getServiceUnavailableResponse("Playwright");
+          case "playwright_run_test_scenario":
+            return this.playwright ? await this.playwright.runTestScenario(args) : this.getServiceUnavailableResponse("Playwright");
+          case "playwright_compare_pages":
+            return this.playwright ? await this.playwright.comparePages(args) : this.getServiceUnavailableResponse("Playwright");
           default:
             throw new Error(`Unknown tool: ${name}`);
         }

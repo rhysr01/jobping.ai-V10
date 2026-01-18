@@ -156,6 +156,13 @@ async function startMCPServer() {
 		console.log("  • puppeteer_compare_pages - Compare two webpages");
 		console.log("");
 
+		console.log("🎭 Playwright Tools:");
+		console.log("  • playwright_take_screenshot - Take webpage screenshots with Playwright");
+		console.log("  • playwright_analyze_design - Analyze webpage design metrics");
+		console.log("  • playwright_run_test_scenario - Execute browser test scenarios");
+		console.log("  • playwright_compare_pages - Compare two webpages side by side");
+		console.log("");
+
 		console.log("✅ Server started successfully (PID:", child.pid, ")");
 		console.log("💡 Configure Claude Desktop to connect to this MCP server");
 		console.log("");

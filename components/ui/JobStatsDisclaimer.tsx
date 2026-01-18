@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Info, Zap } from "lucide-react";
+import { Info } from "lucide-react";
 import { Badge } from "./badge";
 
 interface JobStatsDisclaimerProps {
@@ -74,7 +74,7 @@ export function JobStatsDisclaimer({
 						{/* Job Sources Badges */}
 						<div className="flex flex-wrap items-center gap-2">
 							<span className="text-xs text-zinc-400 font-medium">Sources:</span>
-							{jobSources.map((source, index) => (
+							{jobSources.map((source) => (
 								<Badge
 									key={source}
 									variant="secondary"

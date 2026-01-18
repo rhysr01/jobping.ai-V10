@@ -45,6 +45,9 @@
 		"verify:env": "tsx scripts/verify-env-services.ts",
 		"mcp:start": "tsx scripts/start-mcp-server.ts",
 		"mcp:dev": "tsx scripts/start-mcp-server.ts",
+		"deploy:monitor": "tsx scripts/monitor-deployment.ts",
+		"deploy:watch": "tsx scripts/monitor-deployment.ts --timeout 1800",
+		"deploy:check": "tsx scripts/monitor-deployment.ts --no-notify-success --no-notify-failure",
 		"clean": "rm -rf .next out coverage test-results",
 		"pre-push": "npm run build",
 		"postinstall": "next telemetry disable"

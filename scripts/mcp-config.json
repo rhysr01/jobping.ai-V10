@@ -71,6 +71,12 @@
 				"puppeteer_take_screenshot - Capture webpage screenshots",
 				"puppeteer_analyze_design - Analyze page design and UX",
 				"puppeteer_compare_pages - Compare webpage designs"
+			],
+			"playwright": [
+				"playwright_take_screenshot - Take webpage screenshots with Playwright",
+				"playwright_analyze_design - Analyze webpage design metrics",
+				"playwright_run_test_scenario - Execute browser test scenarios",
+				"playwright_compare_pages - Compare two webpages side by side"
 			]
 		}
 	}
