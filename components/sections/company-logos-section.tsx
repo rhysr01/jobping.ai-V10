@@ -1,10 +1,11 @@
 "use client";
 
+import Autoplay from "embla-carousel-autoplay";
 import { motion } from "framer-motion";
+import { Info } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BrandIcons } from "../ui/BrandIcons";
-import { apiCallJson } from "../../lib/api-client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
 	Carousel,
 	CarouselContent,
@@ -12,9 +13,8 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
-import Autoplay from "embla-carousel-autoplay";
+import { apiCallJson } from "../../lib/api-client";
+import { BrandIcons } from "../ui/BrandIcons";
 
 interface Company {
 	name: string;
@@ -52,8 +52,6 @@ export default function CompanyLogos() {
 		}
 		fetchCompanies();
 	}, []);
-
-
 
 	if (isLoading) {
 		return (
@@ -118,7 +116,8 @@ export default function CompanyLogos() {
 		{ name: "Siemens", logoPath: "/logos/companies/siemens.svg" },
 	];
 
-	const displayCompanies = validCompanies.length > 0 ? validCompanies : fallbackCompanies;
+	const displayCompanies =
+		validCompanies.length > 0 ? validCompanies : fallbackCompanies;
 
 	// Hide section if no companies to display
 	if (displayCompanies.length === 0 && !isLoading) {
@@ -182,7 +181,10 @@ export default function CompanyLogos() {
 					>
 						<CarouselContent className="-ml-4">
 							{displayCompanies.map((company, index) => (
-								<CarouselItem key={`${company.name}-${index}`} className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+								<CarouselItem
+									key={`${company.name}-${index}`}
+									className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+								>
 									<motion.div
 										initial={{ opacity: 0, scale: 0.9, y: 20 }}
 										whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -195,7 +197,11 @@ export default function CompanyLogos() {
 										whileHover={{
 											y: -6,
 											scale: 1.02,
-											transition: { type: "spring", stiffness: 400, damping: 25 },
+											transition: {
+												type: "spring",
+												stiffness: 400,
+												damping: 25,
+											},
 										}}
 										className="h-full"
 									>
@@ -270,9 +276,10 @@ export default function CompanyLogos() {
 					<Alert className="max-w-2xl mx-auto border-zinc-800 bg-zinc-900/50">
 						<Info className="h-4 w-4 text-emerald-500" />
 						<AlertDescription className="text-sm text-zinc-400">
-							JobPing aggregates jobs from public sources including Indeed, Glassdoor,
-							Adzuna, Jooble, Reed, Arbeitnow, and company pages. We are not affiliated
-							with these companies and match you with available listings.
+							JobPing aggregates jobs from public sources including Indeed,
+							Glassdoor, Adzuna, Jooble, Reed, Arbeitnow, and company pages. We
+							are not affiliated with these companies and match you with
+							available listings.
 						</AlertDescription>
 					</Alert>
 				</motion.div>

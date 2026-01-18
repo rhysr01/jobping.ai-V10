@@ -160,29 +160,29 @@ export default async function RootLayout({
 				role="application"
 				aria-label="JobPing - AI Job Matching Platform"
 			>
-					{/* Enhanced animated background */}
-					<AnimatedBackground />
+				{/* Enhanced animated background */}
+				<AnimatedBackground />
 
-					<a
-						href="#main-content"
-						className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 bg-black/90 border border-white/20 rounded-md px-3 py-2 text-white text-sm font-medium backdrop-blur-sm shadow-lg hover:bg-black/95 transition-colors"
-						aria-label="Skip navigation to main content"
-					>
-						Skip to content
-					</a>
-					<Header />
-					<ErrorBoundary>{children}</ErrorBoundary>
-					<Toaster />
-					<Sonner />
-					<KeyboardShortcuts />
-					<CookieBanner />
-					{/* Google Analytics - deferred for better performance */}
-					<Script
-						src="https://www.googletagmanager.com/gtag/js?id=G-G40ZHDYNL6"
-						strategy="lazyOnload"
-					/>
-					<Script id="google-analytics" strategy="afterInteractive">
-						{`
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 z-50 bg-black/90 border border-white/20 rounded-md px-3 py-2 text-white text-sm font-medium backdrop-blur-sm shadow-lg hover:bg-black/95 transition-colors"
+					aria-label="Skip navigation to main content"
+				>
+					Skip to content
+				</a>
+				<Header />
+				<ErrorBoundary>{children}</ErrorBoundary>
+				<Toaster />
+				<Sonner />
+				<KeyboardShortcuts />
+				<CookieBanner />
+				{/* Google Analytics - deferred for better performance */}
+				<Script
+					src="https://www.googletagmanager.com/gtag/js?id=G-G40ZHDYNL6"
+					strategy="lazyOnload"
+				/>
+				<Script id="google-analytics" strategy="afterInteractive">
+					{`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
@@ -198,15 +198,15 @@ export default async function RootLayout({
               anonymize_ip: true, // Anonymize IP addresses for GDPR
             });
           `}
-					</Script>
-					{/* PostHog Analytics - Session Replay & Feature Flags */}
-					{process.env.NEXT_PUBLIC_POSTHOG_KEY && (
-						<Script
-							id="posthog"
-							strategy="lazyOnload"
-							nonce={nonce}
-							dangerouslySetInnerHTML={{
-								__html: `
+				</Script>
+				{/* PostHog Analytics - Session Replay & Feature Flags */}
+				{process.env.NEXT_PUBLIC_POSTHOG_KEY && (
+					<Script
+						id="posthog"
+						strategy="lazyOnload"
+						nonce={nonce}
+						dangerouslySetInnerHTML={{
+							__html: `
                 !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
                 var consent = typeof localStorage !== 'undefined' ? localStorage.getItem('cookie-consent') : null;
                 var isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -220,17 +220,17 @@ export default async function RootLayout({
                   }
                 });
               `,
-							}}
-						/>
-					)}
+						}}
+					/>
+				)}
 
-					{/* PWA Service Worker Registration - Only on mobile for better performance */}
-					<Script
-						id="pwa-registration"
-						strategy="afterInteractive"
-						/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe PWA service worker script */
-						dangerouslySetInnerHTML={{
-							__html: `
+				{/* PWA Service Worker Registration - Only on mobile for better performance */}
+				<Script
+					id="pwa-registration"
+					strategy="afterInteractive"
+					/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe PWA service worker script */
+					dangerouslySetInnerHTML={{
+						__html: `
               if ('serviceWorker' in navigator && window.innerWidth < 1024) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
@@ -243,8 +243,8 @@ export default async function RootLayout({
                 });
               }
             `,
-						}}
-					/>
+					}}
+				/>
 			</body>
 		</html>
 	);

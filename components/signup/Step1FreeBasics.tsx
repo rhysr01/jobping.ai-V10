@@ -55,7 +55,7 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === 'Enter' && !loading && isStepValid) {
 			e.preventDefault();
-			setStep(2);
+			setStep(2); // Use navigation system's setStep
 		}
 	};
 
@@ -73,7 +73,8 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 	};
 
 
-	const isStepValid = formData.fullName.trim() && formData.email.trim() && emailValidation.isValid && formData.fullName.trim().length >= 2;
+	// Use proper navigation validation instead of local validation
+	const isStepValid = formData.fullName.trim() && formData.email.trim() && emailValidation.isValid;
 
 	return (
 		<motion.div
@@ -166,7 +167,7 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 				totalSteps={3}
 				onNext={() => setStep(2)}
 				nextDisabled={!isStepValid || loading}
-				nextLabel={getDisabledMessage(1)}
+				nextLabel={isStepValid ? "Continue to Cities" : getDisabledMessage(1)}
 				loading={loading}
 			/>
 		</motion.div>

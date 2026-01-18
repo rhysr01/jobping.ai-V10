@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useFormPersistence } from "@/hooks/useFormPersistence";
 import { useEmailValidation } from "@/hooks/useFormValidation";
-import { useSignupNavigation } from "@/hooks/useSignupNavigation";
+import { useFreeSignupNavigation } from "@/hooks/useFreeSignupNavigation";
 import { useSignupState } from "@/hooks/useSignupState";
 import { ApiError, apiCallJson } from "@/lib/api-client";
 import { TIMING } from "@/lib/constants";
@@ -48,10 +48,6 @@ function SignupFormFree() {
 	} = signupState;
 
 	const { announce, Announcement } = useAriaAnnounce();
-	const formRefs = {
-		fullName: useRef<HTMLInputElement>(null),
-		email: useRef<HTMLInputElement>(null),
-	};
 
 	// Submission progress state
 	const [submissionProgress, setSubmissionProgress] = useState(0);
@@ -78,27 +74,16 @@ function SignupFormFree() {
 		};
 	}, []);
 
-	// Use navigation hook
-	useSignupNavigation({
-		step,
-		formData,
-		setStep,
-		emailValidation: { isValid: true }, // Will be set below
-		announce,
-		formRefs,
-	});
-
 	// Form validation hooks
 	const emailValidation = useEmailValidation(formData.email);
 
-	// Update navigation hook with proper email validation
-	const navigation = useSignupNavigation({
+	// Use free signup navigation hook
+	const navigation = useFreeSignupNavigation({
 		step,
 		formData,
 		setStep,
 		emailValidation,
 		announce,
-		formRefs,
 	});
 
 	// Submit handler with progress tracking

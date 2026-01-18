@@ -10,13 +10,16 @@ export async function POST(request: NextRequest) {
 		const { event, properties, timestamp, url } = body
 
 		// For now, just log the event (you can integrate with your analytics service later)
+		const userAgent = request.headers.get("user-agent");
+		const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip");
+
 		console.log("[Analytics]", {
 			event,
 			properties,
 			timestamp,
 			url,
-			userAgent: request.headers.get("user-agent"),
-			ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip"),
+			userAgent,
+			ip,
 		})
 
 		// TODO: Store in database or send to analytics service

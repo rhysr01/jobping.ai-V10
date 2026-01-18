@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
  * Process embedding queue
  * Cron job that processes pending job embeddings
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
 	try {
 		console.log("[Embedding Queue] Processing embedding queue...")
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also support GET for health checks
-export async function GET() {
+export async function GET(_request: NextRequest) {
 	return NextResponse.json({
 		status: "ok",
 		message: "Embedding queue processor is available",
