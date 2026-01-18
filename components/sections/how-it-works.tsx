@@ -1,6 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "../ui/accordion";
+import { Badge } from "../ui/badge";
 import { BrandIcons } from "../ui/BrandIcons";
 
 const STEPS = [
@@ -16,9 +23,30 @@ const STEPS = [
 		number: "02",
 		title: "We search 4,000+ companies daily",
 		description:
-			"We scan 4,000+ company career pages daily across 22 EU cities - more than any job board. Our AI ranks every role against your exact profile, so you only see roles worth applying for.",
+			"We scan company career pages directly at 4,000+ companies across 22 EU cities - more comprehensive than any job board. Our AI ranks every role against your exact profile, so you only see roles worth applying for.",
 		icon: BrandIcons.Zap,
 		color: "from-purple-500 to-purple-600",
+		companies: {
+			tech: [
+				"Google", "Microsoft", "Meta", "Amazon", "Netflix", "Spotify",
+				"Uber", "Airbnb", "Stripe", "Shopify", "Slack", "Zoom",
+				"GitHub", "Square", "Robinhood", "Notion"
+			],
+			finance: [
+				"Goldman Sachs", "JPMorgan Chase", "Morgan Stanley", "Deutsche Bank",
+				"HSBC", "Barclays", "Credit Suisse", "UBS", "BNP Paribas",
+				"Société Générale", "ING Group", "Santander"
+			],
+			consulting: [
+				"McKinsey & Company", "Boston Consulting Group", "Bain & Company",
+				"Deloitte", "PwC", "EY", "KPMG", "Accenture", "Oliver Wyman",
+				"Roland Berger", "Monitor Deloitte", "LEK Consulting"
+			],
+			other: [
+				"Unilever", "L'Oréal", "Nestlé", "Siemens", "SAP", "Volkswagen",
+				"BMW", "Mercedes-Benz", "Adidas", "Nike", "IKEA", "H&M"
+			]
+		}
 	},
 	{
 		number: "03",
@@ -146,6 +174,76 @@ export default function HowItWorks() {
 								<p className="text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors">
 									{step.description}
 								</p>
+
+								{/* Company Examples Accordion */}
+								{step.companies && (
+									<div className="mt-6">
+										<Accordion type="single" collapsible className="w-full">
+											<AccordionItem value="tech" className="border-zinc-700">
+												<AccordionTrigger className="text-sm font-semibold text-purple-300 hover:text-purple-200 hover:no-underline py-3">
+													🚀 Tech & AI Companies (500+)
+												</AccordionTrigger>
+												<AccordionContent className="pb-4">
+													<div className="flex flex-wrap gap-2">
+														{step.companies.tech.map((company) => (
+															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-purple-500 hover:text-purple-300">
+																{company}
+															</Badge>
+														))}
+													</div>
+												</AccordionContent>
+											</AccordionItem>
+
+											<AccordionItem value="finance" className="border-zinc-700">
+												<AccordionTrigger className="text-sm font-semibold text-green-300 hover:text-green-200 hover:no-underline py-3">
+													💰 Finance & Banking (300+)
+												</AccordionTrigger>
+												<AccordionContent className="pb-4">
+													<div className="flex flex-wrap gap-2">
+														{step.companies.finance.map((company) => (
+															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-green-500 hover:text-green-300">
+																{company}
+															</Badge>
+														))}
+													</div>
+												</AccordionContent>
+											</AccordionItem>
+
+											<AccordionItem value="consulting" className="border-zinc-700">
+												<AccordionTrigger className="text-sm font-semibold text-blue-300 hover:text-blue-200 hover:no-underline py-3">
+													🎯 Consulting & Professional Services (200+)
+												</AccordionTrigger>
+												<AccordionContent className="pb-4">
+													<div className="flex flex-wrap gap-2">
+														{step.companies.consulting.map((company) => (
+															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-blue-500 hover:text-blue-300">
+																{company}
+															</Badge>
+														))}
+													</div>
+												</AccordionContent>
+											</AccordionItem>
+
+											<AccordionItem value="other" className="border-zinc-700">
+												<AccordionTrigger className="text-sm font-semibold text-orange-300 hover:text-orange-200 hover:no-underline py-3">
+													🏢 And 3,000+ More European Companies
+												</AccordionTrigger>
+												<AccordionContent className="pb-4">
+													<div className="flex flex-wrap gap-2">
+														{step.companies.other.map((company) => (
+															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-orange-500 hover:text-orange-300">
+																{company}
+															</Badge>
+														))}
+														<Badge variant="secondary" className="text-xs bg-zinc-800 text-zinc-400">
+															+ 3,000 more companies...
+														</Badge>
+													</div>
+												</AccordionContent>
+											</AccordionItem>
+										</Accordion>
+									</div>
+								)}
 
 								{/* Hover effect overlay */}
 								<div
