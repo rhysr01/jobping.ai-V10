@@ -200,8 +200,8 @@ export default function Header() {
 							</div>
 						</Link>
 
-						{/* Desktop Navigation */}
-						<nav className="hidden md:flex items-center gap-8">
+						{/* Desktop Navigation - now grouped with CTA on the right */}
+						<div className="hidden md:flex items-center gap-8">
 							{/* Navigation Links with animated underlines */}
 							{navLinks.map((link) => (
 								<Link
@@ -265,13 +265,13 @@ export default function Header() {
 										location: "header",
 									});
 								}}
-								className="font-display group relative px-6 py-3 rounded-full font-semibold text-white overflow-hidden"
+								className="font-display group relative px-6 py-3 rounded-xl font-semibold text-white overflow-hidden"
 							>
 								{/* Black shiny background */}
 								<div className="absolute inset-0 bg-black group-hover:bg-brand-500/10 transition-all duration-300" />
 
 								{/* Shadow that grows on hover */}
-								<div className="absolute inset-0 shadow-lg shadow-black/50 group-hover:shadow-xl group-hover:shadow-black/80 rounded-full transition-all" />
+								<div className="absolute inset-0 shadow-lg shadow-black/50 group-hover:shadow-xl group-hover:shadow-black/80 rounded-xl transition-all" />
 
 								{/* Text */}
 								<span className="relative z-10 group-hover:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
@@ -283,9 +283,9 @@ export default function Header() {
 								</span>
 
 								{/* Border glow */}
-								<div className="absolute inset-0 rounded-full border border-white/30 group-hover:border-white/60 transition-colors" />
+								<div className="absolute inset-0 rounded-xl border border-white/30 group-hover:border-white/60 transition-colors" />
 							</Link>
-						</nav>
+						</div>
 
 						{/* Mobile Menu Button - Enhanced */}
 						<button

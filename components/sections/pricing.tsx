@@ -87,8 +87,8 @@ function Pricing() {
 					className={`${
 						isMobile
 							? "flex flex-col gap-6" // Simpler stacking on mobile
-							: "grid grid-cols-1 md:grid-cols-2 gap-8"
-					} max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16`}
+							: "grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8"
+					} max-w-6xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16`}
 				>
 					{TIERS.map((tier, index) => {
 						const Icon = tier.icon;
@@ -99,7 +99,7 @@ function Pricing() {
 								whileInView={{ opacity: 1, y: 0 }}
 								viewport={{ once: true }}
 								transition={{ delay: index * 0.1 }}
-								className={tier.popular ? "md:scale-105 md:-mt-4 relative" : ""}
+								className={`${tier.popular ? "lg:col-span-2 md:scale-105 md:-mt-4 relative" : "lg:col-span-1"}`}
 							>
 								{/* Premium Card Glow Effect */}
 								{tier.popular && (
@@ -113,18 +113,6 @@ function Pricing() {
 												: "border-border-subtle bg-white/[0.02] backdrop-blur-xl hover:border-white/20"
 										}`}
 									>
-										{tier.popular && (
-											<>
-												{/* Popular badge with emerald gradient - MUCH MORE PROMINENT */}
-												<div className="absolute -top-3 left-6 z-10">
-													<div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 rounded-full shadow-xl shadow-amber-500/30 border-2 border-white/20">
-														<span className="font-display text-sm font-black text-white uppercase tracking-wider">
-															🔥 PREMIUM
-														</span>
-													</div>
-												</div>
-											</>
-										)}
 
 										<div className="relative z-10 p-8 sm:p-10">
 											{/* Icon with more breathing room */}

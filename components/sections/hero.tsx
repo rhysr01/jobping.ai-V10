@@ -8,6 +8,7 @@ import {
 } from "../../lib/copy";
 import HeroBackgroundAura from "../ui/HeroBackgroundAura";
 import CustomButton from "../ui/CustomButton";
+import { BrandIcons } from "../ui/BrandIcons";
 
 function Hero() {
 	return (
@@ -72,7 +73,10 @@ function Hero() {
 					{/* Clear, impactful value proposition */}
 					<p className="text-lg sm:text-xl md:text-2xl text-zinc-300 leading-relaxed max-w-3xl mx-auto mb-8">
 						Get your perfect entry-level European position in just{" "}
-						<strong className="text-white font-bold">2 minutes</strong>, skip
+						<strong className="text-white font-bold flex items-center gap-2">
+							<BrandIcons.Zap className="w-5 h-5 text-emerald-400 animate-pulse" />
+							2 minutes
+						</strong>, skip
 						the endless scrolling.
 					</p>
 
@@ -98,7 +102,7 @@ function Hero() {
 							<div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-4 py-2 rounded-full backdrop-blur-sm border border-emerald-500/20">
 								<div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
 								<span className="text-sm font-medium">
-									1,500+ students matched
+									1,000+ students matched
 								</span>
 							</div>
 							<div className="w-px h-4 bg-zinc-600"></div>
