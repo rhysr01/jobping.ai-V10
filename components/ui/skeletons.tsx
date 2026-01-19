@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 export function JobCardSkeleton() {
 	return (
@@ -24,7 +24,7 @@ export function JobCardSkeleton() {
 			{/* Button skeleton */}
 			<div className="h-10 bg-zinc-700/50 rounded-xl w-full" />
 		</div>
-	)
+	);
 }
 
 export function FormSkeleton() {
@@ -42,7 +42,7 @@ export function FormSkeleton() {
 			{/* Error state */}
 			<div className="h-5 bg-red-900/20 rounded w-40" />
 		</div>
-	)
+	);
 }
 
 export function PricingCardSkeleton() {
@@ -72,7 +72,7 @@ export function PricingCardSkeleton() {
 				<div className="h-12 bg-zinc-700/50 rounded-xl" />
 			</div>
 		</div>
-	)
+	);
 }
 
 export function CompanyLogoSkeleton() {
@@ -80,26 +80,27 @@ export function CompanyLogoSkeleton() {
 		<div className="h-[180px] w-[200px] bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 animate-pulse">
 			<div className="w-full h-full bg-zinc-700/50 rounded-lg" />
 		</div>
-	)
+	);
 }
 
 interface SkeletonProps {
-	className?: string
+	className?: string;
 }
 
 export function Skeleton({ className }: SkeletonProps) {
 	return (
-		<div
-			className={cn(
-				"animate-pulse rounded-md bg-zinc-700/50",
-				className
-			)}
-		/>
-	)
+		<div className={cn("animate-pulse rounded-md bg-zinc-700/50", className)} />
+	);
 }
 
 // Enhanced loading states with context
-export function PageLoading({ title = "Loading...", subtitle }: { title?: string; subtitle?: string }) {
+export function PageLoading({
+	title = "Loading...",
+	subtitle,
+}: {
+	title?: string;
+	subtitle?: string;
+}) {
 	return (
 		<div className="min-h-screen bg-black flex items-center justify-center">
 			<div className="text-center space-y-6">
@@ -110,19 +111,36 @@ export function PageLoading({ title = "Loading...", subtitle }: { title?: string
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
-export function ContentLoading({ title = "Loading content...", className }: { title?: string; className?: string }) {
+export function ContentLoading({
+	title = "Loading content...",
+	className,
+}: {
+	title?: string;
+	className?: string;
+}) {
 	return (
-		<div className={cn("flex flex-col items-center justify-center py-12 space-y-4", className)}>
+		<div
+			className={cn(
+				"flex flex-col items-center justify-center py-12 space-y-4",
+				className,
+			)}
+		>
 			<div className="w-8 h-8 border-3 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
 			<p className="text-zinc-400 text-sm">{title}</p>
 		</div>
-	)
+	);
 }
 
-export function FormLoading({ fields = 3, showButton = true }: { fields?: number; showButton?: boolean }) {
+export function FormLoading({
+	fields = 3,
+	showButton = true,
+}: {
+	fields?: number;
+	showButton?: boolean;
+}) {
 	return (
 		<div className="space-y-6 animate-pulse">
 			{Array.from({ length: fields }).map((_, i) => (
@@ -133,5 +151,5 @@ export function FormLoading({ fields = 3, showButton = true }: { fields?: number
 			))}
 			{showButton && <div className="h-12 bg-zinc-700/50 rounded-xl w-full" />}
 		</div>
-	)
+	);
 }

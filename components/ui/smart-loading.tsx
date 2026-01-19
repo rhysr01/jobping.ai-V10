@@ -1,8 +1,8 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 interface SmartLoadingProps {
-	stage: 'validating' | 'matching' | 'preparing' | 'complete'
-	className?: string
+	stage: "validating" | "matching" | "preparing" | "complete";
+	className?: string;
 }
 
 export function SmartLoading({ stage, className }: SmartLoadingProps) {
@@ -10,15 +10,15 @@ export function SmartLoading({ stage, className }: SmartLoadingProps) {
 		validating: "Validating your details...",
 		matching: "Finding your perfect matches...",
 		preparing: "Almost ready!",
-		complete: "Complete!"
-	}
+		complete: "Complete!",
+	};
 
 	const icons = {
 		validating: "🔍",
 		matching: "🎯",
 		preparing: "✨",
-		complete: "🎉"
-	}
+		complete: "🎉",
+	};
 
 	return (
 		<div className={cn("flex items-center gap-4 p-6", className)}>
@@ -30,29 +30,38 @@ export function SmartLoading({ stage, className }: SmartLoadingProps) {
 				<p className="text-white font-medium">
 					{icons[stage]} {messages[stage]}
 				</p>
-				{stage === 'matching' && (
+				{stage === "matching" && (
 					<p className="text-sm text-zinc-400">
 						This usually takes 5-10 seconds
 					</p>
 				)}
 			</div>
 		</div>
-	)
+	);
 }
 
 interface LoadingSpinnerProps {
-	size?: 'sm' | 'md' | 'lg'
-	className?: string
+	size?: "sm" | "md" | "lg";
+	className?: string;
 }
 
-export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+	size = "md",
+	className,
+}: LoadingSpinnerProps) {
 	const sizes = {
-		sm: 'w-4 h-4',
-		md: 'w-6 h-6',
-		lg: 'w-8 h-8'
-	}
+		sm: "w-4 h-4",
+		md: "w-6 h-6",
+		lg: "w-8 h-8",
+	};
 
 	return (
-		<div className={cn("animate-spin rounded-full border-2 border-current border-t-transparent", sizes[size], className)} />
-	)
+		<div
+			className={cn(
+				"animate-spin rounded-full border-2 border-current border-t-transparent",
+				sizes[size],
+				className,
+			)}
+		/>
+	);
 }

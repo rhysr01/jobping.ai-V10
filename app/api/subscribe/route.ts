@@ -26,7 +26,11 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		.single();
 
 	if (existingUser) {
-		throw new AppError("An account with this email already exists. Try signing in instead.", 409, "DUPLICATE_EMAIL");
+		throw new AppError(
+			"An account with this email already exists. Try signing in instead.",
+			409,
+			"DUPLICATE_EMAIL",
+		);
 	}
 
 	// Insert new user

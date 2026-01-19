@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { BrandIcons } from "./BrandIcons";
 import { cn } from "@/lib/utils";
+import { BrandIcons } from "./BrandIcons";
 
 interface FormStep {
 	id: string;
@@ -22,9 +22,9 @@ export function FormProgress({
 	steps,
 	currentStep,
 	className = "",
-	showValidation = true
+	showValidation = true,
 }: FormProgressProps) {
-	const currentIndex = steps.findIndex(step => step.id === currentStep);
+	const currentIndex = steps.findIndex((step) => step.id === currentStep);
 
 	return (
 		<div className={cn("w-full max-w-2xl mx-auto", className)}>
@@ -36,7 +36,7 @@ export function FormProgress({
 						className="h-full bg-gradient-to-r from-brand-500 to-brand-600 rounded-full"
 						initial={{ width: 0 }}
 						animate={{
-							width: `${((currentIndex + 1) / steps.length) * 100}%`
+							width: `${((currentIndex + 1) / steps.length) * 100}%`,
 						}}
 						transition={{ duration: 0.5, ease: "easeOut" }}
 					/>
@@ -62,7 +62,7 @@ export function FormProgress({
 											? "border-brand-500 text-brand-500 bg-black"
 											: step.isValid
 												? "border-zinc-500 text-zinc-500"
-												: "border-zinc-600 text-zinc-600"
+												: "border-zinc-600 text-zinc-600",
 								)}
 								initial={{ scale: 0 }}
 								animate={{ scale: 1 }}
@@ -83,12 +83,14 @@ export function FormProgress({
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
 				{steps.map((step, _index) => (
 					<div key={step.id} className="text-center">
-						<h3 className={cn(
-							"text-sm font-medium transition-colors",
-							step.isCompleted || step.isCurrent
-								? "text-white"
-								: "text-zinc-500"
-						)}>
+						<h3
+							className={cn(
+								"text-sm font-medium transition-colors",
+								step.isCompleted || step.isCurrent
+									? "text-white"
+									: "text-zinc-500",
+							)}
+						>
 							{step.label}
 						</h3>
 						{showValidation && step.error && step.isCurrent && (
@@ -121,7 +123,7 @@ export function FormProgress({
 interface ValidationFeedbackProps {
 	isValid: boolean;
 	message: string;
-	type: 'success' | 'error' | 'warning' | 'info';
+	type: "success" | "error" | "warning" | "info";
 	className?: string;
 }
 
@@ -129,25 +131,25 @@ export function ValidationFeedback({
 	isValid,
 	message,
 	type,
-	className = ""
+	className = "",
 }: ValidationFeedbackProps) {
 	const icons = {
 		success: BrandIcons.CheckCircle,
 		error: BrandIcons.Shield,
 		warning: BrandIcons.AlertCircle,
-		info: BrandIcons.Info
+		info: BrandIcons.Info,
 	};
 
 	const colors = {
 		success: "text-success bg-emerald-500/10 border-emerald-500/20",
 		error: "text-error bg-red-500/10 border-red-500/20",
 		warning: "text-warning bg-amber-500/10 border-amber-500/20",
-		info: "text-info bg-blue-500/10 border-blue-500/20"
+		info: "text-info bg-blue-500/10 border-blue-500/20",
 	};
 
 	const IconComponent = icons[type];
 
-	if (!isValid && type === 'error') {
+	if (!isValid && type === "error") {
 		return null; // Don't show error feedback for valid fields
 	}
 
@@ -159,7 +161,7 @@ export function ValidationFeedback({
 			className={cn(
 				"flex items-center gap-2 px-3 py-2 rounded-lg border text-sm",
 				colors[type],
-				className
+				className,
 			)}
 		>
 			<IconComponent className="w-4 h-4 flex-shrink-0" />
@@ -182,7 +184,7 @@ interface SmartFormFieldProps {
 	validation?: {
 		isValid: boolean;
 		message: string;
-		type: 'success' | 'error' | 'warning' | 'info';
+		type: "success" | "error" | "warning" | "info";
 	};
 	showAdvanced?: boolean;
 	advancedContent?: React.ReactNode;
@@ -202,16 +204,16 @@ export function SmartFormField({
 	validation,
 	showAdvanced = false,
 	advancedContent,
-	className = ""
+	className = "",
 }: SmartFormFieldProps) {
 	return (
-		<motion.div
-			className={cn("space-y-3", className)}
-			layout
-		>
+		<motion.div className={cn("space-y-3", className)} layout>
 			{/* Label with help indicator */}
 			<div className="flex items-center justify-between">
-				<label htmlFor={id} className="text-base font-bold text-white flex items-center gap-2">
+				<label
+					htmlFor={id}
+					className="text-base font-bold text-white flex items-center gap-2"
+				>
 					{label}
 					{required && <span className="text-error">*</span>}
 				</label>
@@ -238,7 +240,7 @@ export function SmartFormField({
 						: validation?.isValid === true
 							? "border-emerald-500/60 focus:border-emerald-500 focus:ring-emerald-500/30"
 							: "border-zinc-700 hover:border-zinc-600 focus:border-brand-500 focus:ring-brand-500/30",
-					"focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-black"
+					"focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-black",
 				)}
 				aria-invalid={validation?.isValid === false}
 				aria-describedby={help ? `${id}-help` : undefined}

@@ -1,6 +1,6 @@
 /**
  * Target Resolver - Pure Business Logic
- * 
+ *
  * Resolves user preferences into scraping targets.
  * This is "Brain" logic - it decides WHAT to scrape, not HOW.
  */
@@ -26,10 +26,10 @@ function parseJsonEnv(value) {
 
 /**
  * Resolve user preferences into scraping targets
- * 
+ *
  * @param {Array} users - Array of user preferences from database
  * @returns {Object} Aggregated scraping targets with {cities, careerPaths, industries, roles}
- * 
+ *
  * Business Rules:
  * - Combines all active user preferences
  * - Respects environment variable overrides
@@ -89,4 +89,3 @@ module.exports = {
 	resolveTargets,
 	parseJsonEnv, // Export for backwards compatibility if needed
 };
-

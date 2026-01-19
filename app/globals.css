@@ -30,12 +30,18 @@
 	--info: 199 89% 48%;
 	--info-foreground: 0 0% 98%;
 
-	/* Typography */
+	/* Enhanced Typography Scale */
+	--text-display-2xl: 5rem;
 	--text-display-xl: 4rem;
 	--text-display-lg: 3rem;
 	--text-display-md: 2.25rem;
 	--text-display-sm: 1.875rem;
 	--text-display-xs: 1.5rem;
+
+	/* Mobile-optimized sizes */
+	--text-display-mobile-2xl: 3rem;
+	--text-display-mobile-xl: 2.5rem;
+	--text-display-mobile-lg: 2rem;
 
 	--text-body-xl: 1.25rem;
 	--text-body-lg: 1.125rem;
@@ -140,6 +146,47 @@
 	text-shadow:
 		0 2px 4px rgba(0, 0, 0, 0.2),
 		0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Floating animations for hero graphics */
+@keyframes float {
+	0%,
+	100% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-10px) rotate(5deg);
+	}
+}
+
+@keyframes float-delayed {
+	0%,
+	100% {
+		transform: translateY(0px) rotate(0deg);
+	}
+	50% {
+		transform: translateY(-8px) rotate(-3deg);
+	}
+}
+
+.animate-float {
+	animation: float 6s ease-in-out infinite;
+	will-change: transform;
+}
+
+.animate-float-delayed {
+	animation: float-delayed 8s ease-in-out infinite;
+	animation-delay: 2s;
+	will-change: transform;
+}
+
+/* Performance optimization for animations */
+@media (prefers-reduced-motion: reduce) {
+	.animate-float,
+	.animate-float-delayed {
+		animation: none;
+		will-change: auto;
+	}
 }
 
 /* Global styles */

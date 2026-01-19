@@ -45,9 +45,7 @@ async function testRateLimiting() {
 			console.log(
 				`✅ Rate limiting is working! Blocked ${rateLimited.length} requests after ${successful.length} successful ones.`,
 			);
-			console.log(
-				`   First rate limit at attempt #${rateLimited[0].attempt}`,
-			);
+			console.log(`   First rate limit at attempt #${rateLimited[0].attempt}`);
 			return true;
 		} else {
 			console.log(
@@ -80,17 +78,19 @@ async function testSentryIntegration() {
 		});
 
 		// Test error logging (this will send to Sentry if configured)
-		apiLogger.error("Test error log from test script", new Error("Test error"), {
-			test: true,
-			timestamp: new Date().toISOString(),
-			context: "Critical feature test",
-		});
+		apiLogger.error(
+			"Test error log from test script",
+			new Error("Test error"),
+			{
+				test: true,
+				timestamp: new Date().toISOString(),
+				context: "Critical feature test",
+			},
+		);
 
 		console.log("✅ Structured logging (apiLogger) is working");
 		console.log("✅ Sentry integration should capture the test error above");
-		console.log(
-			"   Check Sentry dashboard to verify error was captured",
-		);
+		console.log("   Check Sentry dashboard to verify error was captured");
 
 		return true;
 	} catch (error) {
@@ -131,17 +131,15 @@ async function testApiAuthentication() {
 		}
 	} catch (error) {
 		console.error("❌ API authentication test failed:", error);
-		console.log(
-			"   This is OK if the server is not running locally",
-		);
+		console.log("   This is OK if the server is not running locally");
 		return true; // Not a failure if server not running
 	}
 }
 
 async function main() {
-	console.log("=" .repeat(60));
+	console.log("=".repeat(60));
 	console.log("🚀 Testing Critical Features");
-	console.log("=" .repeat(60));
+	console.log("=".repeat(60));
 
 	const results = {
 		rateLimiting: await testRateLimiting(),
@@ -149,7 +147,7 @@ async function main() {
 		authentication: await testApiAuthentication(),
 	};
 
-	console.log("\n" + "=".repeat(60));
+	console.log(`\n${"=".repeat(60)}`);
 	console.log("📊 Test Results Summary");
 	console.log("=".repeat(60));
 
@@ -161,17 +159,15 @@ async function main() {
 
 	const allPassed = Object.values(results).every((r) => r);
 
-	console.log("\n" + "=".repeat(60));
+	console.log(`\n${"=".repeat(60)}`);
 	if (allPassed) {
 		console.log("✅ All critical features tested successfully!");
 		console.log("🚀 Ready for production deployment");
 	} else {
 		console.log("⚠️  Some tests failed - review above for details");
-		console.log(
-			"   Note: Some failures are OK in local development",
-		);
+		console.log("   Note: Some failures are OK in local development");
 	}
-	console.log("=".repeat(60) + "\n");
+	console.log(`${"=".repeat(60)}\n`);
 
 	process.exit(allPassed ? 0 : 1);
 }
@@ -179,4 +175,3 @@ async function main() {
 if (require.main === module) {
 	main().catch(console.error);
 }
-

@@ -172,7 +172,7 @@ export const CAREER_PATHS = [
 			"Associate Consultant",
 			"Strategy Analyst",
 			"Junior Consultant",
-			"Consulting Intern"
+			"Consulting Intern",
 		],
 		roles: [
 			"Business Analyst",
@@ -201,7 +201,7 @@ export const CAREER_PATHS = [
 			"Junior Data Analyst",
 			"Analytics Intern",
 			"Business Intelligence Intern",
-			"Junior Data Scientist"
+			"Junior Data Scientist",
 		],
 		roles: [
 			"Data Analyst",
@@ -230,7 +230,7 @@ export const CAREER_PATHS = [
 			"Business Development Representative (BDR)",
 			"Inside Sales Representative",
 			"Account Executive",
-			"Customer Success Associate"
+			"Customer Success Associate",
 		],
 		roles: [
 			"Sales Development Representative (SDR)",
@@ -259,7 +259,7 @@ export const CAREER_PATHS = [
 			"Digital Marketing Assistant",
 			"Marketing Coordinator",
 			"Social Media Intern",
-			"Growth Marketing Intern"
+			"Growth Marketing Intern",
 		],
 		roles: [
 			"Marketing Intern",
@@ -288,7 +288,7 @@ export const CAREER_PATHS = [
 			"Finance Intern",
 			"Investment Banking Analyst",
 			"Risk Analyst",
-			"Audit Associate"
+			"Audit Associate",
 		],
 		roles: [
 			"Financial Analyst",
@@ -317,7 +317,7 @@ export const CAREER_PATHS = [
 			"Supply Chain Analyst",
 			"Logistics Analyst",
 			"Procurement Analyst",
-			"Operations Intern"
+			"Operations Intern",
 		],
 		roles: [
 			"Operations Analyst",
@@ -346,7 +346,7 @@ export const CAREER_PATHS = [
 			"Product Analyst",
 			"Product Management Intern",
 			"Junior Product Manager",
-			"Product Designer"
+			"Product Designer",
 		],
 		roles: [
 			"Associate Product Manager (APM)",
@@ -375,7 +375,7 @@ export const CAREER_PATHS = [
 			"Cloud Engineer Intern",
 			"DevOps Engineer Intern",
 			"Data Engineer Intern",
-			"Systems Analyst"
+			"Systems Analyst",
 		],
 		roles: [
 			"Software Engineer Intern",
@@ -404,7 +404,7 @@ export const CAREER_PATHS = [
 			"Sustainability Strategy Intern",
 			"Junior ESG Analyst",
 			"Sustainability Graduate Programme",
-			"ESG Data Analyst Intern"
+			"ESG Data Analyst Intern",
 		],
 		roles: [
 			"ESG Intern",
@@ -433,7 +433,7 @@ export const CAREER_PATHS = [
 			"Rotational Graduate Program",
 			"Management Trainee",
 			"Business Graduate Analyst",
-			"Entry Level Program Associate"
+			"Entry Level Program Associate",
 		],
 		roles: [
 			"Graduate Trainee",

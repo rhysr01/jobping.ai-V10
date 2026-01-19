@@ -8,7 +8,12 @@ interface LiveMatchingOverlayProps {
 	estimatedJobCount?: number;
 }
 
-export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount, estimatedJobCount }: LiveMatchingOverlayProps) {
+export function LiveMatchingOverlay({
+	showLiveMatching,
+	isSubmitting,
+	matchCount,
+	estimatedJobCount,
+}: LiveMatchingOverlayProps) {
 	if (!showLiveMatching && !isSubmitting) return null;
 
 	return (
@@ -61,11 +66,10 @@ export function LiveMatchingOverlay({ showLiveMatching, isSubmitting, matchCount
 					aria-atomic="true"
 				>
 					{matchCount > 0
-						? `${matchCount} ${matchCount === 1 ? 'match' : 'matches'} found`
+						? `${matchCount} ${matchCount === 1 ? "match" : "matches"} found`
 						: isSubmitting
 							? "Scanning..."
-							: "Processing..."
-					}
+							: "Processing..."}
 				</motion.div>
 			</motion.div>
 		</motion.div>

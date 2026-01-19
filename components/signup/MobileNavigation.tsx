@@ -40,9 +40,7 @@ export const MobileNavigation = React.memo(function MobileNavigation({
 						<div
 							key={index}
 							className={`h-2 w-8 rounded-full transition-colors ${
-								index + 1 <= currentStep
-									? "bg-brand-500"
-									: "bg-zinc-600"
+								index + 1 <= currentStep ? "bg-brand-500" : "bg-zinc-600"
 							}`}
 						/>
 					))}

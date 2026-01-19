@@ -387,7 +387,11 @@ export class PrefilterService {
 		}
 
 		// Language relevance for premium users
-		if (this.isPremiumUser(user) && user.languages_spoken && user.languages_spoken.length > 0) {
+		if (
+			this.isPremiumUser(user) &&
+			user.languages_spoken &&
+			user.languages_spoken.length > 0
+		) {
 			const jobLanguages = this.extractJobLanguages(job);
 			const hasLanguageMatch = user.languages_spoken.some((userLang) =>
 				jobLanguages.some((jobLang) =>

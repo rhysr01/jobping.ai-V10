@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
-import CustomButton from "./CustomButton";
 import {
 	Dialog,
 	DialogContent,
@@ -11,6 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import CustomButton from "./CustomButton";
 
 interface SimilarMatch {
 	job_hash: string;
@@ -112,8 +112,7 @@ export default function JobClosedModal({
 
 					{similarMatches.length === 0 && (
 						<p className="text-zinc-400 text-center py-8">
-							No similar matches found. Check back later for new
-							opportunities!
+							No similar matches found. Check back later for new opportunities!
 						</p>
 					)}
 				</div>

@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { waitForPageLoad, fastWaitForSelector } from "./test-utils";
 
 /**
  * Critical E2E Tests for JobPing
@@ -21,18 +20,16 @@ test.describe("Critical User Flows", () => {
 		expect(page.url()).toContain("localhost:3001");
 
 		// Verify we have a body element (basic page structure)
-		const body = page.locator('body');
+		const body = page.locator("body");
 		await expect(body).toBeVisible();
 
 		console.log("✅ Homepage loads successfully");
 	});
 
-	test("Free user signup flow works end-to-end", async ({
-		page,
-	}) => {
+	test("Free user signup flow works end-to-end", async ({ page }) => {
 		// Start at homepage (real user journey)
 		await page.goto("/");
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState("networkidle");
 
 		// Click the main CTA (what real users do to sign up)
 		await page.locator("text=Get My 5 Free Matches").first().click();
@@ -41,12 +38,19 @@ test.describe("Critical User Flows", () => {
 		// Wait for either URL change or form appearance
 		await Promise.race([
 			page.waitForURL(/.*signup/),
-			page.locator('form, [role="form"], input[type="email"]').first().waitFor({ timeout: 5000 })
+			page
+				.locator('form, [role="form"], input[type="email"]')
+				.first()
+				.waitFor({ timeout: 5000 }),
 		]);
 
 		// Verify we can access signup functionality (form or signup page)
-		const hasSignupForm = await page.locator('form, input[type="email"], [data-testid*="signup"]').count() > 0;
-		const isOnSignupPage = page.url().includes('signup') || page.url().includes('register');
+		const hasSignupForm =
+			(await page
+				.locator('form, input[type="email"], [data-testid*="signup"]')
+				.count()) > 0;
+		const isOnSignupPage =
+			page.url().includes("signup") || page.url().includes("register");
 
 		expect(hasSignupForm || isOnSignupPage).toBe(true);
 
@@ -86,13 +90,13 @@ test.describe("Critical User Flows", () => {
 	test("Signup flow works for premium tier", async ({ page }) => {
 		// Start from homepage
 		await page.goto("/");
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState("networkidle");
 
 		// Look for premium/premium upgrade options (real user behavior)
 		const premiumButtons = [
-			page.locator('text=/Premium|Pro|Upgrade|Subscribe/i').first(),
+			page.locator("text=/Premium|Pro|Upgrade|Subscribe/i").first(),
 			page.locator('[class*="premium"]').first(),
-			page.locator('[data-testid*="premium"]').first()
+			page.locator('[data-testid*="premium"]').first(),
 		];
 
 		// Try to find and click a premium option
@@ -109,24 +113,38 @@ test.describe("Critical User Flows", () => {
 			// Should navigate to billing/payment/upgrade page
 			await Promise.race([
 				page.waitForURL(/.*(billing|upgrade|payment|subscribe|premium)/),
-				page.locator('[class*="billing"], [class*="payment"], [class*="upgrade"]').first().waitFor({ timeout: 5000 })
+				page
+					.locator('[class*="billing"], [class*="payment"], [class*="upgrade"]')
+					.first()
+					.waitFor({ timeout: 5000 }),
 			]);
 
 			// Verify premium context (either URL or visible premium elements)
-			const hasPremiumURL = /billing|upgrade|payment|subscribe|premium/i.test(page.url());
-			const hasPremiumElements = await page.locator('text=/premium|pro|upgrade/i').isVisible().catch(() => false);
+			const hasPremiumURL = /billing|upgrade|payment|subscribe|premium/i.test(
+				page.url(),
+			);
+			const hasPremiumElements = await page
+				.locator("text=/premium|pro|upgrade/i")
+				.isVisible()
+				.catch(() => false);
 
 			expect(hasPremiumURL || hasPremiumElements).toBe(true);
 		} else {
 			// If no premium button found, that's actually OK - not all sites have prominent premium CTAs
-			console.log('No premium CTA found - this may be expected for free-focused landing pages');
+			console.log(
+				"No premium CTA found - this may be expected for free-focused landing pages",
+			);
 		}
 	});
 
 	test("Navigation works correctly", async ({ page }) => {
 		// Test basic navigation like real users do
 		// Check if there's a logo or brand name visible
-		const logoElement = page.locator('img[alt*="logo"], [class*="logo"], text*="JobPing", text*="jobping"').first();
+		const logoElement = page
+			.locator(
+				'img[alt*="logo"], [class*="logo"], text*="JobPing", text*="jobping"',
+			)
+			.first();
 		if (await logoElement.isVisible()) {
 			await logoElement.click();
 			await expect(page).toHaveURL("/");
@@ -134,7 +152,13 @@ test.describe("Critical User Flows", () => {
 
 		// Test common navigation patterns that real users expect
 		// Look for "How it works", "Pricing", "About", or similar navigation text
-		const navTexts = ["How it works", "Pricing", "About", "Features", "Contact"];
+		const navTexts = [
+			"How it works",
+			"Pricing",
+			"About",
+			"Features",
+			"Contact",
+		];
 
 		for (const navText of navTexts) {
 			const navLink = page.locator(`text=${navText}`).first();
@@ -154,7 +178,7 @@ test.describe("Critical User Flows", () => {
 		await page.setViewportSize({ width: 375, height: 667 });
 
 		// Wait for content to load on mobile
-		await page.waitForLoadState('networkidle');
+		await page.waitForLoadState("networkidle");
 
 		// Test that core content is visible and readable on mobile
 		await expect(page.locator("text=Get 5 early-career")).toBeVisible();
@@ -166,7 +190,9 @@ test.describe("Critical User Flows", () => {
 		await expect(ctaButton).toBeEnabled();
 
 		// Test that content doesn't require horizontal scrolling (real mobile UX issue)
-		const bodyScrollWidth = await page.locator('body').evaluate(el => el.scrollWidth);
+		const bodyScrollWidth = await page
+			.locator("body")
+			.evaluate((el) => el.scrollWidth);
 		const viewportWidth = page.viewportSize()?.width || 375;
 		expect(bodyScrollWidth).toBeLessThanOrEqual(viewportWidth + 10); // Allow small margin
 
@@ -304,9 +330,7 @@ test.describe("Cross-browser Compatibility", () => {
 		await expect(page.locator('[data-testid="hero-section"]')).toBeVisible();
 	});
 
-	test("Premium upgrade flow works end-to-end", async ({
-		page,
-	}) => {
+	test("Premium upgrade flow works end-to-end", async ({ page }) => {
 		// Navigate to homepage
 		await page.goto("/");
 
@@ -315,14 +339,21 @@ test.describe("Cross-browser Compatibility", () => {
 		await expect(page.locator("text=Premium")).toBeVisible();
 
 		// Click premium CTA
-		const premiumCTA = page.locator("text=Upgrade").or(page.locator("text=Premium")).first();
+		const premiumCTA = page
+			.locator("text=Upgrade")
+			.or(page.locator("text=Premium"))
+			.first();
 		await premiumCTA.click();
 
 		// Should navigate to premium signup or show premium features
-		await expect(page.locator("text=Premium").or(page.locator("text=€5"))).toBeVisible();
+		await expect(
+			page.locator("text=Premium").or(page.locator("text=€5")),
+		).toBeVisible();
 
 		// Test that premium features are highlighted
-		await expect(page.locator("text=weekly").or(page.locator("text=matches"))).toBeVisible();
+		await expect(
+			page.locator("text=weekly").or(page.locator("text=matches")),
+		).toBeVisible();
 	});
 
 	test("Works in Safari", async ({ page, browserName }) => {

@@ -54,8 +54,9 @@ export function TargetCompaniesSection({
 
 			<div className="mt-4 p-4 bg-blue-500/10 rounded-md border border-blue-500/20">
 				<p className="text-sm text-info/80">
-					💡 <strong>Pro tip:</strong> We'll automatically scan these companies weekly
-					and send you priority notifications for new roles that match your preferences.
+					💡 <strong>Pro tip:</strong> We'll automatically scan these companies
+					weekly and send you priority notifications for new roles that match
+					your preferences.
 				</p>
 			</div>
 		</div>

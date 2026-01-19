@@ -5,7 +5,10 @@
  * caching effectiveness, and quality validation
  */
 
-import { AIMatchingService, type AIMatchingOptions } from "../utils/matching/core/ai-matching.service";
+import {
+	AIMatchingService,
+	type AIMatchingOptions,
+} from "../utils/matching/core/ai-matching.service";
 import { aiMatchingCache } from "../lib/cache";
 import type { Job } from "@/scrapers/types";
 import type { UserPreferences } from "../utils/matching/types";
@@ -121,7 +124,7 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockImplementation(
-							() => new Promise(resolve => setTimeout(resolve, 10000)) // 10 second delay
+							() => new Promise((resolve) => setTimeout(resolve, 10000)), // 10 second delay
 						),
 					},
 				},
@@ -145,22 +148,26 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify([{
-										jobId: 1,
-										score: 85,
-										reason: "Good match",
-										scoreBreakdown: {
-											skills: 80,
-											experience: 90,
-											location: 95,
-											company: 70,
-											overall: 85,
-										},
-									}]),
+							choices: [
+								{
+									message: {
+										content: JSON.stringify([
+											{
+												jobId: 1,
+												score: 85,
+												reason: "Good match",
+												scoreBreakdown: {
+													skills: 80,
+													experience: 90,
+													location: 95,
+													company: 70,
+													overall: 85,
+												},
+											},
+										]),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -203,22 +210,26 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify([{
-										jobId: 1,
-										score: 85,
-										reason: "Good match",
-										scoreBreakdown: {
-											skills: 80,
-											experience: 90,
-											location: 95,
-											company: 70,
-											overall: 85,
-										},
-									}]),
+							choices: [
+								{
+									message: {
+										content: JSON.stringify([
+											{
+												jobId: 1,
+												score: 85,
+												reason: "Good match",
+												scoreBreakdown: {
+													skills: 80,
+													experience: 90,
+													location: 95,
+													company: 70,
+													overall: 85,
+												},
+											},
+										]),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -237,11 +248,13 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: "Invalid JSON response",
+							choices: [
+								{
+									message: {
+										content: "Invalid JSON response",
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -258,22 +271,26 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify([{
-										jobId: 1,
-										score: 150, // Invalid score > 100
-										reason: "Good match",
-										scoreBreakdown: {
-											skills: 80,
-											experience: 90,
-											location: 95,
-											company: 70,
-											overall: 85,
-										},
-									}]),
+							choices: [
+								{
+									message: {
+										content: JSON.stringify([
+											{
+												jobId: 1,
+												score: 150, // Invalid score > 100
+												reason: "Good match",
+												scoreBreakdown: {
+													skills: 80,
+													experience: 90,
+													location: 95,
+													company: 70,
+													overall: 85,
+												},
+											},
+										]),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -303,31 +320,36 @@ describe("AI Reliability Tests", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify(
-										largeJobSet.slice(0, 10).map(job => ({
-											jobId: job.id,
-											score: Math.random() * 100,
-											reason: "Test match",
-											scoreBreakdown: {
-												skills: 80,
-												experience: 70,
-												location: 90,
-												company: 60,
-												overall: 75,
-											},
-										}))
-									),
+							choices: [
+								{
+									message: {
+										content: JSON.stringify(
+											largeJobSet.slice(0, 10).map((job) => ({
+												jobId: job.id,
+												score: Math.random() * 100,
+												reason: "Test match",
+												scoreBreakdown: {
+													skills: 80,
+													experience: 70,
+													location: 90,
+													company: 60,
+													overall: 75,
+												},
+											})),
+										),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
 			}));
 
 			const startTime = Date.now();
-			const result = await aiService.findMatches(mockUser, largeJobSet.slice(0, 20));
+			const result = await aiService.findMatches(
+				mockUser,
+				largeJobSet.slice(0, 20),
+			);
 			const duration = Date.now() - startTime;
 
 			expect(result).toBeDefined();
@@ -338,7 +360,7 @@ describe("AI Reliability Tests", () => {
 			// Test that the service doesn't overwhelm the API
 			const concurrentRequests = 5;
 			const promises = Array.from({ length: concurrentRequests }, () =>
-				aiService.findMatches(mockUser, mockJobs)
+				aiService.findMatches(mockUser, mockJobs),
 			);
 
 			const startTime = Date.now();
@@ -356,16 +378,16 @@ describe("AI Reliability Tests", () => {
 			mockOpenAI.mockImplementation(() => ({
 				chat: {
 					completions: {
-						create: jest.fn().mockRejectedValue(
-							new Error("OpenAI API rate limit exceeded")
-						),
+						create: jest
+							.fn()
+							.mockRejectedValue(new Error("OpenAI API rate limit exceeded")),
 					},
 				},
 			}));
 
 			// The service should handle errors gracefully without throwing
 			await expect(
-				aiService.findMatches(mockUser, mockJobs)
+				aiService.findMatches(mockUser, mockJobs),
 			).resolves.toBeDefined();
 		});
 

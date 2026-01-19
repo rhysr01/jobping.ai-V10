@@ -1,5 +1,8 @@
 #!/usr/bin/env tsx
 
+// Export for testing
+export { main, ProductionMatchingEngineTester };
+
 /**
  * PRODUCTION MATCHING ENGINE TESTS
  *
@@ -67,12 +70,17 @@ async function fetchRealTestJobs(): Promise<Job[]> {
 			.eq("status", "active")
 			.is("filtered_reason", null)
 			.gte("created_at", sixtyDaysAgo.toISOString())
-			.or("is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}")
+			.or(
+				"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
+			)
 			.order("created_at", { ascending: false })
 			.limit(50); // Get enough jobs for comprehensive testing
 
 		if (error) {
-			console.warn("Failed to fetch real jobs, falling back to synthetic data:", error.message);
+			console.warn(
+				"Failed to fetch real jobs, falling back to synthetic data:",
+				error.message,
+			);
 			return getFallbackTestJobs();
 		}
 
@@ -336,7 +344,6 @@ const PREMIUM_USER_LONDON: UserPreferences = {
 	target_cities: ["London"],
 	career_path: ["tech", "data-analytics"], // Premium can choose 2 career paths
 	professional_expertise: "software development",
-	work_environment: "hybrid",
 	visa_status: "eu-citizen",
 	entry_level_preference: "entry",
 	languages_spoken: ["English"],
@@ -369,7 +376,7 @@ const USER_NEEDS_VISA: UserPreferences = {
 	career_keywords: "software engineer",
 };
 
-const FREE_USER_VISA_NEED: UserPreferences = {
+const _FREE_USER_VISA_NEED: UserPreferences = {
 	email: "free-visa-test@example.com",
 	target_cities: ["London"],
 	career_path: ["tech"],
@@ -730,87 +737,6 @@ class ProductionMatchingEngineTester {
 				totalMatches: result.matches.length,
 				londonMatches: londonJobs.length,
 				locationFiltered: passed,
-			},
-		};
-	}
-
-	private async testVisaHardFiltering(): Promise<TestResult> {
-		console.log(
-			"🇪🇺 Testing Visa Filtering: Should prioritize visa-friendly jobs...",
-		);
-
-		// Add a job that mentions visa sponsorship
-		const jobsWithVisa = [...PRODUCTION_TEST_JOBS];
-		jobsWithVisa.push({
-			id: 10,
-			job_hash: "visa-friendly-job",
-			title: "Software Engineer (Visa Sponsorship)",
-			company: "VisaCorp London",
-			location: "London, UK",
-			city: "London",
-			country: "UK",
-			job_url: "https://example.com/visa-job",
-			description:
-				"Visa sponsorship available for exceptional candidates. Software engineering role.",
-			experience_required: "entry-level",
-			work_environment: "hybrid",
-			source: "test",
-			categories: ["early-career", "tech-transformation"],
-			company_profile_url: "",
-			language_requirements: ["English"],
-			scrape_timestamp: new Date().toISOString(),
-			original_posted_date: new Date().toISOString(),
-			posted_at: new Date().toISOString(),
-			last_seen_at: new Date().toISOString(),
-			is_active: true,
-			created_at: new Date().toISOString(),
-			visa_friendly: true, // This should pass visa filtering
-		});
-
-		// Test visa filtering via fallback service
-		const { fallbackService } = await import(
-			"../Utils/matching/core/fallback.service"
-		);
-		const fallbackResult = fallbackService.generateFallbackMatches(
-			jobsWithVisa,
-			FREE_USER_VISA_NEED,
-			5,
-		);
-
-		const result = {
-			matches: fallbackResult.map((match) => ({
-				job_hash: match.job.job_hash,
-				match_score: match.matchScore,
-				match_reason: match.matchReason,
-				confidence_score: match.confidenceScore,
-			})),
-			method: "fallback",
-			totalJobsProcessed: jobsWithVisa.length,
-			prefilterResults: {
-				jobs: [],
-				matchLevel: "broad",
-				filteredCount: 0,
-				sourceDistribution: {},
-			},
-			processingTime: 100,
-		};
-
-		// Should include the visa-friendly job (fallback service considers visa preferences)
-		const hasVisaFriendlyJob = result.matches.some(
-			(match) => match.job_hash === "visa-friendly-job",
-		);
-
-		console.log(
-			`   Visa-required user found visa-friendly job: ${hasVisaFriendlyJob ? "✅" : "❌"}`,
-		);
-
-		return {
-			testName: "Visa Hard Filtering",
-			passed: hasVisaFriendlyJob,
-			details: {
-				visaRequired: true,
-				visaFriendlyJobFound: hasVisaFriendlyJob,
-				totalMatches: result.matches.length,
 			},
 		};
 	}

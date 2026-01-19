@@ -1,12 +1,8 @@
 import { expect, test } from "@playwright/test";
 import {
-	PremiumTestDataFactory,
-	PremiumAuthHelper,
 	PremiumAPIHelper,
 	PremiumPerformanceHelper,
-	PremiumValidationHelper,
-	PremiumEdgeCaseGenerator,
-	PremiumAccessibilityHelper,
+	PremiumTestDataFactory,
 } from "./_helpers/premium-test-helpers";
 
 /**
@@ -30,7 +26,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 	});
 
 	test.describe("Authentication & Authorization", () => {
-		test("Match users endpoint requires system authentication", async ({ request }) => {
+		test("Match users endpoint requires system authentication", async ({
+			request,
+		}) => {
 			// Test that the main matching endpoint requires proper auth
 			const response = await request.post("/api/match-users", {
 				data: { userEmail: "test@example.com" },
@@ -40,7 +38,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			expect([401, 403]).toContain(response.status());
 		});
 
-		test("Email endpoint requires system authentication", async ({ request }) => {
+		test("Email endpoint requires system authentication", async ({
+			request,
+		}) => {
 			const response = await request.post("/api/send-scheduled-emails");
 
 			// Should require system auth
@@ -50,7 +50,7 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 		test("System authentication works", async ({ request }) => {
 			// Test with proper system authentication
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { userEmail: "test@example.com" },
 			});
 
@@ -60,7 +60,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 	});
 
 	test.describe("Business Logic - Premium vs Free Differences", () => {
-		test("Premium users get higher minimum match counts", async ({ request }) => {
+		test("Premium users get higher minimum match counts", async ({
+			request,
+		}) => {
 			// Create test users with different tiers
 			const freeUser = PremiumTestDataFactory.createFreeUser();
 			const premiumUser = PremiumTestDataFactory.createUser();
@@ -89,7 +91,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 			// If successful, check match counts
 			if (freeMatch.success && premiumMatch.success) {
-				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(freeMatch.data.matches.length);
+				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(
+					freeMatch.data.matches.length,
+				);
 				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(5); // Premium minimum
 
 				// Premium response should indicate premium processing
@@ -98,7 +102,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			}
 		});
 
-		test("Email scheduling only processes premium users", async ({ request }) => {
+		test("Email scheduling only processes premium users", async ({
+			request,
+		}) => {
 			// Create free and premium users
 			const freeUser = PremiumTestDataFactory.createFreeUser();
 			const premiumUser = PremiumTestDataFactory.createUser();
@@ -116,7 +122,7 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 			// Trigger email sending
 			const emailResponse = await request.post("/api/send-scheduled-emails", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 			});
 
 			// Email endpoint should respond (may have no users to email in test env)
@@ -130,11 +136,15 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 				expect(typeof emailData.processed).toBe("number");
 
 				// In test environment, may process premium users if they exist
-				console.log(`✅ Email scheduling processed ${emailData.processed} users`);
+				console.log(
+					`✅ Email scheduling processed ${emailData.processed} users`,
+				);
 			}
 		});
 
-		test("Premium users get stricter matching criteria", async ({ request }) => {
+		test("Premium users get stricter matching criteria", async ({
+			request,
+		}) => {
 			const premiumUser = PremiumTestHelper.generateTestUser("premium");
 
 			// Create user with very specific preferences
@@ -145,7 +155,7 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			await PremiumTestHelper.createUser(request, premiumUser);
 
 			const matchResponse = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { userEmail: premiumUser.email },
 			});
 
@@ -157,12 +167,14 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			expect(matchData.matches.length).toBeGreaterThan(0);
 		});
 
-		test("Premium users receive enhanced match metadata", async ({ request }) => {
+		test("Premium users receive enhanced match metadata", async ({
+			request,
+		}) => {
 			const premiumUser = PremiumTestHelper.generateTestUser("premium");
 			await PremiumTestHelper.createUser(request, premiumUser);
 
 			const matchResponse = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { userEmail: premiumUser.email },
 			});
 
@@ -190,28 +202,34 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 	test.describe("Performance & Scalability", () => {
 		test("Premium endpoints meet performance SLOs", async ({ request }) => {
-			const { responseTime } = await PremiumPerformanceHelper.measureResponseTime(
-				async () => await request.get("/api/health")
-			);
+			const { responseTime } =
+				await PremiumPerformanceHelper.measureResponseTime(
+					async () => await request.get("/api/health"),
+				);
 
 			expect(responseTime).toBeLessThan(100); // 100ms SLO
 		});
 
 		test("Premium matching handles load gracefully", async ({ request }) => {
 			const users = Array.from({ length: 5 }, () =>
-				PremiumTestDataFactory.createUser()
+				PremiumTestDataFactory.createUser(),
 			);
 
 			// Create multiple premium users
-			await Promise.all(users.map(user => PremiumAPIHelper.createUser(request, user)));
+			await Promise.all(
+				users.map((user) => PremiumAPIHelper.createUser(request, user)),
+			);
 
 			// Create concurrent matching operations
-			const operations = users.map(user =>
-				() => PremiumAPIHelper.runMatching(request, user.email)
+			const operations = users.map(
+				(user) => () => PremiumAPIHelper.runMatching(request, user.email),
 			);
 
 			// Measure performance
-			const metrics = await PremiumPerformanceHelper.measureConcurrentLoad(operations, 5);
+			const metrics = await PremiumPerformanceHelper.measureConcurrentLoad(
+				operations,
+				5,
+			);
 
 			// Performance assertions
 			expect(metrics.responseTime).toBeLessThan(30000); // 30 seconds total
@@ -229,7 +247,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 				// Missing required fields
 			};
 
-			const response = await request.post("/api/signup", { data: invalidUserData });
+			const response = await request.post("/api/signup", {
+				data: invalidUserData,
+			});
 			expect([400, 422]).toContain(response.status());
 
 			const errorData = await response.json();
@@ -238,16 +258,18 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 		test("Matching handles non-existent users", async ({ request }) => {
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { userEmail: "nonexistent@test.com" },
 			});
 
 			expect([400, 404]).toContain(response.status());
 		});
 
-		test("Matching endpoints handle malformed requests", async ({ request }) => {
+		test("Matching endpoints handle malformed requests", async ({
+			request,
+		}) => {
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { invalidField: "invalidValue" }, // Missing required fields
 			});
 
@@ -256,7 +278,7 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 		test("Email scheduling handles empty user base", async ({ request }) => {
 			const response = await request.post("/api/send-scheduled-emails", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 			});
 
 			// Should succeed even with no users to email
@@ -276,20 +298,20 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			};
 
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
-				data: maliciousData
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
+				data: maliciousData,
 			});
 			expect([400]).toContain(response.status());
 		});
 
 		test("Input validation handles oversized data", async ({ request }) => {
 			const oversizedData = {
-				userEmail: "a".repeat(1000) + "@test.com", // Oversized input
+				userEmail: `${"a".repeat(1000)}@test.com`, // Oversized input
 			};
 
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
-				data: oversizedData
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
+				data: oversizedData,
 			});
 			expect([400, 413]).toContain(response.status());
 		});
@@ -297,12 +319,14 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 		test("Rate limiting protects against abuse", async ({ request }) => {
 			// Make multiple rapid requests to health endpoint
 			const requests = Array.from({ length: 50 }, () =>
-				request.get("/api/health")
+				request.get("/api/health"),
 			);
 
 			const responses = await Promise.all(requests);
-			const rateLimitedCount = responses.filter(r => r.status() === 429).length;
-			const successCount = responses.filter(r => r.status() === 200).length;
+			const rateLimitedCount = responses.filter(
+				(r) => r.status() === 429,
+			).length;
+			const successCount = responses.filter((r) => r.status() === 200).length;
 
 			// Should have some successful requests and possibly some rate limited
 			expect(successCount).toBeGreaterThan(0);
@@ -322,8 +346,8 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 			// Should be able to focus on interactive elements
 			const focusedElement = page.locator(":focus");
-			const isInteractive = await focusedElement.evaluate(el =>
-				["BUTTON", "INPUT", "SELECT", "TEXTAREA", "A"].includes(el.tagName)
+			const isInteractive = await focusedElement.evaluate((el) =>
+				["BUTTON", "INPUT", "SELECT", "TEXTAREA", "A"].includes(el.tagName),
 			);
 
 			expect(isInteractive).toBe(true);
@@ -334,7 +358,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 			// Check for ARIA labels on form elements
 			const inputs = page.locator("input[aria-label], input[aria-labelledby]");
-			const buttons = page.locator("button[aria-label], button[aria-labelledby]");
+			const buttons = page.locator(
+				"button[aria-label], button[aria-labelledby]",
+			);
 
 			const inputCount = await inputs.count();
 			const buttonCount = await buttons.count();
@@ -350,7 +376,7 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			await PremiumTestHelper.createUser(request, premiumUser);
 
 			const response = await request.post("/api/match-users", {
-				headers: { "Authorization": `Bearer ${process.env.SYSTEM_API_KEY}` },
+				headers: { Authorization: `Bearer ${process.env.SYSTEM_API_KEY}` },
 				data: { userEmail: premiumUser.email },
 			});
 
@@ -371,7 +397,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			}
 		});
 
-		test("Premium health endpoint returns comprehensive data", async ({ request }) => {
+		test("Premium health endpoint returns comprehensive data", async ({
+			request,
+		}) => {
 			const response = await request.get("/api/health");
 			expect(response.status()).toBe(200);
 
@@ -387,7 +415,10 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 	});
 
 	test.describe("Cross-Browser Compatibility", () => {
-		test("Premium functionality works across browsers", async ({ page, browserName }) => {
+		test("Premium functionality works across browsers", async ({
+			page,
+			browserName,
+		}) => {
 			await page.goto("/upgrade");
 
 			const title = await page.title();
@@ -412,7 +443,10 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 			}
 
 			// Step 2: Run matching
-			const matchResult = await PremiumAPIHelper.runMatching(request, user.email);
+			const matchResult = await PremiumAPIHelper.runMatching(
+				request,
+				user.email,
+			);
 			expect(matchResult.success || matchResult.status === 400).toBe(true);
 
 			if (matchResult.success) {
@@ -424,7 +458,9 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 				// Premium should get minimum match count
 				expect(matchResult.data.matches.length).toBeGreaterThanOrEqual(5);
 
-				console.log(`✅ Complete premium user journey: ${matchResult.data.matches.length} matches found`);
+				console.log(
+					`✅ Complete premium user journey: ${matchResult.data.matches.length} matches found`,
+				);
 			}
 		});
 
@@ -456,12 +492,16 @@ test.describe("Premium Tier - Comprehensive E2E Testing", () => {
 
 			if (freeMatch.success && premiumMatch.success) {
 				// Premium should get at least as many matches as free
-				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(freeMatch.data.matches.length);
+				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(
+					freeMatch.data.matches.length,
+				);
 
 				// Premium should meet minimum threshold
 				expect(premiumMatch.data.matches.length).toBeGreaterThanOrEqual(5);
 
-				console.log(`✅ Free: ${freeMatch.data.matches.length} matches, Premium: ${premiumMatch.data.matches.length} matches`);
+				console.log(
+					`✅ Free: ${freeMatch.data.matches.length} matches, Premium: ${premiumMatch.data.matches.length} matches`,
+				);
 			}
 		});
 	});

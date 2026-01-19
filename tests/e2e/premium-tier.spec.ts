@@ -24,10 +24,11 @@ test.describe("Premium Tier - Complete User Journey", () => {
 
 		// Check if page loads (basic smoke test)
 		const currentUrl = page.url();
-		const isUpgradePage = currentUrl.includes("upgrade") || currentUrl.includes("billing");
+		const isUpgradePage =
+			currentUrl.includes("upgrade") || currentUrl.includes("billing");
 
 		// Verify page loaded successfully
-		const pageTitle = await page.title().catch(() => "");
+		const _pageTitle = await page.title().catch(() => "");
 		const hasBody = (await page.locator("body").count()) > 0;
 
 		expect(hasBody).toBe(true);
@@ -41,7 +42,7 @@ test.describe("Premium Tier - Complete User Journey", () => {
 			page.locator('input[type="email"]').count(),
 		]);
 
-		const hasAnyPremiumContent = premiumIndicators.some(count => count > 0);
+		const hasAnyPremiumContent = premiumIndicators.some((count) => count > 0);
 
 		if (isUpgradePage) {
 			console.log("✅ Premium upgrade page loads correctly");
@@ -77,7 +78,7 @@ test.describe("Premium Tier - Complete User Journey", () => {
 			page.locator("article").count(),
 		]);
 
-		const hasAnyMatchContent = matchIndicators.some(count => count > 0);
+		const hasAnyMatchContent = matchIndicators.some((count) => count > 0);
 
 		if (hasAnyMatchContent) {
 			console.log("✅ Matches page loads with content");
@@ -106,7 +107,9 @@ test.describe("Premium Tier - Complete User Journey", () => {
 
 		const responseTime = Date.now() - startTime;
 
-		console.log(`⏱️ Premium API responded in ${responseTime}ms with status: ${response.status()}`);
+		console.log(
+			`⏱️ Premium API responded in ${responseTime}ms with status: ${response.status()}`,
+		);
 
 		// Premium endpoints should respond within timeout
 		expect(responseTime).toBeLessThan(30000);
@@ -134,7 +137,9 @@ test.describe("Premium Tier - Complete User Journey", () => {
 			console.log(`✅ Premium API returned ${data.jobs.length} enhanced jobs`);
 		} else {
 			const data = await response.json().catch(() => ({}));
-			console.log(`⚠️ Premium API returned status ${status}: ${data.error || data.message || "No message"}`);
+			console.log(
+				`⚠️ Premium API returned status ${status}: ${data.error || data.message || "No message"}`,
+			);
 		}
 	});
 
@@ -228,7 +233,9 @@ test.describe("Premium Tier - Complete User Journey", () => {
 			const premiumData = await premiumResponse.json();
 
 			// Premium should have at least as many jobs as free (usually more)
-			expect(premiumData.jobs.length).toBeGreaterThanOrEqual(freeData.jobs.length);
+			expect(premiumData.jobs.length).toBeGreaterThanOrEqual(
+				freeData.jobs.length,
+			);
 
 			// Premium jobs should have additional metadata
 			if (premiumData.jobs.length > 0) {
@@ -244,7 +251,9 @@ test.describe("Premium Tier - Complete User Journey", () => {
 	test("Premium user journey - from signup to matches", async ({ page }) => {
 		const testEmail = generateTestEmail();
 
-		console.log(`🧪 Testing complete premium user journey with email: ${testEmail}`);
+		console.log(
+			`🧪 Testing complete premium user journey with email: ${testEmail}`,
+		);
 
 		// Step 1: Landing and pricing discovery
 		await page.goto("/");
@@ -283,17 +292,22 @@ test.describe("Premium Tier - Complete User Journey", () => {
 		// Skip to end if possible, or fill minimal form
 		try {
 			await page.locator('button:has-text("Continue")').first().click();
-			await page.locator('button:has-text("Get My Premium Matches")').or(
-				page.locator('button:has-text("Upgrade")')
-			).first().click();
+			await page
+				.locator('button:has-text("Get My Premium Matches")')
+				.or(page.locator('button:has-text("Upgrade")'))
+				.first()
+				.click();
 		} catch (_error) {
 			// Form might require more fields, that's okay for this test
 		}
 
 		// Verify we're in premium flow
 		const currentUrl = page.url();
-		const isPremiumFlow = currentUrl.includes("premium") || currentUrl.includes("upgrade") ||
-			currentUrl.includes("billing") || currentUrl.includes("payment");
+		const isPremiumFlow =
+			currentUrl.includes("premium") ||
+			currentUrl.includes("upgrade") ||
+			currentUrl.includes("billing") ||
+			currentUrl.includes("payment");
 
 		expect(isPremiumFlow).toBe(true);
 

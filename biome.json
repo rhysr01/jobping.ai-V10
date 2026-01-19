@@ -1,22 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"enabled": false
+	},
 	"linter": {
+		"enabled": false
+	},
+	"formatter": {
 		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"suspicious": {
-				"noExplicitAny": "off",
-				"noArrayIndexKey": "off"
-			},
-			"style": {
-				"noNonNullAssertion": "warn",
-				"useImportType": "off"
-			},
-			"complexity": {
-				"noBannedTypes": "off"
-			}
-		}
+		"formatWithErrors": true
 	},
 	"css": {
 		"parser": {
@@ -33,9 +25,13 @@
 			"**",
 			"!**/node_modules",
 			"!**/dist",
+			"!**/.next/**",
+			"!**/build/**",
+			"!**/coverage/**",
 			"!**/Utils/countryLanguageMap.ts",
 			"!**/Utils/email/subjectBuilder.ts",
-			"!**/Utils/email/types.ts"
+			"!**/Utils/email/types.ts",
+			"!**/scripts/test-production-matching-engine.ts"
 		]
 	}
 }

@@ -20,7 +20,7 @@ export function EmptyState({
 	description,
 	icon = "Target",
 	action,
-	className = ""
+	className = "",
 }: EmptyStateProps) {
 	const IconComponent = BrandIcons[icon];
 
@@ -37,9 +37,7 @@ export function EmptyState({
 			</div>
 
 			{/* Content */}
-			<h3 className="text-xl font-bold text-white mb-2">
-				{title}
-			</h3>
+			<h3 className="text-xl font-bold text-white mb-2">{title}</h3>
 			<p className="text-zinc-300 mb-6 max-w-sm mx-auto leading-relaxed">
 				{description}
 			</p>
@@ -47,10 +45,7 @@ export function EmptyState({
 			{/* Action Button */}
 			{action && (
 				<Link href={action.href}>
-					<CustomButton
-						variant={action.variant || "secondary"}
-						size="md"
-					>
+					<CustomButton variant={action.variant || "secondary"} size="md">
 						{action.label}
 					</CustomButton>
 				</Link>
@@ -69,7 +64,7 @@ export function NoMatchesEmpty() {
 			action={{
 				label: "Update Preferences",
 				href: "/preferences",
-				variant: "secondary"
+				variant: "secondary",
 			}}
 		/>
 	);
@@ -84,7 +79,7 @@ export function NetworkErrorEmpty() {
 			action={{
 				label: "Try Again",
 				href: window.location.pathname,
-				variant: "primary"
+				variant: "primary",
 			}}
 		/>
 	);
@@ -109,7 +104,7 @@ export function VisaJobsOnlyEmpty() {
 			action={{
 				label: "Update Search",
 				href: "/preferences",
-				variant: "secondary"
+				variant: "secondary",
 			}}
 		/>
 	);

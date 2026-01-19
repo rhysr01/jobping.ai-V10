@@ -3,10 +3,7 @@
 import { motion } from "framer-motion";
 import React, { useRef } from "react";
 import { CityChip } from "../ui/CityChip";
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "../ui/FormFieldFeedback";
+import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
 import { MobileNavigation } from "./MobileNavigation";
 import { showToast } from "../../lib/toast";
 import {
@@ -50,8 +47,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 
 	const [showAllCities, setShowAllCities] = React.useState(false);
 	const displayedCities = React.useMemo(
-		() => showAllCities ? ALL_CITIES : POPULAR_CITIES,
-		[showAllCities]
+		() => (showAllCities ? ALL_CITIES : POPULAR_CITIES),
+		[showAllCities],
 	);
 
 	const handleCityToggle = (city: string) => {
@@ -59,7 +56,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			navigator.vibrate(10);
 		}
 
-		const isDisabled = !formData.cities.includes(city) && formData.cities.length >= 3;
+		const isDisabled =
+			!formData.cities.includes(city) && formData.cities.length >= 3;
 		if (isDisabled) {
 			showToast.error(
 				"Maximum 3 cities selected. Deselect one to choose another.",
@@ -107,10 +105,11 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					Choose up to 3 cities for instant job matches
 				</p>
 				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-					<span className="text-sm font-medium text-blue-200">🎯 Location matters for visa sponsorship</span>
+					<span className="text-sm font-medium text-blue-200">
+						🎯 Location matters for visa sponsorship
+					</span>
 				</div>
 			</div>
-
 
 			<div>
 				<div className="flex items-center gap-2 mb-3">
@@ -120,30 +119,54 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 						className="block text-base font-bold text-white flex items-center gap-2"
 					>
 						<span>Preferred Cities</span>
-						<span className="text-error text-sm" aria-label="required">*</span>
-						<span className="text-zinc-400 font-normal text-sm">(Select up to 3)</span>
+						<span className="text-error text-sm" aria-label="required">
+							*
+						</span>
+						<span className="text-zinc-400 font-normal text-sm">
+							(Select up to 3)
+						</span>
 					</label>
 					<HoverCard>
 						<HoverCardTrigger asChild>
-							<button className="text-zinc-400 hover:text-zinc-300 transition-colors" aria-label="Help with city selection">
-								<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+							<button
+								className="text-zinc-400 hover:text-zinc-300 transition-colors"
+								aria-label="Help with city selection"
+							>
+								<svg
+									className="w-4 h-4"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
 								</svg>
 							</button>
 						</HoverCardTrigger>
 						<HoverCardContent className="w-80 p-4">
 							<div className="space-y-2">
-								<p className="text-sm font-semibold text-white">🌍 Choose your location preferences</p>
+								<p className="text-sm font-semibold text-white">
+									🌍 Choose your location preferences
+								</p>
 								<p className="text-xs text-zinc-300 leading-relaxed">
-									We'll find job matches in all selected cities. Most roles are remote-friendly,
-									so you can work from anywhere. Start with your preferred locations!
+									We'll find job matches in all selected cities. Most roles are
+									remote-friendly, so you can work from anywhere. Start with
+									your preferred locations!
 								</p>
 							</div>
 						</HoverCardContent>
 					</HoverCard>
 				</div>
-				<p id="cities-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
-					Choose cities where you'd like to work. We'll find the best matches instantly.
+				<p
+					id="cities-help"
+					className="text-sm text-zinc-400 mb-2 leading-relaxed"
+				>
+					Choose cities where you'd like to work. We'll find the best matches
+					instantly.
 				</p>
 
 				{/* Mobile-Optimized City Selection - No Map Dependency */}
@@ -158,11 +181,11 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					{displayedCities.map((city) => {
 						const isSelected = React.useMemo(
 							() => formData.cities.includes(city),
-							[formData.cities, city]
+							[formData.cities, city],
 						);
 						const isDisabled = React.useMemo(
 							() => !isSelected && formData.cities.length >= 3,
-							[isSelected, formData.cities.length]
+							[isSelected, formData.cities.length],
 						);
 						return (
 							<CityChip

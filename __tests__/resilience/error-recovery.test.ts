@@ -52,7 +52,9 @@ describe("Error Recovery & System Resilience", () => {
 			expect(healthStatus.status).toBe("degraded");
 			expect(healthStatus.services.cache.status).toBe("degraded");
 			expect(healthStatus.services.cache.responseTime).toBeGreaterThan(1000);
-			expect(healthStatus.issues).toContain("Cache response time above threshold");
+			expect(healthStatus.issues).toContain(
+				"Cache response time above threshold",
+			);
 		});
 
 		it("maintains partial functionality during outages", async () => {
@@ -62,16 +64,26 @@ describe("Error Recovery & System Resilience", () => {
 					secondary: { available: true, fallbackAvailable: false },
 				},
 
-				executeWithFallback: async (primaryService: string, secondaryService: string, operation: string) => {
+				executeWithFallback: async (
+					primaryService: string,
+					secondaryService: string,
+					operation: string,
+				) => {
 					const primary = serviceManager.services[primaryService];
 					const secondary = serviceManager.services[secondaryService];
 
 					if (primary.available) {
-						return { service: primaryService, result: `${operation} completed with primary` };
+						return {
+							service: primaryService,
+							result: `${operation} completed with primary`,
+						};
 					}
 
 					if (secondary.available) {
-						return { service: secondaryService, result: `${operation} completed with secondary (degraded)` };
+						return {
+							service: secondaryService,
+							result: `${operation} completed with secondary (degraded)`,
+						};
 					}
 
 					throw new Error("All services unavailable");
@@ -79,7 +91,11 @@ describe("Error Recovery & System Resilience", () => {
 			};
 
 			// Test with primary service down but secondary available
-			const result = await serviceManager.executeWithFallback("primary", "secondary", "data fetch");
+			const result = await serviceManager.executeWithFallback(
+				"primary",
+				"secondary",
+				"data fetch",
+			);
 
 			expect(result.service).toBe("secondary");
 			expect(result.result).toContain("degraded");
@@ -90,7 +106,9 @@ describe("Error Recovery & System Resilience", () => {
 	describe("Matching Engine Degradation", () => {
 		it("falls back to cached results when AI fails", async () => {
 			const matchingEngine = {
-				cache: new Map([["user-123", { matches: [1, 2, 3], cachedAt: Date.now() - 300000 }]]), // 5 min old
+				cache: new Map([
+					["user-123", { matches: [1, 2, 3], cachedAt: Date.now() - 300000 }],
+				]), // 5 min old
 
 				findMatches: async (userId: string) => {
 					try {
@@ -129,9 +147,13 @@ describe("Error Recovery & System Resilience", () => {
 				performBasicMatching: async (user: any, jobs: any[]) => {
 					// Simple location-based matching
 					return jobs
-						.filter(job => job.location === user.location)
+						.filter((job) => job.location === user.location)
 						.slice(0, 3)
-						.map(job => ({ job, score: 0.5, reason: "Basic location match" }));
+						.map((job) => ({
+							job,
+							score: 0.5,
+							reason: "Basic location match",
+						}));
 				},
 
 				findMatchesWithFallback: async (user: any, jobs: any[]) => {
@@ -139,7 +161,10 @@ describe("Error Recovery & System Resilience", () => {
 						return await matchingEngine.performAdvancedMatching(user, jobs);
 					} catch (error) {
 						// Fall back to basic matching
-						const basicResults = await matchingEngine.performBasicMatching(user, jobs);
+						const basicResults = await matchingEngine.performBasicMatching(
+							user,
+							jobs,
+						);
 						return {
 							matches: basicResults,
 							mode: "basic",
@@ -183,9 +208,14 @@ describe("Error Recovery & System Resilience", () => {
 
 				getJobsWithResilience: async () => {
 					const retries = [];
-					for (let attempt = 1; attempt <= matchingService.maxRetries; attempt++) {
+					for (
+						let attempt = 1;
+						attempt <= matchingService.maxRetries;
+						attempt++
+					) {
 						try {
-							const jobs = await matchingService.queryWithRetry("SELECT * FROM jobs");
+							const jobs =
+								await matchingService.queryWithRetry("SELECT * FROM jobs");
 							return { jobs, attempts: attempt, success: true };
 						} catch (error) {
 							retries.push({ attempt, error: error.message });
@@ -193,7 +223,9 @@ describe("Error Recovery & System Resilience", () => {
 								return { jobs: [], attempts: attempt, success: false, retries };
 							}
 							// Wait before retry
-							await new Promise(resolve => setTimeout(resolve, 100 * attempt));
+							await new Promise((resolve) =>
+								setTimeout(resolve, 100 * attempt),
+							);
 						}
 					}
 				},
@@ -235,7 +267,9 @@ describe("Error Recovery & System Resilience", () => {
 					const user = await signupService.createUser(userData);
 
 					try {
-						const emailResult = await signupService.sendVerificationEmail(userData.email);
+						const emailResult = await signupService.sendVerificationEmail(
+							userData.email,
+						);
 						return {
 							...user,
 							emailSent: true,
@@ -248,7 +282,8 @@ describe("Error Recovery & System Resilience", () => {
 							...user,
 							emailSent: false,
 							status: "pending_verification",
-							warning: "Verification email will be sent when service is available",
+							warning:
+								"Verification email will be sent when service is available",
 							retryScheduled: true,
 						};
 					}
@@ -279,7 +314,9 @@ describe("Error Recovery & System Resilience", () => {
 						if (op === transactionManager.shouldFailAt) {
 							// Rollback previous operations
 							transactionManager.operations = [];
-							throw new Error(`Operation ${op} failed - transaction rolled back`);
+							throw new Error(
+								`Operation ${op} failed - transaction rolled back`,
+							);
 						}
 						transactionManager.operations.push(op);
 					}
@@ -297,7 +334,11 @@ describe("Error Recovery & System Resilience", () => {
 			]);
 
 			expect(successResult.success).toBe(true);
-			expect(successResult.operations).toEqual(["create_user", "create_profile", "send_welcome_email"]);
+			expect(successResult.operations).toEqual([
+				"create_user",
+				"create_profile",
+				"send_welcome_email",
+			]);
 
 			// Test failed transaction with rollback
 			transactionManager.shouldFailAt = "create_profile";
@@ -309,7 +350,11 @@ describe("Error Recovery & System Resilience", () => {
 					"send_welcome_email",
 				]);
 			} catch (error: any) {
-				failureResult = { success: false, error: error.message, operations: transactionManager.operations };
+				failureResult = {
+					success: false,
+					error: error.message,
+					operations: transactionManager.operations,
+				};
 			}
 
 			expect(failureResult.success).toBe(false);
@@ -348,7 +393,9 @@ describe("Error Recovery & System Resilience", () => {
 					const validation = validationService.validateUserData(userData);
 
 					if (!validation.valid) {
-						throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+						throw new Error(
+							`Validation failed: ${validation.errors.join(", ")}`,
+						);
 					}
 
 					return {
@@ -370,7 +417,9 @@ describe("Error Recovery & System Resilience", () => {
 			} catch (error: any) {
 				expect(error.message).toContain("Validation failed");
 				expect(error.message).toContain("Invalid email format");
-				expect(error.message).toContain("Password must be at least 8 characters");
+				expect(error.message).toContain(
+					"Password must be at least 8 characters",
+				);
 				expect(error.message).toContain("Name is required");
 				expect(error.message).toContain("Age must be between 18 and 120");
 			}
@@ -412,7 +461,10 @@ describe("Error Recovery & System Resilience", () => {
 						const result = await operation();
 						circuitBreaker.successes++;
 
-						if (circuitBreaker.state === "half-open" && circuitBreaker.successes >= circuitBreaker.successThreshold) {
+						if (
+							circuitBreaker.state === "half-open" &&
+							circuitBreaker.successes >= circuitBreaker.successThreshold
+						) {
 							circuitBreaker.state = "closed";
 							circuitBreaker.failures = 0;
 							circuitBreaker.successes = 0;
@@ -491,7 +543,8 @@ describe("Error Recovery & System Resilience", () => {
 						return await resilientService.primaryOperation(input);
 					} catch (error) {
 						// Use fallback
-						const fallbackResult = await resilientService.fallbackOperation(input);
+						const fallbackResult =
+							await resilientService.fallbackOperation(input);
 						return {
 							...fallbackResult,
 							degraded: true,
@@ -560,7 +613,10 @@ describe("Error Recovery & System Resilience", () => {
 			const retryMechanism = {
 				attempts: [] as number[],
 
-				executeWithBackoff: async (operation: () => Promise<any>, maxRetries: number = 3) => {
+				executeWithBackoff: async (
+					operation: () => Promise<any>,
+					maxRetries: number = 3,
+				) => {
 					let lastError;
 
 					for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -572,7 +628,7 @@ describe("Error Recovery & System Resilience", () => {
 							if (attempt < maxRetries) {
 								// Exponential backoff: 100ms, 200ms, 400ms, etc.
 								const delay = 100 * Math.pow(2, attempt - 1);
-								await new Promise(resolve => setTimeout(resolve, delay));
+								await new Promise((resolve) => setTimeout(resolve, delay));
 							}
 						}
 					}
@@ -613,17 +669,22 @@ describe("Error Recovery & System Resilience", () => {
 						deploymentManager.deployingInstance = i;
 
 						// Simulate deployment time
-						await new Promise(resolve => setTimeout(resolve, 100));
+						await new Promise((resolve) => setTimeout(resolve, 100));
 
 						// Health check after deployment
 						const healthCheck = await deploymentManager.checkInstanceHealth(i);
 						if (!healthCheck.healthy) {
-							throw new Error(`Instance ${i} failed health check after deployment`);
+							throw new Error(
+								`Instance ${i} failed health check after deployment`,
+							);
 						}
 					}
 
 					deploymentManager.deployingInstance = -1;
-					return { success: true, deployedInstances: deploymentManager.activeInstances };
+					return {
+						success: true,
+						deployedInstances: deploymentManager.activeInstances,
+					};
 				},
 
 				checkInstanceHealth: async (instanceId: number) => {
@@ -635,8 +696,8 @@ describe("Error Recovery & System Resilience", () => {
 					// Route to healthy instances only
 					const availableInstances = Array.from(
 						{ length: deploymentManager.activeInstances },
-						(_, i) => i
-					).filter(i => i !== deploymentManager.deployingInstance);
+						(_, i) => i,
+					).filter((i) => i !== deploymentManager.deployingInstance);
 
 					if (availableInstances.length === 0) {
 						throw new Error("No healthy instances available during deployment");
@@ -652,7 +713,7 @@ describe("Error Recovery & System Resilience", () => {
 
 			// Make requests during deployment
 			const requestPromises = Array.from({ length: 10 }, () =>
-				deploymentManager.handleRequest()
+				deploymentManager.handleRequest(),
 			);
 
 			const [deploymentResult, requestResults] = await Promise.all([
@@ -662,7 +723,7 @@ describe("Error Recovery & System Resilience", () => {
 
 			expect(deploymentResult.success).toBe(true);
 			expect(requestResults.length).toBe(10);
-			requestResults.forEach(result => {
+			requestResults.forEach((result) => {
 				expect(result.processed).toBe(true);
 				expect(result.instance).toBeDefined();
 			});
@@ -679,15 +740,20 @@ describe("Error Recovery & System Resilience", () => {
 
 				distributeRequest: async (requestLoad: number = 1) => {
 					// Find least loaded healthy instance
-					const healthyInstances = loadBalancer.instances.filter(i => i.healthy);
+					const healthyInstances = loadBalancer.instances.filter(
+						(i) => i.healthy,
+					);
 					const leastLoaded = healthyInstances.reduce((min, current) =>
-						current.load < min.load ? current : min
+						current.load < min.load ? current : min,
 					);
 
 					leastLoaded.load += requestLoad;
 
 					// Check for degradation
-					const totalLoad = loadBalancer.instances.reduce((sum, i) => sum + i.load, 0);
+					const totalLoad = loadBalancer.instances.reduce(
+						(sum, i) => sum + i.load,
+						0,
+					);
 					const avgLoad = totalLoad / loadBalancer.instances.length;
 
 					if (avgLoad > loadBalancer.degradationThreshold) {
@@ -709,15 +775,16 @@ describe("Error Recovery & System Resilience", () => {
 			};
 
 			// Normal load - use higher load per request to trigger degradation
-			const normalRequests = Array.from({ length: 20 }, () =>
-				loadBalancer.distributeRequest(15) // Higher load to trigger degradation
+			const normalRequests = Array.from(
+				{ length: 20 },
+				() => loadBalancer.distributeRequest(15), // Higher load to trigger degradation
 			);
 			const normalResults = await Promise.all(normalRequests);
 
-			const degradedResults = normalResults.filter(r => r.degraded);
+			const degradedResults = normalResults.filter((r) => r.degraded);
 			expect(degradedResults.length).toBeGreaterThan(0); // Some requests should trigger degradation
 
-			degradedResults.forEach(result => {
+			degradedResults.forEach((result) => {
 				expect(result.message).toContain("reduced functionality");
 				expect(result.degraded).toBe(true);
 			});

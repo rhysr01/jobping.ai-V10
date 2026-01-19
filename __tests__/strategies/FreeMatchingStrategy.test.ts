@@ -4,7 +4,10 @@
  * Tests the free tier matching strategy with simple filtering and light AI
  */
 
-import { runFreeMatching, type FreeUserPreferences } from "../../../utils/strategies/FreeMatchingStrategy";
+import {
+	runFreeMatching,
+	type FreeUserPreferences,
+} from "../../../utils/strategies/FreeMatchingStrategy";
 import type { JobWithMetadata } from "../../../lib/types/job";
 
 // Mock all dependencies
@@ -26,8 +29,10 @@ jest.mock("../../../utils/matching/core/matching-engine", () => ({
 	},
 }));
 
-const mockSimplifiedMatchingEngine = require("../../../utils/matching/core/matching-engine").simplifiedMatchingEngine;
-const mockGetDatabaseClient = require("../../../utils/core/database-pool").getDatabaseClient as jest.MockedFunction<any>;
+const mockSimplifiedMatchingEngine =
+	require("../../../utils/matching/core/matching-engine").simplifiedMatchingEngine;
+const mockGetDatabaseClient = require("../../../utils/core/database-pool")
+	.getDatabaseClient as jest.MockedFunction<any>;
 
 describe("FreeMatchingStrategy - Free Tier Logic", () => {
 	let mockUser: FreeUserPreferences;
@@ -98,7 +103,9 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 
 			await runFreeMatching(mockUser, mockJobs);
 
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.objectContaining({
 					email: mockUser.email,
 					target_cities: mockUser.target_cities,
@@ -121,7 +128,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 					maxJobsForAI: 10,
 					fallbackThreshold: 2,
 					includePrefilterScore: false,
-				})
+				}),
 			);
 		});
 	});
@@ -145,13 +152,15 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 			const result = await runFreeMatching(mockUser, mockJobs);
 
 			// Should match job1 and job2 (London + tech), but not job3 (Manchester + marketing)
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.arrayContaining([
 					expect.objectContaining({ job_hash: "job1" }),
 					expect.objectContaining({ job_hash: "job2" }),
 				]),
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 
@@ -161,14 +170,16 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 			await runFreeMatching(userNoCareer, mockJobs);
 
 			// Should still filter by city but allow all careers
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.arrayContaining([
 					expect.objectContaining({ job_hash: "job1" }),
 					expect.objectContaining({ job_hash: "job2" }),
 					expect.objectContaining({ job_hash: "job3" }), // Manchester job should be included
 				]),
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 
@@ -204,7 +215,9 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 
 			await runFreeMatching(mockUser, mockJobs);
 
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.any(Array),
 				expect.objectContaining({
@@ -212,17 +225,19 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 					maxJobsForAI: 10, // Light AI for free tier
 					fallbackThreshold: 2,
 					includePrefilterScore: false,
-				})
+				}),
 			);
 		});
 
 		it("should limit results to 5 matches maximum", async () => {
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockResolvedValue({
-				matches: Array(10).fill(null).map((_, i) => ({
-					job: { ...mockJobs[0], job_hash: `job${i}` },
-					match_score: 80 + i,
-					match_reason: `Match ${i}`,
-				})),
+				matches: Array(10)
+					.fill(null)
+					.map((_, i) => ({
+						job: { ...mockJobs[0], job_hash: `job${i}` },
+						match_score: 80 + i,
+						match_reason: `Match ${i}`,
+					})),
 				method: "ai",
 				metadata: { matchingMethod: "free_ai_ranked" },
 			});
@@ -265,7 +280,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 						match_algorithm: "free_ai_ranked",
 					}),
 				]),
-				{ onConflict: "user_email,job_hash" }
+				{ onConflict: "user_email,job_hash" },
 			);
 		});
 
@@ -291,10 +306,12 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 
 		it("should handle AI matching failures", async () => {
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockRejectedValue(
-				new Error("AI service unavailable")
+				new Error("AI service unavailable"),
 			);
 
-			await expect(runFreeMatching(mockUser, mockJobs)).rejects.toThrow("AI service unavailable");
+			await expect(runFreeMatching(mockUser, mockJobs)).rejects.toThrow(
+				"AI service unavailable",
+			);
 		});
 	});
 
@@ -325,7 +342,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 					cities: mockUser.target_cities,
 					careerPath: mockUser.career_path,
 					jobsAvailable: 3,
-				})
+				}),
 			);
 		});
 
@@ -340,7 +357,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 					email: mockUser.email,
 					original: 3,
 					afterPreFilter: 2, // London + tech jobs
-				})
+				}),
 			);
 		});
 
@@ -356,7 +373,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 					inputJobs: 2,
 					outputMatches: 1,
 					method: "free_ai_ranked",
-				})
+				}),
 			);
 		});
 
@@ -370,14 +387,14 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 				expect.objectContaining({
 					email: mockUser.email,
 					count: 1,
-				})
+				}),
 			);
 		});
 
 		it("should log errors with context", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockRejectedValue(
-				new Error("AI failed")
+				new Error("AI failed"),
 			);
 
 			await expect(runFreeMatching(mockUser, mockJobs)).rejects.toThrow();
@@ -387,7 +404,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 				expect.any(Error),
 				expect.objectContaining({
 					email: mockUser.email,
-				})
+				}),
 			);
 		});
 	});

@@ -24,7 +24,10 @@ export function formatSuccessResponse(
 	userCount: number,
 ): NextResponse {
 	const processingTime = Date.now() - startTime;
-	const totalMatches = results.reduce((sum, result) => sum + (result.matches || 0), 0);
+	const totalMatches = results.reduce(
+		(sum, result) => sum + (result.matches || 0),
+		0,
+	);
 
 	return NextResponse.json({
 		success: true,

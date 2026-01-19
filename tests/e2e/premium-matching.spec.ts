@@ -16,7 +16,9 @@ test.describe("Premium Matching Behavior", () => {
 		return `test-${tier}-${timestamp}@testjobping.com`;
 	};
 
-	test("Premium users get more matches than free users", async ({ request }) => {
+	test("Premium users get more matches than free users", async ({
+		request,
+	}) => {
 		const freeEmail = generateTestEmail("free");
 		const premiumEmail = generateTestEmail("premium");
 
@@ -93,12 +95,16 @@ test.describe("Premium Matching Behavior", () => {
 		const premiumData = await premiumMatch.json();
 
 		// Premium should return at least as many matches as free
-		expect(premiumData.matches.length).toBeGreaterThanOrEqual(freeData.matches.length);
+		expect(premiumData.matches.length).toBeGreaterThanOrEqual(
+			freeData.matches.length,
+		);
 
 		// Premium should have minimum match threshold
 		expect(premiumData.matches.length).toBeGreaterThanOrEqual(5); // Premium minimum
 
-		console.log(`✅ Free: ${freeData.matches.length} matches, Premium: ${premiumData.matches.length} matches`);
+		console.log(
+			`✅ Free: ${freeData.matches.length} matches, Premium: ${premiumData.matches.length} matches`,
+		);
 	});
 
 	test("Premium users get stricter location matching", async ({ request }) => {
@@ -144,7 +150,7 @@ test.describe("Premium Matching Behavior", () => {
 		// Premium should filter out non-exact location matches
 		for (const match of matchData.matches) {
 			const jobLocation = match.job.location?.toLowerCase() || "";
-			const userCity = "berlin";
+			const _userCity = "berlin";
 
 			// Premium should only get Berlin jobs, not country-wide or other cities
 			if (jobLocation.includes("germany") && !jobLocation.includes("berlin")) {
@@ -153,7 +159,9 @@ test.describe("Premium Matching Behavior", () => {
 			}
 		}
 
-		console.log(`✅ Premium location filtering verified for ${matchData.matches.length} matches`);
+		console.log(
+			`✅ Premium location filtering verified for ${matchData.matches.length} matches`,
+		);
 	});
 
 	test("Premium users get career path strict matching", async ({ request }) => {
@@ -200,7 +208,7 @@ test.describe("Premium Matching Behavior", () => {
 		for (const match of matchData.matches) {
 			const jobCategories = match.job.categories || [];
 			const hasStrategy = jobCategories.some((cat: string) =>
-				cat.toLowerCase().includes("strategy")
+				cat.toLowerCase().includes("strategy"),
 			);
 
 			if (!hasStrategy) {
@@ -209,10 +217,14 @@ test.describe("Premium Matching Behavior", () => {
 			}
 		}
 
-		console.log(`✅ Premium career path filtering verified for ${matchData.matches.length} matches`);
+		console.log(
+			`✅ Premium career path filtering verified for ${matchData.matches.length} matches`,
+		);
 	});
 
-	test("Premium matching includes enhanced scoring data", async ({ request }) => {
+	test("Premium matching includes enhanced scoring data", async ({
+		request,
+	}) => {
 		const premiumEmail = generateTestEmail("premium");
 
 		console.log(`🧪 Testing premium enhanced scoring for ${premiumEmail}`);
@@ -268,13 +280,17 @@ test.describe("Premium Matching Behavior", () => {
 			expect(match.score_breakdown).toHaveProperty("skills");
 		}
 
-		console.log(`✅ Premium enhanced scoring verified for ${matchData.matches.length} matches`);
+		console.log(
+			`✅ Premium enhanced scoring verified for ${matchData.matches.length} matches`,
+		);
 	});
 
 	test("Premium users bypass relaxed matching rules", async ({ request }) => {
 		const premiumEmail = generateTestEmail("premium");
 
-		console.log(`🧪 Testing premium relaxed matching bypass for ${premiumEmail}`);
+		console.log(
+			`🧪 Testing premium relaxed matching bypass for ${premiumEmail}`,
+		);
 
 		// Create premium user with very restrictive preferences
 		await request.post("/api/signup", {
@@ -324,7 +340,9 @@ test.describe("Premium Matching Behavior", () => {
 			expect(reason).not.toContain("flexible");
 		}
 
-		console.log(`✅ Premium strict matching verified for ${matchData.matches.length} matches`);
+		console.log(
+			`✅ Premium strict matching verified for ${matchData.matches.length} matches`,
+		);
 	});
 
 	test("Premium matching performance is optimized", async ({ request }) => {
@@ -385,10 +403,14 @@ test.describe("Premium Matching Behavior", () => {
 		expect(matchData).toHaveProperty("jobs_analyzed");
 		expect(matchData.jobs_analyzed).toBeGreaterThan(50); // Premium analyzes more
 
-		console.log(`✅ Premium matching completed in ${duration}ms, analyzed ${matchData.jobs_analyzed} jobs`);
+		console.log(
+			`✅ Premium matching completed in ${duration}ms, analyzed ${matchData.jobs_analyzed} jobs`,
+		);
 	});
 
-	test("Premium match quality is higher than free tier", async ({ request }) => {
+	test("Premium match quality is higher than free tier", async ({
+		request,
+	}) => {
 		const freeEmail = generateTestEmail("free");
 		const premiumEmail = generateTestEmail("premium");
 
@@ -415,10 +437,20 @@ test.describe("Premium Matching Behavior", () => {
 
 		await Promise.all([
 			request.post("/api/signup", {
-				data: { ...userData, fullName: "Free Quality Test", email: freeEmail, tier: "free" },
+				data: {
+					...userData,
+					fullName: "Free Quality Test",
+					email: freeEmail,
+					tier: "free",
+				},
 			}),
 			request.post("/api/signup", {
-				data: { ...userData, fullName: "Premium Quality Test", email: premiumEmail, tier: "premium" },
+				data: {
+					...userData,
+					fullName: "Premium Quality Test",
+					email: premiumEmail,
+					tier: "premium",
+				},
 			}),
 		]);
 
@@ -445,17 +477,27 @@ test.describe("Premium Matching Behavior", () => {
 		const premiumData = await premiumMatch.json();
 
 		// Calculate average match quality
-		const freeAvgScore = freeData.matches.length > 0
-			? freeData.matches.reduce((sum: number, match: any) => sum + match.match_score, 0) / freeData.matches.length
-			: 0;
+		const freeAvgScore =
+			freeData.matches.length > 0
+				? freeData.matches.reduce(
+						(sum: number, match: any) => sum + match.match_score,
+						0,
+					) / freeData.matches.length
+				: 0;
 
-		const premiumAvgScore = premiumData.matches.length > 0
-			? premiumData.matches.reduce((sum: number, match: any) => sum + match.match_score, 0) / premiumData.matches.length
-			: 0;
+		const premiumAvgScore =
+			premiumData.matches.length > 0
+				? premiumData.matches.reduce(
+						(sum: number, match: any) => sum + match.match_score,
+						0,
+					) / premiumData.matches.length
+				: 0;
 
 		// Premium should have higher average match quality
 		expect(premiumAvgScore).toBeGreaterThanOrEqual(freeAvgScore);
 
-		console.log(`✅ Match quality - Free: ${freeAvgScore.toFixed(1)}, Premium: ${premiumAvgScore.toFixed(1)}`);
+		console.log(
+			`✅ Match quality - Free: ${freeAvgScore.toFixed(1)}, Premium: ${premiumAvgScore.toFixed(1)}`,
+		);
 	});
 });

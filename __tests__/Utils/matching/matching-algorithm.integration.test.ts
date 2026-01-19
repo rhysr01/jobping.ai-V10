@@ -32,7 +32,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/london-software-1",
-				description: "React, TypeScript, Node.js software engineering role with mentorship and growth opportunities",
+				description:
+					"React, TypeScript, Node.js software engineering role with mentorship and growth opportunities",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
@@ -56,7 +57,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/london-software-2",
-				description: "Junior developer position for recent graduates with Python, JavaScript, and SQL skills",
+				description:
+					"Junior developer position for recent graduates with Python, JavaScript, and SQL skills",
 				experience_required: "entry-level",
 				work_environment: "remote",
 				source: "test",
@@ -81,7 +83,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "Berlin",
 				country: "Germany",
 				job_url: "https://example.com/berlin-data-1",
-				description: "Data analysis role for graduates with SQL, Python, and Excel skills",
+				description:
+					"Data analysis role for graduates with SQL, Python, and Excel skills",
 				experience_required: "entry-level",
 				work_environment: "office",
 				source: "test",
@@ -105,7 +108,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "Berlin",
 				country: "Germany",
 				job_url: "https://example.com/berlin-data-2",
-				description: "Junior data scientist with Python, pandas, and machine learning experience",
+				description:
+					"Junior data scientist with Python, pandas, and machine learning experience",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
@@ -130,7 +134,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "Paris",
 				country: "France",
 				job_url: "https://example.com/paris-marketing-1",
-				description: "Digital marketing role for recent graduates with SEO, content, and social media skills",
+				description:
+					"Digital marketing role for recent graduates with SEO, content, and social media skills",
 				experience_required: "entry-level",
 				work_environment: "office",
 				source: "test",
@@ -155,7 +160,8 @@ describe("Matching Algorithm Integration", () => {
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/mixed-role",
-				description: "Role combining technical and marketing skills with analytics and growth expertise",
+				description:
+					"Role combining technical and marketing skills with analytics and growth expertise",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
@@ -186,7 +192,8 @@ describe("Matching Algorithm Integration", () => {
 			company_types: ["tech"],
 			roles_selected: ["software-engineer"],
 			subscription_tier: "free",
-			career_keywords: "javascript,react,python,sql,data analysis,machine learning", // Production field: specific skills
+			career_keywords:
+				"javascript,react,python,sql,data analysis,machine learning", // Production field: specific skills
 		};
 
 		// User with single preferences (baseline test)
@@ -209,13 +216,19 @@ describe("Matching Algorithm Integration", () => {
 	describe("40% Career Path Relevance Threshold", () => {
 		it("should include jobs with partial relevance above 40% threshold", () => {
 			// Test with job that has 2/3 relevant categories (66% relevance)
-			const partialJob = testJobs.find(job => job.job_hash === "mixed-role-tech-marketing")!;
+			const partialJob = testJobs.find(
+				(job) => job.job_hash === "mixed-role-tech-marketing",
+			)!;
 			const userWithTechOnly = {
 				...singlePreferenceUser,
 				career_path: ["Tech & Transformation"], // Only wants tech
 			};
 
-			const results = fallbackService.generateFallbackMatches([partialJob], userWithTechOnly, 1);
+			const results = fallbackService.generateFallbackMatches(
+				[partialJob],
+				userWithTechOnly,
+				1,
+			);
 
 			expect(results.length).toBe(1);
 			expect(results[0].unifiedScore.overall).toBeGreaterThan(0);
@@ -223,13 +236,19 @@ describe("Matching Algorithm Integration", () => {
 		});
 
 		it("should give partial scores to jobs below 100% relevance", () => {
-			const partialJob = testJobs.find(job => job.job_hash === "mixed-role-tech-marketing")!;
+			const partialJob = testJobs.find(
+				(job) => job.job_hash === "mixed-role-tech-marketing",
+			)!;
 			const userWithTechOnly = {
 				...singlePreferenceUser,
 				career_path: ["Tech & Transformation"],
 			};
 
-			const results = fallbackService.generateFallbackMatches([partialJob], userWithTechOnly, 1);
+			const results = fallbackService.generateFallbackMatches(
+				[partialJob],
+				userWithTechOnly,
+				1,
+			);
 
 			// Job has 2/3 relevant categories, so should get partial relevance score
 			expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
@@ -250,7 +269,11 @@ describe("Matching Algorithm Integration", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const results = fallbackService.generateFallbackMatches([irrelevantJob], userWithTechOnly, 1);
+			const results = fallbackService.generateFallbackMatches(
+				[irrelevantJob],
+				userWithTechOnly,
+				1,
+			);
 
 			expect(results.length).toBe(1);
 			// Should get low relevance score (less than 50)
@@ -260,31 +283,41 @@ describe("Matching Algorithm Integration", () => {
 
 	describe("Balanced Distribution Logic", () => {
 		it("should distribute across multiple cities when user has multiple preferences", () => {
-			const results = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 6);
+			const results = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				6,
+			);
 
 			expect(results.length).toBeGreaterThan(0);
 
 			// Extract cities from matched jobs
-			const matchedCities = results.map(match => {
-				const job = testJobs.find(j => j.job_hash === match.job.job_hash);
-				return job?.city;
-			}).filter(Boolean);
+			const matchedCities = results
+				.map((match) => {
+					const job = testJobs.find((j) => j.job_hash === match.job.job_hash);
+					return job?.city;
+				})
+				.filter(Boolean);
 
 			const uniqueCities = [...new Set(matchedCities)];
 			expect(uniqueCities.length).toBeGreaterThan(1); // Should have representation from multiple cities
 		});
 
 		it("should distribute across multiple career paths when user has multiple preferences", () => {
-			const results = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 6);
+			const results = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				6,
+			);
 
 			// Count tech vs data jobs
-			const techJobs = results.filter(match => {
-				const job = testJobs.find(j => j.job_hash === match.job.job_hash);
+			const techJobs = results.filter((match) => {
+				const job = testJobs.find((j) => j.job_hash === match.job.job_hash);
 				return job?.categories?.includes("tech-transformation");
 			});
 
-			const dataJobs = results.filter(match => {
-				const job = testJobs.find(j => j.job_hash === match.job.job_hash);
+			const dataJobs = results.filter((match) => {
+				const job = testJobs.find((j) => j.job_hash === match.job.job_hash);
 				return job?.categories?.includes("data-analytics");
 			});
 
@@ -294,14 +327,18 @@ describe("Matching Algorithm Integration", () => {
 		});
 
 		it("should work normally with single user preferences", () => {
-			const results = fallbackService.generateFallbackMatches(testJobs, singlePreferenceUser, 3);
+			const results = fallbackService.generateFallbackMatches(
+				testJobs,
+				singlePreferenceUser,
+				3,
+			);
 
 			expect(results.length).toBeGreaterThan(0);
 			expect(results.length).toBeLessThanOrEqual(3);
 
 			// All results should be from London (single city preference)
-			const nonLondonJobs = results.filter(match => {
-				const job = testJobs.find(j => j.job_hash === match.job.job_hash);
+			const nonLondonJobs = results.filter((match) => {
+				const job = testJobs.find((j) => j.job_hash === match.job.job_hash);
 				return job?.city !== "London";
 			});
 
@@ -311,9 +348,13 @@ describe("Matching Algorithm Integration", () => {
 
 	describe("End-to-End Matching Flow", () => {
 		it("should produce valid match results with all required fields", () => {
-			const results = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 5);
+			const results = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				5,
+			);
 
-			results.forEach(match => {
+			results.forEach((match) => {
 				// Validate match structure
 				expect(match).toHaveProperty("job");
 				expect(match).toHaveProperty("unifiedScore");
@@ -343,34 +384,56 @@ describe("Matching Algorithm Integration", () => {
 
 				// Validate match quality from unified score
 				expect(match.unifiedScore.explanation?.scoreMeaning).toBeDefined();
-				expect(["excellent", "good", "fair", "low", "poor"]).toContain(match.unifiedScore.explanation?.scoreMeaning);
+				expect(["excellent", "good", "fair", "low", "poor"]).toContain(
+					match.unifiedScore.explanation?.scoreMeaning,
+				);
 			});
 		});
 
 		it("should handle edge cases gracefully", () => {
 			// Test with empty job list
-			const emptyResults = fallbackService.generateFallbackMatches([], multiPreferenceUser, 5);
+			const emptyResults = fallbackService.generateFallbackMatches(
+				[],
+				multiPreferenceUser,
+				5,
+			);
 			expect(emptyResults).toEqual([]);
 
 			// Test with very few jobs
 			const fewJobs = testJobs.slice(0, 1);
-			const fewResults = fallbackService.generateFallbackMatches(fewJobs, multiPreferenceUser, 5);
+			const fewResults = fallbackService.generateFallbackMatches(
+				fewJobs,
+				multiPreferenceUser,
+				5,
+			);
 			expect(fewResults.length).toBe(1);
 
 			// Test with high limit
-			const highLimitResults = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 20);
+			const highLimitResults = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				20,
+			);
 			expect(highLimitResults.length).toBe(testJobs.length);
 		});
 
 		it("should be deterministic with same inputs", () => {
-			const results1 = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 4);
-			const results2 = fallbackService.generateFallbackMatches(testJobs, multiPreferenceUser, 4);
+			const results1 = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				4,
+			);
+			const results2 = fallbackService.generateFallbackMatches(
+				testJobs,
+				multiPreferenceUser,
+				4,
+			);
 
 			expect(results1.length).toBe(results2.length);
 
 			// Compare scores (allowing for small timing variations)
-			const scores1 = results1.map(m => m.unifiedScore.overall).sort();
-			const scores2 = results2.map(m => m.unifiedScore.overall).sort();
+			const scores1 = results1.map((m) => m.unifiedScore.overall).sort();
+			const scores2 = results2.map((m) => m.unifiedScore.overall).sort();
 
 			expect(scores1.length).toBe(scores2.length);
 			scores1.forEach((score, index) => {
@@ -385,7 +448,11 @@ describe("Matching Algorithm Integration", () => {
 			const borderlineJob: Job = {
 				...testJobs[0],
 				job_hash: "borderline-job",
-				categories: ["early-career", "tech-transformation", "operations-supply-chain"], // 1/3 = 33% relevance
+				categories: [
+					"early-career",
+					"tech-transformation",
+					"operations-supply-chain",
+				], // 1/3 = 33% relevance
 				title: "Technical Operations Specialist",
 			};
 
@@ -394,33 +461,64 @@ describe("Matching Algorithm Integration", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const results = fallbackService.generateFallbackMatches([borderlineJob], userWithTechFocus, 1);
+			const results = fallbackService.generateFallbackMatches(
+				[borderlineJob],
+				userWithTechFocus,
+				1,
+			);
 
 			expect(results.length).toBe(1);
-					// With new 40% threshold, this job should be included with partial scoring
-					expect(results[0].unifiedScore.overall).toBeGreaterThan(0);
-					expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
+			// With new 40% threshold, this job should be included with partial scoring
+			expect(results[0].unifiedScore.overall).toBeGreaterThan(0);
+			expect(results[0].unifiedScore.components.relevance).toBeGreaterThan(0);
 		});
 
 		it("should show balanced results across diverse job pool", () => {
 			// Add more jobs to create a diverse pool
 			const additionalJobs: Job[] = [
-				{ ...testJobs[0], job_hash: "extra-tech-1", categories: ["early-career", "tech-transformation"] },
-				{ ...testJobs[0], job_hash: "extra-tech-2", categories: ["early-career", "tech-transformation"] },
-				{ ...testJobs[1], job_hash: "extra-data-1", categories: ["early-career", "data-analytics"] },
-				{ ...testJobs[1], job_hash: "extra-data-2", categories: ["early-career", "data-analytics"] },
-				{ ...testJobs[2], job_hash: "extra-marketing-1", categories: ["early-career", "marketing-growth"] },
+				{
+					...testJobs[0],
+					job_hash: "extra-tech-1",
+					categories: ["early-career", "tech-transformation"],
+				},
+				{
+					...testJobs[0],
+					job_hash: "extra-tech-2",
+					categories: ["early-career", "tech-transformation"],
+				},
+				{
+					...testJobs[1],
+					job_hash: "extra-data-1",
+					categories: ["early-career", "data-analytics"],
+				},
+				{
+					...testJobs[1],
+					job_hash: "extra-data-2",
+					categories: ["early-career", "data-analytics"],
+				},
+				{
+					...testJobs[2],
+					job_hash: "extra-marketing-1",
+					categories: ["early-career", "marketing-growth"],
+				},
 			];
 
 			const diverseJobPool = [...testJobs, ...additionalJobs];
-			const results = fallbackService.generateFallbackMatches(diverseJobPool, multiPreferenceUser, 8);
+			const results = fallbackService.generateFallbackMatches(
+				diverseJobPool,
+				multiPreferenceUser,
+				8,
+			);
 
 			// Analyze distribution
 			const categoryCounts: Record<string, number> = {};
-			results.forEach(match => {
-				const job = diverseJobPool.find(j => j.job_hash === match.job.job_hash);
-				job?.categories?.forEach(cat => {
-					if (cat !== "early-career") { // Skip common category
+			results.forEach((match) => {
+				const job = diverseJobPool.find(
+					(j) => j.job_hash === match.job.job_hash,
+				);
+				job?.categories?.forEach((cat) => {
+					if (cat !== "early-career") {
+						// Skip common category
 						categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
 					}
 				});

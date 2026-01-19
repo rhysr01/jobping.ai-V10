@@ -34,7 +34,9 @@ describe("Job Application Flow", () => {
 			};
 
 			expect(applicationTracking.totalApplications).toBeGreaterThan(0);
-			expect(applicationTracking.uniqueUsers).toBeLessThanOrEqual(applicationTracking.totalApplications);
+			expect(applicationTracking.uniqueUsers).toBeLessThanOrEqual(
+				applicationTracking.totalApplications,
+			);
 			expect(applicationTracking.conversionRate).toBeGreaterThan(0);
 			expect(applicationTracking.conversionRate).toBeLessThan(1);
 			expect(applicationTracking.abandonRate).toBeGreaterThan(0);
@@ -44,17 +46,27 @@ describe("Job Application Flow", () => {
 		it("should handle job link validation", async () => {
 			const linkValidationResults = [
 				{ url: "https://example.com/job1", status: "valid", accessible: true },
-				{ url: "https://expired-job.com/job2", status: "expired", accessible: false },
-				{ url: "https://broken-link.com/job3", status: "broken", accessible: false },
+				{
+					url: "https://expired-job.com/job2",
+					status: "expired",
+					accessible: false,
+				},
+				{
+					url: "https://broken-link.com/job3",
+					status: "broken",
+					accessible: false,
+				},
 			];
 
-			linkValidationResults.forEach(result => {
+			linkValidationResults.forEach((result) => {
 				expect(result.url).toBeDefined();
 				expect(["valid", "expired", "broken"]).toContain(result.status);
 				expect(typeof result.accessible).toBe("boolean");
 			});
 
-			const validLinks = linkValidationResults.filter(r => r.accessible).length;
+			const validLinks = linkValidationResults.filter(
+				(r) => r.accessible,
+			).length;
 			const totalLinks = linkValidationResults.length;
 			const accessibilityRate = validLinks / totalLinks;
 
@@ -86,7 +98,7 @@ describe("Job Application Flow", () => {
 				},
 			];
 
-			linkHealthScenarios.forEach(scenario => {
+			linkHealthScenarios.forEach((scenario) => {
 				expect(scenario.url).toBeDefined();
 				expect(scenario.status).toBeDefined();
 				expect(scenario.responseTime).toBeGreaterThanOrEqual(0);
@@ -142,7 +154,7 @@ describe("Job Application Flow", () => {
 			expect(antiBotDetection.indicators.length).toBeGreaterThan(0);
 			expect(antiBotDetection.responses.length).toBeGreaterThan(0);
 
-			antiBotDetection.responses.forEach(response => {
+			antiBotDetection.responses.forEach((response) => {
 				expect(response.message).toBeDefined();
 				expect(response.blocked).toBe(true);
 			});
@@ -223,7 +235,9 @@ describe("Job Application Flow", () => {
 			});
 
 			// Verify no conflicts in tracking
-			const uniqueSessions = new Set(concurrentApplications.map(app => app.sessionId));
+			const uniqueSessions = new Set(
+				concurrentApplications.map((app) => app.sessionId),
+			);
 			expect(uniqueSessions.size).toBe(5);
 		});
 	});
@@ -246,19 +260,19 @@ describe("Job Application Flow", () => {
 				totalRequests: 20,
 			};
 
-			expect(spamPrevention.blockedRequests + spamPrevention.allowedRequests).toBe(spamPrevention.totalRequests);
-			expect(spamPrevention.blockedRequests).toBeGreaterThan(spamPrevention.allowedRequests);
+			expect(
+				spamPrevention.blockedRequests + spamPrevention.allowedRequests,
+			).toBe(spamPrevention.totalRequests);
+			expect(spamPrevention.blockedRequests).toBeGreaterThan(
+				spamPrevention.allowedRequests,
+			);
 			expect(spamPrevention.tracking.ipAddresses.size).toBeGreaterThan(0);
 			expect(spamPrevention.tracking.userAgents.has("Bot/1.0")).toBe(true);
 		});
 
 		it("should validate job hash format", async () => {
 			const hashValidation = {
-				validHashes: [
-					"abc123def456",
-					"job-789-xyz",
-					"application_12345",
-				],
+				validHashes: ["abc123def456", "job-789-xyz", "application_12345"],
 				invalidHashes: [
 					"../etc/passwd",
 					"../../../sensitive-file",
@@ -273,16 +287,22 @@ describe("Job Application Flow", () => {
 				},
 			};
 
-			hashValidation.validHashes.forEach(hash => {
-				expect(hash.length).toBeLessThanOrEqual(hashValidation.validationRules.maxLength);
-				expect(hashValidation.validationRules.allowedChars.test(hash)).toBe(true);
+			hashValidation.validHashes.forEach((hash) => {
+				expect(hash.length).toBeLessThanOrEqual(
+					hashValidation.validationRules.maxLength,
+				);
+				expect(hashValidation.validationRules.allowedChars.test(hash)).toBe(
+					true,
+				);
 			});
 
-			hashValidation.invalidHashes.forEach(hash => {
-				expect(hash.length > hashValidation.validationRules.maxLength ||
-					   !hashValidation.validationRules.allowedChars.test(hash) ||
-					   hash.includes("../") ||
-					   hash.includes("<script>")).toBe(true);
+			hashValidation.invalidHashes.forEach((hash) => {
+				expect(
+					hash.length > hashValidation.validationRules.maxLength ||
+						!hashValidation.validationRules.allowedChars.test(hash) ||
+						hash.includes("../") ||
+						hash.includes("<script>"),
+				).toBe(true);
 			});
 		});
 
@@ -303,14 +323,18 @@ describe("Job Application Flow", () => {
 				loggedIncidents: 4,
 			};
 
-			traversalPrevention.attackVectors.forEach(vector => {
+			traversalPrevention.attackVectors.forEach((vector) => {
 				expect(vector.includes("../") || vector.includes("..\\")).toBe(true);
 			});
 
 			expect(traversalPrevention.sanitization.removeDots).toBe(true);
 			expect(traversalPrevention.sanitization.validatePath).toBe(true);
-			expect(traversalPrevention.blockedAttempts).toBe(traversalPrevention.attackVectors.length);
-			expect(traversalPrevention.loggedIncidents).toBe(traversalPrevention.attackVectors.length);
+			expect(traversalPrevention.blockedAttempts).toBe(
+				traversalPrevention.attackVectors.length,
+			);
+			expect(traversalPrevention.loggedIncidents).toBe(
+				traversalPrevention.attackVectors.length,
+			);
 		});
 	});
 
@@ -337,13 +361,14 @@ describe("Job Application Flow", () => {
 				},
 				{
 					scenario: "network_timeout",
-					message: "Connection timeout. Please check your internet and try again.",
+					message:
+						"Connection timeout. Please check your internet and try again.",
 					actionable: true,
 					userFriendly: true,
 				},
 			];
 
-			errorMessages.forEach(error => {
+			errorMessages.forEach((error) => {
 				expect(error.message).toBeDefined();
 				expect(error.message.length).toBeGreaterThan(10);
 				expect(error.userFriendly).toBe(true);
@@ -354,9 +379,9 @@ describe("Job Application Flow", () => {
 		it("should handle network timeouts gracefully", async () => {
 			const timeoutHandling = {
 				thresholds: {
-					warning: 5000,   // Show warning after 5 seconds
-					timeout: 15000,  // Give up after 15 seconds
-					retry: 3000,     // Wait 3 seconds before retry
+					warning: 5000, // Show warning after 5 seconds
+					timeout: 15000, // Give up after 15 seconds
+					retry: 3000, // Wait 3 seconds before retry
 				},
 				userFeedback: [
 					{ time: 0, message: "Connecting to job site..." },
@@ -372,11 +397,13 @@ describe("Job Application Flow", () => {
 				],
 			};
 
-			expect(timeoutHandling.thresholds.warning).toBeLessThan(timeoutHandling.thresholds.timeout);
+			expect(timeoutHandling.thresholds.warning).toBeLessThan(
+				timeoutHandling.thresholds.timeout,
+			);
 			expect(timeoutHandling.userFeedback.length).toBeGreaterThan(2);
 			expect(timeoutHandling.fallbackOptions.length).toBeGreaterThan(0);
 
-			timeoutHandling.userFeedback.forEach(feedback => {
+			timeoutHandling.userFeedback.forEach((feedback) => {
 				expect(feedback.time).toBeGreaterThanOrEqual(0);
 				expect(feedback.message).toBeDefined();
 			});
@@ -395,7 +422,7 @@ describe("Job Application Flow", () => {
 					name: "external_job_board",
 					description: "Redirect to external job posting site",
 					userExperience: "good",
-					successRate: 0.90,
+					successRate: 0.9,
 					loadTime: "2-5 seconds",
 				},
 				{
@@ -409,16 +436,18 @@ describe("Job Application Flow", () => {
 					name: "manual_link",
 					description: "Provide link for manual application",
 					userExperience: "basic",
-					successRate: 0.70,
+					successRate: 0.7,
 					loadTime: "immediate",
 				},
 			];
 
-			redirectStrategies.forEach(strategy => {
+			redirectStrategies.forEach((strategy) => {
 				expect(strategy.name).toBeDefined();
 				expect(strategy.successRate).toBeGreaterThan(0.5);
 				expect(strategy.successRate).toBeLessThanOrEqual(1);
-				expect(["seamless", "good", "controlled", "basic"]).toContain(strategy.userExperience);
+				expect(["seamless", "good", "controlled", "basic"]).toContain(
+					strategy.userExperience,
+				);
 			});
 		});
 	});
@@ -431,16 +460,23 @@ describe("Job Application Flow", () => {
 					jobsApplied: 120,
 					applicationsSuccessful: 96,
 					conversionRate: 0.12, // 12% of viewed jobs result in applications
-					successRate: 0.80,    // 80% of applications succeed
+					successRate: 0.8, // 80% of applications succeed
 				},
 				timeBasedTracking: {
 					applicationsByHour: {
-						"9": 15, "10": 25, "11": 30, "12": 12, "13": 18, "14": 10, "15": 8, "16": 2,
+						"9": 15,
+						"10": 25,
+						"11": 30,
+						"12": 12,
+						"13": 18,
+						"14": 10,
+						"15": 8,
+						"16": 2,
 					},
 					conversionBySource: {
 						matches_page: 0.15,
 						email_digest: 0.08,
-						search_results: 0.10,
+						search_results: 0.1,
 						direct_link: 0.05,
 					},
 				},
@@ -451,58 +487,69 @@ describe("Job Application Flow", () => {
 				},
 			};
 
-			expect(conversionAnalytics.funnelMetrics.applicationsSuccessful).toBeLessThanOrEqual(conversionAnalytics.funnelMetrics.jobsApplied);
+			expect(
+				conversionAnalytics.funnelMetrics.applicationsSuccessful,
+			).toBeLessThanOrEqual(conversionAnalytics.funnelMetrics.jobsApplied);
 			expect(conversionAnalytics.funnelMetrics.conversionRate).toBe(
-				conversionAnalytics.funnelMetrics.jobsApplied / conversionAnalytics.funnelMetrics.jobsViewed
+				conversionAnalytics.funnelMetrics.jobsApplied /
+					conversionAnalytics.funnelMetrics.jobsViewed,
 			);
 			expect(conversionAnalytics.funnelMetrics.successRate).toBe(
-				conversionAnalytics.funnelMetrics.applicationsSuccessful / conversionAnalytics.funnelMetrics.jobsApplied
+				conversionAnalytics.funnelMetrics.applicationsSuccessful /
+					conversionAnalytics.funnelMetrics.jobsApplied,
 			);
 
 			// Premium users should have higher conversion rates
-			expect(conversionAnalytics.userSegmentation.premiumUsers.conversionRate).toBeGreaterThan(
-				conversionAnalytics.userSegmentation.newUsers.conversionRate
+			expect(
+				conversionAnalytics.userSegmentation.premiumUsers.conversionRate,
+			).toBeGreaterThan(
+				conversionAnalytics.userSegmentation.newUsers.conversionRate,
 			);
 		});
 
 		it("should measure job link quality", async () => {
 			const linkQualityMetrics = {
 				overallQuality: {
-					validLinks: 0.94,      // 94% of links are accessible
-					brokenLinks: 0.03,     // 3% are completely broken
-					expiredLinks: 0.02,    // 2% have expired
-					requiresAction: 0.01,  // 1% require manual intervention
+					validLinks: 0.94, // 94% of links are accessible
+					brokenLinks: 0.03, // 3% are completely broken
+					expiredLinks: 0.02, // 2% have expired
+					requiresAction: 0.01, // 1% require manual intervention
 				},
 				responseTimeDistribution: {
-					fast: 0.65,     // < 2 seconds
-					medium: 0.25,   // 2-5 seconds
-					slow: 0.08,     // 5-10 seconds
-					timeout: 0.02,  // > 10 seconds
+					fast: 0.65, // < 2 seconds
+					medium: 0.25, // 2-5 seconds
+					slow: 0.08, // 5-10 seconds
+					timeout: 0.02, // > 10 seconds
 				},
 				linkTypes: {
 					direct: { count: 850, successRate: 0.96, avgResponseTime: 1.2 },
 					external: { count: 120, successRate: 0.89, avgResponseTime: 3.8 },
 					expired: { count: 25, successRate: 0.12, avgResponseTime: 0 },
-					broken: { count: 5, successRate: 0.00, avgResponseTime: 0 },
+					broken: { count: 5, successRate: 0.0, avgResponseTime: 0 },
 				},
 				qualityBySource: {
 					reed: { qualityScore: 0.92, issues: ["some redirects"] },
-					indeed: { qualityScore: 0.88, issues: ["captcha blocks", "expired links"] },
+					indeed: {
+						qualityScore: 0.88,
+						issues: ["captcha blocks", "expired links"],
+					},
 					linkedin: { qualityScore: 0.95, issues: ["login required"] },
 					company: { qualityScore: 0.98, issues: [] },
 				},
 			};
 
-			expect(linkQualityMetrics.overallQuality.validLinks +
-				   linkQualityMetrics.overallQuality.brokenLinks +
-				   linkQualityMetrics.overallQuality.expiredLinks +
-				   linkQualityMetrics.overallQuality.requiresAction).toBe(1);
+			expect(
+				linkQualityMetrics.overallQuality.validLinks +
+					linkQualityMetrics.overallQuality.brokenLinks +
+					linkQualityMetrics.overallQuality.expiredLinks +
+					linkQualityMetrics.overallQuality.requiresAction,
+			).toBe(1);
 
 			expect(linkQualityMetrics.linkTypes.direct.successRate).toBeGreaterThan(
-				linkQualityMetrics.linkTypes.external.successRate
+				linkQualityMetrics.linkTypes.external.successRate,
 			);
 
-			Object.values(linkQualityMetrics.qualityBySource).forEach(source => {
+			Object.values(linkQualityMetrics.qualityBySource).forEach((source) => {
 				expect(source.qualityScore).toBeGreaterThanOrEqual(0);
 				expect(source.qualityScore).toBeLessThanOrEqual(1);
 			});
@@ -532,8 +579,8 @@ describe("Job Application Flow", () => {
 					{
 						step: "application_complete",
 						users: 960,
-						conversion: 0.80, // 80% of starters complete applications
-						dropoff: 0.20,
+						conversion: 0.8, // 80% of starters complete applications
+						dropoff: 0.2,
 					},
 					{
 						step: "follow_up",
@@ -572,11 +619,15 @@ describe("Job Application Flow", () => {
 			}
 
 			// Validate abandon reasons add up to reasonable total
-			const totalAbandonRate = Object.values(funnelAnalytics.abandonReasons).reduce((a, b) => a + b, 0);
+			const totalAbandonRate = Object.values(
+				funnelAnalytics.abandonReasons,
+			).reduce((a, b) => a + b, 0);
 			expect(totalAbandonRate).toBeGreaterThan(0.95); // Should account for most abandons
 
 			expect(funnelAnalytics.timeToConvert.average).toBeGreaterThan(0);
-			expect(funnelAnalytics.improvementOpportunities.length).toBeGreaterThan(0);
+			expect(funnelAnalytics.improvementOpportunities.length).toBeGreaterThan(
+				0,
+			);
 		});
 	});
 });

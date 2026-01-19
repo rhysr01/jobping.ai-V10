@@ -39,9 +39,8 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 	shouldShowError,
 	getDisabledMessage,
 }: Step1FreeBasicsProps) {
-
 	const handleEmailChange = (value: string | boolean) => {
-		setFormData({ ...formData, email: typeof value === 'string' ? value : '' });
+		setFormData({ ...formData, email: typeof value === "string" ? value : "" });
 		setFieldErrors((prev) => {
 			const next = { ...prev };
 			delete next.email;
@@ -49,10 +48,9 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 		});
 	};
 
-
 	// Keyboard navigation enhancement
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter' && !loading && isStepValid) {
+		if (e.key === "Enter" && !loading && isStepValid) {
 			e.preventDefault();
 			setStep(2);
 		}
@@ -61,19 +59,18 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 	const handleEmailBlur = () => {
 		setTouchedFields((prev) => new Set(prev).add("email"));
 		if (emailValidation.error || fieldErrors.email) {
-			announce(
-				fieldErrors.email || emailValidation.error || "",
-				"assertive",
-			);
+			announce(fieldErrors.email || emailValidation.error || "", "assertive");
 		} else if (emailValidation.isValid) {
 			announce("Email address is valid", "polite");
 			showToast.success("Email verified! ✓");
 		}
 	};
 
-
 	// Use proper navigation validation instead of local validation
-	const isStepValid = formData.fullName.trim() && formData.email.trim() && emailValidation.isValid;
+	const isStepValid =
+		formData.fullName.trim() &&
+		formData.email.trim() &&
+		emailValidation.isValid;
 
 	return (
 		<motion.div
@@ -88,14 +85,19 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 			onKeyDown={handleKeyDown}
 		>
 			<div className="mb-6 sm:mb-8">
-				<h2 id="step1-heading" className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				<h2
+					id="step1-heading"
+					className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+				>
 					Get your matches
 				</h2>
 				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
 					Enter your email to receive 5 personalized job matches instantly
 				</p>
 				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-					<span className="text-sm font-medium text-emerald-200">⚡ Free • Instant • No commitment</span>
+					<span className="text-sm font-medium text-emerald-200">
+						⚡ Free • Instant • No commitment
+					</span>
 				</div>
 			</div>
 
@@ -108,7 +110,10 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 						type="text"
 						value={formData.fullName}
 						onChange={(value) => {
-							setFormData({ ...formData, fullName: typeof value === 'string' ? value : '' });
+							setFormData({
+								...formData,
+								fullName: typeof value === "string" ? value : "",
+							});
 							setFieldErrors((prev) => {
 								const next = { ...prev };
 								delete next.fullName;
@@ -119,15 +124,29 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 							setTouchedFields((prev) => new Set(prev).add("fullName"));
 						}}
 						onKeyDown={(e) => {
-							if (e.key === 'Enter') {
+							if (e.key === "Enter") {
 								e.preventDefault();
-								const emailInput = document.getElementById('email');
+								const emailInput = document.getElementById("email");
 								emailInput?.focus();
 							}
 						}}
 						placeholder="John Smith"
-						error={fieldErrors.fullName || (shouldShowError("fullName", formData.fullName.length > 0, formData.fullName.trim().length >= 2) ? "Name is required" : undefined)}
-						success={formData.fullName.length > 0 && formData.fullName.trim().length >= 2 ? "Looks good!" : undefined}
+						error={
+							fieldErrors.fullName ||
+							(shouldShowError(
+								"fullName",
+								formData.fullName.length > 0,
+								formData.fullName.trim().length >= 2,
+							)
+								? "Name is required"
+								: undefined)
+						}
+						success={
+							formData.fullName.length > 0 &&
+							formData.fullName.trim().length >= 2
+								? "Looks good!"
+								: undefined
+						}
 						autoComplete="name"
 						inputMode="text"
 						autoFocus
@@ -142,15 +161,28 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 						onChange={handleEmailChange}
 						onBlur={handleEmailBlur}
 						onKeyDown={(e) => {
-							if (e.key === 'Enter' && isStepValid && !loading) {
+							if (e.key === "Enter" && isStepValid && !loading) {
 								e.preventDefault();
 								setStep(2);
 							}
 						}}
 						placeholder="you@example.com"
 						helpText="Get 5 instant job matches - no spam, no commitment"
-						error={fieldErrors.email || (shouldShowError("email", formData.email.length > 0, emailValidation.isValid) ? emailValidation.error : undefined)}
-						success={formData.email.length > 0 && emailValidation.isValid ? "Perfect! ✓" : undefined}
+						error={
+							fieldErrors.email ||
+							(shouldShowError(
+								"email",
+								formData.email.length > 0,
+								emailValidation.isValid,
+							)
+								? emailValidation.error
+								: undefined)
+						}
+						success={
+							formData.email.length > 0 && emailValidation.isValid
+								? "Perfect! ✓"
+								: undefined
+						}
 						autoComplete="email"
 						inputMode="email"
 					/>
@@ -164,7 +196,7 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 			<div className="flex justify-center mt-8">
 				<button
 					onClick={() => {
-						console.log('Button clicked');
+						console.log("Button clicked");
 						// setStep(2);
 					}}
 					disabled={!isStepValid || loading}

@@ -113,9 +113,9 @@ export default function BillingPage({
 			if (!userEmail) return;
 
 			try {
-				const response = await apiCallJson("/api/user/verification-status", {
+				const response = (await apiCallJson("/api/user/verification-status", {
 					method: "GET",
-				}) as { verified: boolean; email?: string };
+				})) as { verified: boolean; email?: string };
 				setEmailVerified(response.verified);
 			} catch (err) {
 				console.error("Failed to check verification status:", err);
@@ -493,7 +493,8 @@ export default function BillingPage({
 								<div className="text-left">
 									<h3 className="text-xl font-bold mb-2">Check Your Email</h3>
 									<p className="text-zinc-400 mb-4">
-										We sent a verification link to <strong className="text-white">{userEmail}</strong>
+										We sent a verification link to{" "}
+										<strong className="text-white">{userEmail}</strong>
 									</p>
 									<ul className="text-sm text-zinc-400 space-y-1">
 										<li>• Click the link to verify your email</li>
@@ -512,7 +513,9 @@ export default function BillingPage({
 									I've Verified My Email
 								</CustomButton>
 								<CustomButton
-									onClick={() => window.open("mailto:contact@getjobping.com", "_blank")}
+									onClick={() =>
+										window.open("mailto:contact@getjobping.com", "_blank")
+									}
 									variant="secondary"
 									size="sm"
 								>
@@ -522,7 +525,13 @@ export default function BillingPage({
 						</div>
 
 						<div className="text-sm text-zinc-500">
-							Need a new verification email? <a href="/signup/verify" className="text-purple-400 hover:text-purple-300 underline">Resend verification</a>
+							Need a new verification email?{" "}
+							<a
+								href="/signup/verify"
+								className="text-purple-400 hover:text-purple-300 underline"
+							>
+								Resend verification
+							</a>
 						</div>
 					</div>
 				</div>

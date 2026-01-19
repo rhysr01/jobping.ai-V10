@@ -101,16 +101,22 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 	describe("Normal AI Success Path", () => {
 		beforeEach(() => {
 			// Mock successful prefilter
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
 			} as PrefilterResult);
 
 			// Mock successful AI matching
-			const mockAIMatchingService = require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
+			const mockAIMatchingService =
+				require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
 			mockAIMatchingService.findMatches.mockResolvedValue([
 				{
 					job: mockJobs[0],
@@ -170,14 +176,15 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 		it("should call prefilter with freshness tiers", async () => {
 			await engine.findMatchesForUser(mockUser, mockJobs);
 
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			expect(mockPrefilterService.prefilterJobs).toHaveBeenCalledWith(
 				expect.arrayContaining([
 					expect.objectContaining({
 						freshnessTier: "fresh",
 					}),
 				]),
-				mockUser
+				mockUser,
 			);
 		});
 
@@ -190,7 +197,7 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				expect.objectContaining({
 					userEmail: mockUser.email,
 					aiMatches: 1,
-				})
+				}),
 			);
 		});
 
@@ -206,20 +213,29 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 	describe("AI Failure → Fallback Success Path", () => {
 		beforeEach(() => {
 			// Mock successful prefilter
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
 			} as PrefilterResult);
 
 			// Mock AI failure
-			const mockAIMatchingService = require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
-			mockAIMatchingService.findMatches.mockRejectedValue(new Error("AI service unavailable"));
+			const mockAIMatchingService =
+				require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
+			mockAIMatchingService.findMatches.mockRejectedValue(
+				new Error("AI service unavailable"),
+			);
 
 			// Mock fallback success
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([
 				{
 					job: mockJobs[0],
@@ -281,18 +297,19 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				expect.any(Error),
 				expect.objectContaining({
 					userEmail: mockUser.email,
-				})
+				}),
 			);
 		});
 
 		it("should call fallback service when AI fails", async () => {
 			await engine.findMatchesForUser(mockUser, mockJobs);
 
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			expect(mockFallbackService.generateFallbackMatches).toHaveBeenCalledWith(
 				mockJobs,
 				mockUser,
-				6 // fallbackThreshold * 2 (3 * 2)
+				6, // fallbackThreshold * 2 (3 * 2)
 			);
 		});
 	});
@@ -300,7 +317,8 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 	describe("Prefilter Returns No Jobs", () => {
 		beforeEach(() => {
 			// Mock prefilter returning no jobs
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
 				jobs: [],
 				matchLevel: "broad",
@@ -309,7 +327,8 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 			} as PrefilterResult);
 
 			// Mock emergency fallback
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([
 				{
 					job: mockJobs[0],
@@ -370,22 +389,28 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				expect.objectContaining({
 					userEmail: mockUser.email,
 					totalJobs: 1,
-				})
+				}),
 			);
 		});
 	});
 
 	describe("AI Disabled - Fallback Only", () => {
 		beforeEach(() => {
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
 			} as PrefilterResult);
 
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([
 				{
 					job: mockJobs[0],
@@ -444,23 +469,30 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				useAI: false,
 			});
 
-			const mockAIMatchingService = require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
+			const mockAIMatchingService =
+				require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
 			expect(mockAIMatchingService.findMatches).not.toHaveBeenCalled();
 		});
 	});
 
 	describe("Duplicate Match Removal", () => {
 		beforeEach(() => {
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
 			} as PrefilterResult);
 
 			// Mock AI returning matches
-			const mockAIMatchingService = require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
+			const mockAIMatchingService =
+				require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
 			mockAIMatchingService.findMatches.mockResolvedValue([
 				{
 					job: mockJobs[0],
@@ -478,7 +510,8 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 			]);
 
 			// Mock fallback also returning the same job
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([
 				{
 					job: mockJobs[0], // Same job
@@ -562,11 +595,15 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 	describe("Error Handling - Emergency Fallback", () => {
 		beforeEach(() => {
 			// Mock prefilter failure
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
-			mockPrefilterService.prefilterJobs.mockRejectedValue(new Error("Prefilter crashed"));
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			mockPrefilterService.prefilterJobs.mockRejectedValue(
+				new Error("Prefilter crashed"),
+			);
 
 			// Mock emergency fallback
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([
 				{
 					job: mockJobs[0],
@@ -630,22 +667,28 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				expect.objectContaining({
 					userEmail: mockUser.email,
 					totalJobs: 1,
-				})
+				}),
 			);
 		});
 	});
 
 	describe("Custom Options", () => {
 		beforeEach(() => {
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
 			} as PrefilterResult);
 
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			mockFallbackService.generateFallbackMatches.mockReturnValue([]);
 		});
 
@@ -654,11 +697,12 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				maxJobsForAI: 5,
 			});
 
-			const mockAIMatchingService = require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
+			const mockAIMatchingService =
+				require("../../../../utils/matching/core/ai-matching.service").aiMatchingService;
 			expect(mockAIMatchingService.findMatches).toHaveBeenCalledWith(
 				mockUser,
 				expect.any(Array), // Should be limited to 5 jobs
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 
@@ -667,22 +711,24 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 				fallbackThreshold: 2,
 			});
 
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			expect(mockFallbackService.generateFallbackMatches).toHaveBeenCalledWith(
 				expect.any(Array),
 				mockUser,
-				4 // 2 * 2
+				4, // 2 * 2
 			);
 		});
 
 		it("should use default options when none provided", async () => {
 			await engine.findMatchesForUser(mockUser, mockJobs);
 
-			const mockFallbackService = require("../../../../utils/matching/core/fallback.service").fallbackService;
+			const mockFallbackService =
+				require("../../../../utils/matching/core/fallback.service").fallbackService;
 			expect(mockFallbackService.generateFallbackMatches).toHaveBeenCalledWith(
 				expect.any(Array),
 				mockUser,
-				6 // 3 * 2 (default fallbackThreshold)
+				6, // 3 * 2 (default fallbackThreshold)
 			);
 		});
 	});
@@ -713,9 +759,14 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 		});
 
 		it("should log final matching results", async () => {
-			const mockPrefilterService = require("../../../../utils/matching/core/prefilter.service").prefilterService;
+			const mockPrefilterService =
+				require("../../../../utils/matching/core/prefilter.service").prefilterService;
 			mockPrefilterService.prefilterJobs.mockResolvedValue({
-				jobs: mockJobs.map(job => ({ ...job, freshnessTier: "fresh", prefilterScore: 80 })),
+				jobs: mockJobs.map((job) => ({
+					...job,
+					freshnessTier: "fresh",
+					prefilterScore: 80,
+				})),
 				matchLevel: "exact",
 				filteredCount: 1,
 				sourceDistribution: { test: 1 },
@@ -735,7 +786,7 @@ describe("SimplifiedMatchingEngine - 100% Coverage", () => {
 						prefilteredJobs: 1,
 						processingTime: expect.any(Number),
 					}),
-				})
+				}),
 			);
 		});
 	});

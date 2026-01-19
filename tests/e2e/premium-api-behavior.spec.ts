@@ -136,7 +136,7 @@ test.describe("Premium API Behavior", () => {
 					Authorization: `Bearer ${process.env.SYSTEM_API_KEY}`,
 				},
 				data: { userEmail: freeEmail },
-			})
+			}),
 		);
 
 		const premiumRequests = Array.from({ length: 25 }, () =>
@@ -145,7 +145,7 @@ test.describe("Premium API Behavior", () => {
 					Authorization: `Bearer ${process.env.SYSTEM_API_KEY}`,
 				},
 				data: { userEmail: premiumEmail },
-			})
+			}),
 		);
 
 		const [freeResponses, premiumResponses] = await Promise.all([
@@ -154,19 +154,27 @@ test.describe("Premium API Behavior", () => {
 		]);
 
 		// Count successful responses
-		const freeSuccesses = freeResponses.filter(r => r.status() === 200).length;
-		const premiumSuccesses = premiumResponses.filter(r => r.status() === 200).length;
+		const freeSuccesses = freeResponses.filter(
+			(r) => r.status() === 200,
+		).length;
+		const premiumSuccesses = premiumResponses.filter(
+			(r) => r.status() === 200,
+		).length;
 
 		// Premium should have higher success rate or more allowed requests
 		expect(premiumSuccesses).toBeGreaterThanOrEqual(freeSuccesses);
 
-		console.log(`✅ Rate limits - Free: ${freeSuccesses}/15, Premium: ${premiumSuccesses}/25`);
+		console.log(
+			`✅ Rate limits - Free: ${freeSuccesses}/15, Premium: ${premiumSuccesses}/25`,
+		);
 	});
 
 	test("Premium users get enhanced API responses", async ({ request }) => {
 		const premiumEmail = generateTestEmail();
 
-		console.log(`🧪 Testing premium enhanced API responses for ${premiumEmail}`);
+		console.log(
+			`🧪 Testing premium enhanced API responses for ${premiumEmail}`,
+		);
 
 		// Create premium user
 		await request.post("/api/signup", {
@@ -308,7 +316,9 @@ test.describe("Premium API Behavior", () => {
 		// Premium should have processing metadata
 		if (premiumData.processing_time && freeData.processing_time) {
 			// Premium might be processed faster (priority queue)
-			console.log(`⏱️ Processing times - Free: ${freeData.processing_time}ms, Premium: ${premiumData.processing_time}ms`);
+			console.log(
+				`⏱️ Processing times - Free: ${freeData.processing_time}ms, Premium: ${premiumData.processing_time}ms`,
+			);
 		}
 
 		console.log("✅ Premium priority processing verified");
@@ -317,7 +327,9 @@ test.describe("Premium API Behavior", () => {
 	test("Premium users get enhanced error handling", async ({ request }) => {
 		const premiumEmail = generateTestEmail();
 
-		console.log(`🧪 Testing premium enhanced error handling for ${premiumEmail}`);
+		console.log(
+			`🧪 Testing premium enhanced error handling for ${premiumEmail}`,
+		);
 
 		// Create premium user
 		await request.post("/api/signup", {
@@ -362,7 +374,7 @@ test.describe("Premium API Behavior", () => {
 		console.log(`🧪 Testing premium data retention for ${premiumEmail}`);
 
 		// Create premium user
-		const signupTime = new Date().toISOString();
+		const _signupTime = new Date().toISOString();
 		await request.post("/api/signup", {
 			data: {
 				fullName: "Premium Retention Test",
@@ -375,7 +387,9 @@ test.describe("Premium API Behavior", () => {
 		});
 
 		// Test data retention settings
-		const retentionResponse = await request.get(`/api/users/${premiumEmail}/retention`);
+		const retentionResponse = await request.get(
+			`/api/users/${premiumEmail}/retention`,
+		);
 		if (retentionResponse.status() === 200) {
 			const retentionData = await retentionResponse.json();
 
@@ -425,7 +439,9 @@ test.describe("Premium API Behavior", () => {
 		});
 
 		// Check usage analytics
-		const analyticsResponse = await request.get(`/api/analytics/usage/${premiumEmail}`);
+		const analyticsResponse = await request.get(
+			`/api/analytics/usage/${premiumEmail}`,
+		);
 		if (analyticsResponse.status() === 200) {
 			const analyticsData = await analyticsResponse.json();
 
@@ -440,7 +456,9 @@ test.describe("Premium API Behavior", () => {
 			// Should track premium features usage
 			expect(analyticsData.premium_metrics).toHaveProperty("features_used");
 
-			console.log(`✅ Premium analytics: ${analyticsData.premium_metrics.api_calls} API calls tracked`);
+			console.log(
+				`✅ Premium analytics: ${analyticsData.premium_metrics.api_calls} API calls tracked`,
+			);
 		} else {
 			console.log("⚠️ Analytics endpoint not available");
 		}

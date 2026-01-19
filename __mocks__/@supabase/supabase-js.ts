@@ -253,7 +253,7 @@ class MockFilterBuilder implements FilterBuilder {
 				limitCount: this.limitCount,
 				isSingle: this.isSingle,
 			});
-			if (this.table === 'users') {
+			if (this.table === "users") {
 				console.log(`Users table data:`, tableData);
 			}
 		}
@@ -312,7 +312,9 @@ class MockFilterBuilder implements FilterBuilder {
 
 		// Handle count queries
 		if ((this as any).countOptions?.count === "exact") {
-			console.log(`Count query for table ${this.table}, filteredData length: ${filteredData.length}, tableData length: ${global.__SB_MOCK__[this.table]?.length || 0}`);
+			console.log(
+				`Count query for table ${this.table}, filteredData length: ${filteredData.length}, tableData length: ${global.__SB_MOCK__[this.table]?.length || 0}`,
+			);
 			const tableData = global.__SB_MOCK__[this.table] || [];
 			const count = tableData.length;
 			console.log(`Returning count ${count} for table ${this.table}`);
@@ -359,7 +361,8 @@ class MockFilterBuilder implements FilterBuilder {
 				(existing) =>
 					existing.job_hash === data.job_hash ||
 					existing.id === data.id ||
-					(existing.email === data.email && existing.token_hash === data.token_hash),
+					(existing.email === data.email &&
+						existing.token_hash === data.token_hash),
 			);
 
 			if (existingIndex >= 0) {

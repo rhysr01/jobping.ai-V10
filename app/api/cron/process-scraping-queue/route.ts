@@ -107,7 +107,10 @@ const processScrapingQueueHandler = asyncHandler(
 					` Completed scraping job ${job.id} for ${scraperType}: ${scraperResult.jobsScraped} jobs`,
 				);
 			} catch (error) {
-				apiLogger.error(` Failed to process scraping job ${job.id}:`, error as Error);
+				apiLogger.error(
+					` Failed to process scraping job ${job.id}:`,
+					error as Error,
+				);
 
 				// Handle failure with retry logic
 				const newAttempts = (job.attempts || 0) + 1;

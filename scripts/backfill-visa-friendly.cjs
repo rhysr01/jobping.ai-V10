@@ -3,13 +3,15 @@
 /**
  * Backfill visa_friendly field for existing jobs in database
  * Runs visa detection on job descriptions and updates the visa_friendly field
- * 
+ *
  * Usage: node scripts/backfill-visa-friendly.cjs [--batch-size=100] [--limit=10000]
  */
 
 require("dotenv").config({ path: ".env.local" });
 const { createClient } = require("@supabase/supabase-js");
-const { detectVisaFriendliness } = require("../scrapers/shared/visa-detection.cjs");
+const {
+	detectVisaFriendliness,
+} = require("../scrapers/shared/visa-detection.cjs");
 
 function getSupabase() {
 	const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -62,7 +64,9 @@ async function backfillVisaFriendly(options = {}) {
 			break;
 		}
 
-		console.log(`\n📦 Processing batch: ${jobs.length} jobs (offset: ${offset})`);
+		console.log(
+			`\n📦 Processing batch: ${jobs.length} jobs (offset: ${offset})`,
+		);
 
 		// Process each job
 		const updates = [];
@@ -100,7 +104,7 @@ async function backfillVisaFriendly(options = {}) {
 			const updateBatchSize = 50;
 			for (let i = 0; i < updates.length; i += updateBatchSize) {
 				const batch = updates.slice(i, i + updateBatchSize);
-				
+
 				// Use upsert for batch update
 				const updatePromises = batch.map((update) =>
 					supabase
@@ -110,13 +114,11 @@ async function backfillVisaFriendly(options = {}) {
 				);
 
 				const results = await Promise.all(updatePromises);
-				
+
 				// Check for errors
 				const errors = results.filter((r) => r.error);
 				if (errors.length > 0) {
-					console.warn(
-						`   ⚠️  ${errors.length} update errors in this batch`,
-					);
+					console.warn(`   ⚠️  ${errors.length} update errors in this batch`);
 					errors.forEach((err) => {
 						console.warn("   Error:", err.error?.message);
 					});
@@ -157,7 +159,9 @@ async function backfillVisaFriendly(options = {}) {
 		.is("visa_friendly", null)
 		.eq("is_active", true);
 
-	console.log(`\n📋 Remaining jobs with NULL visa_friendly: ${remainingNull || 0}`);
+	console.log(
+		`\n📋 Remaining jobs with NULL visa_friendly: ${remainingNull || 0}`,
+	);
 }
 
 // Parse command line arguments
@@ -181,4 +185,3 @@ backfillVisaFriendly(options)
 		console.error("\n❌ Script failed:", error);
 		process.exit(1);
 	});
-

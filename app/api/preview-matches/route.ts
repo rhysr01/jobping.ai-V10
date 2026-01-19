@@ -38,7 +38,13 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 	try {
 		const body: PreviewMatchesRequest = await req.json();
-		const { cities, careerPath, visaSponsorship, limit = 3, isPreview = false } = body;
+		const {
+			cities,
+			careerPath,
+			visaSponsorship,
+			limit = 3,
+			isPreview = false,
+		} = body;
 
 		// Validate required fields
 		if (!cities || !Array.isArray(cities) || cities.length === 0) {
@@ -226,7 +232,9 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 				jobsQuery.in("city", cityArray);
 			}
 
-			jobsQuery.or("is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}");
+			jobsQuery.or(
+				"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
+			);
 
 			if (visaSponsorship === "need-sponsorship") {
 				jobsQuery.eq("visa_friendly", true);
@@ -241,11 +249,11 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 				apiLogger.warn("Failed to fetch job previews", jobsError, {
 					cities,
 					limit,
-					requestId
+					requestId,
 				});
 			} else if (jobsData) {
 				// Add basic match scoring (simplified)
-				matches = jobsData.map(job => ({
+				matches = jobsData.map((job) => ({
 					id: job.id,
 					title: job.title,
 					company: job.company,
@@ -255,7 +263,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 					job_url: job.job_url,
 					posted_at: job.posted_at,
 					match_score: Math.floor(Math.random() * 30) + 70, // Simplified scoring
-					match_reason: "Location and career match"
+					match_reason: "Location and career match",
 				}));
 			}
 		}

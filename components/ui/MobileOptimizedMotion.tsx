@@ -1,11 +1,11 @@
 "use client";
 
-import { ReactNode, lazy, Suspense } from "react";
+import { lazy, ReactNode, Suspense } from "react";
 import { useWindowSize } from "@/hooks/useWindowSize";
 
 // Dynamic import for framer-motion to reduce bundle size
 const MotionDiv = lazy(() =>
-	import("framer-motion").then((mod) => ({ default: mod.motion.div }))
+	import("framer-motion").then((mod) => ({ default: mod.motion.div })),
 );
 
 interface MobileOptimizedMotionProps {
@@ -49,11 +49,7 @@ export function MobileOptimizedMotion({
 
 	// On mobile, render as regular div without motion props
 	if (isMobile) {
-		return (
-			<div className={className}>
-				{children}
-			</div>
-		);
+		return <div className={className}>{children}</div>;
 	}
 
 	// On desktop, render as dynamically imported motion component

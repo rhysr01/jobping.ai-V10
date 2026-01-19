@@ -76,40 +76,47 @@ test.describe("Premium Email Delivery", () => {
 		}
 
 		// Log successful test completion
-		console.log(`✅ Premium user signup and digest creation completed for ${testEmail}`);
+		console.log(
+			`✅ Premium user signup and digest creation completed for ${testEmail}`,
+		);
 		console.log("📧 Emails would be sent by scheduled cron job in production");
 	});
 
-	test("Premium email templates include enhanced features", async ({ request }) => {
+	test("Premium email templates include enhanced features", async ({
+		request,
+	}) => {
 		console.log("🧪 Testing premium email template features");
 
 		const testEmail = generateTestEmail();
 
 		// Test template generation for premium user
-		const templateResponse = await request.post("/api/email/generate-template", {
-			data: {
-				tier: "premium",
-				userEmail: testEmail,
-				templateType: "weekly-matches",
-				matchCount: 8,
-				jobs: [
-					{
-						id: 1,
-						title: "Senior Software Engineer",
-						company: "Tech Corp",
-						location: "London, UK",
-						match_score: 95,
-					},
-					{
-						id: 2,
-						title: "Full Stack Developer",
-						company: "Startup Inc",
-						location: "Berlin, Germany",
-						match_score: 88,
-					},
-				],
+		const templateResponse = await request.post(
+			"/api/email/generate-template",
+			{
+				data: {
+					tier: "premium",
+					userEmail: testEmail,
+					templateType: "weekly-matches",
+					matchCount: 8,
+					jobs: [
+						{
+							id: 1,
+							title: "Senior Software Engineer",
+							company: "Tech Corp",
+							location: "London, UK",
+							match_score: 95,
+						},
+						{
+							id: 2,
+							title: "Full Stack Developer",
+							company: "Startup Inc",
+							location: "Berlin, Germany",
+							match_score: 88,
+						},
+					],
+				},
 			},
-		});
+		);
 
 		if (templateResponse.status() === 200) {
 			const templateData = await templateResponse.json();
@@ -132,7 +139,9 @@ test.describe("Premium Email Delivery", () => {
 
 			console.log("✅ Premium email template features verified");
 		} else {
-			console.log(`⚠️ Template generation not available (status: ${templateResponse.status()})`);
+			console.log(
+				`⚠️ Template generation not available (status: ${templateResponse.status()})`,
+			);
 		}
 	});
 
@@ -157,9 +166,13 @@ test.describe("Premium Email Delivery", () => {
 			expect(scheduleData).toHaveProperty("isPremium");
 			expect(scheduleData.isPremium).toBe(true);
 
-			console.log(`✅ Premium scheduling: ${scheduleData.frequency}, ${scheduleData.jobsPerSend} jobs`);
+			console.log(
+				`✅ Premium scheduling: ${scheduleData.frequency}, ${scheduleData.jobsPerSend} jobs`,
+			);
 		} else {
-			console.log(`⚠️ Schedule endpoint not available (status: ${scheduleResponse.status()})`);
+			console.log(
+				`⚠️ Schedule endpoint not available (status: ${scheduleResponse.status()})`,
+			);
 		}
 	});
 
@@ -195,11 +208,15 @@ test.describe("Premium Email Delivery", () => {
 
 			console.log("✅ Premium email tracking verified");
 		} else {
-			console.log(`⚠️ Email tracking not available (status: ${trackingResponse.status()})`);
+			console.log(
+				`⚠️ Email tracking not available (status: ${trackingResponse.status()})`,
+			);
 		}
 
 		// Test analytics retrieval
-		const analyticsResponse = await request.get(`/api/email/analytics/${testEmail}`);
+		const analyticsResponse = await request.get(
+			`/api/email/analytics/${testEmail}`,
+		);
 
 		if (analyticsResponse.status() === 200) {
 			const analyticsData = await analyticsResponse.json();
@@ -271,14 +288,17 @@ test.describe("Premium Email Delivery", () => {
 		}
 
 		// Test preference updates
-		const preferenceResponse = await request.put(`/api/email/preferences/${testEmail}`, {
-			data: {
-				tier: "premium",
-				frequency: "biweekly", // Premium users might have options
-				jobTypes: ["graduate", "experienced"],
-				regions: ["Europe"],
+		const preferenceResponse = await request.put(
+			`/api/email/preferences/${testEmail}`,
+			{
+				data: {
+					tier: "premium",
+					frequency: "biweekly", // Premium users might have options
+					jobTypes: ["graduate", "experienced"],
+					regions: ["Europe"],
+				},
 			},
-		});
+		);
 
 		if (preferenceResponse.status() === 200) {
 			const preferenceData = await preferenceResponse.json();

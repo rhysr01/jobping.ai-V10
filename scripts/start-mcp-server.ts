@@ -1,9 +1,9 @@
 #!/usr/bin/env tsx
 
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { config as dotenvConfig } from "dotenv";
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
 
 async function startMCPServer() {
 	try {
@@ -157,10 +157,18 @@ async function startMCPServer() {
 		console.log("");
 
 		console.log("🎭 Playwright Tools:");
-		console.log("  • playwright_take_screenshot - Take webpage screenshots with Playwright");
-		console.log("  • playwright_analyze_design - Analyze webpage design metrics");
-		console.log("  • playwright_run_test_scenario - Execute browser test scenarios");
-		console.log("  • playwright_compare_pages - Compare two webpages side by side");
+		console.log(
+			"  • playwright_take_screenshot - Take webpage screenshots with Playwright",
+		);
+		console.log(
+			"  • playwright_analyze_design - Analyze webpage design metrics",
+		);
+		console.log(
+			"  • playwright_run_test_scenario - Execute browser test scenarios",
+		);
+		console.log(
+			"  • playwright_compare_pages - Compare two webpages side by side",
+		);
 		console.log("");
 
 		console.log("✅ Server started successfully (PID:", child.pid, ")");

@@ -30,13 +30,27 @@ const extractCountryFromLocation = (location: string): string => {
 	const trimmed = location.trim();
 	// Simple city to country mapping for known cities
 	const cityMap: Record<string, string> = {
-		"Dublin": "Ireland", "Belfast": "Ireland",
-		"London": "United Kingdom", "Manchester": "United Kingdom", "Birmingham": "United Kingdom",
-		"Paris": "France", "Amsterdam": "Netherlands", "Brussels": "Belgium",
-		"Berlin": "Germany", "Hamburg": "Germany", "Munich": "Germany",
-		"Zurich": "Switzerland", "Madrid": "Spain", "Barcelona": "Spain",
-		"Milan": "Italy", "Rome": "Italy", "Stockholm": "Sweden",
-		"Copenhagen": "Denmark", "Vienna": "Austria", "Prague": "Czech Republic", "Warsaw": "Poland"
+		Dublin: "Ireland",
+		Belfast: "Ireland",
+		London: "United Kingdom",
+		Manchester: "United Kingdom",
+		Birmingham: "United Kingdom",
+		Paris: "France",
+		Amsterdam: "Netherlands",
+		Brussels: "Belgium",
+		Berlin: "Germany",
+		Hamburg: "Germany",
+		Munich: "Germany",
+		Zurich: "Switzerland",
+		Madrid: "Spain",
+		Barcelona: "Spain",
+		Milan: "Italy",
+		Rome: "Italy",
+		Stockholm: "Sweden",
+		Copenhagen: "Denmark",
+		Vienna: "Austria",
+		Prague: "Czech Republic",
+		Warsaw: "Poland",
 	};
 	return cityMap[trimmed] || trimmed;
 };

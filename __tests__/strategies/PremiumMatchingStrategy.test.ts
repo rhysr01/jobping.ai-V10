@@ -4,7 +4,10 @@
  * Tests the premium tier matching strategy with comprehensive filtering and deep AI
  */
 
-import { runPremiumMatching, type PremiumUserPreferences } from "../../../utils/strategies/PremiumMatchingStrategy";
+import {
+	runPremiumMatching,
+	type PremiumUserPreferences,
+} from "../../../utils/strategies/PremiumMatchingStrategy";
 import type { JobWithMetadata } from "../../../lib/types/job";
 
 // Mock all dependencies
@@ -26,8 +29,10 @@ jest.mock("../../../utils/matching/core/matching-engine", () => ({
 	},
 }));
 
-const mockSimplifiedMatchingEngine = require("../../../utils/matching/core/matching-engine").simplifiedMatchingEngine;
-const mockGetDatabaseClient = require("../../../utils/core/database-pool").getDatabaseClient as jest.MockedFunction<any>;
+const mockSimplifiedMatchingEngine =
+	require("../../../utils/matching/core/matching-engine").simplifiedMatchingEngine;
+const mockGetDatabaseClient = require("../../../utils/core/database-pool")
+	.getDatabaseClient as jest.MockedFunction<any>;
 
 describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 	let mockUser: PremiumUserPreferences;
@@ -110,7 +115,9 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 			await runPremiumMatching(mockUser, mockJobs);
 
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				mockUser, // Premium strategy passes user preferences directly
 				expect.any(Array),
 				expect.objectContaining({
@@ -118,7 +125,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 					maxJobsForAI: 30, // Deep AI for premium
 					fallbackThreshold: 5,
 					includePrefilterScore: true,
-				})
+				}),
 			);
 		});
 	});
@@ -142,22 +149,24 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			const result = await runPremiumMatching(mockUser, mockJobs);
 
 			// Should only match job1 (London + tech + hybrid + visa sponsorship)
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
-				expect.arrayContaining([
-					expect.objectContaining({ job_hash: "job1" }),
-				]),
-				expect.any(Object)
+				expect.arrayContaining([expect.objectContaining({ job_hash: "job1" })]),
+				expect.any(Object),
 			);
 
 			// Should not include job2 (Berlin but no visa sponsorship) or job3 (Manchester + marketing + remote)
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.not.arrayContaining([
 					expect.objectContaining({ job_hash: "job2" }),
 					expect.objectContaining({ job_hash: "job3" }),
 				]),
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 
@@ -167,12 +176,12 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			await runPremiumMatching(londonOnlyUser, mockJobs);
 
 			// Should include London job, exclude Berlin and Manchester
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
-				expect.arrayContaining([
-					expect.objectContaining({ job_hash: "job1" }),
-				]),
-				expect.any(Object)
+				expect.arrayContaining([expect.objectContaining({ job_hash: "job1" })]),
+				expect.any(Object),
 			);
 		});
 
@@ -181,13 +190,15 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			const result = await runPremiumMatching(mockUser, mockJobs);
 
 			// job1 has "tech" category, job2 has "product" category
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.arrayContaining([
 					expect.objectContaining({ job_hash: "job1" }),
 					expect.objectContaining({ job_hash: "job2" }), // Berlin job, but has product category
 				]),
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 
@@ -196,12 +207,12 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			const result = await runPremiumMatching(mockUser, mockJobs);
 
 			// job1 description contains "React/Python"
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
-				expect.arrayContaining([
-					expect.objectContaining({ job_hash: "job1" }),
-				]),
-				expect.any(Object)
+				expect.arrayContaining([expect.objectContaining({ job_hash: "job1" })]),
+				expect.any(Object),
 			);
 		});
 
@@ -211,12 +222,12 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			await runPremiumMatching(remoteUser, mockJobs);
 
 			// Should only include job3 (remote), exclude job1/job2 (hybrid)
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
-				expect.arrayContaining([
-					expect.objectContaining({ job_hash: "job3" }),
-				]),
-				expect.any(Object)
+				expect.arrayContaining([expect.objectContaining({ job_hash: "job3" })]),
+				expect.any(Object),
 			);
 		});
 
@@ -225,12 +236,12 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 			const result = await runPremiumMatching(mockUser, mockJobs);
 
 			// Should include job1 (visa sponsorship), exclude job2 (no visa)
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
-				expect.arrayContaining([
-					expect.objectContaining({ job_hash: "job1" }),
-				]),
-				expect.any(Object)
+				expect.arrayContaining([expect.objectContaining({ job_hash: "job1" })]),
+				expect.any(Object),
 			);
 		});
 
@@ -267,7 +278,9 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 			await runPremiumMatching(mockUser, mockJobs);
 
-			expect(mockSimplifiedMatchingEngine.findMatchesForUser).toHaveBeenCalledWith(
+			expect(
+				mockSimplifiedMatchingEngine.findMatchesForUser,
+			).toHaveBeenCalledWith(
 				expect.any(Object),
 				expect.any(Array),
 				expect.objectContaining({
@@ -275,17 +288,19 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 					maxJobsForAI: 30, // PREMIUM: Deep AI processing
 					fallbackThreshold: 5, // More tolerant
 					includePrefilterScore: true, // Include pre-filter scores
-				})
+				}),
 			);
 		});
 
 		it("should limit results to 15 matches maximum", async () => {
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockResolvedValue({
-				matches: Array(20).fill(null).map((_, i) => ({
-					job: { ...mockJobs[0], job_hash: `job${i}` },
-					match_score: 80 + i,
-					match_reason: `Premium match ${i}`,
-				})),
+				matches: Array(20)
+					.fill(null)
+					.map((_, i) => ({
+						job: { ...mockJobs[0], job_hash: `job${i}` },
+						match_score: 80 + i,
+						match_reason: `Premium match ${i}`,
+					})),
 				method: "ai",
 				metadata: { matchingMethod: "premium_ai_ranked" },
 			});
@@ -328,7 +343,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 						match_algorithm: "premium_ai_ranked",
 					}),
 				]),
-				{ onConflict: "user_email,job_hash" }
+				{ onConflict: "user_email,job_hash" },
 			);
 		});
 
@@ -354,10 +369,12 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 		it("should handle AI matching failures", async () => {
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockRejectedValue(
-				new Error("Premium AI service unavailable")
+				new Error("Premium AI service unavailable"),
 			);
 
-			await expect(runPremiumMatching(mockUser, mockJobs)).rejects.toThrow("Premium AI service unavailable");
+			await expect(runPremiumMatching(mockUser, mockJobs)).rejects.toThrow(
+				"Premium AI service unavailable",
+			);
 		});
 	});
 
@@ -390,7 +407,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 					skills: mockUser.skills.length,
 					industries: mockUser.industries.length,
 					jobsAvailable: 3,
-				})
+				}),
 			);
 		});
 
@@ -413,7 +430,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 						workEnvironment: "hybrid",
 						visaStatus: "visa-needed",
 					}),
-				})
+				}),
 			);
 		});
 
@@ -429,7 +446,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 					inputJobs: 1,
 					outputMatches: 1,
 					method: "premium_ai_ranked",
-				})
+				}),
 			);
 		});
 
@@ -443,14 +460,14 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				expect.objectContaining({
 					email: mockUser.email,
 					count: 1,
-				})
+				}),
 			);
 		});
 
 		it("should log premium-specific errors", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 			mockSimplifiedMatchingEngine.findMatchesForUser.mockRejectedValue(
-				new Error("Premium AI failed")
+				new Error("Premium AI failed"),
 			);
 
 			await expect(runPremiumMatching(mockUser, mockJobs)).rejects.toThrow();
@@ -460,7 +477,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				expect.any(Error),
 				expect.objectContaining({
 					email: mockUser.email,
-				})
+				}),
 			);
 		});
 	});

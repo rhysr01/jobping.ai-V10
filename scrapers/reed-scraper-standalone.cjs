@@ -3,7 +3,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const axios = require("axios");
 const { createClient } = require("@supabase/supabase-js");
@@ -15,14 +15,24 @@ const {
 } = require("./shared/helpers.cjs");
 
 // Removed debug regex patterns
-const { recordScraperRun, recordApiRequest } = require("./shared/telemetry.cjs");
+const {
+	recordScraperRun,
+	recordApiRequest,
+} = require("./shared/telemetry.cjs");
 
 // Check for required API credentials
 if (!process.env.REED_API_KEY) {
 	console.error("❌ REED CREDENTIALS MISSING:");
-	console.error("   - REED_API_KEY:", process.env.REED_API_KEY ? "✅ Set" : "❌ Missing");
-	console.error("   📝 Add this to your environment variables or GitHub Actions secrets");
-	console.error("   🔗 Get credentials: https://www.reed.co.uk/developers/jobseeker");
+	console.error(
+		"   - REED_API_KEY:",
+		process.env.REED_API_KEY ? "✅ Set" : "❌ Missing",
+	);
+	console.error(
+		"   📝 Add this to your environment variables or GitHub Actions secrets",
+	);
+	console.error(
+		"   🔗 Get credentials: https://www.reed.co.uk/developers/jobseeker",
+	);
 	process.exit(1);
 }
 const { processIncomingJob } = require("./shared/processor.cjs");
@@ -243,58 +253,180 @@ const {
 const QUERY_SETS = {
 	SET_A: [
 		// EXPANDED: Maximum early career internships and graduate programs (35 terms)
-		"graduate programme", "graduate scheme", "graduate program", "graduate training",
-		"internship", "intern", "summer intern", "year in industry", "industrial placement",
-		"graduate trainee", "management trainee", "trainee program", "trainee scheme",
-		"campus hire", "new grad", "recent graduate", "early graduate", "fresh graduate",
-		"entry level program", "graduate development program", "leadership graduate program",
-		"marketing coordinator", "operations coordinator", "product coordinator", "hr coordinator",
-		"project coordinator", "sales coordinator", "finance coordinator", "business coordinator",
-		"event coordinator", "communications coordinator", "content coordinator",
-		"finance intern", "consulting intern", "marketing intern", "data intern",
-		"investment banking intern", "technology intern", "engineering intern", "product intern",
-		"entry level software engineer", "junior data scientist", "graduate consultant",
-		"associate investment banker", "recent graduate finance", "campus recruiter", "new grad program",
-		"apprentice", "apprenticeship", "graduate apprenticeship", "degree apprenticeship",
-		"placement student", "sandwich course", "vacation scheme", "vacation student"
+		"graduate programme",
+		"graduate scheme",
+		"graduate program",
+		"graduate training",
+		"internship",
+		"intern",
+		"summer intern",
+		"year in industry",
+		"industrial placement",
+		"graduate trainee",
+		"management trainee",
+		"trainee program",
+		"trainee scheme",
+		"campus hire",
+		"new grad",
+		"recent graduate",
+		"early graduate",
+		"fresh graduate",
+		"entry level program",
+		"graduate development program",
+		"leadership graduate program",
+		"marketing coordinator",
+		"operations coordinator",
+		"product coordinator",
+		"hr coordinator",
+		"project coordinator",
+		"sales coordinator",
+		"finance coordinator",
+		"business coordinator",
+		"event coordinator",
+		"communications coordinator",
+		"content coordinator",
+		"finance intern",
+		"consulting intern",
+		"marketing intern",
+		"data intern",
+		"investment banking intern",
+		"technology intern",
+		"engineering intern",
+		"product intern",
+		"entry level software engineer",
+		"junior data scientist",
+		"graduate consultant",
+		"associate investment banker",
+		"recent graduate finance",
+		"campus recruiter",
+		"new grad program",
+		"apprentice",
+		"apprenticeship",
+		"graduate apprenticeship",
+		"degree apprenticeship",
+		"placement student",
+		"sandwich course",
+		"vacation scheme",
+		"vacation student",
 	],
 	SET_B: [
 		// EXPANDED: Maximum analyst, associate, and assistant roles (40 terms)
-		"business analyst", "financial analyst", "data analyst", "operations analyst",
-		"strategy analyst", "risk analyst", "investment analyst", "product analyst",
-		"marketing analyst", "sales analyst", "hr analyst", "supply chain analyst",
-		"associate consultant", "graduate analyst", "junior analyst", "entry level analyst",
-		"analyst graduate", "trainee analyst", "analyst intern",
-		"marketing assistant", "brand assistant", "product assistant", "finance assistant",
-		"operations assistant", "hr assistant", "sales assistant", "admin assistant",
-		"personal assistant", "executive assistant", "management assistant",
-		"sales development representative", "sdr", "bdr", "business development representative",
-		"junior account executive", "customer success associate", "account manager assistant",
-		"associate finance", "graduate associate", "junior consultant", "trainee consultant",
-		"associate product manager", "apm", "associate product", "product associate",
-		"entry level consultant", "consultant graduate", "junior business analyst",
-		"graduate business analyst", "trainee business analyst", "research assistant",
-		"junior researcher", "graduate researcher", "analyst assistant"
+		"business analyst",
+		"financial analyst",
+		"data analyst",
+		"operations analyst",
+		"strategy analyst",
+		"risk analyst",
+		"investment analyst",
+		"product analyst",
+		"marketing analyst",
+		"sales analyst",
+		"hr analyst",
+		"supply chain analyst",
+		"associate consultant",
+		"graduate analyst",
+		"junior analyst",
+		"entry level analyst",
+		"analyst graduate",
+		"trainee analyst",
+		"analyst intern",
+		"marketing assistant",
+		"brand assistant",
+		"product assistant",
+		"finance assistant",
+		"operations assistant",
+		"hr assistant",
+		"sales assistant",
+		"admin assistant",
+		"personal assistant",
+		"executive assistant",
+		"management assistant",
+		"sales development representative",
+		"sdr",
+		"bdr",
+		"business development representative",
+		"junior account executive",
+		"customer success associate",
+		"account manager assistant",
+		"associate finance",
+		"graduate associate",
+		"junior consultant",
+		"trainee consultant",
+		"associate product manager",
+		"apm",
+		"associate product",
+		"product associate",
+		"entry level consultant",
+		"consultant graduate",
+		"junior business analyst",
+		"graduate business analyst",
+		"trainee business analyst",
+		"research assistant",
+		"junior researcher",
+		"graduate researcher",
+		"analyst assistant",
 	],
 	SET_C: [
 		// EXPANDED: Maximum entry-level, junior, engineer, specialist roles (45 terms)
-		"entry level", "junior", "graduate", "recent graduate", "early graduate",
-		"early careers program", "rotational graduate program", "graduate rotation",
-		"entry level software engineer", "junior software engineer", "graduate software engineer",
-		"software engineer intern", "data engineer intern", "cloud engineer intern",
-		"frontend engineer intern", "backend engineer intern", "devops engineer intern",
-		"associate product manager", "apm", "product analyst", "junior product manager",
-		"entry level product", "product graduate", "junior fulfilment specialist",
-		"entry level technical specialist", "graduate hr specialist", "junior marketing specialist",
-		"junior product designer", "ux intern", "ui intern", "junior ux designer",
-		"design intern", "junior designer", "graduate designer", "entry level designer",
-		"junior engineer", "graduate engineer", "entry level engineer", "trainee engineer",
-		"junior specialist", "graduate specialist", "entry level specialist",
-		"esg intern", "sustainability analyst", "climate analyst", "environment analyst",
-		"junior researcher", "research assistant", "graduate researcher",
-		"junior developer", "graduate developer", "trainee developer", "junior programmer",
-		"entry level developer", "graduate web developer", "junior web developer",
-		"junior consultant", "graduate consultant", "trainee consultant"
+		"entry level",
+		"junior",
+		"graduate",
+		"recent graduate",
+		"early graduate",
+		"early careers program",
+		"rotational graduate program",
+		"graduate rotation",
+		"entry level software engineer",
+		"junior software engineer",
+		"graduate software engineer",
+		"software engineer intern",
+		"data engineer intern",
+		"cloud engineer intern",
+		"frontend engineer intern",
+		"backend engineer intern",
+		"devops engineer intern",
+		"associate product manager",
+		"apm",
+		"product analyst",
+		"junior product manager",
+		"entry level product",
+		"product graduate",
+		"junior fulfilment specialist",
+		"entry level technical specialist",
+		"graduate hr specialist",
+		"junior marketing specialist",
+		"junior product designer",
+		"ux intern",
+		"ui intern",
+		"junior ux designer",
+		"design intern",
+		"junior designer",
+		"graduate designer",
+		"entry level designer",
+		"junior engineer",
+		"graduate engineer",
+		"entry level engineer",
+		"trainee engineer",
+		"junior specialist",
+		"graduate specialist",
+		"entry level specialist",
+		"esg intern",
+		"sustainability analyst",
+		"climate analyst",
+		"environment analyst",
+		"junior researcher",
+		"research assistant",
+		"graduate researcher",
+		"junior developer",
+		"graduate developer",
+		"trainee developer",
+		"junior programmer",
+		"entry level developer",
+		"graduate web developer",
+		"junior web developer",
+		"junior consultant",
+		"graduate consultant",
+		"trainee consultant",
 	],
 };
 
@@ -318,7 +450,7 @@ function getCurrentQuerySet() {
  * Generate career path-based queries rotating between internship, graduate programme, and early career
  * Rotates every 8 hours: SET_A (internship), SET_B (graduate programme), SET_C (early career)
  * UK-focused queries for Reed
- * 
+ *
  * EXPANDED: Now includes both career path queries AND specific role-based queries from QUERY_SETS
  * This provides broader coverage and should significantly increase job collection
  */
@@ -349,7 +481,7 @@ function generateReedQueries() {
 
 	// Determine query type based on rotation set
 	let queryType;
-	
+
 	if (currentSet === "SET_A") {
 		// Internship queries
 		queryType = "internship";
@@ -402,7 +534,8 @@ const queriesToUse =
 // Calculate estimated requests based on actual pages per query type
 // Career path queries: 6 pages, role queries: 7 pages (from getMaxPagesForQuery logic)
 const avgPagesPerQuery = 6.5; // Average of 6-7 pages per query
-const estimatedRequests = LOCATIONS.length * queriesToUse.length * avgPagesPerQuery;
+const estimatedRequests =
+	LOCATIONS.length * queriesToUse.length * avgPagesPerQuery;
 console.log(
 	`📋 Reed query strategy: Using ${queriesToUse.length} queries per location (from ${EARLY_TERMS.length} total)`,
 );
@@ -444,7 +577,8 @@ if (TARGET_CAREER_PATHS.length) {
  */
 function getMaxPagesForQuery(query) {
 	// Career path queries (e.g., "strategy internship", "finance graduate programme")
-	const careerPathPattern = /^(strategy|finance|sales|marketing|data|operations|product|tech|sustainability|people-hr|legal|creative|general-management)\s+(internship|graduate programme|graduate scheme|early career)/i;
+	const careerPathPattern =
+		/^(strategy|finance|sales|marketing|data|operations|product|tech|sustainability|people-hr|legal|creative|general-management)\s+(internship|graduate programme|graduate scheme|early career)/i;
 	const isCareerPathQuery = careerPathPattern.test(query.trim());
 
 	// REED FREE TIER LIMIT: 1,000 requests/day, 2 runs/day = 500 per run
@@ -480,19 +614,21 @@ async function fetchReedPage(params) {
 				"JobPingBot/1.0 (+https://getjobping.com/bot; contact: support@getjobping.com)",
 		};
 		const resp = await axios.get(REED_API, { params, headers, timeout: 20000 });
-		const len = Array.isArray(resp.data?.results) ? resp.data.results.length : 0;
+		const len = Array.isArray(resp.data?.results)
+			? resp.data.results.length
+			: 0;
 		console.log(`   ← got ${len} results`);
 
 		// Record successful API request
 		recordApiRequest("reed", REED_API, true);
 
 		// Log API response details for debugging
-		if (resp.data && typeof resp.data === 'object') {
+		if (resp.data && typeof resp.data === "object") {
 			console.log(`   📊 API response summary:`, {
-				totalResults: resp.data.totalResults || 'N/A',
+				totalResults: resp.data.totalResults || "N/A",
 				resultsCount: len,
 				hasResults: Array.isArray(resp.data.results),
-				status: resp.status
+				status: resp.status,
 			});
 		}
 
@@ -506,7 +642,7 @@ async function fetchReedPage(params) {
 			statusText: error.response?.statusText,
 			message: error.message,
 			url: REED_API,
-			params: params
+			params: params,
 		});
 
 		// If unauthorized, the API key is likely invalid
@@ -541,11 +677,11 @@ async function scrapeLocation(location) {
 	console.log(
 		`   🔍 Using ${termsToUse.length} queries for ${location} (${termsToUse.filter((_, i) => i < 20).length} role-based)`,
 	);
-	
+
 	let totalQueries = 0;
 	let successfulQueries = 0;
 	let totalJobsFound = 0;
-	let totalJobsFiltered = 0;
+	const _totalJobsFiltered = 0;
 
 	for (const term of termsToUse) {
 		totalQueries++;
@@ -553,7 +689,7 @@ async function scrapeLocation(location) {
 		const queryMaxPages = getMaxPagesForQuery(term);
 		let page = 0;
 		let queryJobsFound = 0;
-		let queryJobsFiltered = 0;
+		const _queryJobsFiltered = 0;
 
 		while (page < queryMaxPages) {
 			const params = {
@@ -645,12 +781,14 @@ async function scrapeLocation(location) {
 				}
 				console.warn(`❌ Reed error for ${location} ${term}:`, e.message);
 				if (e.response) {
-					console.warn(`   HTTP ${e.response.status}: ${e.response.statusText}`);
+					console.warn(
+						`   HTTP ${e.response.status}: ${e.response.statusText}`,
+					);
 				}
 				break;
 			}
 		}
-		
+
 		// Log query results
 		queryJobsFound = jobs.length - totalJobsFound;
 		totalJobsFound = jobs.length;
@@ -665,7 +803,7 @@ async function scrapeLocation(location) {
 			);
 		}
 	}
-	
+
 	// Log location summary
 	console.log(
 		`📊 Reed ${location} summary: ${successfulQueries}/${totalQueries} queries successful, ${jobs.length} total jobs found`,
@@ -680,7 +818,9 @@ async function saveJobsToDB(jobs) {
 	const supabase = createClient(url, key);
 
 	const dbJobsPromises = jobs.map(convertToDatabaseFormat);
-	const dbJobs = (await Promise.all(dbJobsPromises)).filter((job) => job !== null);
+	const dbJobs = (await Promise.all(dbJobsPromises)).filter(
+		(job) => job !== null,
+	);
 
 	// CRITICAL: Use comprehensive validator (consolidates all validation logic)
 	const { validateJobs } = require("./shared/jobValidator.cjs");
@@ -760,7 +900,7 @@ async function saveJobsToDB(jobs) {
 			console.warn("⚠️  Reed: Skipping job with missing required fields");
 			return false;
 		}
-		
+
 		const key = makeJobHash({
 			title: j.title,
 			company: j.company,

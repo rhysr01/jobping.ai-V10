@@ -16,7 +16,9 @@ describe("Promo Code Integration", () => {
 	beforeAll(async () => {
 		// Check if the server is running by trying to connect
 		try {
-			const response = await fetch("http://localhost:3000/api/health").catch(() => null);
+			const response = await fetch("http://localhost:3000/api/health").catch(
+				() => null,
+			);
 			serverAvailable = response?.ok || false;
 		} catch {
 			serverAvailable = false;
@@ -148,12 +150,12 @@ describe("Promo Code Integration", () => {
 			const validPromoCodes = ["rhys", "RHYS", "Rhys", "rHyS"];
 			const invalidPromoCodes = ["invalid", "test", "promo", ""];
 
-			validPromoCodes.forEach(code => {
+			validPromoCodes.forEach((code) => {
 				const normalized = code.toLowerCase().trim();
 				expect(normalized).toBe("rhys");
 			});
 
-			invalidPromoCodes.forEach(code => {
+			invalidPromoCodes.forEach((code) => {
 				const normalized = code.toLowerCase().trim();
 				expect(normalized).not.toBe("rhys");
 			});
@@ -175,21 +177,21 @@ describe("Promo Code Integration", () => {
 			const validEmails = [
 				"user@example.com",
 				"test.email@domain.co.uk",
-				"user+tag@example.com"
+				"user+tag@example.com",
 			];
 			const invalidEmails = [
 				"invalid-email",
 				"@example.com",
 				"user@",
-				"user.example.com"
+				"user.example.com",
 			];
 
-			validEmails.forEach(email => {
+			validEmails.forEach((email) => {
 				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 				expect(emailRegex.test(email)).toBe(true);
 			});
 
-			invalidEmails.forEach(email => {
+			invalidEmails.forEach((email) => {
 				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 				expect(emailRegex.test(email)).toBe(false);
 			});
@@ -206,7 +208,9 @@ describe("Promo Code Integration", () => {
 				},
 			};
 
-			expect(availablePromoCodes.rhys.description).toBe("1 month free premium access");
+			expect(availablePromoCodes.rhys.description).toBe(
+				"1 month free premium access",
+			);
 			expect(availablePromoCodes.rhys.type).toBe("1_month_free");
 			expect(availablePromoCodes.rhys.active).toBe(true);
 			expect(availablePromoCodes.rhys.caseInsensitive).toBe(true);

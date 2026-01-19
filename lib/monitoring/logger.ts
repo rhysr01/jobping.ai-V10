@@ -35,7 +35,11 @@ class Logger {
 	private serviceName = "jobping";
 
 	private shouldLog(level: LogLevel): boolean {
-		if (process.env.NODE_ENV === "test" && level !== LogLevel.ERROR && level !== LogLevel.CRITICAL) {
+		if (
+			process.env.NODE_ENV === "test" &&
+			level !== LogLevel.ERROR &&
+			level !== LogLevel.CRITICAL
+		) {
 			return false;
 		}
 

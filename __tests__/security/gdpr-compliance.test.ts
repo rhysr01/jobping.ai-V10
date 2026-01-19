@@ -106,7 +106,8 @@ describe("Security: GDPR Compliance", () => {
 		const now = new Date();
 
 		// Should have retention policy
-		const monthsInactive = (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24 * 30);
+		const monthsInactive =
+			(now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24 * 30);
 		expect(monthsInactive).toBeGreaterThan(0);
 	});
 });

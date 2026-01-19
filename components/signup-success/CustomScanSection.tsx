@@ -7,7 +7,10 @@ interface CustomScanSectionProps {
 	email: string;
 }
 
-export function CustomScanSection({ customScan, email }: CustomScanSectionProps) {
+export function CustomScanSection({
+	customScan,
+	email,
+}: CustomScanSectionProps) {
 	if (!customScan) {
 		return null;
 	}
@@ -38,7 +41,8 @@ export function CustomScanSection({ customScan, email }: CustomScanSectionProps)
 			<div className="mt-4 p-4 bg-purple-500/10 rounded-md border border-purple-500/20">
 				<p className="text-sm text-brand-500/80">
 					🚀 <strong>Bonus scan:</strong> Get additional job matches beyond your
-					weekly {customScan.estimatedTime.toLowerCase()} scan. Perfect for urgent job searches!
+					weekly {customScan.estimatedTime.toLowerCase()} scan. Perfect for
+					urgent job searches!
 				</p>
 			</div>
 		</div>

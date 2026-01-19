@@ -85,74 +85,74 @@ describe("Security: API Key Exposure", () => {
 	});
 });
 
-	it("should validate email input sanitization", () => {
-		// Test email validation patterns that could be exploited
-		const dangerousEmails = [
-			"test@evil.com<script>alert('xss')</script>",
-			"test@domain.com\nBCC: evil@domain.com",
-			"test@domain.com; DROP TABLE users; --",
-		];
+it("should validate email input sanitization", () => {
+	// Test email validation patterns that could be exploited
+	const dangerousEmails = [
+		"test@evil.com<script>alert('xss')</script>",
+		"test@domain.com\nBCC: evil@domain.com",
+		"test@domain.com; DROP TABLE users; --",
+	];
 
-		dangerousEmails.forEach((email) => {
-			// These inputs should be detected as dangerous
-			const hasScriptTag = email.includes("<script>");
-			const hasSqlInjection = email.includes("DROP TABLE");
-			const hasEmailInjection = email.includes("BCC:");
+	dangerousEmails.forEach((email) => {
+		// These inputs should be detected as dangerous
+		const hasScriptTag = email.includes("<script>");
+		const hasSqlInjection = email.includes("DROP TABLE");
+		const hasEmailInjection = email.includes("BCC:");
 
-			expect(hasScriptTag || hasSqlInjection || hasEmailInjection).toBe(true);
-		});
+		expect(hasScriptTag || hasSqlInjection || hasEmailInjection).toBe(true);
 	});
+});
 
-	it("should prevent SQL injection in user inputs", () => {
-		const sqlInjectionAttempts = [
-			"' OR '1'='1",
-			"'; DROP TABLE users; --",
-			"' UNION SELECT password FROM admin --",
-		];
+it("should prevent SQL injection in user inputs", () => {
+	const sqlInjectionAttempts = [
+		"' OR '1'='1",
+		"'; DROP TABLE users; --",
+		"' UNION SELECT password FROM admin --",
+	];
 
-		sqlInjectionAttempts.forEach((input) => {
-			// These should be parameterized in database queries
-			expect(input.includes("'")).toBe(true); // Just testing detection
-		});
+	sqlInjectionAttempts.forEach((input) => {
+		// These should be parameterized in database queries
+		expect(input.includes("'")).toBe(true); // Just testing detection
 	});
+});
 
-	it("should enforce GDPR data minimization", () => {
-		// Test that we don't collect unnecessary personal data
-		const requiredFields = ["email", "cities", "languages"];
-		const optionalFields = ["fullName", "phone", "address"];
+it("should enforce GDPR data minimization", () => {
+	// Test that we don't collect unnecessary personal data
+	const requiredFields = ["email", "cities", "languages"];
+	const optionalFields = ["fullName", "phone", "address"];
 
-		// Ensure required fields are minimal
-		expect(requiredFields.length).toBeLessThanOrEqual(5);
+	// Ensure required fields are minimal
+	expect(requiredFields.length).toBeLessThanOrEqual(5);
 
-		// Optional fields should not include sensitive data
-		const sensitiveFields = ["ssn", "credit_card", "bank_account"];
-		sensitiveFields.forEach((field) => {
-			expect(optionalFields).not.toContain(field);
-		});
+	// Optional fields should not include sensitive data
+	const sensitiveFields = ["ssn", "credit_card", "bank_account"];
+	sensitiveFields.forEach((field) => {
+		expect(optionalFields).not.toContain(field);
 	});
+});
 
-	it("should validate API authentication", () => {
-		// Test that internal API endpoints require proper authentication
-		const internalEndpoints = [
-			"/api/admin/",
-			"/api/matches/premium",
-			"/api/email/send-premium",
-		];
+it("should validate API authentication", () => {
+	// Test that internal API endpoints require proper authentication
+	const internalEndpoints = [
+		"/api/admin/",
+		"/api/matches/premium",
+		"/api/email/send-premium",
+	];
 
-		internalEndpoints.forEach((endpoint) => {
-			expect(endpoint).toMatch(/^\/api\//);
-			// In a real test, we'd make requests without auth and check 401/403
-		});
+	internalEndpoints.forEach((endpoint) => {
+		expect(endpoint).toMatch(/^\/api\//);
+		// In a real test, we'd make requests without auth and check 401/403
 	});
+});
 
-	it("should prevent unauthorized access to user data", () => {
-		// Test user isolation - users should only access their own data
-		const userId = "user_123";
-		const otherUserId = "user_456";
+it("should prevent unauthorized access to user data", () => {
+	// Test user isolation - users should only access their own data
+	const userId = "user_123";
+	const otherUserId = "user_456";
 
-		// This would be tested by making API calls with different user contexts
-		expect(userId).not.toBe(otherUserId);
-	});
+	// This would be tested by making API calls with different user contexts
+	expect(userId).not.toBe(otherUserId);
+});
 
 // Helper to find files
 function globSync(pattern: string): string[] {

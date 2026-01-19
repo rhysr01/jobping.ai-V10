@@ -15,27 +15,39 @@ export function useMobilePerformance() {
 		const trackMobilePerformance = () => {
 			try {
 				// Get connection information
-				const connection = (navigator as any).connection ||
+				const connection =
+					(navigator as any).connection ||
 					(navigator as any).mozConnection ||
 					(navigator as any).webkitConnection;
 
-				const connectionType = connection?.effectiveType || 'unknown';
-				const deviceMemory = (navigator as any).deviceMemory || 'unknown';
+				const connectionType = connection?.effectiveType || "unknown";
+				const deviceMemory = (navigator as any).deviceMemory || "unknown";
 
 				// Track load time (time since navigation started)
 				const loadTime = performance.now();
 
 				// Track performance metrics
-				performanceMonitor.recordMetric('mobile_load_time', loadTime);
-				performanceMonitor.recordMetric('mobile_connection_type', connectionType === '4g' ? 4 : connectionType === '3g' ? 3 : connectionType === '2g' ? 2 : connectionType === 'slow-2g' ? 1 : 0);
+				performanceMonitor.recordMetric("mobile_load_time", loadTime);
+				performanceMonitor.recordMetric(
+					"mobile_connection_type",
+					connectionType === "4g"
+						? 4
+						: connectionType === "3g"
+							? 3
+							: connectionType === "2g"
+								? 2
+								: connectionType === "slow-2g"
+									? 1
+									: 0,
+				);
 
 				// Track device memory (if available)
-				if (typeof deviceMemory === 'number') {
-					performanceMonitor.recordMetric('mobile_device_memory', deviceMemory);
+				if (typeof deviceMemory === "number") {
+					performanceMonitor.recordMetric("mobile_device_memory", deviceMemory);
 				}
 
 				// Send analytics event
-				trackEvent('mobile_performance', {
+				trackEvent("mobile_performance", {
 					loadTime: Math.round(loadTime),
 					connectionType,
 					deviceMemory,
@@ -45,11 +57,12 @@ export function useMobilePerformance() {
 
 				// Log performance warnings
 				if (loadTime > 5000) {
-					console.warn(`Slow mobile load: ${loadTime}ms on ${connectionType} connection`);
+					console.warn(
+						`Slow mobile load: ${loadTime}ms on ${connectionType} connection`,
+					);
 				}
-
 			} catch (error) {
-				console.error('Mobile performance tracking failed:', error);
+				console.error("Mobile performance tracking failed:", error);
 			}
 		};
 
@@ -63,15 +76,15 @@ export function useMobilePerformance() {
 			}
 		};
 
-		document.addEventListener('visibilitychange', handleVisibilityChange);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
 
 		return () => {
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
 		};
 	}, [isMobile]);
 
 	return {
 		isMobile,
-		getMobileMetrics: () => performanceMonitor.getMetricsByPrefix('mobile_'),
+		getMobileMetrics: () => performanceMonitor.getMetricsByPrefix("mobile_"),
 	};
 }

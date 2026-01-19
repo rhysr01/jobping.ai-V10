@@ -1,20 +1,17 @@
 "use client";
 
-import React, { useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "./FormFieldFeedback";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import React, { useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { FormFieldError, FormFieldSuccess } from "./FormFieldFeedback";
 
 // Simple debounce utility (like Stripe's UX)
 function debounce<T extends (...args: any[]) => void>(
 	func: T,
-	wait: number
+	wait: number,
 ): (...args: Parameters<T>) => void {
 	let timeout: NodeJS.Timeout;
 	return (...args: Parameters<T>) => {
@@ -74,17 +71,24 @@ export const SharedFormField = React.memo(function SharedFormField({
 					onBlur();
 				}
 			}, 300),
-		[onBlur]
+		[onBlur],
 	);
 
-	const handleInputChange = useCallback((newValue: string | boolean) => {
-		onChange(newValue);
+	const handleInputChange = useCallback(
+		(newValue: string | boolean) => {
+			onChange(newValue);
 
-		// Trigger debounced validation for email fields
-		if (type === "email" && typeof newValue === "string" && newValue.length > 3) {
-			debouncedValidation();
-		}
-	}, [onChange, type, debouncedValidation]);
+			// Trigger debounced validation for email fields
+			if (
+				type === "email" &&
+				typeof newValue === "string" &&
+				newValue.length > 3
+			) {
+				debouncedValidation();
+			}
+		},
+		[onChange, type, debouncedValidation],
+	);
 
 	return (
 		<div className={className}>
@@ -94,12 +98,17 @@ export const SharedFormField = React.memo(function SharedFormField({
 			>
 				<span>{label}</span>
 				{required && (
-					<span className="text-error text-sm" aria-hidden="true">*</span>
+					<span className="text-error text-sm" aria-hidden="true">
+						*
+					</span>
 				)}
 			</label>
 
 			{helpText && (
-				<p id={`${id}-help`} className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4 leading-relaxed">
+				<p
+					id={`${id}-help`}
+					className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4 leading-relaxed"
+				>
 					{helpText}
 				</p>
 			)}
@@ -167,7 +176,10 @@ export const SharedFormField = React.memo(function SharedFormField({
 				>
 					{options.map((option) => (
 						<div key={option.value} className="flex items-center space-x-2">
-							<RadioGroupItem value={option.value} id={`${id}-${option.value}`} />
+							<RadioGroupItem
+								value={option.value}
+								id={`${id}-${option.value}`}
+							/>
 							<label
 								htmlFor={`${id}-${option.value}`}
 								className="text-sm text-zinc-300 cursor-pointer"
@@ -186,7 +198,6 @@ export const SharedFormField = React.memo(function SharedFormField({
 					onBlur={onBlur}
 					onKeyDown={onKeyDown}
 					placeholder={placeholder}
-					autoFocus={autoFocus}
 					autoComplete={autoComplete}
 					inputMode={inputMode}
 					disabled={disabled}
@@ -214,8 +225,8 @@ export const SharedFormField = React.memo(function SharedFormField({
 			)}
 
 			{/* Error/Success Messages */}
-			{(variant === "switch" || variant === "checkbox" ? true : value) && (
-				success && !error ? (
+			{(variant === "switch" || variant === "checkbox" ? true : value) &&
+				(success && !error ? (
 					<motion.div
 						initial={{ opacity: 0, scale: 0.8, y: -10 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -223,7 +234,7 @@ export const SharedFormField = React.memo(function SharedFormField({
 							type: "spring",
 							stiffness: 400,
 							damping: 25,
-							duration: 0.4
+							duration: 0.4,
 						}}
 					>
 						<FormFieldSuccess message={success} id={`${id}-success`} />
@@ -236,8 +247,7 @@ export const SharedFormField = React.memo(function SharedFormField({
 					>
 						<FormFieldError error={error} id={`${id}-error`} />
 					</motion.div>
-				) : null
-			)}
+				) : null)}
 		</div>
 	);
 });

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BrandIcons } from "./BrandIcons";
 import {
 	Sheet,
 	SheetContent,
@@ -14,6 +13,7 @@ import {
 	CTA_GET_MY_5_FREE_MATCHES,
 	TRUST_TEXT_INSTANT_SETUP,
 } from "../../lib/copy";
+import { BrandIcons } from "./BrandIcons";
 
 export default function ExitIntentPopup() {
 	const [showPopup, setShowPopup] = useState(false);
@@ -39,17 +39,18 @@ export default function ExitIntentPopup() {
 			// Track scroll depth
 			const handleScroll = () => {
 				const scrollTop = window.scrollY;
-				const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+				const docHeight =
+					document.documentElement.scrollHeight - window.innerHeight;
 				const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
 				setScrollDepth(scrollPercent);
 			};
 
-			window.addEventListener('scroll', handleScroll);
+			window.addEventListener("scroll", handleScroll);
 			handleScroll(); // Initial check
 
 			return () => {
 				clearInterval(timeInterval);
-				window.removeEventListener('scroll', handleScroll);
+				window.removeEventListener("scroll", handleScroll);
 			};
 		}
 		return undefined;
@@ -96,8 +97,8 @@ export default function ExitIntentPopup() {
 					</SheetTitle>
 					<SheetDescription className="text-sm sm:text-base text-zinc-300 mb-5 max-w-md mx-auto">
 						See <strong className="text-white">5 hand-picked jobs</strong>{" "}
-						matched to your city, visa status, and career path. Instant
-						results - no credit card needed.
+						matched to your city, visa status, and career path. Instant results
+						- no credit card needed.
 					</SheetDescription>
 				</SheetHeader>
 

@@ -58,12 +58,14 @@ export function HeroSectionFree({
 						`${activeJobs} active jobs this week`
 					)}
 				</span>
-				{!isLoadingStats && totalUsers && parseInt(totalUsers.replace(/\D/g, ""), 10) > 0 && (
-					<span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-4 py-2 backdrop-blur-sm">
-						<BrandIcons.Users className="h-4 w-4 text-brand-300" />
-						{`${totalUsers}+ users joined`}
-					</span>
-				)}
+				{!isLoadingStats &&
+					totalUsers &&
+					parseInt(totalUsers.replace(/\D/g, ""), 10) > 0 && (
+						<span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-4 py-2 backdrop-blur-sm">
+							<BrandIcons.Users className="h-4 w-4 text-brand-300" />
+							{`${totalUsers}+ users joined`}
+						</span>
+					)}
 				<span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-4 py-2 backdrop-blur-sm">
 					<BrandIcons.Zap className="h-4 w-4 text-brand-300" />
 					Matches in under 60 seconds

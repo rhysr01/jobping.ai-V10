@@ -13,10 +13,7 @@ const EuropeMap = dynamic(() => import("../ui/EuropeMap"), {
 		</div>
 	),
 });
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "../ui/FormFieldFeedback";
+import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
 import { Skeleton } from "../ui/Skeleton";
 import LanguageSelector from "../ui/LanguageSelector";
 import { SIGNUP_INITIAL_ROLES } from "../../lib/productMetrics";
@@ -82,7 +79,10 @@ export const Step1Basics = React.memo(function Step1Basics({
 			aria-labelledby="premium-step1-heading"
 		>
 			<div className="mb-6 sm:mb-8">
-				<h2 id="premium-step1-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				<h2
+					id="premium-step1-heading"
+					className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+				>
 					Let's get started
 				</h2>
 				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
@@ -96,7 +96,9 @@ export const Step1Basics = React.memo(function Step1Basics({
 					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3 flex items-center gap-2"
 				>
 					<span>Full Name</span>
-					<span className="text-error text-sm" aria-label="required">*</span>
+					<span className="text-error text-sm" aria-label="required">
+						*
+					</span>
 				</label>
 				<input
 					ref={formRefs.fullName}
@@ -162,9 +164,14 @@ export const Step1Basics = React.memo(function Step1Basics({
 					className="block text-base sm:text-lg font-bold text-white mb-2 sm:mb-3 flex items-center gap-2"
 				>
 					<span>Email</span>
-					<span className="text-error text-sm" aria-label="required">*</span>
+					<span className="text-error text-sm" aria-label="required">
+						*
+					</span>
 				</label>
-				<p id="email-help" className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4 leading-relaxed">
+				<p
+					id="email-help"
+					className="text-sm font-medium text-zinc-300 mb-3 sm:mb-4 leading-relaxed"
+				>
 					Get {SIGNUP_INITIAL_ROLES} jobs in your welcome email, then curated
 					drops 3x per week (Mon/Wed/Fri).
 				</p>
@@ -235,10 +242,17 @@ export const Step1Basics = React.memo(function Step1Basics({
 					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
 					<span>Preferred Cities</span>
-					<span className="text-error text-sm" aria-label="required">*</span>
-					<span className="text-zinc-400 font-normal text-sm">(Select up to 3)</span>
+					<span className="text-error text-sm" aria-label="required">
+						*
+					</span>
+					<span className="text-zinc-400 font-normal text-sm">
+						(Select up to 3)
+					</span>
 				</label>
-				<p id="cities-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
+				<p
+					id="cities-help"
+					className="text-sm text-zinc-400 mb-2 leading-relaxed"
+				>
 					Choose up to 3 cities where you'd like to work. You can click on the
 					map or use the buttons below.
 				</p>
@@ -433,9 +447,14 @@ export const Step1Basics = React.memo(function Step1Basics({
 					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
 					<span>Languages (Professional Level)</span>
-					<span className="text-error text-sm" aria-label="required">*</span>
+					<span className="text-error text-sm" aria-label="required">
+						*
+					</span>
 				</label>
-				<p id="languages-help" className="text-sm text-zinc-400 mb-2 leading-relaxed">
+				<p
+					id="languages-help"
+					className="text-sm text-zinc-400 mb-2 leading-relaxed"
+				>
 					Select languages you can use professionally
 				</p>
 				<p className="text-sm text-zinc-500 mb-4 leading-relaxed">

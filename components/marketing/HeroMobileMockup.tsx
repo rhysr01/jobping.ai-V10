@@ -5,7 +5,10 @@ import { IPhoneShell } from "../ui/IPhoneShell";
 import { TiltCard } from "../ui/TiltCard";
 import Link from "next/link";
 import { BrandIcons } from "../ui/BrandIcons";
-import { CTA_GET_MY_5_FREE_MATCHES, CTA_GET_MY_5_FREE_MATCHES_ARIA } from "../../lib/copy";
+import {
+	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_MY_5_FREE_MATCHES_ARIA,
+} from "../../lib/copy";
 import { trackEvent } from "../../lib/analytics";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { useEffect, useState } from "react";
@@ -23,7 +26,8 @@ const FALLBACK_JOBS = [
 		company: "McKinsey & Company",
 		location: "London, UK",
 		matchScore: 95,
-		matchReason: "Perfect for your Strategy and Business Design career path. Located in London, visa sponsorship available.",
+		matchReason:
+			"Perfect for your Strategy and Business Design career path. Located in London, visa sponsorship available.",
 		workEnvironment: "Hybrid",
 		type: "Internship",
 	},
@@ -32,7 +36,8 @@ const FALLBACK_JOBS = [
 		company: "BCG",
 		location: "Amsterdam, Netherlands",
 		matchScore: 92,
-		matchReason: "Ideal for recent graduates in Strategy. Visa sponsorship available for non-EU candidates.",
+		matchReason:
+			"Ideal for recent graduates in Strategy. Visa sponsorship available for non-EU candidates.",
 		workEnvironment: "Hybrid",
 		type: "Graduate Programme",
 	},
@@ -41,7 +46,8 @@ const FALLBACK_JOBS = [
 		company: "Deloitte",
 		location: "Dublin, Ireland",
 		matchScore: 89,
-		matchReason: "Great entry-level role matching your career path. Dublin location with visa support.",
+		matchReason:
+			"Great entry-level role matching your career path. Dublin location with visa support.",
 		workEnvironment: "On-site",
 		type: "Full-time",
 	},
@@ -50,7 +56,8 @@ const FALLBACK_JOBS = [
 		company: "PwC",
 		location: "Berlin, Germany",
 		matchScore: 86,
-		matchReason: "Entry-level role in Strategy consulting. Berlin office with relocation support.",
+		matchReason:
+			"Entry-level role in Strategy consulting. Berlin office with relocation support.",
 		workEnvironment: "Hybrid",
 		type: "Full-time",
 	},
@@ -59,13 +66,18 @@ const FALLBACK_JOBS = [
 		company: "EY",
 		location: "Paris, France",
 		matchScore: 84,
-		matchReason: "Internship opportunity in Business Design. Paris location, French language preferred.",
+		matchReason:
+			"Internship opportunity in Business Design. Paris location, French language preferred.",
 		workEnvironment: "Hybrid",
 		type: "Internship",
 	},
 ];
 
-export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloadedJobs }: HeroMockupProps) {
+export function HeroMobileMockup({
+	stats: _stats,
+	topMatch: _topMatch,
+	preloadedJobs,
+}: HeroMockupProps) {
 	const [jobs, setJobs] = useState<any[]>([]);
 	const { isMobile } = useWindowSize();
 
@@ -84,9 +96,15 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 				location: job.location || "",
 				// FIX: API returns percentages (0-100), don't multiply by 100
 				matchScore: job.matchScore || 85,
-				matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
+				matchReason:
+					job.matchReason ||
+					`Perfect for your career path. Located in ${job.location || ""}.`,
 				workEnvironment: job.workEnvironment || "Hybrid",
-				type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",
+				type: job.isInternship
+					? "Internship"
+					: job.isGraduate
+						? "Graduate Programme"
+						: "Full-time",
 			}));
 			setJobs(formattedJobs);
 		} else {
@@ -116,9 +134,15 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 								location: job.location || "",
 								// FIX: API returns percentages (0-100), don't multiply by 100
 								matchScore: job.matchScore || 85,
-								matchReason: job.matchReason || `Perfect for your career path. Located in ${job.location || ""}.`,
+								matchReason:
+									job.matchReason ||
+									`Perfect for your career path. Located in ${job.location || ""}.`,
 								workEnvironment: job.workEnvironment || "Hybrid",
-								type: job.isInternship ? "Internship" : job.isGraduate ? "Graduate Programme" : "Full-time",
+								type: job.isInternship
+									? "Internship"
+									: job.isGraduate
+										? "Graduate Programme"
+										: "Full-time",
 							}));
 							setJobs(formattedJobs);
 							return;
@@ -151,68 +175,67 @@ export function HeroMobileMockup({ stats: _stats, topMatch: _topMatch, preloaded
 							{/* Scrollable matches container */}
 							<div className="flex-1 overflow-y-auto p-4 pt-6 space-y-4">
 								{displayJobs.map((job, index) => (
-									<div
-										key={index}
-										className="group relative"
-									>
+									<div key={index} className="group relative">
 										{/* Glow effect on hover */}
 										<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
-										
+
 										{/* Card */}
 										<div
 											className="relative rounded-lg bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-1"
 											style={{
-												boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+												boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
 											}}
 										>
 											{/* Match Score & Company */}
 											<div className="flex items-center justify-between mb-1.5">
 												{/* Custom Match Badge - No Emoji */}
-												<div className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg ${
-													job.matchScore >= 92
-														? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
-														: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
-												}`}>
+												<div
+													className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg ${
+														job.matchScore >= 92
+															? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
+															: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
+													}`}
+												>
 													<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
 													<span className="text-xs font-bold text-white">
 														{job.matchScore}% Match
 													</span>
 												</div>
-											<div className="text-xs font-semibold text-white truncate ml-2">
-												{job.company}
+												<div className="text-xs font-semibold text-white truncate ml-2">
+													{job.company}
+												</div>
 											</div>
-										</div>
 
-										{/* Job Title */}
-										<h3 className="text-sm font-bold text-white mb-1 leading-tight line-clamp-2">
-											{job.title}
-										</h3>
+											{/* Job Title */}
+											<h3 className="text-sm font-bold text-white mb-1 leading-tight line-clamp-2">
+												{job.title}
+											</h3>
 
-										{/* Location */}
-										<div className="flex items-center gap-2 text-xs text-zinc-300 mb-1.5">
-											<MapPin size={10} className="shrink-0" />
-											{job.location}
-										</div>
-
-										{/* Match Reason */}
-										<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
-											<div className="text-xs font-semibold text-brand-500 uppercase tracking-wider mb-0.5">
-												Why This Matches
+											{/* Location */}
+											<div className="flex items-center gap-2 text-xs text-zinc-300 mb-1.5">
+												<MapPin size={10} className="shrink-0" />
+												{job.location}
 											</div>
-											<p className="text-xs text-white leading-relaxed line-clamp-2">
-												{job.matchReason}
-											</p>
-										</div>
 
-										{/* Tags */}
-										<div className="flex flex-wrap gap-2 mb-1.5">
-											<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-xs font-semibold">
-												{job.workEnvironment}
-											</span>
-											<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-xs font-semibold">
-												{job.type}
-											</span>
-										</div>
+											{/* Match Reason */}
+											<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500 rounded">
+												<div className="text-xs font-semibold text-brand-500 uppercase tracking-wider mb-0.5">
+													Why This Matches
+												</div>
+												<p className="text-xs text-white leading-relaxed line-clamp-2">
+													{job.matchReason}
+												</p>
+											</div>
+
+											{/* Tags */}
+											<div className="flex flex-wrap gap-2 mb-1.5">
+												<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-xs font-semibold">
+													{job.workEnvironment}
+												</span>
+												<span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-zinc-300 text-xs font-semibold">
+													{job.type}
+												</span>
+											</div>
 										</div>
 									</div>
 								))}

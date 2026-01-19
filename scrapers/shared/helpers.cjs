@@ -73,14 +73,18 @@ function normalizeString(value) {
 function classifyEarlyCareer(job) {
 	const title = normalizeString(job?.title || "");
 	const description = normalizeString(job?.description || "");
-	const fullText = title + " " + description;
+	const fullText = `${title} ${description}`;
 	if (!fullText.trim()) return false;
 
 	// STRONG EARLY CAREER INDICATORS: If title or description contains clear early career terms,
 	// accept regardless of other content (company descriptions often mention execs)
-	const strongEarlyCareerTerms = /(?:^|\s)(internship|intern|graduate\s+(?:programme|program|scheme|trainee)|placement|work\s+experience\s+placement|industrial\s+placement|sandwich\s+(?:course|placement)|year\s+(?:in|out)\s+industry|undergraduate\s+placement|trainee\s+programme|spring\s+intern|summer\s+intern|fall\s+intern|winter\s+intern)(?:\s|$)/i;
+	const strongEarlyCareerTerms =
+		/(?:^|\s)(internship|intern|graduate\s+(?:programme|program|scheme|trainee)|placement|work\s+experience\s+placement|industrial\s+placement|sandwich\s+(?:course|placement)|year\s+(?:in|out)\s+industry|undergraduate\s+placement|trainee\s+programme|spring\s+intern|summer\s+intern|fall\s+intern|winter\s+intern)(?:\s|$)/i;
 
-	if (strongEarlyCareerTerms.test(title) || strongEarlyCareerTerms.test(description)) {
+	if (
+		strongEarlyCareerTerms.test(title) ||
+		strongEarlyCareerTerms.test(description)
+	) {
 		return true;
 	}
 
@@ -125,14 +129,22 @@ async function fetchFullJobDescription(jobUrl, apiDescription = "") {
 
 	// Skip if URL contains common job board domains that block scraping
 	const blockedDomains = [
-		"indeed.com", "linkedin.com", "glassdoor.com", "monster.com",
-		"ziprecruiter.com", "careerjet.com", "reed.co.uk", "adzuna.co.uk",
-		"totaljobs.com", "jooble.org", "arbeitnow.com"
+		"indeed.com",
+		"linkedin.com",
+		"glassdoor.com",
+		"monster.com",
+		"ziprecruiter.com",
+		"careerjet.com",
+		"reed.co.uk",
+		"adzuna.co.uk",
+		"totaljobs.com",
+		"jooble.org",
+		"arbeitnow.com",
 	];
 
 	try {
 		const url = new URL(jobUrl);
-		if (blockedDomains.some(domain => url.hostname.includes(domain))) {
+		if (blockedDomains.some((domain) => url.hostname.includes(domain))) {
 			return apiDescription;
 		}
 	} catch {
@@ -142,11 +154,13 @@ async function fetchFullJobDescription(jobUrl, apiDescription = "") {
 	try {
 		const response = await fetch(jobUrl, {
 			headers: {
-				"User-Agent": "Mozilla/5.0 (compatible; JobPing/1.0; +https://jobping.ai)",
-				"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+				"User-Agent":
+					"Mozilla/5.0 (compatible; JobPing/1.0; +https://jobping.ai)",
+				Accept:
+					"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 				"Accept-Language": "en-US,en;q=0.5",
 				"Accept-Encoding": "gzip, deflate",
-				"Connection": "keep-alive",
+				Connection: "keep-alive",
 				"Upgrade-Insecure-Requests": "1",
 			},
 			timeout: 10000, // 10 second timeout
@@ -162,12 +176,16 @@ async function fetchFullJobDescription(jobUrl, apiDescription = "") {
 		const description = extractDescriptionFromHtml(html);
 
 		// Return full description if it's significantly longer than API description
-		if (description && description.length > (apiDescription.length * 1.5) && description.length > 100) {
+		if (
+			description &&
+			description.length > apiDescription.length * 1.5 &&
+			description.length > 100
+		) {
 			return description;
 		}
 
 		return apiDescription;
-	} catch (error) {
+	} catch (_error) {
 		// Silently fail and return original description
 		return apiDescription;
 	}
@@ -184,23 +202,31 @@ function extractDescriptionFromHtml(html) {
 		const selectors = [
 			'[data-testid="job-description"]',
 			'[data-qa="job-description"]',
-			'.job-description',
-			'.job-detail-description',
-			'.description',
-			'#job-description',
-			'.vacancy-description',
-			'.job__description',
+			".job-description",
+			".job-detail-description",
+			".description",
+			"#job-description",
+			".vacancy-description",
+			".job__description",
 			'[class*="description"]',
 			'[class*="job-description"]',
-			'[class*="job_detail"]'
+			'[class*="job_detail"]',
 		];
 
 		// Try to find description using selectors
 		for (const selector of selectors) {
-			const matches = html.match(new RegExp(`${selector}[^>]*>([^<]*(?:<(?!/?${selector})[^>]*>[^<]*)*)`, 'gi'));
+			const matches = html.match(
+				new RegExp(
+					`${selector}[^>]*>([^<]*(?:<(?!/?${selector})[^>]*>[^<]*)*)`,
+					"gi",
+				),
+			);
 			if (matches && matches.length > 0) {
 				// Clean up HTML tags and extract text
-				let description = matches[0].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+				const description = matches[0]
+					.replace(/<[^>]*>/g, " ")
+					.replace(/\s+/g, " ")
+					.trim();
 				if (description.length > 50) {
 					return description;
 				}
@@ -217,8 +243,11 @@ function extractDescriptionFromHtml(html) {
 
 		for (const pattern of textPatterns) {
 			const match = html.match(pattern);
-			if (match && match[1]) {
-				let description = match[1].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+			if (match?.[1]) {
+				const description = match[1]
+					.replace(/<[^>]*>/g, " ")
+					.replace(/\s+/g, " ")
+					.trim();
 				if (description.length > 50) {
 					return description;
 				}

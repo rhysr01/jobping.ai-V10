@@ -1,11 +1,19 @@
-import { PreferencesFormData, EXPERIENCE_LEVELS, WORK_ENVIRONMENTS, VISA_STATUSES } from "@/hooks/usePreferences";
+import {
+	PreferencesFormData,
+	EXPERIENCE_LEVELS,
+	WORK_ENVIRONMENTS,
+	VISA_STATUSES,
+} from "@/hooks/usePreferences";
 
 interface BasicInfoSectionProps {
 	formData: PreferencesFormData;
 	onUpdate: (updates: Partial<PreferencesFormData>) => void;
 }
 
-export function BasicInfoSection({ formData, onUpdate }: BasicInfoSectionProps) {
+export function BasicInfoSection({
+	formData,
+	onUpdate,
+}: BasicInfoSectionProps) {
 	return (
 		<div className="space-y-6">
 			<div>

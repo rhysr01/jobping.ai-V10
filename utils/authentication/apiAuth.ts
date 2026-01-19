@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { getProductionRateLimiter } from "../production-rate-limiter";
 import { apiLogger } from "../../lib/api-logger";
+import { getProductionRateLimiter } from "../production-rate-limiter";
 
 export interface AuthConfig {
 	/**
@@ -65,9 +65,13 @@ export function withApiAuth(
 			const systemKey = process.env.SYSTEM_API_KEY;
 
 			if (!systemKey) {
-				apiLogger.error("SYSTEM_API_KEY not configured", new Error("SYSTEM_API_KEY not configured"), {
-					endpoint: req.nextUrl.pathname,
-				});
+				apiLogger.error(
+					"SYSTEM_API_KEY not configured",
+					new Error("SYSTEM_API_KEY not configured"),
+					{
+						endpoint: req.nextUrl.pathname,
+					},
+				);
 				return NextResponse.json(
 					{ error: "Server configuration error" },
 					{ status: 500 },
@@ -148,4 +152,3 @@ export function withApiAuth(
 		}
 	};
 }
-

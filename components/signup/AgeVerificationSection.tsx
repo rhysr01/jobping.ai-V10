@@ -23,17 +23,20 @@ export function AgeVerificationSection({
 	disabled = false,
 	showErrors = false,
 }: SimplifiedAgeVerificationProps) {
-	const ageVerificationError = showErrors && !ageVerified
-		? "Please confirm you are at least 16 years old"
-		: undefined;
+	const ageVerificationError =
+		showErrors && !ageVerified
+			? "Please confirm you are at least 16 years old"
+			: undefined;
 
-	const termsError = showErrors && !termsAccepted
-		? "Please accept the terms of service to continue"
-		: undefined;
+	const termsError =
+		showErrors && !termsAccepted
+			? "Please accept the terms of service to continue"
+			: undefined;
 
-	const gdprError = showErrors && !gdprConsent
-		? "Please accept the privacy policy to continue"
-		: undefined;
+	const gdprError =
+		showErrors && !gdprConsent
+			? "Please accept the privacy policy to continue"
+			: undefined;
 
 	return (
 		<motion.div
@@ -61,7 +64,9 @@ export function AgeVerificationSection({
 							onChange={(e) => onAgeVerifiedChange(e.target.checked)}
 							disabled={disabled}
 							className="mt-1.5 w-5 h-5 text-brand-600 bg-zinc-900 border-zinc-700 rounded focus:ring-brand-500 focus:ring-2 transition-colors"
-							aria-describedby={ageVerificationError ? "age-verification-error" : undefined}
+							aria-describedby={
+								ageVerificationError ? "age-verification-error" : undefined
+							}
 							aria-invalid={!!ageVerificationError}
 						/>
 						<div className="flex-1">
@@ -72,7 +77,11 @@ export function AgeVerificationSection({
 								I confirm I am at least 16 years old
 							</label>
 							{ageVerificationError && (
-								<p id="age-verification-error" className="mt-2 text-sm text-error flex items-center gap-2 font-medium" role="alert">
+								<p
+									id="age-verification-error"
+									className="mt-2 text-sm text-error flex items-center gap-2 font-medium"
+									role="alert"
+								>
 									<span className="text-error">⚠️</span>
 									{ageVerificationError}
 								</p>
@@ -92,7 +101,9 @@ export function AgeVerificationSection({
 							}}
 							disabled={disabled}
 							className="mt-1.5 w-5 h-5 text-brand-600 bg-zinc-900 border-zinc-700 rounded focus:ring-brand-500 focus:ring-2 transition-colors"
-							aria-describedby={(termsError || gdprError) ? "legal-error" : "legal-help"}
+							aria-describedby={
+								termsError || gdprError ? "legal-error" : "legal-help"
+							}
 							aria-invalid={!!(termsError || gdprError)}
 						/>
 						<div className="flex-1">
@@ -120,13 +131,21 @@ export function AgeVerificationSection({
 								</a>
 							</label>
 							{(termsError || gdprError) && (
-								<p id="legal-error" className="mt-2 text-sm text-error flex items-center gap-2 font-medium" role="alert">
+								<p
+									id="legal-error"
+									className="mt-2 text-sm text-error flex items-center gap-2 font-medium"
+									role="alert"
+								>
 									<span className="text-error">⚠️</span>
 									{termsError || gdprError}
 								</p>
 							)}
-							<p id="legal-help" className="mt-3 text-xs text-zinc-400 leading-relaxed">
-								By accepting, you agree to our terms and consent to processing your data for job matching purposes under GDPR.
+							<p
+								id="legal-help"
+								className="mt-3 text-xs text-zinc-400 leading-relaxed"
+							>
+								By accepting, you agree to our terms and consent to processing
+								your data for job matching purposes under GDPR.
 							</p>
 						</div>
 					</div>

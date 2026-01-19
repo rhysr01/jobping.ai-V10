@@ -3,10 +3,7 @@
 import { motion } from "framer-motion";
 import React from "react";
 import EntryLevelSelector from "../ui/EntryLevelSelector";
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "../ui/FormFieldFeedback";
+import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
 import { Skeleton } from "../ui/Skeleton";
 import WorkEnvironmentSelector from "../ui/WorkEnvironmentSelector";
 import { COMPANIES } from "./constants";
@@ -129,10 +126,10 @@ export const Step2Preferences = React.memo(function Step2Preferences({
 							htmlFor="visa-field"
 							className="block text-base font-bold text-white mb-3"
 						>
-											Do you require visa sponsorship?
-											<span className="text-sm text-zinc-400 font-normal block mt-1">
-												Most EU students don't need sponsorship
-											</span>
+							Do you require visa sponsorship?
+							<span className="text-sm text-zinc-400 font-normal block mt-1">
+								Most EU students don't need sponsorship
+							</span>
 						</label>
 						<p className="text-sm text-zinc-200 mb-3">
 							We ask this so we can filter for companies that provide visa
@@ -191,7 +188,7 @@ export const Step2Preferences = React.memo(function Step2Preferences({
 							!!formData.visaStatus,
 						) && (
 							<FormFieldError
-													error="We need to know if you require visa sponsorship to find matching jobs that you can actually apply for."
+								error="We need to know if you require visa sponsorship to find matching jobs that you can actually apply for."
 								id="visa-error"
 							/>
 						)}

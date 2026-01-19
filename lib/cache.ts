@@ -7,23 +7,23 @@ import { LRUCache as LRU } from "lru-cache";
 
 // Configuration for different cache use cases
 export const CACHE_CONFIGS = {
-  aiMatching: {
-    max: 10000, // 10k entries
-    ttl: 1000 * 60 * 30, // 30 minutes
-    maxSize: 50 * 1024 * 1024, // 50MB
-    sizeCalculation: (value: any) => {
-      // Rough estimation: 1KB per cached item
-      return JSON.stringify(value).length;
-    },
-  },
-  general: {
-    max: 1000,
-    ttl: 1000 * 60 * 15, // 15 minutes
-  },
-  shortTerm: {
-    max: 500,
-    ttl: 1000 * 60 * 5, // 5 minutes
-  },
+	aiMatching: {
+		max: 10000, // 10k entries
+		ttl: 1000 * 60 * 30, // 30 minutes
+		maxSize: 50 * 1024 * 1024, // 50MB
+		sizeCalculation: (value: any) => {
+			// Rough estimation: 1KB per cached item
+			return JSON.stringify(value).length;
+		},
+	},
+	general: {
+		max: 1000,
+		ttl: 1000 * 60 * 15, // 15 minutes
+	},
+	shortTerm: {
+		max: 500,
+		ttl: 1000 * 60 * 5, // 5 minutes
+	},
 } as const;
 
 /**
@@ -45,25 +45,25 @@ export class StandardizedCache {
 		this.cache.set(key, value);
 	}
 
-  has(key: string): boolean {
-    return this.cache.has(key);
-  }
+	has(key: string): boolean {
+		return this.cache.has(key);
+	}
 
-  delete(key: string): boolean {
-    return this.cache.delete(key);
-  }
+	delete(key: string): boolean {
+		return this.cache.delete(key);
+	}
 
-  clear(): void {
-    this.cache.clear();
-  }
+	clear(): void {
+		this.cache.clear();
+	}
 
-  size(): number {
-    return this.cache.size;
-  }
+	size(): number {
+		return this.cache.size;
+	}
 
-  keys(): string[] {
-    return Array.from(this.cache.keys());
-  }
+	keys(): string[] {
+		return Array.from(this.cache.keys());
+	}
 
 	// Utility methods for common patterns
 	getOrSet(key: string, factory: () => any): any {
@@ -92,18 +92,18 @@ export const shortTermCache = new StandardizedCache(CACHE_CONFIGS.shortTerm);
 
 // Utility functions for backward compatibility
 export const createCache = (config?: LRU.Options<string, any, any>) =>
-  new StandardizedCache(config);
+	new StandardizedCache(config);
 
 /**
  * Migration helpers - gradually replace old cache implementations
  */
 export const migrateFromOldCache = (
-  oldCache: any,
-  _newCache: StandardizedCache
+	oldCache: any,
+	_newCache: StandardizedCache,
 ): void => {
-  if (oldCache && typeof oldCache.size === "function") {
-    // Migrate existing entries if possible
-    console.log(`Migrating ${oldCache.size()} entries to standardized cache`);
-    // Note: Old caches may not expose keys/values, so this is best-effort
-  }
+	if (oldCache && typeof oldCache.size === "function") {
+		// Migrate existing entries if possible
+		console.log(`Migrating ${oldCache.size()} entries to standardized cache`);
+		// Note: Old caches may not expose keys/values, so this is best-effort
+	}
 };

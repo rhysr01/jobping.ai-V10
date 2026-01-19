@@ -59,44 +59,47 @@ export function useSignupState(initialStep?: number) {
 	});
 
 	const setStep = (step: number) => {
-		setState(prev => ({ ...prev, step }));
+		setState((prev) => ({ ...prev, step }));
 	};
 
 	const setLoading = (loading: boolean) => {
-		setState(prev => ({ ...prev, loading }));
+		setState((prev) => ({ ...prev, loading }));
 	};
 
 	const setError = (error: string) => {
-		setState(prev => ({ ...prev, error }));
+		setState((prev) => ({ ...prev, error }));
 	};
 
 	const setSuccessState = (successState: SignupState["successState"]) => {
-		setState(prev => ({ ...prev, successState }));
+		setState((prev) => ({ ...prev, successState }));
 	};
 
 	const setActiveJobs = (activeJobs: string) => {
-		setState(prev => ({ ...prev, activeJobs }));
+		setState((prev) => ({ ...prev, activeJobs }));
 	};
 
 	const setTotalUsers = (totalUsers: string) => {
-		setState(prev => ({ ...prev, totalUsers }));
+		setState((prev) => ({ ...prev, totalUsers }));
 	};
 
 	const setIsLoadingStats = (isLoadingStats: boolean) => {
-		setState(prev => ({ ...prev, isLoadingStats }));
+		setState((prev) => ({ ...prev, isLoadingStats }));
 	};
 
 	const updateFormData = (updates: Partial<SignupFormData>) => {
-		setState(prev => ({
+		setState((prev) => ({
 			...prev,
-			formData: { ...prev.formData, ...updates }
+			formData: { ...prev.formData, ...updates },
 		}));
 	};
 
-	const setFormData: React.Dispatch<React.SetStateAction<SignupFormData>> = (formData) => {
-		setState(prev => ({
+	const setFormData: React.Dispatch<React.SetStateAction<SignupFormData>> = (
+		formData,
+	) => {
+		setState((prev) => ({
 			...prev,
-			formData: typeof formData === 'function' ? formData(prev.formData) : formData
+			formData:
+				typeof formData === "function" ? formData(prev.formData) : formData,
 		}));
 	};
 
@@ -104,7 +107,7 @@ export function useSignupState(initialStep?: number) {
 		if (!Array.isArray(state.formData[field])) return;
 		const currentArray = state.formData[field] as string[];
 		const newArray = currentArray.includes(value)
-			? currentArray.filter(v => v !== value)
+			? currentArray.filter((v) => v !== value)
 			: [...currentArray, value];
 		updateFormData({ [field]: newArray });
 	};

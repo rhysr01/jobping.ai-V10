@@ -69,7 +69,7 @@ function SignupForm() {
 	const { clearProgress } = useFormPersistence(
 		formData as any,
 		setFormData as any,
-		{ tier: 'premium', hasStep: true, minStepForSave: 1 },
+		{ tier: "premium", hasStep: true, minStepForSave: 1 },
 		setStep,
 		step,
 	);
@@ -118,7 +118,7 @@ function SignupForm() {
 		try {
 			// Stage 1: Validation (10% - 30%)
 			setSubmissionProgress(10);
-			await new Promise(resolve => setTimeout(resolve, 300));
+			await new Promise((resolve) => setTimeout(resolve, 300));
 			setSubmissionProgress(30);
 			setSubmissionStage("Analyzing your preferences...");
 
@@ -154,7 +154,9 @@ function SignupForm() {
 			clearProgress();
 
 			setTimeout(() => {
-				router.push(`/signup/verify?tier=premium&email=${encodeURIComponent(response.email)}`);
+				router.push(
+					`/signup/verify?tier=premium&email=${encodeURIComponent(response.email)}`,
+				);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			setSubmissionProgress(0);
@@ -180,13 +182,18 @@ function SignupForm() {
 
 	// Helper functions
 
-
-	const selectAllRoles = useCallback((careerPath: string) => {
-		const career = CAREER_PATHS.find((c) => c.value === careerPath);
-		if (career) {
-			setFormData({ ...formData, roles: career.popularRoles || career.roles });
-		}
-	}, [formData, setFormData]);
+	const selectAllRoles = useCallback(
+		(careerPath: string) => {
+			const career = CAREER_PATHS.find((c) => c.value === careerPath);
+			if (career) {
+				setFormData({
+					...formData,
+					roles: career.popularRoles || career.roles,
+				});
+			}
+		},
+		[formData, setFormData],
+	);
 
 	const clearAllRoles = useCallback(() => {
 		setFormData({ ...formData, roles: [] });
@@ -241,14 +248,80 @@ function SignupForm() {
 								<div className="mb-4">
 									<Progress value={submissionProgress} className="h-2" />
 								</div>
-								<p className="text-white font-medium text-lg">{submissionStage}</p>
-								<p className="text-zinc-400 text-sm mt-1">Creating your premium account...</p>
+								<p className="text-white font-medium text-lg">
+									{submissionStage}
+								</p>
+								<p className="text-zinc-400 text-sm mt-1">
+									Creating your premium account...
+								</p>
 							</motion.div>
 						)}
 
 						{/* Step content will be added here */}
 						<div className="text-white text-center">
-							{step === 1 && <Step1Basics key="step1" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} fieldErrors={{}} setFieldErrors={() => {}} announce={announce} loading={loading} setStep={navigation.navigateToStep} emailValidation={emailValidation} nameValidation={nameValidation} citiesValidation={citiesValidation} languagesValidation={languagesValidation} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 2 && <Step2Preferences key="step2" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} />} {step === 3 && <Step3CareerPath key="step3" formData={formData} setFormData={setFormData as any} touchedFields={new Set()} setTouchedFields={() => {}} loading={loading} setStep={navigation.navigateToStep} shouldShowError={() => false} getDisabledMessage={() => "Continue"} toggleArray={toggleArrayValue as any} selectAllRoles={selectAllRoles} clearAllRoles={clearAllRoles} tier="premium" />} {step === 4 && <Step4MatchingPreferences key="step4" formData={formData} setFormData={setFormData as any} loading={loading} setStep={navigation.navigateToStep} toggleArray={toggleArrayValue as any} handleSubmit={handleSubmit} />}
+							{step === 1 && (
+								<Step1Basics
+									key="step1"
+									formData={formData}
+									setFormData={setFormData as any}
+									touchedFields={new Set()}
+									setTouchedFields={() => {}}
+									fieldErrors={{}}
+									setFieldErrors={() => {}}
+									announce={announce}
+									loading={loading}
+									setStep={navigation.navigateToStep}
+									emailValidation={emailValidation}
+									nameValidation={nameValidation}
+									citiesValidation={citiesValidation}
+									languagesValidation={languagesValidation}
+									shouldShowError={() => false}
+									getDisabledMessage={() => "Continue"}
+									toggleArray={toggleArrayValue as any}
+								/>
+							)}{" "}
+							{step === 2 && (
+								<Step2Preferences
+									key="step2"
+									formData={formData}
+									setFormData={setFormData as any}
+									touchedFields={new Set()}
+									setTouchedFields={() => {}}
+									loading={loading}
+									setStep={navigation.navigateToStep}
+									shouldShowError={() => false}
+									getDisabledMessage={() => "Continue"}
+									toggleArray={toggleArrayValue as any}
+								/>
+							)}{" "}
+							{step === 3 && (
+								<Step3CareerPath
+									key="step3"
+									formData={formData}
+									setFormData={setFormData as any}
+									touchedFields={new Set()}
+									setTouchedFields={() => {}}
+									loading={loading}
+									setStep={navigation.navigateToStep}
+									shouldShowError={() => false}
+									getDisabledMessage={() => "Continue"}
+									toggleArray={toggleArrayValue as any}
+									selectAllRoles={selectAllRoles}
+									clearAllRoles={clearAllRoles}
+									tier="premium"
+								/>
+							)}{" "}
+							{step === 4 && (
+								<Step4MatchingPreferences
+									key="step4"
+									formData={formData}
+									setFormData={setFormData as any}
+									loading={loading}
+									setStep={navigation.navigateToStep}
+									toggleArray={toggleArrayValue as any}
+									handleSubmit={handleSubmit}
+								/>
+							)}
 						</div>
 					</div>
 				</div>

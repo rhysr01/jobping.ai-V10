@@ -41,26 +41,19 @@ export default function Page() {
 					8. FAQ - Objection killer (addresses Visa/Cancellation fears)
 				*/}
 
-					<Hero />
+				<Hero />
 
+				<CompanyLogos />
 
-					<CompanyLogos />
+				<EUJobStats />
 
+				<PremiumEmailShowcase />
 
-					<EUJobStats />
+				<Pricing />
 
+				<SocialProofRow />
 
-					<PremiumEmailShowcase />
-
-
-					<Pricing />
-
-
-					<SocialProofRow />
-
-
-					<FAQ />
-
+				<FAQ />
 			</main>
 			<div className="h-8 w-full bg-gradient-to-b from-transparent to-black/40" />
 			<Footer />

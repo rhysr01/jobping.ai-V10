@@ -11,7 +11,10 @@ interface FreeSuccessPageProps {
 	email: string;
 }
 
-export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPageProps) {
+export function FreeSuccessPage({
+	matchCount,
+	email: userEmail,
+}: FreeSuccessPageProps) {
 	const [isResending, setIsResending] = useState(false);
 	const [resendMessage, setResendMessage] = useState("");
 	return (
@@ -43,7 +46,9 @@ export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPag
 					<div className="bg-gradient-to-r from-emerald-500/10 via-emerald-600/10 to-teal-500/10 rounded-2xl p-6 border border-emerald-500/20 max-w-md mx-auto">
 						<div className="flex items-center justify-center gap-3 mb-4">
 							<BrandIcons.Mail className="w-6 h-6 text-emerald-400" />
-							<span className="text-lg font-semibold text-white">Check Your Email</span>
+							<span className="text-lg font-semibold text-white">
+								Check Your Email
+							</span>
 						</div>
 						<p className="text-sm text-content-secondary mb-4">
 							We've sent your first {matchCount} job matches to:
@@ -82,7 +87,8 @@ export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPag
 								Review Your Matches
 							</h3>
 							<p className="text-sm text-content-secondary text-center">
-								Each job is hand-picked for your visa status, location, and career path
+								Each job is hand-picked for your visa status, location, and
+								career path
 							</p>
 						</div>
 
@@ -125,15 +131,21 @@ export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPag
 					<div className="grid md:grid-cols-3 gap-4 mb-6">
 						<div className="flex items-center gap-3 p-4 rounded-xl bg-black/40 border border-white/10">
 							<BrandIcons.Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-							<span className="text-sm font-medium text-white">45 matches/month</span>
+							<span className="text-sm font-medium text-white">
+								45 matches/month
+							</span>
 						</div>
 						<div className="flex items-center gap-3 p-4 rounded-xl bg-black/40 border border-white/10">
 							<BrandIcons.Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-							<span className="text-sm font-medium text-white">3× weekly delivery</span>
+							<span className="text-sm font-medium text-white">
+								3× weekly delivery
+							</span>
 						</div>
 						<div className="flex items-center gap-3 p-4 rounded-xl bg-black/40 border border-white/10">
 							<BrandIcons.Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-							<span className="text-sm font-medium text-white">Cancel anytime</span>
+							<span className="text-sm font-medium text-white">
+								Cancel anytime
+							</span>
 						</div>
 					</div>
 
@@ -184,7 +196,9 @@ export function FreeSuccessPage({ matchCount, email: userEmail }: FreeSuccessPag
 										setTimeout(() => setResendMessage(""), 5000);
 									} else {
 										const error = await response.json();
-										setResendMessage(error.message || "Failed to resend email.");
+										setResendMessage(
+											error.message || "Failed to resend email.",
+										);
 									}
 								} catch (error) {
 									setResendMessage("Network error. Please try again.");

@@ -61,7 +61,7 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 			},
 			undefined,
 			undefined,
-			200
+			200,
 		);
 		const response = NextResponse.json(successResponse, { status: 200 });
 		response.headers.set("x-request-id", requestId);
@@ -93,7 +93,7 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 					},
 					undefined,
 					undefined,
-					200
+					200,
 				),
 				{ status: 200 },
 			);
@@ -229,7 +229,7 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 		},
 		undefined,
 		undefined,
-		200
+		200,
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });
@@ -242,7 +242,10 @@ async function handleSignupStats(requestId: string) {
 	const now = Date.now();
 
 	// Return cached count if still valid (1 minute cache)
-	if (cachedSignupCount !== null && now - lastSignupFetch < SIGNUP_CACHE_DURATION) {
+	if (
+		cachedSignupCount !== null &&
+		now - lastSignupFetch < SIGNUP_CACHE_DURATION
+	) {
 		const successResponse = createSuccessResponse(
 			{
 				count: cachedSignupCount,
@@ -251,7 +254,7 @@ async function handleSignupStats(requestId: string) {
 			},
 			undefined,
 			undefined,
-			200
+			200,
 		);
 		const response = NextResponse.json(successResponse, { status: 200 });
 		response.headers.set("x-request-id", requestId);
@@ -289,7 +292,7 @@ async function handleSignupStats(requestId: string) {
 		},
 		undefined,
 		undefined,
-		200
+		200,
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });
@@ -334,7 +337,7 @@ async function handleEUJobStats(requestId: string) {
 		},
 		undefined,
 		undefined,
-		200
+		200,
 	);
 
 	const response = NextResponse.json(successResponse, { status: 200 });

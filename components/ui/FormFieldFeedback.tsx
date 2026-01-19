@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { BrandIcons } from "./BrandIcons";
 import { getHumanErrorMessage } from "@/lib/error-messages";
+import { BrandIcons } from "./BrandIcons";
 
 interface FormFieldErrorProps {
 	error?: string;
@@ -100,29 +100,29 @@ export function StatusIndicator({
 	message,
 	icon = true,
 	size = "sm",
-	className = ""
+	className = "",
 }: StatusIndicatorProps) {
 	const statusConfig = {
 		success: {
 			icon: BrandIcons.CheckCircle,
 			color: "text-success",
-			container: "bg-success/10 border border-success/20"
+			container: "bg-success/10 border border-success/20",
 		},
 		error: {
 			icon: BrandIcons.AlertCircle,
 			color: "text-error",
-			container: "bg-error/10 border border-error/20"
+			container: "bg-error/10 border border-error/20",
 		},
 		warning: {
 			icon: BrandIcons.AlertCircle,
 			color: "text-warning",
-			container: "bg-warning/10 border border-warning/20"
+			container: "bg-warning/10 border border-warning/20",
 		},
 		info: {
 			icon: BrandIcons.Info,
 			color: "text-info",
-			container: "bg-info/10 border border-info/20"
-		}
+			container: "bg-info/10 border border-info/20",
+		},
 	};
 
 	const config = statusConfig[status];
@@ -131,9 +131,17 @@ export function StatusIndicator({
 	const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
 
 	return (
-		<div className={`inline-flex items-center gap-2 rounded-md px-3 py-2 ${config.container} ${className}`}>
-			{icon && <IconComponent className={`${iconSize} flex-shrink-0 ${config.color}`} />}
-			<span className={`${textSize} font-medium ${config.color}`}>{message}</span>
+		<div
+			className={`inline-flex items-center gap-2 rounded-md px-3 py-2 ${config.container} ${className}`}
+		>
+			{icon && (
+				<IconComponent
+					className={`${iconSize} flex-shrink-0 ${config.color}`}
+				/>
+			)}
+			<span className={`${textSize} font-medium ${config.color}`}>
+				{message}
+			</span>
 		</div>
 	);
 }
@@ -156,39 +164,45 @@ export function Notification({
 	message,
 	action,
 	onClose,
-	className = ""
+	className = "",
 }: NotificationProps) {
 	const typeConfig = {
 		success: {
 			icon: BrandIcons.CheckCircle,
 			color: "text-success",
-			container: "bg-success/10 border-success/20"
+			container: "bg-success/10 border-success/20",
 		},
 		error: {
 			icon: BrandIcons.AlertCircle,
 			color: "text-error",
-			container: "bg-error/10 border-error/20"
+			container: "bg-error/10 border-error/20",
 		},
 		warning: {
 			icon: BrandIcons.AlertCircle,
 			color: "text-warning",
-			container: "bg-warning/10 border-warning/20"
+			container: "bg-warning/10 border-warning/20",
 		},
 		info: {
 			icon: BrandIcons.Info,
 			color: "text-info",
-			container: "bg-info/10 border-info/20"
-		}
+			container: "bg-info/10 border-info/20",
+		},
 	};
 
 	const config = typeConfig[type];
 	const IconComponent = config.icon;
 
 	return (
-		<div className={`flex items-start gap-3 p-4 rounded-lg border ${config.container} ${className}`}>
-			<IconComponent className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`} />
+		<div
+			className={`flex items-start gap-3 p-4 rounded-lg border ${config.container} ${className}`}
+		>
+			<IconComponent
+				className={`w-5 h-5 mt-0.5 flex-shrink-0 ${config.color}`}
+			/>
 			<div className="flex-1 min-w-0">
-				{title && <h4 className={`font-semibold ${config.color} mb-1`}>{title}</h4>}
+				{title && (
+					<h4 className={`font-semibold ${config.color} mb-1`}>{title}</h4>
+				)}
 				<p className={`text-sm ${config.color}/80`}>{message}</p>
 			</div>
 			<div className="flex items-center gap-2 flex-shrink-0">

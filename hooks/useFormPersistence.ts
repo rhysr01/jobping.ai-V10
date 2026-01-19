@@ -48,7 +48,7 @@ interface SavedFormState {
 }
 
 interface UseFormPersistenceOptions {
-	tier: 'premium' | 'free';
+	tier: "premium" | "free";
 	hasStep?: boolean; // Whether to track step changes
 	minStepForSave?: number; // Minimum step to start saving (premium only)
 }
@@ -71,19 +71,22 @@ export function useFormPersistence(
 	const hasUserDataRef = useRef(false);
 
 	// Check if user has entered any data (for free tier)
-	const checkHasUserData = useCallback((data: FormDataType) => {
-		if (tier === 'free') {
-			const freeData = data as FreeFormData;
-			return !!(
-				freeData.email ||
-				freeData.fullName ||
-				freeData.cities?.length ||
-				freeData.careerPath ||
-				freeData.visaSponsorship
-			);
-		}
-		return true; // Premium always saves after minStepForSave
-	}, [tier]);
+	const checkHasUserData = useCallback(
+		(data: FormDataType) => {
+			if (tier === "free") {
+				const freeData = data as FreeFormData;
+				return !!(
+					freeData.email ||
+					freeData.fullName ||
+					freeData.cities?.length ||
+					freeData.careerPath ||
+					freeData.visaSponsorship
+				);
+			}
+			return true; // Premium always saves after minStepForSave
+		},
+		[tier],
+	);
 
 	// Update hasUserData ref when formData changes
 	useEffect(() => {
@@ -92,9 +95,10 @@ export function useFormPersistence(
 
 	// Save progress based on tier-specific logic
 	useEffect(() => {
-		const shouldSave = tier === 'premium'
-			? (currentStep && currentStep >= minStepForSave)
-			: hasUserDataRef.current;
+		const shouldSave =
+			tier === "premium"
+				? currentStep && currentStep >= minStepForSave
+				: hasUserDataRef.current;
 
 		if (!shouldSave) return;
 
@@ -102,13 +106,13 @@ export function useFormPersistence(
 			let formDataToSave = formData;
 
 			// Convert SignupFormData to FreeFormData for free tier
-			if (tier === 'free') {
+			if (tier === "free") {
 				const signupData = formData as any; // SignupFormData
 				formDataToSave = {
 					email: signupData.email,
 					fullName: signupData.fullName,
 					cities: signupData.cities,
-					careerPath: signupData.careerPath?.[0] || '', // Convert array to string
+					careerPath: signupData.careerPath?.[0] || "", // Convert array to string
 					visaSponsorship: signupData.visaSponsorship,
 					gdprConsent: signupData.gdprConsent,
 					birthYear: signupData.birthYear,
@@ -157,7 +161,7 @@ export function useFormPersistence(
 			}
 
 			// Restore data based on tier
-			if (tier === 'premium') {
+			if (tier === "premium") {
 				// Premium: restore formData and step
 				setFormData(parsed.formData);
 				if (hasStep && setStep && parsed.step !== undefined) {
@@ -167,25 +171,28 @@ export function useFormPersistence(
 			} else {
 				// Free: convert FreeFormData back to SignupFormData and restore if user confirms
 				const shouldRestore = confirm(
-					"We found your previous progress. Would you like to restore it?"
+					"We found your previous progress. Would you like to restore it?",
 				);
 				if (shouldRestore) {
 					const freeData = parsed.formData as FreeFormData;
 					const signupData = {
-						fullName: freeData.fullName || '',
-						email: freeData.email || '',
+						fullName: freeData.fullName || "",
+						email: freeData.email || "",
 						cities: freeData.cities || [],
 						languages: [],
 						workEnvironment: [],
-						visaStatus: freeData.visaSponsorship === 'yes' ? 'Non-EU (require sponsorship)' : 'EU citizen',
+						visaStatus:
+							freeData.visaSponsorship === "yes"
+								? "Non-EU (require sponsorship)"
+								: "EU citizen",
 						entryLevelPreferences: [],
 						targetCompanies: [],
 						careerPath: freeData.careerPath ? [freeData.careerPath] : [], // Convert string to array
 						roles: [],
 						industries: [],
-						companySizePreference: '',
+						companySizePreference: "",
 						skills: [],
-						careerKeywords: '',
+						careerKeywords: "",
 						gdprConsent: freeData.gdprConsent || false,
 						birthYear: freeData.birthYear,
 						ageVerified: freeData.ageVerified || false,

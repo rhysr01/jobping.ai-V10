@@ -6,7 +6,8 @@ interface GDPRConsentSectionProps {
 }
 
 export function GDPRConsentSection({ formState }: GDPRConsentSectionProps) {
-	const { formData, setFormData, setTouchedFields, shouldShowError } = formState;
+	const { formData, setFormData, setTouchedFields, shouldShowError } =
+		formState;
 
 	const handleGDPRChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setFormData((prev) => ({

@@ -76,7 +76,8 @@ describe("AIMatchingService - 100% Coverage", () => {
 				city: "London",
 				country: "UK",
 				job_url: "https://example.com/job1",
-				description: "Looking for experienced software engineer with React and TypeScript skills",
+				description:
+					"Looking for experienced software engineer with React and TypeScript skills",
 				experience_required: "mid-level",
 				work_environment: "hybrid",
 				source: "test",
@@ -124,23 +125,27 @@ describe("AIMatchingService - 100% Coverage", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify([{
-										jobIndex: 0,
-										matchScore: 85,
-										confidenceScore: 90,
-										matchReason: "Strong match",
-										scoreBreakdown: {
-											skills: 80,
-											experience: 85,
-											location: 90,
-											company: 75,
-											overall: 85,
-										},
-									}]),
+							choices: [
+								{
+									message: {
+										content: JSON.stringify([
+											{
+												jobIndex: 0,
+												matchScore: 85,
+												confidenceScore: 90,
+												matchReason: "Strong match",
+												scoreBreakdown: {
+													skills: 80,
+													experience: 85,
+													location: 90,
+													company: 75,
+													overall: 85,
+												},
+											},
+										]),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -173,38 +178,40 @@ describe("AIMatchingService - 100% Coverage", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: JSON.stringify([
-										{
-											jobIndex: 0,
-											matchScore: 70,
-											confidenceScore: 80,
-											matchReason: "Good match",
-											scoreBreakdown: {
-												skills: 65,
-												experience: 70,
-												location: 75,
-												company: 70,
-												overall: 70,
+							choices: [
+								{
+									message: {
+										content: JSON.stringify([
+											{
+												jobIndex: 0,
+												matchScore: 70,
+												confidenceScore: 80,
+												matchReason: "Good match",
+												scoreBreakdown: {
+													skills: 65,
+													experience: 70,
+													location: 75,
+													company: 70,
+													overall: 70,
+												},
 											},
-										},
-										{
-											jobIndex: 0,
-											matchScore: 90,
-											confidenceScore: 95,
-											matchReason: "Excellent match",
-											scoreBreakdown: {
-												skills: 85,
-												experience: 90,
-												location: 95,
-												company: 80,
-												overall: 90,
+											{
+												jobIndex: 0,
+												matchScore: 90,
+												confidenceScore: 95,
+												matchReason: "Excellent match",
+												scoreBreakdown: {
+													skills: 85,
+													experience: 90,
+													location: 95,
+													company: 80,
+													overall: 90,
+												},
 											},
-										},
-									]),
+										]),
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -226,11 +233,13 @@ describe("AIMatchingService - 100% Coverage", () => {
 
 			const mockOpenAI = require("openai").default;
 			const createMock = jest.fn().mockResolvedValue({
-				choices: [{
-					message: {
-						content: JSON.stringify([]),
+				choices: [
+					{
+						message: {
+							content: JSON.stringify([]),
+						},
 					},
-				}],
+				],
 			});
 
 			mockOpenAI.mockImplementation(() => ({
@@ -277,7 +286,7 @@ describe("AIMatchingService - 100% Coverage", () => {
 			expect(mockOpenAI).toHaveBeenCalledWith(
 				expect.objectContaining({
 					apiKey: "test-key",
-				})
+				}),
 			);
 		});
 
@@ -294,9 +303,9 @@ describe("AIMatchingService - 100% Coverage", () => {
 		it("should throw error when OpenAI not initialized", async () => {
 			const noKeyService = new AIMatchingService();
 
-			await expect(noKeyService.findMatches(mockUser, mockJobs))
-				.rejects
-				.toThrow("OpenAI client not initialized");
+			await expect(
+				noKeyService.findMatches(mockUser, mockJobs),
+			).rejects.toThrow("OpenAI client not initialized");
 		});
 
 		it("should log completion statistics", async () => {
@@ -312,7 +321,7 @@ describe("AIMatchingService - 100% Coverage", () => {
 						matchesFound: 1,
 						processingTime: expect.any(Number),
 					}),
-				})
+				}),
 			);
 		});
 	});
@@ -320,19 +329,21 @@ describe("AIMatchingService - 100% Coverage", () => {
 	describe("Cache Functionality", () => {
 		it("should return cached results when available", async () => {
 			const mockCache = require("../../../../lib/cache").aiMatchingCache;
-			const cachedResults = [{
-				job: mockJobs[0],
-				matchScore: 80,
-				confidenceScore: 85,
-				matchReason: "Cached match",
-				scoreBreakdown: {
-					skills: 75,
-					experience: 80,
-					location: 85,
-					company: 70,
-					overall: 80,
+			const cachedResults = [
+				{
+					job: mockJobs[0],
+					matchScore: 80,
+					confidenceScore: 85,
+					matchReason: "Cached match",
+					scoreBreakdown: {
+						skills: 75,
+						experience: 80,
+						location: 85,
+						company: 70,
+						overall: 80,
+					},
 				},
-			}];
+			];
 
 			mockCache.get.mockReturnValue(cachedResults);
 
@@ -354,7 +365,7 @@ describe("AIMatchingService - 100% Coverage", () => {
 
 			expect(mockCache.set).toHaveBeenCalledWith(
 				expect.any(String), // Cache key
-				expect.any(Array) // Results
+				expect.any(Array), // Results
 			);
 		});
 
@@ -407,7 +418,9 @@ describe("AIMatchingService - 100% Coverage", () => {
 			mockOpenAI.mockImplementation(() => ({
 				chat: {
 					completions: {
-						create: jest.fn().mockRejectedValue(new Error("API rate limit exceeded")),
+						create: jest
+							.fn()
+							.mockRejectedValue(new Error("API rate limit exceeded")),
 					},
 				},
 			}));
@@ -424,7 +437,7 @@ describe("AIMatchingService - 100% Coverage", () => {
 				expect.objectContaining({
 					userEmail: mockUser.email,
 					jobsCount: 1,
-				})
+				}),
 			);
 		});
 
@@ -434,11 +447,13 @@ describe("AIMatchingService - 100% Coverage", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: null, // Empty response
+							choices: [
+								{
+									message: {
+										content: null, // Empty response
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -455,11 +470,13 @@ describe("AIMatchingService - 100% Coverage", () => {
 				chat: {
 					completions: {
 						create: jest.fn().mockResolvedValue({
-							choices: [{
-								message: {
-									content: "Invalid JSON response {",
+							choices: [
+								{
+									message: {
+										content: "Invalid JSON response {",
+									},
 								},
-							}],
+							],
 						}),
 					},
 				},
@@ -473,7 +490,7 @@ describe("AIMatchingService - 100% Coverage", () => {
 			const mockLogger = require("../../../../lib/api-logger").apiLogger;
 			expect(mockLogger.error).toHaveBeenCalledWith(
 				"Failed to parse OpenAI response",
-				expect.any(Error)
+				expect.any(Error),
 			);
 		});
 	});
@@ -498,7 +515,10 @@ describe("AIMatchingService - 100% Coverage", () => {
 				career_keywords: undefined,
 			};
 
-			const prompt = (service as any).buildPrompt(userWithoutKeywords, mockJobs);
+			const prompt = (service as any).buildPrompt(
+				userWithoutKeywords,
+				mockJobs,
+			);
 
 			expect(prompt).toBeDefined();
 			expect(typeof prompt).toBe("string");
@@ -513,19 +533,21 @@ describe("AIMatchingService - 100% Coverage", () => {
 
 	describe("Response Parsing", () => {
 		it("should parse valid JSON responses", () => {
-			const validResponse = JSON.stringify([{
-				jobIndex: 0,
-				matchScore: 85,
-				confidenceScore: 90,
-				matchReason: "Good match",
-				scoreBreakdown: {
-					skills: 80,
-					experience: 85,
-					location: 90,
-					company: 75,
-					overall: 85,
+			const validResponse = JSON.stringify([
+				{
+					jobIndex: 0,
+					matchScore: 85,
+					confidenceScore: 90,
+					matchReason: "Good match",
+					scoreBreakdown: {
+						skills: 80,
+						experience: 85,
+						location: 90,
+						company: 75,
+						overall: 85,
+					},
 				},
-			}]);
+			]);
 
 			const results = (service as any).parseResponse(validResponse, mockJobs);
 
@@ -535,59 +557,74 @@ describe("AIMatchingService - 100% Coverage", () => {
 		});
 
 		it("should clamp score values to valid ranges", () => {
-			const outOfRangeResponse = JSON.stringify([{
-				jobIndex: 0,
-				matchScore: 150, // Too high
-				confidenceScore: -10, // Too low
-				matchReason: "Test match",
-				scoreBreakdown: {
-					skills: 80,
-					experience: 85,
-					location: 90,
-					company: 75,
-					overall: 85,
+			const outOfRangeResponse = JSON.stringify([
+				{
+					jobIndex: 0,
+					matchScore: 150, // Too high
+					confidenceScore: -10, // Too low
+					matchReason: "Test match",
+					scoreBreakdown: {
+						skills: 80,
+						experience: 85,
+						location: 90,
+						company: 75,
+						overall: 85,
+					},
 				},
-			}]);
+			]);
 
-			const results = (service as any).parseResponse(outOfRangeResponse, mockJobs);
+			const results = (service as any).parseResponse(
+				outOfRangeResponse,
+				mockJobs,
+			);
 
 			expect(results[0].matchScore).toBe(100); // Clamped to max
 			expect(results[0].confidenceScore).toBe(0); // Clamped to min
 		});
 
 		it("should skip matches with invalid job indices", () => {
-			const invalidIndexResponse = JSON.stringify([{
-				jobIndex: 999, // Invalid index
-				matchScore: 85,
-				confidenceScore: 90,
-				matchReason: "Invalid match",
-				scoreBreakdown: {
-					skills: 80,
-					experience: 85,
-					location: 90,
-					company: 75,
-					overall: 85,
+			const invalidIndexResponse = JSON.stringify([
+				{
+					jobIndex: 999, // Invalid index
+					matchScore: 85,
+					confidenceScore: 90,
+					matchReason: "Invalid match",
+					scoreBreakdown: {
+						skills: 80,
+						experience: 85,
+						location: 90,
+						company: 75,
+						overall: 85,
+					},
 				},
-			}]);
+			]);
 
-			const results = (service as any).parseResponse(invalidIndexResponse, mockJobs);
+			const results = (service as any).parseResponse(
+				invalidIndexResponse,
+				mockJobs,
+			);
 
 			expect(results).toHaveLength(0); // Should skip invalid match
 		});
 
 		it("should handle missing scoreBreakdown fields", () => {
-			const incompleteResponse = JSON.stringify([{
-				jobIndex: 0,
-				matchScore: 85,
-				confidenceScore: 90,
-				matchReason: "Incomplete match",
-				scoreBreakdown: {
-					skills: 80,
-					// Missing other fields
+			const incompleteResponse = JSON.stringify([
+				{
+					jobIndex: 0,
+					matchScore: 85,
+					confidenceScore: 90,
+					matchReason: "Incomplete match",
+					scoreBreakdown: {
+						skills: 80,
+						// Missing other fields
+					},
 				},
-			}]);
+			]);
 
-			const results = (service as any).parseResponse(incompleteResponse, mockJobs);
+			const results = (service as any).parseResponse(
+				incompleteResponse,
+				mockJobs,
+			);
 
 			expect(results).toHaveLength(1);
 			expect(results[0].scoreBreakdown.skills).toBe(80);
@@ -603,11 +640,13 @@ describe("AIMatchingService - 100% Coverage", () => {
 		});
 
 		it("should handle jobs with missing fields", async () => {
-			const incompleteJobs = [{
-				job_hash: "incomplete",
-				title: "Test Job",
-				// Missing many required fields
-			}] as Job[];
+			const incompleteJobs = [
+				{
+					job_hash: "incomplete",
+					title: "Test Job",
+					// Missing many required fields
+				},
+			] as Job[];
 
 			// Should not crash
 			const results = await service.findMatches(mockUser, incompleteJobs);

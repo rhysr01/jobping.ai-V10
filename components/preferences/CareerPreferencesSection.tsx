@@ -1,11 +1,18 @@
-import { PreferencesFormData, CAREER_PATHS, ENTRY_LEVEL_PREFERENCES } from "@/hooks/usePreferences";
+import {
+	PreferencesFormData,
+	CAREER_PATHS,
+	ENTRY_LEVEL_PREFERENCES,
+} from "@/hooks/usePreferences";
 
 interface CareerPreferencesSectionProps {
 	formData: PreferencesFormData;
 	onUpdate: (updates: Partial<PreferencesFormData>) => void;
 }
 
-export function CareerPreferencesSection({ formData, onUpdate }: CareerPreferencesSectionProps) {
+export function CareerPreferencesSection({
+	formData,
+	onUpdate,
+}: CareerPreferencesSectionProps) {
 	return (
 		<div className="space-y-6">
 			<div>
@@ -26,15 +33,23 @@ export function CareerPreferencesSection({ formData, onUpdate }: CareerPreferenc
 									onChange={(e) => {
 										if (e.target.checked) {
 											if (formData.careerPath.length < 2) {
-												onUpdate({ careerPath: [...formData.careerPath, path] });
+												onUpdate({
+													careerPath: [...formData.careerPath, path],
+												});
 											}
 										} else {
-											onUpdate({ careerPath: formData.careerPath.filter(cp => cp !== path) });
+											onUpdate({
+												careerPath: formData.careerPath.filter(
+													(cp) => cp !== path,
+												),
+											});
 										}
 									}}
 									className="w-4 h-4 text-brand-600 bg-white/10 border-white/20 rounded focus:ring-brand-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
 								/>
-								<span className={`text-sm ${canSelect ? 'text-zinc-500' : 'text-content-secondary'}`}>
+								<span
+									className={`text-sm ${canSelect ? "text-zinc-500" : "text-content-secondary"}`}
+								>
 									{path}
 								</span>
 							</label>
@@ -82,12 +97,16 @@ export function CareerPreferencesSection({ formData, onUpdate }: CareerPreferenc
 									onChange={(e) => {
 										const updated = e.target.checked
 											? [...formData.entryLevelPreferences, preference]
-											: formData.entryLevelPreferences.filter((item) => item !== preference);
+											: formData.entryLevelPreferences.filter(
+													(item) => item !== preference,
+												);
 										onUpdate({ entryLevelPreferences: updated });
 									}}
 									className="w-4 h-4 text-brand-600 bg-white/10 border-white/20 rounded focus:ring-brand-500 focus:ring-2"
 								/>
-								<span className="text-sm text-content-secondary">{preference}</span>
+								<span className="text-sm text-content-secondary">
+									{preference}
+								</span>
 							</label>
 						))}
 					</div>

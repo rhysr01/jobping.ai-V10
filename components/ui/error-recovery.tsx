@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
+import { showToast } from "../../lib/toast";
 import { BrandIcons } from "./BrandIcons";
 import CustomButton from "./CustomButton";
-import { showToast } from "../../lib/toast";
 
 interface ErrorRecoveryProps {
 	error: string;
@@ -14,56 +14,60 @@ export function ErrorRecovery({
 	error,
 	onRetry,
 	suggestions = [],
-	className = ""
+	className = "",
 }: ErrorRecoveryProps) {
 	const getErrorType = (error: string) => {
 		const lowerError = error.toLowerCase();
-		if (lowerError.includes('network') || lowerError.includes('connection')) {
-			return 'network';
+		if (lowerError.includes("network") || lowerError.includes("connection")) {
+			return "network";
 		}
-		if (lowerError.includes('validation') || lowerError.includes('invalid')) {
-			return 'validation';
+		if (lowerError.includes("validation") || lowerError.includes("invalid")) {
+			return "validation";
 		}
-		if (lowerError.includes('rate limit') || lowerError.includes('too many')) {
-			return 'rateLimit';
+		if (lowerError.includes("rate limit") || lowerError.includes("too many")) {
+			return "rateLimit";
 		}
-		return 'general';
+		return "general";
 	};
 
 	const getErrorIcon = (errorType: string) => {
 		switch (errorType) {
-			case 'network': return 'WifiOff';
-			case 'validation': return 'AlertTriangle';
-			case 'rateLimit': return 'Clock';
-			default: return 'AlertCircle';
+			case "network":
+				return "WifiOff";
+			case "validation":
+				return "AlertTriangle";
+			case "rateLimit":
+				return "Clock";
+			default:
+				return "AlertCircle";
 		}
 	};
 
 	const getDefaultSuggestions = (errorType: string) => {
 		switch (errorType) {
-			case 'network':
+			case "network":
 				return [
-					'Check your internet connection',
-					'Try refreshing the page',
-					'Wait a moment and try again'
+					"Check your internet connection",
+					"Try refreshing the page",
+					"Wait a moment and try again",
 				];
-			case 'validation':
+			case "validation":
 				return [
-					'Double-check your information',
-					'Make sure all required fields are filled',
-					'Check email format'
+					"Double-check your information",
+					"Make sure all required fields are filled",
+					"Check email format",
 				];
-			case 'rateLimit':
+			case "rateLimit":
 				return [
-					'Wait a few minutes before trying again',
-					'Try during off-peak hours',
-					'Contact support if this persists'
+					"Wait a few minutes before trying again",
+					"Try during off-peak hours",
+					"Contact support if this persists",
 				];
 			default:
 				return [
-					'Try refreshing the page',
-					'Clear your browser cache',
-					'Contact support if the problem continues'
+					"Try refreshing the page",
+					"Clear your browser cache",
+					"Contact support if the problem continues",
 				];
 		}
 	};
@@ -71,7 +75,8 @@ export function ErrorRecovery({
 	const errorType = getErrorType(error);
 	const iconName = getErrorIcon(errorType);
 	const IconComponent = BrandIcons[iconName as keyof typeof BrandIcons];
-	const displaySuggestions = suggestions.length > 0 ? suggestions : getDefaultSuggestions(errorType);
+	const displaySuggestions =
+		suggestions.length > 0 ? suggestions : getDefaultSuggestions(errorType);
 
 	return (
 		<motion.div
@@ -88,9 +93,7 @@ export function ErrorRecovery({
 			<h3 className="text-lg font-semibold text-white mb-2">
 				Something went wrong
 			</h3>
-			<p className="text-zinc-400 mb-4 leading-relaxed">
-				{error}
-			</p>
+			<p className="text-zinc-400 mb-4 leading-relaxed">{error}</p>
 
 			{/* Suggestions */}
 			<div className="text-left mb-6">
@@ -155,7 +158,10 @@ interface ErrorBoundaryProps {
 	fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
 }
 
-export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<
+	ErrorBoundaryProps,
+	ErrorBoundaryState
+> {
 	constructor(props: ErrorBoundaryProps) {
 		super(props);
 		this.state = { hasError: false };
@@ -166,8 +172,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 	}
 
 	componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-		console.error('Error boundary caught an error:', error, errorInfo);
-		showToast.error('Something went wrong. Please try refreshing the page.');
+		console.error("Error boundary caught an error:", error, errorInfo);
+		showToast.error("Something went wrong. Please try refreshing the page.");
 	}
 
 	render() {
@@ -188,9 +194,9 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 					error="An unexpected error occurred. We're working to fix this."
 					onRetry={() => this.setState({ hasError: false, error: undefined })}
 					suggestions={[
-						'Refresh the page',
-						'Try again in a few minutes',
-						'Contact support if this persists'
+						"Refresh the page",
+						"Try again in a few minutes",
+						"Contact support if this persists",
 					]}
 				/>
 			);

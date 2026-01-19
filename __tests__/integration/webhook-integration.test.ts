@@ -64,14 +64,11 @@ describe("Webhook Integration Tests", () => {
 	describe("Webhook Security", () => {
 		it("should validate webhook origins", () => {
 			// Test that webhooks only accept requests from trusted sources
-			const trustedOrigins = [
-				"https://api.stripe.com",
-				"https://api.polar.sh",
-			];
+			const trustedOrigins = ["https://api.stripe.com", "https://api.polar.sh"];
 
 			const untrustedOrigin = "https://evil.com";
 
-			trustedOrigins.forEach(origin => {
+			trustedOrigins.forEach((origin) => {
 				expect(origin).toMatch(/^https:\/\/api\./);
 			});
 

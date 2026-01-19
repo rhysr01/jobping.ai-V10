@@ -26,19 +26,22 @@ export default function SocialProofRow() {
 			icon: <BrandIcons.Mail className="h-5 w-5" />,
 			eyebrow: "Premium",
 			title: `15 fresh matches in your inbox every week`,
-			description: "Never miss opportunities - delivered Mon/Wed/Fri while they're still available",
+			description:
+				"Never miss opportunities - delivered Mon/Wed/Fri while they're still available",
 		},
 		{
 			icon: <BrandIcons.CheckCircle className="h-5 w-5" />,
 			eyebrow: "Premium",
 			title: `Complete salary & visa details upfront`,
-			description: "Know exactly what you're applying for - no hidden requirements or surprise rejections",
+			description:
+				"Know exactly what you're applying for - no hidden requirements or surprise rejections",
 		},
 		{
 			icon: <BrandIcons.Target className="h-5 w-5" />,
 			eyebrow: "Premium",
 			title: `AI learns from your feedback instantly`,
-			description: "Thumbs up/down on any match improves your recommendations - better jobs, faster",
+			description:
+				"Thumbs up/down on any match improves your recommendations - better jobs, faster",
 		},
 	];
 
@@ -84,7 +87,7 @@ export default function SocialProofRow() {
 								>
 									{/* Glow effect on hover */}
 									<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-500" />
-									
+
 									{/* Glowing divider */}
 									{index < items.length - 1 && (
 										<span className="hidden md:inline absolute right-0 top-1/2 h-12 w-px bg-gradient-to-b from-transparent via-emerald-500/40 to-transparent -translate-y-1/2" />

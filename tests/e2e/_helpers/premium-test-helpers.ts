@@ -78,11 +78,15 @@ export class PremiumTestDataFactory {
 	}
 
 	static createFreeUser(overrides: Partial<PremiumUser> = {}): PremiumUser {
-		return this.createUser({ ...overrides, tier: "free", experience: "0" });
+		return PremiumTestDataFactory.createUser({
+			...overrides,
+			tier: "free",
+			experience: "0",
+		});
 	}
 
 	static createRestrictiveUser(): PremiumUser {
-		return this.createUser({
+		return PremiumTestDataFactory.createUser({
 			cities: ["Tokyo"],
 			languages: ["Japanese"],
 			careerPath: "finance",
@@ -100,8 +104,8 @@ export class PremiumTestDataFactory {
 	}
 
 	static createOversizedUser(): PremiumUser {
-		const user = this.createUser();
-		user.email = "a".repeat(1000) + "@test.com";
+		const user = PremiumTestDataFactory.createUser();
+		user.email = `${"a".repeat(1000)}@test.com`;
 		user.skills = Array.from({ length: 100 }, (_, i) => `skill${i}`);
 		return user;
 	}
@@ -111,12 +115,15 @@ export class PremiumTestDataFactory {
  * Authentication & Authorization Helpers
  */
 export class PremiumAuthHelper {
-	static async authenticatePremiumUser(request: APIRequestContext, user: PremiumUser) {
+	static async authenticatePremiumUser(
+		_request: APIRequestContext,
+		user: PremiumUser,
+	) {
 		// Simulate premium authentication
 		const authToken = `premium-token-${user.email}`;
 		return {
 			headers: {
-				"Authorization": `Bearer ${authToken}`,
+				Authorization: `Bearer ${authToken}`,
 				"X-Premium-Tier": "true",
 			},
 			cookies: [
@@ -131,7 +138,10 @@ export class PremiumAuthHelper {
 		};
 	}
 
-	static async authenticateFreeUser(request: APIRequestContext, user: PremiumUser) {
+	static async authenticateFreeUser(
+		_request: APIRequestContext,
+		user: PremiumUser,
+	) {
 		return {
 			headers: {
 				"X-Tier": "free",
@@ -150,7 +160,7 @@ export class PremiumAuthHelper {
 	static async getSystemAuth() {
 		return {
 			headers: {
-				"Authorization": `Bearer ${process.env.SYSTEM_API_KEY}`,
+				Authorization: `Bearer ${process.env.SYSTEM_API_KEY}`,
 			},
 		};
 	}
@@ -180,7 +190,11 @@ export class PremiumAPIHelper {
 		};
 	}
 
-	static async runMatching(request: APIRequestContext, userEmail: string, options: any = {}) {
+	static async runMatching(
+		request: APIRequestContext,
+		userEmail: string,
+		options: any = {},
+	) {
 		const auth = await PremiumAuthHelper.getSystemAuth();
 		const response = await request.post("/api/match-users", {
 			headers: auth.headers,
@@ -197,7 +211,10 @@ export class PremiumAPIHelper {
 		};
 	}
 
-	static async getPremiumMatches(request: APIRequestContext, user: PremiumUser) {
+	static async getPremiumMatches(
+		request: APIRequestContext,
+		user: PremiumUser,
+	) {
 		// Premium matches use the same endpoint but with premium user data
 		return PremiumAPIHelper.runMatching(request, user.email);
 	}
@@ -208,7 +225,7 @@ export class PremiumAPIHelper {
  */
 export class PremiumPerformanceHelper {
 	static async measureResponseTime<T>(
-		operation: () => Promise<T>
+		operation: () => Promise<T>,
 	): Promise<{ result: T; responseTime: number }> {
 		const startTime = Date.now();
 		const result = await operation();
@@ -219,7 +236,7 @@ export class PremiumPerformanceHelper {
 
 	static async measureConcurrentLoad<T>(
 		operations: (() => Promise<T>)[],
-		concurrency: number = 5
+		concurrency: number = 5,
 	): Promise<PerformanceMetrics> {
 		const startTime = Date.now();
 		const results: { success: boolean; responseTime: number }[] = [];
@@ -230,22 +247,28 @@ export class PremiumPerformanceHelper {
 			const batchResults = await Promise.all(
 				batch.map(async (op) => {
 					try {
-						const { responseTime } = await this.measureResponseTime(op);
+						const { responseTime } =
+							await PremiumPerformanceHelper.measureResponseTime(op);
 						return { success: true, responseTime };
 					} catch {
 						return { success: false, responseTime: 0 };
 					}
-				})
+				}),
 			);
 			results.push(...batchResults);
 		}
 
 		const totalTime = Date.now() - startTime;
-		const successfulRequests = results.filter(r => r.success).length;
+		const successfulRequests = results.filter((r) => r.success).length;
 		const totalRequests = results.length;
 		const errorRate = (totalRequests - successfulRequests) / totalRequests;
-		const responseTimes = results.filter(r => r.success).map(r => r.responseTime);
-		const percentile95 = responseTimes.sort((a, b) => a - b)[Math.floor(responseTimes.length * 0.95)] || 0;
+		const responseTimes = results
+			.filter((r) => r.success)
+			.map((r) => r.responseTime);
+		const percentile95 =
+			responseTimes.sort((a, b) => a - b)[
+				Math.floor(responseTimes.length * 0.95)
+			] || 0;
 
 		return {
 			responseTime: totalTime,
@@ -260,7 +283,10 @@ export class PremiumPerformanceHelper {
  * Response Validation Helpers
  */
 export class PremiumValidationHelper {
-	static validateMatchResponse(data: MatchResult, expectedTier: "free" | "premium") {
+	static validateMatchResponse(
+		data: MatchResult,
+		expectedTier: "free" | "premium",
+	) {
 		expect(data).toHaveProperty("matches");
 		expect(Array.isArray(data.matches)).toBe(true);
 		expect(data).toHaveProperty("method");
@@ -287,9 +313,14 @@ export class PremiumValidationHelper {
 		}
 	}
 
-	static validatePremiumVsFreeComparison(freeData: MatchResult, premiumData: MatchResult) {
+	static validatePremiumVsFreeComparison(
+		freeData: MatchResult,
+		premiumData: MatchResult,
+	) {
 		// Premium should return at least as many matches as free
-		expect(premiumData.matches.length).toBeGreaterThanOrEqual(freeData.matches.length);
+		expect(premiumData.matches.length).toBeGreaterThanOrEqual(
+			freeData.matches.length,
+		);
 
 		// Premium should have tier metadata
 		expect(premiumData.tier).toBe("premium");
@@ -324,7 +355,7 @@ export class PremiumEdgeCaseGenerator {
 			{ userEmail: "'; DROP TABLE users; --" },
 			{ userEmail: "<script>alert('xss')</script>" },
 			{ userEmail: "../../../../etc/passwd" },
-			{ userEmail: "a".repeat(10000) + "@test.com" },
+			{ userEmail: `${"a".repeat(10000)}@test.com` },
 		];
 	}
 
@@ -352,7 +383,11 @@ export class PremiumEdgeCaseGenerator {
 export class PremiumAccessibilityHelper {
 	static async checkKeyboardNavigation(page: any) {
 		// Test Tab navigation
-		const tabbableElements = await page.locator('[tabindex]:not([tabindex="-1"]), button, input, select, textarea, a[href]').all();
+		const tabbableElements = await page
+			.locator(
+				'[tabindex]:not([tabindex="-1"]), button, input, select, textarea, a[href]',
+			)
+			.all();
 		expect(tabbableElements.length).toBeGreaterThan(0);
 
 		// Test focus management
@@ -364,8 +399,12 @@ export class PremiumAccessibilityHelper {
 	}
 
 	static async checkAriaLabels(page: any) {
-		const ariaElements = await page.locator('[aria-label], [aria-labelledby]').all();
-		const totalFormElements = await page.locator('input, button, select, textarea').all();
+		const ariaElements = await page
+			.locator("[aria-label], [aria-labelledby]")
+			.all();
+		const totalFormElements = await page
+			.locator("input, button, select, textarea")
+			.all();
 
 		return {
 			ariaElements: ariaElements.length,

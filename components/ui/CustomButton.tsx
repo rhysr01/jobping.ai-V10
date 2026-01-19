@@ -1,7 +1,7 @@
-import { forwardRef } from "react";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
-import { motion } from "framer-motion";
 import { cva, type VariantProps } from "class-variance-authority";
+import { motion } from "framer-motion";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { forwardRef } from "react";
 import { BrandIcons } from "./BrandIcons";
 
 const buttonVariants = cva(
@@ -9,9 +9,12 @@ const buttonVariants = cva(
 	{
 		variants: {
 			variant: {
-				primary: "bg-brand-500 hover:bg-brand-600 text-white font-semibold shadow-lg shadow-brand-500/30 hover:shadow-xl hover:shadow-brand-500/40 transition-all duration-200",
-				secondary: "border-2 border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 text-brand-100 font-medium transition-all duration-200",
-				ghost: "text-zinc-300 hover:text-white hover:bg-white/5 font-medium transition-all duration-200",
+				primary:
+					"bg-brand-500 hover:bg-brand-600 text-white font-semibold shadow-lg shadow-brand-500/30 hover:shadow-xl hover:shadow-brand-500/40 transition-all duration-200",
+				secondary:
+					"border-2 border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 text-brand-100 font-medium transition-all duration-200",
+				ghost:
+					"text-zinc-300 hover:text-white hover:bg-white/5 font-medium transition-all duration-200",
 			},
 			size: {
 				sm: "px-4 py-3 text-sm min-h-[52px] sm:min-h-[48px]", // Bigger on mobile for better touch targets
@@ -25,7 +28,7 @@ const buttonVariants = cva(
 			variant: "primary",
 			size: "md",
 		},
-	}
+	},
 );
 
 interface ButtonProps
@@ -41,20 +44,23 @@ interface ButtonProps
 	animated?: boolean; // Enable framer-motion animations
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
-	children,
-	variant,
-	size,
-	isLoading = false,
-	className = "",
-	disabled,
-	href,
-	target,
-	icon,
-	fullWidth = false,
-	animated = false,
-	...props
-}, ref) {
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+	{
+		children,
+		variant,
+		size,
+		isLoading = false,
+		className = "",
+		disabled,
+		href,
+		target,
+		icon,
+		fullWidth = false,
+		animated = false,
+		...props
+	},
+	ref,
+) {
 	const IconComponent = icon ? BrandIcons[icon] : null;
 	const widthClass = fullWidth ? "w-full" : "";
 
@@ -63,7 +69,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
 			{isLoading ? (
 				<>
 					<span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-					{animated ? <span className="animate-pulse">Loading</span> : "Loading..."}
+					{animated ? (
+						<span className="animate-pulse">Loading</span>
+					) : (
+						"Loading..."
+					)}
 				</>
 			) : (
 				<>
@@ -76,9 +86,13 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
 
 	const buttonProps = {
 		type: props.type || "button",
-		className: buttonVariants({ variant, size, className: `${widthClass} ${className}`.trim() }),
+		className: buttonVariants({
+			variant,
+			size,
+			className: `${widthClass} ${className}`.trim(),
+		}),
 		disabled: disabled || isLoading,
-		...props
+		...props,
 	};
 
 	const buttonElement = animated ? (
@@ -87,20 +101,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
 			{...(buttonProps as any)}
 			whileHover={{
 				scale: disabled || isLoading ? 1 : 1.01, // Reduced scale for better performance
-				transition: { duration: 0.2, ease: "easeOut" }
+				transition: { duration: 0.2, ease: "easeOut" },
 			}}
 			whileTap={{
 				scale: disabled || isLoading ? 1 : 0.99,
-				transition: { duration: 0.1 }
+				transition: { duration: 0.1 },
 			}}
 		>
 			{buttonContent}
 		</motion.button>
 	) : (
-		<button
-			ref={ref}
-			{...buttonProps}
-		>
+		<button ref={ref} {...buttonProps}>
 			{buttonContent}
 		</button>
 	);
@@ -111,7 +122,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({
 				href={href}
 				target={target}
 				rel={target === "_blank" ? "noreferrer noopener" : undefined}
-				className={buttonVariants({ variant, size, className: `${widthClass} ${className}`.trim() })}
+				className={buttonVariants({
+					variant,
+					size,
+					className: `${widthClass} ${className}`.trim(),
+				})}
 				{...(props as any)}
 			>
 				{buttonContent}

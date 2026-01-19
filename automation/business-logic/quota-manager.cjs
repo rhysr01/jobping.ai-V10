@@ -1,6 +1,6 @@
 /**
  * Quota Manager - Pure Business Logic
- * 
+ *
  * Determines when to stop scraping based on job count targets.
  * This is "Brain" logic - it makes decisions but doesn't execute anything.
  */
@@ -38,10 +38,10 @@ function getScraperTargets() {
 
 /**
  * Evaluate if scraping should stop based on quotas
- * 
+ *
  * @param {Object} stats - Current cycle statistics with {total: number, perSource: Object}
  * @returns {boolean} true if global cycle should stop, false otherwise
- * 
+ *
  * Note: Per-scraper quotas don't stop the cycle, they just indicate
  * that specific scraper has reached its target
  */
@@ -57,7 +57,7 @@ function shouldStopCycle(stats) {
 
 /**
  * Check if a specific scraper has reached its target
- * 
+ *
  * @param {Object} stats - Current cycle statistics with {total: number, perSource: Object}
  * @param {string} scraperName - Name of scraper to check
  * @returns {boolean} true if scraper has reached its quota
@@ -79,4 +79,3 @@ module.exports = {
 	shouldStopCycle,
 	hasScraperReachedTarget,
 };
-

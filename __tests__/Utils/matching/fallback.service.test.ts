@@ -5,7 +5,10 @@
 
 import type { Job } from "../../../scrapers/types";
 import type { UserPreferences } from "../../../utils/matching/types";
-import { FallbackService, type FallbackMatch } from "../../../utils/matching/core/fallback.service";
+import {
+	FallbackService,
+	type FallbackMatch,
+} from "../../../utils/matching/core/fallback.service";
 
 describe("FallbackService", () => {
 	let service: FallbackService;
@@ -22,7 +25,8 @@ describe("FallbackService", () => {
 				company: "Tech Corp",
 				location: "London, UK",
 				job_url: "https://example.com/job1",
-				description: "Entry-level software engineering position for recent graduates",
+				description:
+					"Entry-level software engineering position for recent graduates",
 				experience_required: "entry-level",
 				work_environment: "hybrid",
 				source: "test",
@@ -30,7 +34,9 @@ describe("FallbackService", () => {
 				company_profile_url: "",
 				language_requirements: ["English"],
 				scrape_timestamp: new Date().toISOString(),
-				original_posted_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+				original_posted_date: new Date(
+					Date.now() - 24 * 60 * 60 * 1000,
+				).toISOString(),
 				posted_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
 				last_seen_at: new Date().toISOString(),
 				is_active: true,
@@ -44,7 +50,8 @@ describe("FallbackService", () => {
 				company: "Data Corp",
 				location: "Berlin, Germany",
 				job_url: "https://example.com/job2",
-				description: "Data analysis internship for students and recent graduates",
+				description:
+					"Data analysis internship for students and recent graduates",
 				experience_required: "entry-level",
 				work_environment: "remote",
 				source: "test",
@@ -52,7 +59,9 @@ describe("FallbackService", () => {
 				company_profile_url: "",
 				language_requirements: ["English", "German"],
 				scrape_timestamp: new Date().toISOString(),
-				original_posted_date: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+				original_posted_date: new Date(
+					Date.now() - 12 * 60 * 60 * 1000,
+				).toISOString(),
 				posted_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
 				last_seen_at: new Date().toISOString(),
 				is_active: true,
@@ -74,7 +83,9 @@ describe("FallbackService", () => {
 				company_profile_url: "",
 				language_requirements: ["English"],
 				scrape_timestamp: new Date().toISOString(),
-				original_posted_date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+				original_posted_date: new Date(
+					Date.now() - 48 * 60 * 60 * 1000,
+				).toISOString(),
 				posted_at: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
 				last_seen_at: new Date().toISOString(),
 				is_active: true,
@@ -96,7 +107,9 @@ describe("FallbackService", () => {
 				company_profile_url: "",
 				language_requirements: ["English", "French"],
 				scrape_timestamp: new Date().toISOString(),
-				original_posted_date: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+				original_posted_date: new Date(
+					Date.now() - 6 * 60 * 60 * 1000,
+				).toISOString(),
 				posted_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
 				last_seen_at: new Date().toISOString(),
 				is_active: true,
@@ -148,8 +161,11 @@ describe("FallbackService", () => {
 			expect(result.length).toBe(4);
 
 			// Count locations and career paths in results
-			const locations = result.map(match => match.job.city?.toLowerCase() || match.job.location?.toLowerCase());
-			const careerPaths = result.flatMap(match => match.job.categories || []);
+			const locations = result.map(
+				(match) =>
+					match.job.city?.toLowerCase() || match.job.location?.toLowerCase(),
+			);
+			const careerPaths = result.flatMap((match) => match.job.categories || []);
 
 			// Should have representation from multiple locations
 			const uniqueLocations = new Set(locations.filter(Boolean));
@@ -157,11 +173,11 @@ describe("FallbackService", () => {
 			expect(uniqueLocations.size).toBeGreaterThanOrEqual(1);
 
 			// Should have representation from multiple career paths
-			const techJobs = result.filter(match =>
-				match.job.categories?.some(cat => cat.includes("tech"))
+			const techJobs = result.filter((match) =>
+				match.job.categories?.some((cat) => cat.includes("tech")),
 			);
-			const dataJobs = result.filter(match =>
-				match.job.categories?.some(cat => cat.includes("data"))
+			const dataJobs = result.filter((match) =>
+				match.job.categories?.some((cat) => cat.includes("data")),
 			);
 
 			// Should not be all tech or all data jobs (balanced distribution)
@@ -188,7 +204,11 @@ describe("FallbackService", () => {
 				career_path: ["Tech & Transformation"], // Only one career path
 			};
 
-			const result = service.generateFallbackMatches([partialMatchJob], userWithSinglePath, 1);
+			const result = service.generateFallbackMatches(
+				[partialMatchJob],
+				userWithSinglePath,
+				1,
+			);
 
 			expect(result.length).toBe(1);
 			// Job should still be included with partial score since 50% relevance > 40% threshold
@@ -209,7 +229,11 @@ describe("FallbackService", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const result = service.generateFallbackMatches([partialRelevanceJob], userWithTechPath, 1);
+			const result = service.generateFallbackMatches(
+				[partialRelevanceJob],
+				userWithTechPath,
+				1,
+			);
 
 			expect(result.length).toBe(1);
 			// Job should get reasonable score with new advanced algorithm
@@ -231,7 +255,11 @@ describe("FallbackService", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const result = service.generateFallbackMatches([unrelatedJob], userWithTechPath, 1);
+			const result = service.generateFallbackMatches(
+				[unrelatedJob],
+				userWithTechPath,
+				1,
+			);
 
 			expect(result.length).toBe(1);
 			// Job should get low relevance score since no categories match at all
@@ -252,9 +280,15 @@ describe("FallbackService", () => {
 			const allJobs = [...mockJobs, ...additionalJobs];
 			const result = service.generateFallbackMatches(allJobs, mockUser, 6);
 
-			const londonJobs = result.filter(match => match.job.city?.toLowerCase().includes("london"));
-			const berlinJobs = result.filter(match => match.job.city?.toLowerCase().includes("berlin"));
-			const parisJobs = result.filter(match => match.job.city?.toLowerCase().includes("paris"));
+			const londonJobs = result.filter((match) =>
+				match.job.city?.toLowerCase().includes("london"),
+			);
+			const berlinJobs = result.filter((match) =>
+				match.job.city?.toLowerCase().includes("berlin"),
+			);
+			const parisJobs = result.filter((match) =>
+				match.job.city?.toLowerCase().includes("paris"),
+			);
 
 			// Should have balanced representation
 			expect(londonJobs.length).toBeGreaterThan(0);
@@ -262,33 +296,62 @@ describe("FallbackService", () => {
 			expect(parisJobs.length).toBeGreaterThan(0);
 
 			// Distribution should be relatively even (allowing for rounding)
-			const totalJobs = londonJobs.length + berlinJobs.length + parisJobs.length;
-			expect(Math.abs(londonJobs.length - berlinJobs.length)).toBeLessThanOrEqual(2);
-			expect(Math.abs(londonJobs.length - parisJobs.length)).toBeLessThanOrEqual(2);
+			const totalJobs =
+				londonJobs.length + berlinJobs.length + parisJobs.length;
+			expect(
+				Math.abs(londonJobs.length - berlinJobs.length),
+			).toBeLessThanOrEqual(2);
+			expect(
+				Math.abs(londonJobs.length - parisJobs.length),
+			).toBeLessThanOrEqual(2);
 		});
 
 		it("should distribute jobs fairly across multiple career paths", () => {
 			// Create jobs with different career path categories
 			const techJobs = [
-				{ ...mockJobs[0], job_hash: "tech1", categories: ["early-career", "tech-transformation"] },
-				{ ...mockJobs[0], job_hash: "tech2", categories: ["early-career", "tech-transformation"] },
-				{ ...mockJobs[0], job_hash: "tech3", categories: ["early-career", "tech-transformation"] },
+				{
+					...mockJobs[0],
+					job_hash: "tech1",
+					categories: ["early-career", "tech-transformation"],
+				},
+				{
+					...mockJobs[0],
+					job_hash: "tech2",
+					categories: ["early-career", "tech-transformation"],
+				},
+				{
+					...mockJobs[0],
+					job_hash: "tech3",
+					categories: ["early-career", "tech-transformation"],
+				},
 			];
 
 			const dataJobs = [
-				{ ...mockJobs[1], job_hash: "data1", categories: ["early-career", "data-analytics"] },
-				{ ...mockJobs[1], job_hash: "data2", categories: ["early-career", "data-analytics"] },
-				{ ...mockJobs[1], job_hash: "data3", categories: ["early-career", "data-analytics"] },
+				{
+					...mockJobs[1],
+					job_hash: "data1",
+					categories: ["early-career", "data-analytics"],
+				},
+				{
+					...mockJobs[1],
+					job_hash: "data2",
+					categories: ["early-career", "data-analytics"],
+				},
+				{
+					...mockJobs[1],
+					job_hash: "data3",
+					categories: ["early-career", "data-analytics"],
+				},
 			];
 
 			const allJobs = [...techJobs, ...dataJobs];
 			const result = service.generateFallbackMatches(allJobs, mockUser, 6);
 
-			const techResultJobs = result.filter(match =>
-				match.job.categories?.some(cat => cat.includes("tech"))
+			const techResultJobs = result.filter((match) =>
+				match.job.categories?.some((cat) => cat.includes("tech")),
 			);
-			const dataResultJobs = result.filter(match =>
-				match.job.categories?.some(cat => cat.includes("data"))
+			const dataResultJobs = result.filter((match) =>
+				match.job.categories?.some((cat) => cat.includes("data")),
 			);
 
 			// Should have balanced representation across career paths
@@ -296,7 +359,9 @@ describe("FallbackService", () => {
 			expect(dataResultJobs.length).toBeGreaterThan(0);
 
 			// Should be roughly equal distribution
-			expect(Math.abs(techResultJobs.length - dataResultJobs.length)).toBeLessThanOrEqual(2);
+			expect(
+				Math.abs(techResultJobs.length - dataResultJobs.length),
+			).toBeLessThanOrEqual(2);
 		});
 
 		it("should handle users with single preferences", () => {
@@ -306,15 +371,22 @@ describe("FallbackService", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const result = service.generateFallbackMatches(mockJobs, singleCityUser, 3);
+			const result = service.generateFallbackMatches(
+				mockJobs,
+				singleCityUser,
+				3,
+			);
 
 			expect(result.length).toBeGreaterThan(0);
 			// Should still work normally with single preferences
 			// London jobs may not be prioritized over higher-scoring jobs from other locations
-			expect(result.some(match =>
-				match.job.location?.toLowerCase().includes("london") ||
-				match.job.city?.toLowerCase().includes("london")
-			)).toBe(true);
+			expect(
+				result.some(
+					(match) =>
+						match.job.location?.toLowerCase().includes("london") ||
+						match.job.city?.toLowerCase().includes("london"),
+				),
+			).toBe(true);
 		});
 
 		it("should handle users with no location preferences", () => {
@@ -324,7 +396,11 @@ describe("FallbackService", () => {
 				career_path: ["Tech & Transformation"],
 			};
 
-			const result = service.generateFallbackMatches(mockJobs, noLocationUser, 3);
+			const result = service.generateFallbackMatches(
+				mockJobs,
+				noLocationUser,
+				3,
+			);
 
 			expect(result.length).toBeGreaterThan(0);
 			// Should return top-scoring jobs when no location preferences
@@ -346,7 +422,11 @@ describe("FallbackService", () => {
 
 	describe("Scoring Breakdown", () => {
 		it("should include all required breakdown components", () => {
-			const result = service.generateFallbackMatches(mockJobs.slice(0, 1), mockUser, 1);
+			const result = service.generateFallbackMatches(
+				mockJobs.slice(0, 1),
+				mockUser,
+				1,
+			);
 
 			expect(result.length).toBe(1);
 			const components = result[0].unifiedScore.components;
@@ -356,7 +436,7 @@ describe("FallbackService", () => {
 			expect(components).toHaveProperty("opportunity");
 			expect(components).toHaveProperty("timing");
 			// All component values should be numbers
-			Object.values(components).forEach(value => {
+			Object.values(components).forEach((value) => {
 				expect(typeof value).toBe("number");
 				expect(value).toBeGreaterThanOrEqual(0);
 			});
@@ -366,16 +446,27 @@ describe("FallbackService", () => {
 			const londonJob = { ...mockJobs[0], city: "London" }; // Ensure city is set
 			const userWithLondon = { ...mockUser, target_cities: ["London"] };
 
-			const result = service.generateFallbackMatches([londonJob], userWithLondon, 1);
+			const result = service.generateFallbackMatches(
+				[londonJob],
+				userWithLondon,
+				1,
+			);
 
 			expect(result[0].unifiedScore.components.relevance).toBeGreaterThan(80); // High relevance for exact location match
 		});
 
 		it("should calculate career path scores correctly", () => {
 			const techJob = { ...mockJobs[0], categories: ["tech-transformation"] }; // Single category for exact match
-			const userWithTech = { ...mockUser, career_path: ["Tech & Transformation"] };
+			const userWithTech = {
+				...mockUser,
+				career_path: ["Tech & Transformation"],
+			};
 
-			const result = service.generateFallbackMatches([techJob], userWithTech, 1);
+			const result = service.generateFallbackMatches(
+				[techJob],
+				userWithTech,
+				1,
+			);
 
 			// Should get high relevance score since career path matches exactly
 			expect(result[0].unifiedScore.components.relevance).toBeGreaterThan(60);
@@ -396,7 +487,7 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([perfectJob], mockUser, 1);
 
 			// Note: Actual classification may vary based on scoring, but should be reasonable quality
-					expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
+			expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
 			expect(result[0].unifiedScore.overall).toBeGreaterThanOrEqual(40);
 		});
 
@@ -411,7 +502,7 @@ describe("FallbackService", () => {
 			const result = service.generateFallbackMatches([goodJob], mockUser, 1);
 
 			// Note: Actual classification may vary based on scoring
-					expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
+			expect(result[0].unifiedScore.explanation?.scoreMeaning).toBeDefined();
 			expect(result[0].unifiedScore.overall).toBeGreaterThanOrEqual(50);
 		});
 
@@ -448,7 +539,7 @@ describe("FallbackService", () => {
 		it("should integrate all scoring components properly", () => {
 			const result = service.generateFallbackMatches(mockJobs, mockUser, 4);
 
-			result.forEach(match => {
+			result.forEach((match) => {
 				const components = match.unifiedScore.components;
 				const totalScore = match.unifiedScore.overall;
 
@@ -470,8 +561,8 @@ describe("FallbackService", () => {
 			expect(result1.length).toBe(result2.length);
 			// Results should be consistent (though order might vary due to sorting)
 			// Allow for small variations due to potential timing/recency factors
-			const scores1 = result1.map(m => m.unifiedScore.overall).sort();
-			const scores2 = result2.map(m => m.unifiedScore.overall).sort();
+			const scores1 = result1.map((m) => m.unifiedScore.overall).sort();
+			const scores2 = result2.map((m) => m.unifiedScore.overall).sort();
 
 			expect(scores1.length).toBe(scores2.length);
 			scores1.forEach((score, index) => {
@@ -488,17 +579,46 @@ describe("FallbackService", () => {
 				};
 
 				const jobs = [
-					{ ...mockJobs[0], job_hash: "london1", city: "London", title: "London Job 1" },
-					{ ...mockJobs[0], job_hash: "london2", city: "London", title: "London Job 2" },
-					{ ...mockJobs[0], job_hash: "berlin1", city: "Berlin", title: "Berlin Job 1" },
-					{ ...mockJobs[0], job_hash: "amsterdam1", city: "Amsterdam", title: "Amsterdam Job 1" },
-					{ ...mockJobs[0], job_hash: "paris1", city: "Paris", title: "Paris Job 1" },
+					{
+						...mockJobs[0],
+						job_hash: "london1",
+						city: "London",
+						title: "London Job 1",
+					},
+					{
+						...mockJobs[0],
+						job_hash: "london2",
+						city: "London",
+						title: "London Job 2",
+					},
+					{
+						...mockJobs[0],
+						job_hash: "berlin1",
+						city: "Berlin",
+						title: "Berlin Job 1",
+					},
+					{
+						...mockJobs[0],
+						job_hash: "amsterdam1",
+						city: "Amsterdam",
+						title: "Amsterdam Job 1",
+					},
+					{
+						...mockJobs[0],
+						job_hash: "paris1",
+						city: "Paris",
+						title: "Paris Job 1",
+					},
 				];
 
-				const result = service.generateFallbackMatches(jobs, userWithMultipleCities, 4);
+				const result = service.generateFallbackMatches(
+					jobs,
+					userWithMultipleCities,
+					4,
+				);
 
 				// Should include jobs from different preferred cities
-				const cities = result.map(r => r.job.city);
+				const cities = result.map((r) => r.job.city);
 				const uniqueCities = [...new Set(cities)];
 				expect(uniqueCities.length).toBeGreaterThan(1); // At least 2 different cities
 			});
@@ -526,7 +646,11 @@ describe("FallbackService", () => {
 					// Missing many fields
 				} as Job;
 
-				const matches = service.generateFallbackMatches([incompleteJob], mockUser, 5);
+				const matches = service.generateFallbackMatches(
+					[incompleteJob],
+					mockUser,
+					5,
+				);
 
 				expect(matches).toHaveLength(1);
 				expect(matches[0].unifiedScore.overall).toBeDefined();

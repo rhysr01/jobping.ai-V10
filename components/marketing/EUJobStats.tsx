@@ -17,7 +17,13 @@ interface JobStats {
 }
 
 // Animated number component
-function AnimatedNumber({ value, duration = 2 }: { value: number; duration?: number }) {
+function AnimatedNumber({
+	value,
+	duration = 2,
+}: {
+	value: number;
+	duration?: number;
+}) {
 	const spring = useSpring(0, { duration: duration * 1000 });
 	const display = useTransform(spring, (current) =>
 		Math.round(current).toLocaleString(),
@@ -121,7 +127,8 @@ export function EUJobStats() {
 			label: "Total Active",
 			value: displayStats.total,
 			color: "zinc",
-			description: "Across 21 EU cities including London, Berlin, Paris, Amsterdam, and more",
+			description:
+				"Across 21 EU cities including London, Berlin, Paris, Amsterdam, and more",
 		},
 	];
 
@@ -229,10 +236,14 @@ export function EUJobStats() {
 									<motion.div
 										className={cn(
 											"absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500",
-											stat.color === "purple" && "from-purple-500/20 to-purple-600/10",
-											stat.color === "emerald" && "from-emerald-500/20 to-emerald-600/10",
-											stat.color === "blue" && "from-blue-500/20 to-blue-600/10",
-											stat.color === "zinc" && "from-zinc-500/20 to-zinc-600/10",
+											stat.color === "purple" &&
+												"from-purple-500/20 to-purple-600/10",
+											stat.color === "emerald" &&
+												"from-emerald-500/20 to-emerald-600/10",
+											stat.color === "blue" &&
+												"from-blue-500/20 to-blue-600/10",
+											stat.color === "zinc" &&
+												"from-zinc-500/20 to-zinc-600/10",
 										)}
 									/>
 
@@ -259,8 +270,10 @@ export function EUJobStats() {
 												level="h3"
 												className={cn(
 													"text-4xl md:text-5xl mb-1 bg-gradient-to-r bg-clip-text text-transparent",
-													stat.color === "purple" && "from-purple-400 to-purple-600",
-													stat.color === "emerald" && "from-emerald-400 to-emerald-600",
+													stat.color === "purple" &&
+														"from-purple-400 to-purple-600",
+													stat.color === "emerald" &&
+														"from-emerald-400 to-emerald-600",
 													stat.color === "blue" && "from-blue-400 to-blue-600",
 													stat.color === "zinc" && "from-zinc-400 to-zinc-600",
 												)}
@@ -292,9 +305,7 @@ export function EUJobStats() {
 				</div>
 
 				{/* Job Stats & Disclaimer */}
-				<JobStatsDisclaimer
-					className="mt-12 md:mt-16"
-				/>
+				<JobStatsDisclaimer className="mt-12 md:mt-16" />
 			</div>
 		</section>
 	);

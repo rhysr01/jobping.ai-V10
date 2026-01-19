@@ -36,7 +36,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const normalizedEmail = email.toLowerCase().trim();
 
 	// Check if user exists and needs verification
-	const supabase = (await import("../../../../utils/core/database-pool")).getDatabaseClient();
+	const supabase = (
+		await import("../../../../utils/core/database-pool")
+	).getDatabaseClient();
 	const { data: user } = await supabase
 		.from("users")
 		.select("email, email_verified, full_name, subscription_tier")
@@ -46,7 +48,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	if (!user) {
 		// Don't reveal if email exists or not (security)
 		return NextResponse.json(
-			{ message: "If an account exists with this email, a verification link has been sent." },
+			{
+				message:
+					"If an account exists with this email, a verification link has been sent.",
+			},
 			{ status: 200 },
 		);
 	}

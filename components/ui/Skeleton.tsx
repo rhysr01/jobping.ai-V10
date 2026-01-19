@@ -31,7 +31,9 @@ export function Skeleton({ className = "", lines = 1 }: SkeletonProps) {
 
 export function SkeletonCard({ className = "" }: { className?: string }) {
 	return (
-		<div className={`animate-pulse bg-white/5 border border-white/10 rounded-xl p-6 ${className}`}>
+		<div
+			className={`animate-pulse bg-white/5 border border-white/10 rounded-xl p-6 ${className}`}
+		>
 			<div className="space-y-3">
 				<Skeleton className="h-6 w-1/2" />
 				<Skeleton className="h-4 w-full" />
@@ -42,7 +44,5 @@ export function SkeletonCard({ className = "" }: { className?: string }) {
 }
 
 export function SkeletonButton({ className = "" }: { className?: string }) {
-	return (
-		<Skeleton className={`h-11 w-32 rounded-full ${className}`} />
-	);
+	return <Skeleton className={`h-11 w-32 rounded-full ${className}`} />;
 }

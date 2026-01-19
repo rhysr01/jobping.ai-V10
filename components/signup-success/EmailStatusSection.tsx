@@ -35,10 +35,14 @@ export function EmailStatusSection({
 
 			<div className="space-y-4">
 				<div className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/10">
-					<div className={`w-3 h-3 rounded-full ${emailStatus.sent ? "bg-green-400" : "bg-yellow-400"}`} />
+					<div
+						className={`w-3 h-3 rounded-full ${emailStatus.sent ? "bg-green-400" : "bg-yellow-400"}`}
+					/>
 					<div className="flex-1">
 						<p className="text-sm font-medium text-white">
-							{emailStatus.sent ? "Email sent successfully" : "Sending welcome email..."}
+							{emailStatus.sent
+								? "Email sent successfully"
+								: "Sending welcome email..."}
 						</p>
 						{emailStatus.sentAt && (
 							<p className="text-xs text-success">

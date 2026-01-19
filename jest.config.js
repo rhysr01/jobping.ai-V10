@@ -26,10 +26,10 @@ const customJestConfig = {
 		// Strategic coverage approach - focus on critical user paths, not blanket coverage
 		// Target: ~17.82% strategic coverage prioritizing user impact over numerical metrics
 		global: {
-			branches: 5,    // Lower threshold - focus on critical branches
-			functions: 8,   // Focus on critical functions
-			lines: 8,       // Strategic line coverage
-			statements: 8,  // Strategic statement coverage
+			branches: 5, // Lower threshold - focus on critical branches
+			functions: 8, // Focus on critical functions
+			lines: 8, // Strategic line coverage
+			statements: 8, // Strategic statement coverage
 		},
 		// High-priority modules - critical user paths
 		"Utils/matching/core/matching-engine.ts": {

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Process embedding queue
@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
  */
 export async function POST(_request: NextRequest) {
 	try {
-		console.log("[Embedding Queue] Processing embedding queue...")
+		console.log("[Embedding Queue] Processing embedding queue...");
 
 		// TODO: Implement actual embedding processing logic
 		// This could involve:
@@ -16,20 +16,20 @@ export async function POST(_request: NextRequest) {
 		// 4. Processing in batches to avoid rate limits
 
 		// For now, just return success
-		console.log("[Embedding Queue] Queue processing completed")
+		console.log("[Embedding Queue] Queue processing completed");
 
 		return NextResponse.json({
 			success: true,
 			message: "Embedding queue processed successfully",
 			processed: 0, // TODO: Return actual count
-			timestamp: new Date().toISOString()
-		})
+			timestamp: new Date().toISOString(),
+		});
 	} catch (error) {
-		console.error("[Embedding Queue] Error:", error)
+		console.error("[Embedding Queue] Error:", error);
 		return NextResponse.json(
 			{ error: "Failed to process embedding queue" },
-			{ status: 500 }
-		)
+			{ status: 500 },
+		);
 	}
 }
 
@@ -38,6 +38,6 @@ export async function GET(_request: NextRequest) {
 	return NextResponse.json({
 		status: "ok",
 		message: "Embedding queue processor is available",
-		timestamp: new Date().toISOString()
-	})
+		timestamp: new Date().toISOString(),
+	});
 }

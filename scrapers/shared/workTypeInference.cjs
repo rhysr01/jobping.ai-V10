@@ -229,7 +229,7 @@ function inferWorkTypeCategories(title = "", description = "") {
  */
 function ensureWorkTypeCategory(job) {
 	const categories = Array.isArray(job.categories) ? [...job.categories] : [];
-	
+
 	// Check if job already has a work-type category
 	const hasWorkType = categories.some((cat) =>
 		WORK_TYPE_CATEGORIES.includes(cat),
@@ -266,4 +266,3 @@ module.exports = {
 	ensureWorkTypeCategory,
 	WORK_TYPE_CATEGORIES,
 };
-

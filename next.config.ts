@@ -9,7 +9,11 @@ const nextConfig: NextConfig = {
 	},
 	// Performance optimizations - bundle splitting and mobile-first
 	experimental: {
-		optimizePackageImports: ["framer-motion", "lucide-react", "@tsparticles/react"],
+		optimizePackageImports: [
+			"framer-motion",
+			"lucide-react",
+			"@tsparticles/react",
+		],
 		scrollRestoration: true, // Better mobile UX
 	},
 	// Remove console logs in production (keep errors and warnings)
@@ -102,16 +106,16 @@ const nextConfig: NextConfig = {
 		// Ensure modules are resolved correctly
 		config.resolve.modules = [
 			...(config.resolve.modules || []),
-			require('path').resolve(process.cwd()),
+			require("path").resolve(process.cwd()),
 		];
 		// Force alias resolution
 		config.resolve.alias = {
 			...config.resolve.alias,
-			'@': require('path').resolve(process.cwd()),
-			'@/utils': require('path').resolve(process.cwd(), 'utils'),
-			'@/lib': require('path').resolve(process.cwd(), 'lib'),
-			'@/components': require('path').resolve(process.cwd(), 'components'),
-			'@/app': require('path').resolve(process.cwd(), 'app'),
+			"@": require("path").resolve(process.cwd()),
+			"@/utils": require("path").resolve(process.cwd(), "utils"),
+			"@/lib": require("path").resolve(process.cwd(), "lib"),
+			"@/components": require("path").resolve(process.cwd(), "components"),
+			"@/app": require("path").resolve(process.cwd(), "app"),
 		};
 
 		// Mobile-specific optimizations
@@ -126,22 +130,22 @@ const nextConfig: NextConfig = {
 						// Separate Framer Motion for conditional loading
 						framerMotion: {
 							test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-							name: 'framer-motion',
-							chunks: 'all',
+							name: "framer-motion",
+							chunks: "all",
 							priority: 10,
 						},
 						// Separate heavy UI libraries
 						uiLibs: {
 							test: /[\\/]node_modules[\\/](lucide-react|@radix-ui)[\\/]/,
-							name: 'ui-libs',
-							chunks: 'all',
+							name: "ui-libs",
+							chunks: "all",
 							priority: 5,
 						},
 						// Separate analytics for lazy loading
 						analytics: {
 							test: /[\\/]node_modules[\\/](posthog-js|@posthog)[\\/]/,
-							name: 'analytics',
-							chunks: 'all',
+							name: "analytics",
+							chunks: "all",
 							priority: 3,
 						},
 					},
@@ -192,18 +196,20 @@ const bundleAnalyzerConfig = withBundleAnalyzer({
 	enabled: process.env.ANALYZE === "true",
 });
 
-export default bundleAnalyzerConfig(withSentryConfig(nextConfig, {
-	// For all available options, see:
-	// https://github.com/getsentry/sentry-webpack-plugin#options
+export default bundleAnalyzerConfig(
+	withSentryConfig(nextConfig, {
+		// For all available options, see:
+		// https://github.com/getsentry/sentry-webpack-plugin#options
 
-	// Suppresses source map uploading logs during build
-	silent: true,
-	// Vercel integration will automatically detect org and project
-	// These are optional when using Vercel integration
-	org: process.env.SENTRY_ORG || "jobping",
-	project: process.env.SENTRY_PROJECT || "javascript-nextjs",
-	// Vercel integration handles auth token automatically
-	authToken: process.env.SENTRY_AUTH_TOKEN,
-	// Automatically upload source maps (Vercel integration handles this)
-	widenClientFileUpload: true,
-}));
+		// Suppresses source map uploading logs during build
+		silent: true,
+		// Vercel integration will automatically detect org and project
+		// These are optional when using Vercel integration
+		org: process.env.SENTRY_ORG || "jobping",
+		project: process.env.SENTRY_PROJECT || "javascript-nextjs",
+		// Vercel integration handles auth token automatically
+		authToken: process.env.SENTRY_AUTH_TOKEN,
+		// Automatically upload source maps (Vercel integration handles this)
+		widenClientFileUpload: true,
+	}),
+);

@@ -69,7 +69,9 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 	await markUserVerified(email);
 
 	// Check user tier to determine redirect destination
-	const supabase = (await import("../../../utils/core/database-pool")).getDatabaseClient();
+	const supabase = (
+		await import("../../../utils/core/database-pool")
+	).getDatabaseClient();
 	const { data: user } = await supabase
 		.from("users")
 		.select("subscription_tier")
@@ -77,9 +79,10 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 		.single();
 
 	// Premium users go to payment, others go to success page
-	const redirectUrl = user?.subscription_tier === "premium"
-		? `${baseUrl}/billing?verified=true&email=${encodeURIComponent(email)}`
-		: `${baseUrl}/signup/success?verified=true&email=${encodeURIComponent(email)}`;
+	const redirectUrl =
+		user?.subscription_tier === "premium"
+			? `${baseUrl}/billing?verified=true&email=${encodeURIComponent(email)}`
+			: `${baseUrl}/signup/success?verified=true&email=${encodeURIComponent(email)}`;
 
 	return NextResponse.redirect(redirectUrl);
 });

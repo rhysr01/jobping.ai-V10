@@ -31,7 +31,7 @@ export function LiveJobsReview({
 	cities,
 	careerPath,
 	isVisible,
-	className = ""
+	className = "",
 }: LiveJobsReviewProps) {
 	const [jobPreviews, setJobPreviews] = useState<JobPreview[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -47,21 +47,21 @@ export function LiveJobsReview({
 
 		try {
 			// Call preview-matches API with limited results for preview
-			const response = await fetch('/api/preview-matches', {
-				method: 'POST',
+			const response = await fetch("/api/preview-matches", {
+				method: "POST",
 				headers: {
-					'Content-Type': 'application/json',
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
 					cities,
 					careerPath,
 					limit: 3, // Only show 3 preview jobs
-					isPreview: true
+					isPreview: true,
 				}),
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to fetch job previews');
+				throw new Error("Failed to fetch job previews");
 			}
 
 			const data = await response.json();
@@ -73,9 +73,9 @@ export function LiveJobsReview({
 			}
 		} catch (err) {
 			if (process.env.NODE_ENV === "development") {
-				console.error('Error fetching job previews:', err);
+				console.error("Error fetching job previews:", err);
 			}
-			setError('Unable to load job previews right now');
+			setError("Unable to load job previews right now");
 		} finally {
 			setIsLoading(false);
 			setHasFetched(true);
@@ -127,7 +127,7 @@ export function LiveJobsReview({
 							<motion.div
 								animate={{
 									scale: [1, 1.2, 1],
-									rotate: [0, 180, 360]
+									rotate: [0, 180, 360],
 								}}
 								transition={{
 									duration: 2,
@@ -138,9 +138,7 @@ export function LiveJobsReview({
 							>
 								<BrandIcons.Target className="w-4 h-4 text-emerald-400" />
 							</motion.div>
-							<h3 className="text-lg font-bold text-white">
-								Live Job Preview
-							</h3>
+							<h3 className="text-lg font-bold text-white">Live Job Preview</h3>
 						</div>
 						{jobPreviews.length > 0 && (
 							<motion.div
@@ -264,7 +262,9 @@ export function LiveJobsReview({
 									{/* Action hint */}
 									<div className="flex items-center justify-between">
 										<span className="text-xs text-content-secondary">
-											{job.posted_at ? `${new Date(job.posted_at).toLocaleDateString()}` : 'Recent'}
+											{job.posted_at
+												? `${new Date(job.posted_at).toLocaleDateString()}`
+												: "Recent"}
 										</span>
 										<CustomButton
 											variant="secondary"
@@ -275,9 +275,13 @@ export function LiveJobsReview({
 													job_id: job.id,
 													company: job.company,
 													title: job.title,
-													from_form: true
+													from_form: true,
 												});
-												window.open(job.job_url, '_blank', 'noopener,noreferrer');
+												window.open(
+													job.job_url,
+													"_blank",
+													"noopener,noreferrer",
+												);
 											}}
 										>
 											Quick View →
@@ -294,7 +298,8 @@ export function LiveJobsReview({
 								className="mt-4 p-3 rounded-xl bg-black/30 border border-emerald-500/20"
 							>
 								<p className="text-xs text-emerald-200 text-center">
-									✨ <strong>These look promising!</strong> Complete your signup to see all matches →
+									✨ <strong>These look promising!</strong> Complete your signup
+									to see all matches →
 								</p>
 							</motion.div>
 						</div>

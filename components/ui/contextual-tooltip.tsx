@@ -1,11 +1,11 @@
-import { BrandIcons } from "./BrandIcons";
-import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { BrandIcons } from "./BrandIcons";
 
 interface ContextualTooltipProps {
 	content: string;
@@ -25,20 +25,20 @@ export function ContextualTooltip({
 	maxWidth = 300,
 	showIcon = false,
 	variant = "default",
-	className = ""
+	className = "",
 }: ContextualTooltipProps) {
 	const variants = {
 		default: "bg-zinc-900/95 border-zinc-700 text-zinc-100",
 		info: "bg-blue-900/95 border-blue-700 text-info",
 		warning: "bg-amber-900/95 border-amber-700 text-amber-100",
-		success: "bg-emerald-900/95 border-emerald-700 text-emerald-100"
+		success: "bg-emerald-900/95 border-emerald-700 text-emerald-100",
 	};
 
 	const iconVariants = {
 		default: BrandIcons.Info,
 		info: BrandIcons.Info,
 		warning: BrandIcons.AlertCircle,
-		success: BrandIcons.CheckCircle
+		success: BrandIcons.CheckCircle,
 	};
 
 	const IconComponent = showIcon ? iconVariants[variant] : null;
@@ -46,15 +46,13 @@ export function ContextualTooltip({
 	return (
 		<TooltipProvider>
 			<Tooltip>
-				<TooltipTrigger asChild>
-					{children}
-				</TooltipTrigger>
+				<TooltipTrigger asChild>{children}</TooltipTrigger>
 				<TooltipContent
 					side={side}
 					className={cn(
 						"max-w-sm px-3 py-2 text-sm shadow-lg backdrop-blur-sm rounded-lg border",
 						variants[variant],
-						className
+						className,
 					)}
 					style={{ maxWidth }}
 				>
@@ -62,9 +60,7 @@ export function ContextualTooltip({
 						{IconComponent && (
 							<IconComponent className="w-4 h-4 mt-0.5 flex-shrink-0" />
 						)}
-						<div className="flex-1">
-							{content}
-						</div>
+						<div className="flex-1">{content}</div>
 					</div>
 				</TooltipContent>
 			</Tooltip>
@@ -73,14 +69,14 @@ export function ContextualTooltip({
 }
 
 // Smart tooltip that adapts to user behavior
-interface SmartTooltipProps extends Omit<ContextualTooltipProps, 'showIcon'> {
-	trigger: 'hover' | 'focus' | 'click';
+interface SmartTooltipProps extends Omit<ContextualTooltipProps, "showIcon"> {
+	trigger: "hover" | "focus" | "click";
 	autoHide?: boolean;
 	delay?: number;
 }
 
 export function SmartTooltip({
-	trigger = 'hover',
+	trigger = "hover",
 	autoHide = true,
 	delay = 300,
 	...props
@@ -104,11 +100,11 @@ interface InlineHelpProps {
 export function InlineHelp({
 	text,
 	variant = "subtle",
-	className = ""
+	className = "",
 }: InlineHelpProps) {
 	const styles = {
 		subtle: "text-zinc-400 hover:text-zinc-300",
-		prominent: "text-brand-400 hover:text-brand-300"
+		prominent: "text-brand-400 hover:text-brand-300",
 	};
 
 	return (
@@ -118,7 +114,7 @@ export function InlineHelp({
 				className={cn(
 					"inline-flex items-center justify-center w-5 h-5 rounded-full transition-colors",
 					styles[variant],
-					className
+					className,
 				)}
 				aria-label="Help"
 			>
@@ -168,7 +164,7 @@ export function GuidanceTooltip({
 	totalSteps,
 	content,
 	isCompleted,
-	children
+	children,
 }: GuidanceTooltipProps) {
 	const variant = isCompleted ? "success" : "info";
 	const iconText = isCompleted ? "✓" : `${step}/${totalSteps}`;

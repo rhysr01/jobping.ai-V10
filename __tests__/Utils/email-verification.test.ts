@@ -74,6 +74,8 @@ describe("sendVerificationEmail", () => {
 			error: { message: "Invalid recipient" },
 		});
 
-		await expect(sendVerificationEmail("invalid@example.com")).rejects.toThrow();
+		await expect(
+			sendVerificationEmail("invalid@example.com"),
+		).rejects.toThrow();
 	});
 });

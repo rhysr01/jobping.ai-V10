@@ -1,17 +1,17 @@
 // API request counter with file persistence
-const fs = require('fs');
-const path = require('path');
-const TELEMETRY_FILE = path.join(__dirname, '../../.api-telemetry.json');
+const fs = require("node:fs");
+const path = require("node:path");
+const TELEMETRY_FILE = path.join(__dirname, "../../.api-telemetry.json");
 
 function loadTelemetryData() {
 	try {
 		if (fs.existsSync(TELEMETRY_FILE)) {
-			const data = fs.readFileSync(TELEMETRY_FILE, 'utf8');
+			const data = fs.readFileSync(TELEMETRY_FILE, "utf8");
 			const parsed = JSON.parse(data);
 			return new Map(Object.entries(parsed));
 		}
 	} catch (error) {
-		console.warn('⚠️  Failed to load telemetry data:', error.message);
+		console.warn("⚠️  Failed to load telemetry data:", error.message);
 	}
 	return new Map();
 }
@@ -21,7 +21,7 @@ function saveTelemetryData() {
 		const data = Object.fromEntries(apiRequestCounts);
 		fs.writeFileSync(TELEMETRY_FILE, JSON.stringify(data, null, 2));
 	} catch (error) {
-		console.warn('⚠️  Failed to save telemetry data:', error.message);
+		console.warn("⚠️  Failed to save telemetry data:", error.message);
 	}
 }
 
@@ -29,7 +29,7 @@ const apiRequestCounts = loadTelemetryData();
 
 function recordApiRequest(apiName, endpoint = "", success = true) {
 	try {
-		const dateKey = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+		const dateKey = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 		const key = `${apiName}__${dateKey}`; // Use double underscore to avoid conflicts
 
 		if (!apiRequestCounts.has(key)) {
@@ -70,10 +70,7 @@ function recordApiRequest(apiName, endpoint = "", success = true) {
 
 		console.log(JSON.stringify(payload));
 	} catch (error) {
-		console.warn(
-			"⚠️  Failed to record API telemetry:",
-			error?.message || error,
-		);
+		console.warn("⚠️  Failed to record API telemetry:", error?.message || error);
 	}
 }
 
@@ -82,7 +79,7 @@ function getApiUsageReport() {
 	const freshData = loadTelemetryData();
 	const report = {};
 	for (const [key, counts] of freshData.entries()) {
-		const [apiName, date] = key.split('__');
+		const [apiName, date] = key.split("__");
 		if (!report[apiName]) {
 			report[apiName] = {};
 		}

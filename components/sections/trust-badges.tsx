@@ -13,9 +13,21 @@ export default function TrustBadges() {
 			className="mt-6 flex flex-wrap items-center justify-center gap-3"
 		>
 			{[
-				{ icon: BrandIcons.CheckCircle, text: "100% Free", glowClass: "from-emerald-500/20 to-emerald-500/10" },
-				{ icon: BrandIcons.Shield, text: "Privacy-First", glowClass: "from-emerald-500/20 to-emerald-500/10" },
-				{ icon: BrandIcons.Zap, text: "No Credit Card", glowClass: "from-emerald-500/20 to-emerald-500/10" },
+				{
+					icon: BrandIcons.CheckCircle,
+					text: "100% Free",
+					glowClass: "from-emerald-500/20 to-emerald-500/10",
+				},
+				{
+					icon: BrandIcons.Shield,
+					text: "Privacy-First",
+					glowClass: "from-emerald-500/20 to-emerald-500/10",
+				},
+				{
+					icon: BrandIcons.Zap,
+					text: "No Credit Card",
+					glowClass: "from-emerald-500/20 to-emerald-500/10",
+				},
 			].map((badge, index) => (
 				<motion.div
 					key={index}
@@ -26,8 +38,10 @@ export default function TrustBadges() {
 					className="group relative"
 				>
 					{/* Glow effect on hover */}
-					<div className={`absolute inset-0 bg-gradient-to-r ${badge.glowClass} rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-					
+					<div
+						className={`absolute inset-0 bg-gradient-to-r ${badge.glowClass} rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+					/>
+
 					{/* Badge */}
 					<div className="relative px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300 cursor-default">
 						<span className="font-display flex items-center gap-2 text-xs font-medium text-white/90">

@@ -13,7 +13,8 @@ import Stripe from "stripe";
 
 // Use test keys (Vercel integration provides these)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "sk_test_dummy";
-const STRIPE_CONNECT_WEBHOOK_SECRET = process.env.STRIPE_CONNECT_WEBHOOK_SECRET || "whsec_test_dummy";
+const STRIPE_CONNECT_WEBHOOK_SECRET =
+	process.env.STRIPE_CONNECT_WEBHOOK_SECRET || "whsec_test_dummy";
 
 describe("Stripe Connect Integration", () => {
 	let stripe: Stripe;
@@ -34,7 +35,9 @@ describe("Stripe Connect Integration", () => {
 
 		// Check if server is available for API tests
 		try {
-			const response = await fetch("http://localhost:3000/api/health").catch(() => null);
+			const response = await fetch("http://localhost:3000/api/health").catch(
+				() => null,
+			);
 			serverAvailable = response?.ok || false;
 		} catch {
 			serverAvailable = false;
@@ -184,17 +187,20 @@ describe("Stripe Connect Integration", () => {
 			);
 
 			// Test the API endpoint
-			const response = await fetch("http://localhost:3000/api/stripe-connect/billing-portal", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
+			const response = await fetch(
+				"http://localhost:3000/api/stripe-connect/billing-portal",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						accountId: account.id,
+						customerId: customer.id,
+						returnUrl: "https://example.com/return",
+					}),
 				},
-				body: JSON.stringify({
-					accountId: account.id,
-					customerId: customer.id,
-					returnUrl: "https://example.com/return",
-				}),
-			});
+			);
 
 			const data = await response.json();
 
@@ -236,7 +242,9 @@ describe("Stripe Connect Integration", () => {
 			);
 
 			expect(product.name).toBe("Test Product");
-			expect(product.description).toBe("A test product for integration testing");
+			expect(product.description).toBe(
+				"A test product for integration testing",
+			);
 
 			// Create price for the product
 			const price = await stripe.prices.create(
@@ -262,11 +270,19 @@ describe("Stripe Connect Integration", () => {
 			);
 
 			expect(products.data.length).toBeGreaterThan(0);
-			expect(products.data.some(p => p.id === product.id)).toBe(true);
+			expect(products.data.some((p) => p.id === product.id)).toBe(true);
 
 			// Clean up
-			await stripe.prices.update(price.id, { active: false }, { stripeAccount: account.id });
-			await stripe.products.update(product.id, { active: false }, { stripeAccount: account.id });
+			await stripe.prices.update(
+				price.id,
+				{ active: false },
+				{ stripeAccount: account.id },
+			);
+			await stripe.products.update(
+				product.id,
+				{ active: false },
+				{ stripeAccount: account.id },
+			);
 			await stripe.accounts.del(account.id);
 		});
 
@@ -283,7 +299,9 @@ describe("Stripe Connect Integration", () => {
 			});
 
 			// Test the API endpoint
-			const response = await fetch(`http://localhost:3000/api/stripe-connect/list-products?accountId=${account.id}`);
+			const response = await fetch(
+				`http://localhost:3000/api/stripe-connect/list-products?accountId=${account.id}`,
+			);
 
 			const data = await response.json();
 
@@ -346,9 +364,7 @@ describe("Stripe Connect Integration", () => {
 				return;
 			}
 
-			await expect(
-				stripe.accounts.retrieve("acct_invalid")
-			).rejects.toThrow();
+			await expect(stripe.accounts.retrieve("acct_invalid")).rejects.toThrow();
 		});
 
 		it("should handle invalid customer IDs", async () => {
@@ -364,7 +380,7 @@ describe("Stripe Connect Integration", () => {
 			});
 
 			await expect(
-				stripe.customers.retrieve("cus_invalid", { stripeAccount: account.id })
+				stripe.customers.retrieve("cus_invalid", { stripeAccount: account.id }),
 			).rejects.toThrow();
 
 			await stripe.accounts.del(account.id);
@@ -377,30 +393,36 @@ describe("Stripe Connect Integration", () => {
 			}
 
 			// Test missing accountId
-			const response1 = await fetch("http://localhost:3000/api/stripe-connect/billing-portal", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
+			const response1 = await fetch(
+				"http://localhost:3000/api/stripe-connect/billing-portal",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						customerId: "cus_test",
+					}),
 				},
-				body: JSON.stringify({
-					customerId: "cus_test",
-				}),
-			});
+			);
 
 			const data1 = await response1.json();
 			expect(response1.status).toBe(400);
 			expect(data1.error).toContain("accountId");
 
 			// Test missing customerId
-			const response2 = await fetch("http://localhost:3000/api/stripe-connect/billing-portal", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
+			const response2 = await fetch(
+				"http://localhost:3000/api/stripe-connect/billing-portal",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						accountId: "acct_test",
+					}),
 				},
-				body: JSON.stringify({
-					accountId: "acct_test",
-				}),
-			});
+			);
 
 			const data2 = await response2.json();
 			expect(response2.status).toBe(400);
@@ -432,7 +454,11 @@ describe("Stripe Connect Integration", () => {
 			});
 
 			// Verify signature
-			const event = stripe.webhooks.constructEvent(payload, signature, STRIPE_CONNECT_WEBHOOK_SECRET);
+			const event = stripe.webhooks.constructEvent(
+				payload,
+				signature,
+				STRIPE_CONNECT_WEBHOOK_SECRET,
+			);
 
 			expect(event).toBeDefined();
 			expect(event.type).toBe("account.updated");
@@ -452,7 +478,11 @@ describe("Stripe Connect Integration", () => {
 			const invalidSignature = "t=123,v1=invalid_signature";
 
 			expect(() => {
-				stripe.webhooks.constructEvent(payload, invalidSignature, STRIPE_CONNECT_WEBHOOK_SECRET);
+				stripe.webhooks.constructEvent(
+					payload,
+					invalidSignature,
+					STRIPE_CONNECT_WEBHOOK_SECRET,
+				);
 			}).toThrow();
 		});
 	});
@@ -465,23 +495,27 @@ describe("Stripe Connect Integration", () => {
 			}
 
 			// Create multiple accounts concurrently to test rate limiting
-			const promises = Array(3).fill(null).map(() =>
-				stripe.accounts.create({
-					type: "express",
-					country: "US",
-					email: "test@example.com",
-				})
-			);
+			const promises = Array(3)
+				.fill(null)
+				.map(() =>
+					stripe.accounts.create({
+						type: "express",
+						country: "US",
+						email: "test@example.com",
+					}),
+				);
 
 			const results = await Promise.all(promises);
 
 			expect(results).toHaveLength(3);
-			results.forEach(account => {
+			results.forEach((account) => {
 				expect(account.id).toMatch(/^acct_/);
 			});
 
 			// Clean up
-			await Promise.all(results.map(account => stripe.accounts.del(account.id)));
+			await Promise.all(
+				results.map((account) => stripe.accounts.del(account.id)),
+			);
 		});
 
 		it("should validate Stripe API limits", () => {
@@ -510,7 +544,10 @@ describe("Stripe Connect Integration", () => {
 				expect(config.secretKey).toMatch(/^sk_(test|live)_/);
 			}
 
-			if (config.connectWebhookSecret && !config.connectWebhookSecret.includes("dummy")) {
+			if (
+				config.connectWebhookSecret &&
+				!config.connectWebhookSecret.includes("dummy")
+			) {
 				expect(config.connectWebhookSecret).toMatch(/^whsec_/);
 			}
 		});
@@ -521,7 +558,9 @@ describe("Stripe Connect Integration", () => {
 				return;
 			}
 
-			const response = await fetch("http://localhost:3000/api/stripe-connect/health");
+			const response = await fetch(
+				"http://localhost:3000/api/stripe-connect/health",
+			);
 
 			expect([200, 503]).toContain(response.status); // 200 if configured, 503 if not
 

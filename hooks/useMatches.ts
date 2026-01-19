@@ -76,7 +76,12 @@ export interface UseMatchesReturn {
 	// Actions
 	fetchMatches: () => Promise<void>;
 	handleJobDismiss: (job: Job) => void;
-	handleJobClick: (jobId: number, company: string, position: number, job?: Job) => void;
+	handleJobClick: (
+		jobId: number,
+		company: string,
+		position: number,
+		job?: Job,
+	) => void;
 	handleScroll: () => void;
 	setShowJobClosedModal: (show: boolean) => void;
 }
@@ -84,7 +89,9 @@ export interface UseMatchesReturn {
 export function useMatches(): UseMatchesReturn {
 	const searchParams = useSearchParams();
 	const [jobs, setJobs] = useState<Job[]>([]);
-	const [targetCompanies, setTargetCompanies] = useState<TargetCompany[] | null>(null);
+	const [targetCompanies, setTargetCompanies] = useState<
+		TargetCompany[] | null
+	>(null);
 	const [customScan, setCustomScan] = useState<CustomScan | null>(null);
 	const [loading, setLoading] = useState(true);
 	const loadingMessage = "Finding your perfect matches...";
@@ -92,7 +99,9 @@ export function useMatches(): UseMatchesReturn {
 	const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
 	const [jobsViewed, setJobsViewed] = useState(0);
 	const [clickedJobId, setClickedJobId] = useState<number | null>(null);
-	const [dismissedJobIds, setDismissedJobIds] = useState<Set<number>>(new Set());
+	const [dismissedJobIds, setDismissedJobIds] = useState<Set<number>>(
+		new Set(),
+	);
 	const [dismissingJobId, setDismissingJobId] = useState<number | null>(null);
 	const jobsContainerRef = useRef<HTMLDivElement>(null);
 	const [showJobClosedModal, setShowJobClosedModal] = useState(false);

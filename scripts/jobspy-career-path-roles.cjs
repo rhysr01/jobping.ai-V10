@@ -12,7 +12,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
@@ -167,11 +167,17 @@ function isCareerPathRole(title, description) {
 	];
 
 	// Must contain at least one career path term
-	const hasCareerPathTerm = careerPathTerms.some(term => text.includes(term));
+	const hasCareerPathTerm = careerPathTerms.some((term) => text.includes(term));
 
 	// Exclude internships (this is for career path roles, not internships)
-	const internshipTerms = ["intern", "internship", "stage", "praktikum", "prácticas"];
-	const isInternship = internshipTerms.some(term => text.includes(term));
+	const internshipTerms = [
+		"intern",
+		"internship",
+		"stage",
+		"praktikum",
+		"prácticas",
+	];
+	const isInternship = internshipTerms.some((term) => text.includes(term));
 
 	return hasCareerPathTerm && !isInternship;
 }
@@ -182,9 +188,13 @@ async function main() {
 
 		// Check Python/JobSpy availability
 		try {
-			const result = spawnSync("python3", ["-c", "import jobspy; print('JobSpy available')"], {
-				timeout: 5000,
-			});
+			const result = spawnSync(
+				"python3",
+				["-c", "import jobspy; print('JobSpy available')"],
+				{
+					timeout: 5000,
+				},
+			);
 			if (result.status !== 0) {
 				console.error("❌ JobSpy Python package not installed");
 				process.exit(1);
@@ -214,7 +224,8 @@ async function main() {
 					"junior consultant",
 				];
 
-				const term = searchTerms[Math.floor(Math.random() * searchTerms.length)];
+				const term =
+					searchTerms[Math.floor(Math.random() * searchTerms.length)];
 
 				console.log(`🔍 Searching for "${term}" in ${city}...`);
 
@@ -257,7 +268,10 @@ except Exception as e:
 				);
 
 				if (result.error || result.status !== 0) {
-					console.warn(`⚠️  JobSpy failed for ${city}:`, result.error?.message || result.stderr?.toString());
+					console.warn(
+						`⚠️  JobSpy failed for ${city}:`,
+						result.error?.message || result.stderr?.toString(),
+					);
 					continue;
 				}
 
@@ -269,7 +283,9 @@ except Exception as e:
 
 				// Parse CSV
 				const lines = output.split("\n");
-				const csvStartIndex = lines.findIndex(line => line.includes("title,company,"));
+				const csvStartIndex = lines.findIndex((line) =>
+					line.includes("title,company,"),
+				);
 				if (csvStartIndex === -1) continue;
 
 				const csvData = lines.slice(csvStartIndex).join("\n");
@@ -277,10 +293,12 @@ except Exception as e:
 
 				try {
 					const { parse } = require("csv-parse/sync");
-					jobs.push(...parse(csvData, {
-						columns: true,
-						skip_empty_lines: true,
-					}));
+					jobs.push(
+						...parse(csvData, {
+							columns: true,
+							skip_empty_lines: true,
+						}),
+					);
 				} catch (parseError) {
 					console.warn(`⚠️  CSV parse error for ${city}:`, parseError.message);
 					continue;
@@ -300,7 +318,9 @@ except Exception as e:
 
 						// Skip if missing critical fields
 						if (!j.title || !j.company || !j.job_url) {
-							console.log(`[JobSpy Debug] Missing fields for job: title="${j.title}", company="${j.company}", job_url="${j.job_url}"`);
+							console.log(
+								`[JobSpy Debug] Missing fields for job: title="${j.title}", company="${j.company}", job_url="${j.job_url}"`,
+							);
 							continue;
 						}
 
@@ -332,7 +352,7 @@ except Exception as e:
 							},
 						);
 
-						if (processedJob && processedJob.title && processedJob.company) {
+						if (processedJob?.title && processedJob.company) {
 							// Additional validation to ensure required fields
 							if (!processedJob.title.trim() || !processedJob.company.trim()) {
 								filtered++;
@@ -349,7 +369,9 @@ except Exception as e:
 					}
 				}
 
-				console.log(`📊 ${city}: ${processedCount} processed, ${filtered} filtered, ${saved} saved`);
+				console.log(
+					`📊 ${city}: ${processedCount} processed, ${filtered} filtered, ${saved} saved`,
+				);
 
 				// Batch save to database
 				if (qualityFiltered.length > 0) {
@@ -364,7 +386,10 @@ except Exception as e:
 							});
 
 							if (error) {
-								console.error(`❌ Database error for ${city} batch ${Math.floor(i / batchSize) + 1}:`, error);
+								console.error(
+									`❌ Database error for ${city} batch ${Math.floor(i / batchSize) + 1}:`,
+									error,
+								);
 								throw error;
 							}
 						});
@@ -377,17 +402,14 @@ except Exception as e:
 				}
 
 				// Rate limiting - be gentle with JobSpy
-				await new Promise(resolve => setTimeout(resolve, 2000));
-
+				await new Promise((resolve) => setTimeout(resolve, 2000));
 			} catch (error) {
 				console.error(`❌ Error processing ${city}:`, error.message);
-				continue;
 			}
 		}
 
 		console.log(`\n🎉 JobSpy Career Path Roles scraping complete!`);
 		console.log(`📊 Total career path role jobs saved: ${totalSaved}`);
-
 	} catch (error) {
 		console.error("❌ JobSpy Career Path Roles scraper failed:", error.message);
 		process.exit(1);

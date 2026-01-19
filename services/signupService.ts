@@ -1,5 +1,5 @@
-import { apiCall } from "../lib/api-client";
 import type { SignupFormData } from "../components/signup/types";
+import { apiCall } from "../lib/api-client";
 
 export interface SignupResult {
 	matchCount?: number;
@@ -7,7 +7,9 @@ export interface SignupResult {
 }
 
 export class SignupService {
-	static async submitFreeSignup(formData: SignupFormData): Promise<SignupResult> {
+	static async submitFreeSignup(
+		formData: SignupFormData,
+	): Promise<SignupResult> {
 		const response = await apiCall("/api/signup/free", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

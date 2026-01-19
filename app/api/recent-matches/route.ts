@@ -23,7 +23,7 @@ export const GET = async (req: NextRequest) => {
 
 		const response = NextResponse.json(
 			createSuccessResponse(recentMatch, "Recent match retrieved successfully"),
-			{ status: 200 }
+			{ status: 200 },
 		);
 		response.headers.set("x-request-id", requestId);
 
@@ -38,7 +38,7 @@ export const GET = async (req: NextRequest) => {
 				error: "Failed to fetch recent matches",
 				message: "Internal server error",
 			},
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 };

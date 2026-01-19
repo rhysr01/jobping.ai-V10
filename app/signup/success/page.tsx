@@ -61,7 +61,10 @@ function SignupSuccessContent() {
 					<div className="space-y-6">
 						{/* Custom Scan */}
 						{metadata?.customScan && (
-							<CustomScanSection customScan={metadata.customScan} email={email} />
+							<CustomScanSection
+								customScan={metadata.customScan}
+								email={email}
+							/>
 						)}
 
 						{/* Next Steps */}

@@ -26,7 +26,11 @@ export interface UseSignupFormReturn {
 	visaStatusValidation: ReturnType<typeof useRequiredValidation>;
 	isFormValid: boolean;
 	formProgress: number;
-	shouldShowError: (fieldName: string, hasValue: boolean, isValid: boolean) => boolean;
+	shouldShowError: (
+		fieldName: string,
+		hasValue: boolean,
+		isValid: boolean,
+	) => boolean;
 
 	// Job count preview
 	jobCount: number | null;
@@ -79,38 +83,49 @@ export function useSignupForm(): UseSignupFormReturn {
 	});
 
 	const [jobCount, setJobCount] = useState<number | null>(null);
-	const [jobCountMetadata, setJobCountMetadata] = useState<JobCountMetadata | null>(null);
+	const [jobCountMetadata, setJobCountMetadata] =
+		useState<JobCountMetadata | null>(null);
 	const [isLoadingJobCount, setIsLoadingJobCount] = useState(false);
 	const [previewError, setPreviewError] = useState<string | null>(null);
-	const [previewTimeoutId, setPreviewTimeoutId] = useState<NodeJS.Timeout | null>(null);
+	const [previewTimeoutId, setPreviewTimeoutId] =
+		useState<NodeJS.Timeout | null>(null);
 	const [matchCount, setMatchCount] = useState<number>(0);
 	const [showLiveMatching, setShowLiveMatching] = useState(false);
 	const [overlayStartTime, setOverlayStartTime] = useState<number | null>(null);
 
 	// Ensure overlay shows for minimum time to prevent flash
-	const dismissOverlayWithMinimumTime = useCallback((callback?: () => void) => {
-		const elapsed = Date.now() - (overlayStartTime || 0);
-		const remainingTime = Math.max(0, 2000 - elapsed); // Minimum 2s display
+	const dismissOverlayWithMinimumTime = useCallback(
+		(callback?: () => void) => {
+			const elapsed = Date.now() - (overlayStartTime || 0);
+			const remainingTime = Math.max(0, 2000 - elapsed); // Minimum 2s display
 
-		setTimeout(() => {
-			setShowLiveMatching(false);
-			setOverlayStartTime(null);
-			callback?.();
-		}, remainingTime);
-	}, [overlayStartTime]);
+			setTimeout(() => {
+				setShowLiveMatching(false);
+				setOverlayStartTime(null);
+				callback?.();
+			}, remainingTime);
+		},
+		[overlayStartTime],
+	);
 
 	// Form persistence
 	const { clearProgress } = useFormPersistence(
 		formData as any,
 		setFormData as any,
-		{ tier: 'free', hasStep: false },
+		{ tier: "free", hasStep: false },
 	);
 
 	// Form validation hooks
 	const emailValidation = useEmailValidation(formData.email);
 	const nameValidation = useRequiredValidation(formData.fullName, "Full name");
-	const citiesValidation = useRequiredValidation(formData.cities, "Preferred cities");
-	const visaStatusValidation = useRequiredValidation(formData.visaStatus, "Visa status");
+	const citiesValidation = useRequiredValidation(
+		formData.cities,
+		"Preferred cities",
+	);
+	const visaStatusValidation = useRequiredValidation(
+		formData.visaStatus,
+		"Visa status",
+	);
 
 	// Memoized helper functions
 	const toggleArray = useCallback((arr: string[], value: string) => {
@@ -143,12 +158,7 @@ export function useSignupForm(): UseSignupFormReturn {
 
 			return touchedFields.has(fieldName) && hasValue && !isValid;
 		},
-		[
-			touchedFields,
-			formData.email,
-			formData.fullName,
-			formData.visaStatus,
-		],
+		[touchedFields, formData.email, formData.fullName, formData.visaStatus],
 	);
 
 	// Track when user completes step 1 (cities + career path selected)
@@ -290,7 +300,9 @@ export function useSignupForm(): UseSignupFormReturn {
 				if (result.redirectToMatches) {
 					dismissOverlayWithMinimumTime(() => {
 						setTimeout(() => {
-							router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount || 5}`);
+							router.push(
+								`/matches?justSignedUp=true&matchCount=${result.matchCount || 5}`,
+							);
 						}, 500); // Small delay after overlay disappears
 					});
 					return;
@@ -299,7 +311,9 @@ export function useSignupForm(): UseSignupFormReturn {
 				setMatchCount(result.matchCount || 0);
 
 				if ((result.matchCount || 0) === 0) {
-					setError("We couldn't find any matches for your preferences. Try selecting different cities or career paths.");
+					setError(
+						"We couldn't find any matches for your preferences. Try selecting different cities or career paths.",
+					);
 					trackEvent("signup_failed", { tier: "free", error: "no_matches" });
 					return;
 				}
@@ -313,18 +327,30 @@ export function useSignupForm(): UseSignupFormReturn {
 
 				clearProgress();
 				dismissOverlayWithMinimumTime(() => {
-					router.push(`/matches?justSignedUp=true&matchCount=${result.matchCount}`);
+					router.push(
+						`/matches?justSignedUp=true&matchCount=${result.matchCount}`,
+					);
 				});
 			} catch (err) {
 				dismissOverlayWithMinimumTime();
-				const errorMessage = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+				const errorMessage =
+					err instanceof Error
+						? err.message
+						: "Something went wrong. Please try again.";
 				trackEvent("signup_failed", { tier: "free", error: errorMessage });
 				setError(errorMessage);
 			} finally {
 				setIsSubmitting(false);
 			}
 		},
-		[isFormValid, formData, router, isSubmitting, emailValidation.isValid, clearProgress],
+		[
+			isFormValid,
+			formData,
+			router,
+			isSubmitting,
+			emailValidation.isValid,
+			clearProgress,
+		],
 	);
 
 	return {

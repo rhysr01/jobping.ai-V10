@@ -28,25 +28,66 @@ const STEPS = [
 		color: "from-purple-500 to-purple-600",
 		companies: {
 			tech: [
-				"Google", "Microsoft", "Meta", "Amazon", "Netflix", "Spotify",
-				"Uber", "Airbnb", "Stripe", "Shopify", "Slack", "Zoom",
-				"GitHub", "Square", "Robinhood", "Notion"
+				"Google",
+				"Microsoft",
+				"Meta",
+				"Amazon",
+				"Netflix",
+				"Spotify",
+				"Uber",
+				"Airbnb",
+				"Stripe",
+				"Shopify",
+				"Slack",
+				"Zoom",
+				"GitHub",
+				"Square",
+				"Robinhood",
+				"Notion",
 			],
 			finance: [
-				"Goldman Sachs", "JPMorgan Chase", "Morgan Stanley", "Deutsche Bank",
-				"HSBC", "Barclays", "Credit Suisse", "UBS", "BNP Paribas",
-				"Société Générale", "ING Group", "Santander"
+				"Goldman Sachs",
+				"JPMorgan Chase",
+				"Morgan Stanley",
+				"Deutsche Bank",
+				"HSBC",
+				"Barclays",
+				"Credit Suisse",
+				"UBS",
+				"BNP Paribas",
+				"Société Générale",
+				"ING Group",
+				"Santander",
 			],
 			consulting: [
-				"McKinsey & Company", "Boston Consulting Group", "Bain & Company",
-				"Deloitte", "PwC", "EY", "KPMG", "Accenture", "Oliver Wyman",
-				"Roland Berger", "Monitor Deloitte", "LEK Consulting"
+				"McKinsey & Company",
+				"Boston Consulting Group",
+				"Bain & Company",
+				"Deloitte",
+				"PwC",
+				"EY",
+				"KPMG",
+				"Accenture",
+				"Oliver Wyman",
+				"Roland Berger",
+				"Monitor Deloitte",
+				"LEK Consulting",
 			],
 			other: [
-				"Unilever", "L'Oréal", "Nestlé", "Siemens", "SAP", "Volkswagen",
-				"BMW", "Mercedes-Benz", "Adidas", "Nike", "IKEA", "H&M"
-			]
-		}
+				"Unilever",
+				"L'Oréal",
+				"Nestlé",
+				"Siemens",
+				"SAP",
+				"Volkswagen",
+				"BMW",
+				"Mercedes-Benz",
+				"Adidas",
+				"Nike",
+				"IKEA",
+				"H&M",
+			],
+		},
 	},
 	{
 		number: "03",
@@ -186,7 +227,11 @@ export default function HowItWorks() {
 												<AccordionContent className="pb-4">
 													<div className="flex flex-wrap gap-2">
 														{step.companies.tech.map((company) => (
-															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-purple-500 hover:text-purple-300">
+															<Badge
+																key={company}
+																variant="outline"
+																className="text-xs border-zinc-600 text-zinc-300 hover:border-purple-500 hover:text-purple-300"
+															>
 																{company}
 															</Badge>
 														))}
@@ -194,14 +239,21 @@ export default function HowItWorks() {
 												</AccordionContent>
 											</AccordionItem>
 
-											<AccordionItem value="finance" className="border-zinc-700">
+											<AccordionItem
+												value="finance"
+												className="border-zinc-700"
+											>
 												<AccordionTrigger className="text-sm font-semibold text-green-300 hover:text-green-200 hover:no-underline py-3">
 													💰 Finance & Banking (300+)
 												</AccordionTrigger>
 												<AccordionContent className="pb-4">
 													<div className="flex flex-wrap gap-2">
 														{step.companies.finance.map((company) => (
-															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-green-500 hover:text-green-300">
+															<Badge
+																key={company}
+																variant="outline"
+																className="text-xs border-zinc-600 text-zinc-300 hover:border-green-500 hover:text-green-300"
+															>
 																{company}
 															</Badge>
 														))}
@@ -209,14 +261,21 @@ export default function HowItWorks() {
 												</AccordionContent>
 											</AccordionItem>
 
-											<AccordionItem value="consulting" className="border-zinc-700">
+											<AccordionItem
+												value="consulting"
+												className="border-zinc-700"
+											>
 												<AccordionTrigger className="text-sm font-semibold text-blue-300 hover:text-blue-200 hover:no-underline py-3">
 													🎯 Consulting & Professional Services (200+)
 												</AccordionTrigger>
 												<AccordionContent className="pb-4">
 													<div className="flex flex-wrap gap-2">
 														{step.companies.consulting.map((company) => (
-															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-blue-500 hover:text-blue-300">
+															<Badge
+																key={company}
+																variant="outline"
+																className="text-xs border-zinc-600 text-zinc-300 hover:border-blue-500 hover:text-blue-300"
+															>
 																{company}
 															</Badge>
 														))}
@@ -231,11 +290,18 @@ export default function HowItWorks() {
 												<AccordionContent className="pb-4">
 													<div className="flex flex-wrap gap-2">
 														{step.companies.other.map((company) => (
-															<Badge key={company} variant="outline" className="text-xs border-zinc-600 text-zinc-300 hover:border-orange-500 hover:text-orange-300">
+															<Badge
+																key={company}
+																variant="outline"
+																className="text-xs border-zinc-600 text-zinc-300 hover:border-orange-500 hover:text-orange-300"
+															>
 																{company}
 															</Badge>
 														))}
-														<Badge variant="secondary" className="text-xs bg-zinc-800 text-zinc-400">
+														<Badge
+															variant="secondary"
+															className="text-xs bg-zinc-800 text-zinc-400"
+														>
 															+ 3,000 more companies...
 														</Badge>
 													</div>

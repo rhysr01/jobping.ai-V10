@@ -48,9 +48,7 @@ export function CareerPathSection({
 								: "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
 						} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
 					>
-						<span className="font-medium text-white text-sm">
-							{path.label}
-						</span>
+						<span className="font-medium text-white text-sm">{path.label}</span>
 					</motion.button>
 				))}
 			</div>

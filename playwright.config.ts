@@ -52,7 +52,7 @@ export default defineConfig({
 		// Maximum time each action such as `click()` can take
 		actionTimeout: 15 * 1000, // Increased to 15s for reliable actions
 
-			// Viewport size
+		// Viewport size
 		viewport: { width: 1280, height: 720 },
 	},
 

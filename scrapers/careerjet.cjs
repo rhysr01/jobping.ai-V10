@@ -1,7 +1,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const { createClient } = require("@supabase/supabase-js");
 const {
@@ -22,9 +22,16 @@ const { recordScraperRun } = require("./shared/telemetry.cjs");
 // Check for required API credentials
 if (!process.env.CAREERJET_API_KEY) {
 	console.error("❌ CAREERJET CREDENTIALS MISSING:");
-	console.error("   - CAREERJET_API_KEY:", process.env.CAREERJET_API_KEY ? "✅ Set" : "❌ Missing");
-	console.error("   📝 Add this to your environment variables or GitHub Actions secrets");
-	console.error("   🔗 Get credentials: https://www.careerjet.com/partners/api/");
+	console.error(
+		"   - CAREERJET_API_KEY:",
+		process.env.CAREERJET_API_KEY ? "✅ Set" : "❌ Missing",
+	);
+	console.error(
+		"   📝 Add this to your environment variables or GitHub Actions secrets",
+	);
+	console.error(
+		"   🔗 Get credentials: https://www.careerjet.com/partners/api/",
+	);
 	process.exit(1);
 }
 const { processIncomingJob } = require("./shared/processor.cjs");
@@ -51,23 +58,74 @@ const CITIES = [
 const LOCAL_EARLY_CAREER_TERMS = {
 	fr: [
 		// EXPANDED: Maximum French early career terms
-		"jeune diplômé", "stagiaire", "alternance", "junior", "débutant",
-		"programme graduate", "coordinateur", "assistant", "représentant", "spécialiste",
-		"ingénieur", "stagiaire marketing", "stagiaire finance", "stagiaire tech",
-		"stagiaire hr", "stagiaire esg", "diplômé", "alternant", "apprenti",
-		"premier emploi", "jeune professionnel", "coordinateur junior", "assistant junior",
-		"spécialiste junior", "ingénieur junior", "stagiaire commercial", "stagiaire opérationnel",
-		"stagiaire logistique", "stagiaire rh", "stagiaire comptabilité", "cdd", "cdi débutant"
+		"jeune diplômé",
+		"stagiaire",
+		"alternance",
+		"junior",
+		"débutant",
+		"programme graduate",
+		"coordinateur",
+		"assistant",
+		"représentant",
+		"spécialiste",
+		"ingénieur",
+		"stagiaire marketing",
+		"stagiaire finance",
+		"stagiaire tech",
+		"stagiaire hr",
+		"stagiaire esg",
+		"diplômé",
+		"alternant",
+		"apprenti",
+		"premier emploi",
+		"jeune professionnel",
+		"coordinateur junior",
+		"assistant junior",
+		"spécialiste junior",
+		"ingénieur junior",
+		"stagiaire commercial",
+		"stagiaire opérationnel",
+		"stagiaire logistique",
+		"stagiaire rh",
+		"stagiaire comptabilité",
+		"cdd",
+		"cdi débutant",
 	],
 	de: [
 		// EXPANDED: Maximum German early career terms
-		"absolvent", "trainee", "praktikant", "junior", "berufseinsteiger",
-		"nachwuchskraft", "praktikum", "werkstudent", "koordinator", "assistent",
-		"vertreter", "spezialist", "ingenieur", "praktikum marketing", "praktikum finance",
-		"praktikum tech", "praktikum hr", "praktikum nachhaltigkeit", "ausbildung",
-		"duales studium", "azubi", "berufseinstieg", "karrierestart", "einsteiger",
-		"praktikumsplatz", "koordinator junior", "assistent junior", "spezialist junior",
-		"ingenieur junior", "volontariat", "freiwilligendienst", "fsj", " BFD"
+		"absolvent",
+		"trainee",
+		"praktikant",
+		"junior",
+		"berufseinsteiger",
+		"nachwuchskraft",
+		"praktikum",
+		"werkstudent",
+		"koordinator",
+		"assistent",
+		"vertreter",
+		"spezialist",
+		"ingenieur",
+		"praktikum marketing",
+		"praktikum finance",
+		"praktikum tech",
+		"praktikum hr",
+		"praktikum nachhaltigkeit",
+		"ausbildung",
+		"duales studium",
+		"azubi",
+		"berufseinstieg",
+		"karrierestart",
+		"einsteiger",
+		"praktikumsplatz",
+		"koordinator junior",
+		"assistent junior",
+		"spezialist junior",
+		"ingenieur junior",
+		"volontariat",
+		"freiwilligendienst",
+		"fsj",
+		" BFD",
 	],
 	es: [
 		"programa de graduados",
@@ -477,263 +535,268 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 
 	try {
 		while (hasMorePages && page <= MAX_PAGES) {
-		try {
-			const params = new URLSearchParams({
-				locale_code: city.locale,
-				location: city.name,
-				keywords: keyword,
-				affid: CAREERJET_API_KEY,
-				user_ip: "11.22.33.44", // Required by API
-				user_agent: "Mozilla/5.0 JobPing/1.0", // Required by API
-				pagesize: "50", // Max on free tier
-				page: String(page),
-				sort: "date", // Most recent first
-				contracttype: "p", // Permanent
+			try {
+				const params = new URLSearchParams({
+					locale_code: city.locale,
+					location: city.name,
+					keywords: keyword,
+					affid: CAREERJET_API_KEY,
+					user_ip: "11.22.33.44", // Required by API
+					user_agent: "Mozilla/5.0 JobPing/1.0", // Required by API
+					pagesize: "50", // Max on free tier
+					page: String(page),
+					sort: "date", // Most recent first
+					contracttype: "p", // Permanent
+				});
+
+				const url = `${BASE_URL}?${params.toString()}`;
+				const startTime = Date.now();
+
+				// Add 30-second timeout to prevent hanging requests
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+				let response;
+				try {
+					response = await fetch(url, {
+						headers: {
+							"User-Agent": "Mozilla/5.0 JobPing/1.0",
+							Accept: "application/json",
+						},
+						signal: controller.signal,
+					});
+					clearTimeout(timeoutId);
+				} catch (error) {
+					clearTimeout(timeoutId);
+					if (error.name === "AbortError") {
+						throw new Error(
+							`Request timed out after 30s for ${keyword} in ${city.name}`,
+						);
+					}
+					throw error;
+				}
+				const responseTime = Date.now() - startTime;
+				totalResponseTime += responseTime;
+
+				if (!response.ok) {
+					// Handle specific error codes
+					if (response.status === 403) {
+						console.error(
+							`[CareerJet] 🚫 ACCESS FORBIDDEN (403) - API key invalid or account blocked`,
+						);
+						console.error(
+							`[CareerJet] Please check CAREERJET_API_KEY or contact CareerJet support`,
+						);
+						// Fail fast on 403 - don't retry
+						throw new Error("CareerJet API access forbidden - invalid API key");
+					}
+
+					if (response.status === 429) {
+						console.warn(
+							`[CareerJet] Rate limit hit for ${keyword} in ${city.name} (page ${page}) - will slow down`,
+						);
+						return {
+							saved: savedCount,
+							shouldSlowDown: true,
+							responseTime: totalResponseTime,
+						};
+					}
+
+					console.error(
+						`[CareerJet] API error ${response.status} for ${keyword} in ${city.name} (page ${page})`,
+					);
+					break; // Stop pagination on other errors
+				}
+
+				const data = await response.json();
+				const jobs = data.jobs || [];
+				const totalPages = data.pages || data.total_pages || null;
+				const totalResults = data.hits || data.total || null;
+
+				if (jobs.length === 0) {
+					hasMorePages = false;
+					break;
+				}
+
+				// Check if we've reached the last page
+				if (totalPages && page >= totalPages) {
+					hasMorePages = false;
+				}
+
+				console.log(
+					`[CareerJet] Found ${jobs.length} jobs for "${keyword}" in ${city.name} (page ${page}${totalResults ? `/${totalPages || "?"}, total available: ${totalResults}` : ""}${totalPages ? `, ${totalPages} pages total` : ""}) (${responseTime}ms)`,
+				);
+
+				// Process each job
+				for (const job of jobs) {
+					try {
+						// Create normalized job object for early-career check
+						const normalizedJob = {
+							title: job.title || "",
+							company: job.company || "",
+							location: job.location || city.name,
+							description: job.description || "",
+						};
+
+						// Check if it's early career using shared helper
+						const isEarlyCareer = classifyEarlyCareer(normalizedJob);
+						if (!isEarlyCareer) {
+							continue; // Skip non-early-career jobs
+						}
+
+						// ENHANCED: Extract salary from description (keep this as it's CareerJet-specific)
+						function extractSalary(desc) {
+							if (!desc) return null;
+							const patterns = [
+								/(?:€|EUR|euro)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(?:€|EUR|euro)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
+								/(?:£|GBP|pound)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(?:£|GBP|pound)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
+								/(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*(?:€|EUR|£|GBP|euro|pound)/i,
+								/salary[:\s]+(?:€|£|EUR|GBP)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
+								/(?:€|EUR|euro)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
+								/(?:£|GBP|pound)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
+							];
+							for (const pattern of patterns) {
+								const match = desc.match(pattern);
+								if (match) return match[0].trim().replace(/\s+/g, " ");
+							}
+							return null;
+						}
+						const salary = extractSalary(job.description || "");
+
+						// ENHANCED: Enrich description if too short
+						let enrichedDescription = job.description || "";
+						if (enrichedDescription.length < 50 && job.site) {
+							enrichedDescription =
+								`${job.title || ""} at ${job.company || ""}. ${enrichedDescription}`.trim();
+						}
+
+						// Process through standardization pipe
+						const processed = await processIncomingJob(
+							{
+								title: job.title,
+								company: job.company,
+								location: job.location || city.name,
+								description: enrichedDescription,
+								url: job.url,
+								posted_at: parseRelativeDate(job.date || "today"),
+								date: job.date,
+							},
+							{
+								source: "careerjet",
+								defaultCity: city.name,
+								defaultCountry: city.country,
+							},
+						);
+
+						// CRITICAL: Skip if processor rejected (e.g., job board company)
+						if (!processed) {
+							continue;
+						}
+
+						// Generate job_hash
+						const job_hash = makeJobHash({
+							title: processed.title,
+							company: processed.company,
+							location: processed.location,
+						});
+
+						// ENHANCED: Infer categories using CAREER_PATH_KEYWORDS (keep this as it's CareerJet-specific)
+						const categories = inferCategories(job.title, enrichedDescription);
+
+						// Prepare database record with all standardized fields
+						const jobRecord = {
+							...processed,
+							job_hash,
+							categories, // Override with CareerJet-specific categories
+							// Add salary if extracted (CareerJet-specific)
+							...(salary ? { salary_range: salary } : {}),
+						};
+
+						// CRITICAL: Validate before adding to batch
+						const { validateJob } = require("./shared/jobValidator.cjs");
+						const validation = validateJob(jobRecord);
+						if (!validation.valid) {
+							console.warn(
+								`[CareerJet] Skipping invalid job: ${validation.errors.join(", ")}`,
+							);
+							continue;
+						}
+
+						// Add to batch instead of saving immediately
+						jobBatch.push(validation.job);
+
+						// Save batch when it reaches BATCH_SIZE
+						if (jobBatch.length >= BATCH_SIZE) {
+							const { error, data } = await supabase
+								.from("jobs")
+								.upsert(jobBatch, {
+									onConflict: "job_hash",
+									ignoreDuplicates: true, // Skip duplicates instead of expensive updates
+								});
+
+							if (error) {
+								console.error(`[CareerJet] Error saving batch:`, error.message);
+							} else {
+								const saved = Array.isArray(data)
+									? data.length
+									: jobBatch.length;
+								savedCount += saved;
+								console.log(
+									`[CareerJet] Saved batch of ${jobBatch.length} jobs`,
+								);
+							}
+							jobBatch.length = 0; // Clear batch
+						}
+					} catch (jobError) {
+						console.error(
+							"[CareerJet] Error processing job:",
+							jobError.message,
+						);
+					}
+				}
+
+				// If we got fewer jobs than expected (less than page size), likely no more pages
+				if (jobs.length < 50) {
+					hasMorePages = false;
+				}
+
+				page++;
+
+				// Rate limiting between pages
+				if (hasMorePages && page <= MAX_PAGES) {
+					await new Promise((resolve) => setTimeout(resolve, 1000)); // 1s delay between pages
+				}
+			} catch (error) {
+				console.error(
+					`[CareerJet] Error scraping ${keyword} in ${city.name} (page ${page}):`,
+					error.message,
+				);
+				break; // Stop pagination on error
+			}
+		}
+
+		// Save any remaining jobs in the batch
+		if (jobBatch.length > 0) {
+			const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
+				onConflict: "job_hash",
+				ignoreDuplicates: true, // Skip duplicates instead of expensive updates
 			});
 
-			const url = `${BASE_URL}?${params.toString()}`;
-			const startTime = Date.now();
-
-			// Add 30-second timeout to prevent hanging requests
-			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-			let response;
-			try {
-				response = await fetch(url, {
-					headers: {
-						"User-Agent": "Mozilla/5.0 JobPing/1.0",
-						Accept: "application/json",
-					},
-					signal: controller.signal,
-				});
-				clearTimeout(timeoutId);
-			} catch (error) {
-				clearTimeout(timeoutId);
-				if (error.name === 'AbortError') {
-					throw new Error(`Request timed out after 30s for ${keyword} in ${city.name}`);
-				}
-				throw error;
+			if (error) {
+				console.error(`[CareerJet] Error saving final batch:`, error.message);
+			} else {
+				const saved = Array.isArray(data) ? data.length : jobBatch.length;
+				savedCount += saved;
+				console.log(`[CareerJet] Saved final batch of ${jobBatch.length} jobs`);
 			}
-			const responseTime = Date.now() - startTime;
-			totalResponseTime += responseTime;
-
-			if (!response.ok) {
-				// Handle specific error codes
-				if (response.status === 403) {
-					console.error(
-						`[CareerJet] 🚫 ACCESS FORBIDDEN (403) - API key invalid or account blocked`,
-					);
-					console.error(
-						`[CareerJet] Please check CAREERJET_API_KEY or contact CareerJet support`,
-					);
-					// Fail fast on 403 - don't retry
-					throw new Error("CareerJet API access forbidden - invalid API key");
-				}
-
-				if (response.status === 429) {
-					console.warn(
-						`[CareerJet] Rate limit hit for ${keyword} in ${city.name} (page ${page}) - will slow down`,
-					);
-					return { saved: savedCount, shouldSlowDown: true, responseTime: totalResponseTime };
-				}
-
-				console.error(
-					`[CareerJet] API error ${response.status} for ${keyword} in ${city.name} (page ${page})`,
-				);
-				break; // Stop pagination on other errors
-			}
-
-			const data = await response.json();
-			const jobs = data.jobs || [];
-			const totalPages = data.pages || data.total_pages || null;
-			const totalResults = data.hits || data.total || null;
-
-			if (jobs.length === 0) {
-				hasMorePages = false;
-				break;
-			}
-
-			// Check if we've reached the last page
-			if (totalPages && page >= totalPages) {
-				hasMorePages = false;
-			}
-
-			console.log(
-				`[CareerJet] Found ${jobs.length} jobs for "${keyword}" in ${city.name} (page ${page}${totalResults ? `/${totalPages || '?'}, total available: ${totalResults}` : ''}${totalPages ? `, ${totalPages} pages total` : ''}) (${responseTime}ms)`,
-			);
-
-			// Process each job
-			for (const job of jobs) {
-			try {
-				// Create normalized job object for early-career check
-				const normalizedJob = {
-					title: job.title || "",
-					company: job.company || "",
-					location: job.location || city.name,
-					description: job.description || "",
-				};
-
-				// Check if it's early career using shared helper
-				const isEarlyCareer = classifyEarlyCareer(normalizedJob);
-				if (!isEarlyCareer) {
-					continue; // Skip non-early-career jobs
-				}
-
-				// ENHANCED: Extract salary from description (keep this as it's CareerJet-specific)
-				function extractSalary(desc) {
-					if (!desc) return null;
-					const patterns = [
-						/(?:€|EUR|euro)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(?:€|EUR|euro)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
-						/(?:£|GBP|pound)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(?:£|GBP|pound)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
-						/(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*(?:€|EUR|£|GBP|euro|pound)/i,
-						/salary[:\s]+(?:€|£|EUR|GBP)?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)\s*-?\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
-						/(?:€|EUR|euro)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
-						/(?:£|GBP|pound)\s*(\d{1,3}(?:[.,]\d{3})*(?:k|K)?)/i,
-					];
-					for (const pattern of patterns) {
-						const match = desc.match(pattern);
-						if (match) return match[0].trim().replace(/\s+/g, " ");
-					}
-					return null;
-				}
-				const salary = extractSalary(job.description || "");
-
-				// ENHANCED: Enrich description if too short
-				let enrichedDescription = job.description || "";
-				if (enrichedDescription.length < 50 && job.site) {
-					enrichedDescription =
-						`${job.title || ""} at ${job.company || ""}. ${enrichedDescription}`.trim();
-				}
-
-				// Process through standardization pipe
-				const processed = await processIncomingJob(
-					{
-						title: job.title,
-						company: job.company,
-						location: job.location || city.name,
-						description: enrichedDescription,
-						url: job.url,
-						posted_at: parseRelativeDate(job.date || "today"),
-						date: job.date,
-					},
-					{
-						source: "careerjet",
-						defaultCity: city.name,
-						defaultCountry: city.country,
-					},
-				);
-
-				// CRITICAL: Skip if processor rejected (e.g., job board company)
-				if (!processed) {
-					continue;
-				}
-
-				// Generate job_hash
-				const job_hash = makeJobHash({
-					title: processed.title,
-					company: processed.company,
-					location: processed.location,
-				});
-
-				// ENHANCED: Infer categories using CAREER_PATH_KEYWORDS (keep this as it's CareerJet-specific)
-				const categories = inferCategories(job.title, enrichedDescription);
-
-				// Prepare database record with all standardized fields
-				const jobRecord = {
-					...processed,
-					job_hash,
-					categories, // Override with CareerJet-specific categories
-					// Add salary if extracted (CareerJet-specific)
-					...(salary ? { salary_range: salary } : {}),
-				};
-
-				// CRITICAL: Validate before adding to batch
-				const { validateJob } = require("./shared/jobValidator.cjs");
-				const validation = validateJob(jobRecord);
-				if (!validation.valid) {
-					console.warn(
-						`[CareerJet] Skipping invalid job: ${validation.errors.join(", ")}`,
-					);
-					continue;
-				}
-
-				// Add to batch instead of saving immediately
-				jobBatch.push(validation.job);
-
-				// Save batch when it reaches BATCH_SIZE
-				if (jobBatch.length >= BATCH_SIZE) {
-					const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
-						onConflict: "job_hash",
-						ignoreDuplicates: true, // Skip duplicates instead of expensive updates
-					});
-
-					if (error) {
-						console.error(
-							`[CareerJet] Error saving batch:`,
-							error.message,
-						);
-					} else {
-						const saved = Array.isArray(data) ? data.length : jobBatch.length;
-						savedCount += saved;
-						console.log(
-							`[CareerJet] Saved batch of ${jobBatch.length} jobs`,
-						);
-					}
-					jobBatch.length = 0; // Clear batch
-				}
-			} catch (jobError) {
-				console.error("[CareerJet] Error processing job:", jobError.message);
-			}
-			}
-
-			// If we got fewer jobs than expected (less than page size), likely no more pages
-			if (jobs.length < 50) {
-				hasMorePages = false;
-			}
-
-			page++;
-
-			// Rate limiting between pages
-			if (hasMorePages && page <= MAX_PAGES) {
-				await new Promise((resolve) => setTimeout(resolve, 1000)); // 1s delay between pages
-			}
-		} catch (error) {
-			console.error(
-				`[CareerJet] Error scraping ${keyword} in ${city.name} (page ${page}):`,
-				error.message,
-			);
-			break; // Stop pagination on error
 		}
-	}
 
-	// Save any remaining jobs in the batch
-	if (jobBatch.length > 0) {
-		const { error, data } = await supabase.from("jobs").upsert(jobBatch, {
-			onConflict: "job_hash",
-			ignoreDuplicates: true, // Skip duplicates instead of expensive updates
-		});
-
-		if (error) {
-			console.error(
-				`[CareerJet] Error saving final batch:`,
-				error.message,
-			);
-		} else {
-			const saved = Array.isArray(data) ? data.length : jobBatch.length;
-			savedCount += saved;
-			console.log(
-				`[CareerJet] Saved final batch of ${jobBatch.length} jobs`,
-			);
-		}
-	}
-
-	// Return both count and whether to slow down (based on response time)
-	return {
-		saved: savedCount,
-		shouldSlowDown: totalResponseTime > 2000,
-		responseTime: totalResponseTime,
-	};
+		// Return both count and whether to slow down (based on response time)
+		return {
+			saved: savedCount,
+			shouldSlowDown: totalResponseTime > 2000,
+			responseTime: totalResponseTime,
+		};
 	} catch (error) {
 		console.error(
 			`[CareerJet] Error scraping ${keyword} in ${city.name}:`,
@@ -834,11 +897,15 @@ async function scrapeCareerJet() {
 				errors++;
 
 				// Fail fast on critical errors to prevent timeouts
-				if (error.message.includes('timed out') ||
-					error.message.includes('API access forbidden') ||
-					error.message.includes('ECONNREFUSED') ||
-					error.message.includes('ENOTFOUND')) {
-					console.error(`[CareerJet] Critical error detected, stopping ${city.name} processing`);
+				if (
+					error.message.includes("timed out") ||
+					error.message.includes("API access forbidden") ||
+					error.message.includes("ECONNREFUSED") ||
+					error.message.includes("ENOTFOUND")
+				) {
+					console.error(
+						`[CareerJet] Critical error detected, stopping ${city.name} processing`,
+					);
 					break; // Stop processing this city
 				}
 

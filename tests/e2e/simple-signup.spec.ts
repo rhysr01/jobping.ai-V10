@@ -14,7 +14,9 @@ test.describe("Simple Signup Tests", () => {
 
 		// Check if homepage loads - just verify heading and body are present
 		await expect(
-			page.locator('h1:has-text("Get 5 early-career job matches instantly free")'),
+			page.locator(
+				'h1:has-text("Get 5 early-career job matches instantly free")',
+			),
 		).toBeVisible();
 		await expect(page.locator("body")).toBeVisible();
 
@@ -120,7 +122,9 @@ test.describe("Simple Signup Tests", () => {
 
 		// Basic functionality test
 		await expect(
-			page.locator('h1:has-text("Get 5 early-career job matches instantly free")'),
+			page.locator(
+				'h1:has-text("Get 5 early-career job matches instantly free")',
+			),
 		).toBeVisible();
 
 		// Navigation test

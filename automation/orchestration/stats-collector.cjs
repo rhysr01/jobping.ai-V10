@@ -1,13 +1,13 @@
 /**
  * Stats Collector - Infrastructure Layer
- * 
+ *
  * Collects statistics from database. This is "Muscle" - it knows
  * HOW to query the database, but not WHY we're checking quotas.
  */
 
 /**
  * Collect cycle statistics since a given timestamp
- * 
+ *
  * @param {Object} supabase - Supabase client instance
  * @param {string} sinceIso - ISO timestamp to collect stats from
  * @returns {Promise<Object>} Cycle statistics with {total: number, perSource: Object}
@@ -46,4 +46,3 @@ async function collectCycleStats(supabase, sinceIso) {
 module.exports = {
 	collectCycleStats,
 };
-

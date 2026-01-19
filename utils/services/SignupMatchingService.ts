@@ -13,9 +13,15 @@
 
 import { apiLogger } from "../../lib/api-logger";
 import { getDatabaseClient } from "../core/database-pool";
-import { runFreeMatching, type FreeUserPreferences } from "../strategies/FreeMatchingStrategy";
-import { runPremiumMatching, type PremiumUserPreferences } from "../strategies/PremiumMatchingStrategy";
-import type { UserPreferences, JobMatch } from "../matching/types";
+import type { JobMatch, UserPreferences } from "../matching/types";
+import {
+	type FreeUserPreferences,
+	runFreeMatching,
+} from "../strategies/FreeMatchingStrategy";
+import {
+	type PremiumUserPreferences,
+	runPremiumMatching,
+} from "../strategies/PremiumMatchingStrategy";
 
 export type SubscriptionTier = "free" | "premium_pending";
 
@@ -80,31 +86,38 @@ export class SignupMatchingService {
 	static async runMatching(
 		userPrefs: UserPreferences,
 		config: MatchingConfig,
-		requestId?: string
+		requestId?: string,
 	): Promise<MatchingResult> {
 		const startTime = Date.now();
 		const email = userPrefs.email;
 		const requestIdStr = requestId || crypto.randomUUID();
 
 		try {
-			apiLogger.info(`[${config.tier.toUpperCase()}] Starting signup matching`, {
-				email,
-				requestId: requestIdStr,
-				tier: config.tier,
-				maxMatches: config.maxMatches,
-				jobFreshnessDays: config.jobFreshnessDays,
-			});
-
-			// STEP 1: IDEMPOTENCY CHECK - Prevent race conditions
-			const existingMatchesResult = await this.checkExistingMatches(email, config.tier);
-			if (existingMatchesResult) {
-				const processingTime = Date.now() - startTime;
-				apiLogger.info(`[${config.tier.toUpperCase()}] Idempotent match found`, {
+			apiLogger.info(
+				`[${config.tier.toUpperCase()}] Starting signup matching`,
+				{
 					email,
 					requestId: requestIdStr,
-					existingCount: existingMatchesResult.matchCount,
-					processingTime,
-				});
+					tier: config.tier,
+					maxMatches: config.maxMatches,
+					jobFreshnessDays: config.jobFreshnessDays,
+				},
+			);
+
+			// STEP 1: IDEMPOTENCY CHECK - Prevent race conditions
+			const existingMatchesResult =
+				await SignupMatchingService.checkExistingMatches(email, config.tier);
+			if (existingMatchesResult) {
+				const processingTime = Date.now() - startTime;
+				apiLogger.info(
+					`[${config.tier.toUpperCase()}] Idempotent match found`,
+					{
+						email,
+						requestId: requestIdStr,
+						existingCount: existingMatchesResult.matchCount,
+						processingTime,
+					},
+				);
 				return {
 					success: true,
 					matchCount: existingMatchesResult.matchCount,
@@ -115,13 +128,16 @@ export class SignupMatchingService {
 			}
 
 			// STEP 2: FETCH JOBS - Tier-aware job selection
-			const jobs = await this.fetchJobsForTier(config);
+			const jobs = await SignupMatchingService.fetchJobsForTier(config);
 			if (jobs.length === 0) {
-				apiLogger.warn(`[${config.tier.toUpperCase()}] No jobs available for matching`, {
-					email,
-					requestId: requestIdStr,
-					tier: config.tier,
-				});
+				apiLogger.warn(
+					`[${config.tier.toUpperCase()}] No jobs available for matching`,
+					{
+						email,
+						requestId: requestIdStr,
+						tier: config.tier,
+					},
+				);
 				return {
 					success: false,
 					matchCount: 0,
@@ -132,15 +148,23 @@ export class SignupMatchingService {
 				};
 			}
 
-			apiLogger.info(`[${config.tier.toUpperCase()}] Fetched jobs for matching`, {
-				email,
-				requestId: requestIdStr,
-				jobCount: jobs.length,
-				tier: config.tier,
-			});
+			apiLogger.info(
+				`[${config.tier.toUpperCase()}] Fetched jobs for matching`,
+				{
+					email,
+					requestId: requestIdStr,
+					jobCount: jobs.length,
+					tier: config.tier,
+				},
+			);
 
 			// STEP 3: DELEGATE TO APPROPRIATE STRATEGY
-			let strategyResult: { matches: any[]; matchCount: number; method: string; duration: number };
+			let strategyResult: {
+				matches: any[];
+				matchCount: number;
+				method: string;
+				duration: number;
+			};
 
 			if (config.tier === "free") {
 				// Use Free Matching Strategy
@@ -177,15 +201,18 @@ export class SignupMatchingService {
 
 			const processingTime = Date.now() - startTime;
 
-			apiLogger.info(`[${config.tier.toUpperCase()}] Strategy matching completed`, {
-				email,
-				requestId: requestIdStr,
-				tier: config.tier,
-				totalJobsProcessed: jobs.length,
-				matchesFound: strategyResult.matchCount,
-				processingTime,
-				method: strategyResult.method,
-			});
+			apiLogger.info(
+				`[${config.tier.toUpperCase()}] Strategy matching completed`,
+				{
+					email,
+					requestId: requestIdStr,
+					tier: config.tier,
+					totalJobsProcessed: jobs.length,
+					matchesFound: strategyResult.matchCount,
+					processingTime,
+					method: strategyResult.method,
+				},
+			);
 
 			return {
 				success: true,
@@ -194,18 +221,22 @@ export class SignupMatchingService {
 				processingTime,
 				method: strategyResult.method as "ai" | "fallback" | "idempotent",
 			};
-
 		} catch (error) {
 			const processingTime = Date.now() - startTime;
-			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
 
-			apiLogger.error(`[${config.tier.toUpperCase()}] Matching failed catastrophically`, error as Error, {
-				email,
-				requestId: requestIdStr,
-				tier: config.tier,
-				processingTime,
-				error: errorMessage,
-			});
+			apiLogger.error(
+				`[${config.tier.toUpperCase()}] Matching failed catastrophically`,
+				error as Error,
+				{
+					email,
+					requestId: requestIdStr,
+					tier: config.tier,
+					processingTime,
+					error: errorMessage,
+				},
+			);
 
 			return {
 				success: false,
@@ -218,13 +249,12 @@ export class SignupMatchingService {
 		}
 	}
 
-
 	/**
 	 * Check if user already has matches (idempotency)
 	 */
 	private static async checkExistingMatches(
 		email: string,
-		tier: SubscriptionTier
+		tier: SubscriptionTier,
 	): Promise<{ matchCount: number } | null> {
 		try {
 			const supabase = getDatabaseClient();
@@ -248,10 +278,13 @@ export class SignupMatchingService {
 
 			return null; // No existing matches
 		} catch (error) {
-			apiLogger.warn(`[${tier.toUpperCase()}] Failed to check existing matches, proceeding with matching`, {
-				email,
-				error: error instanceof Error ? error.message : String(error),
-			});
+			apiLogger.warn(
+				`[${tier.toUpperCase()}] Failed to check existing matches, proceeding with matching`,
+				{
+					email,
+					error: error instanceof Error ? error.message : String(error),
+				},
+			);
 			return null; // Proceed with matching on error
 		}
 	}
@@ -259,7 +292,9 @@ export class SignupMatchingService {
 	/**
 	 * Fetch jobs based on tier-specific freshness requirements
 	 */
-	private static async fetchJobsForTier(config: MatchingConfig): Promise<any[]> {
+	private static async fetchJobsForTier(
+		config: MatchingConfig,
+	): Promise<any[]> {
 		const supabase = getDatabaseClient();
 		const freshnessDate = new Date();
 		freshnessDate.setDate(freshnessDate.getDate() - config.jobFreshnessDays);
@@ -280,12 +315,10 @@ export class SignupMatchingService {
 			.is("filtered_reason", null)
 			.gte("posted_at", freshnessDate.toISOString())
 			.order("created_at", { ascending: false });
-			// REMOVED LIMIT - let PrefilterService filter by location/career first, then limit if needed
+		// REMOVED LIMIT - let PrefilterService filter by location/career first, then limit if needed
 
 		return jobs || [];
 	}
-
-
 }
 
 /**

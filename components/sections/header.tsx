@@ -15,7 +15,8 @@ export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [activeSection, setActiveSection] = useState<string>("");
 	const [isMobile, setIsMobile] = useState(false);
-	const [previouslyFocusedElement, setPreviouslyFocusedElement] = useState<Element | null>(null);
+	const [previouslyFocusedElement, setPreviouslyFocusedElement] =
+		useState<Element | null>(null);
 	const pathname = usePathname();
 
 	// Initialize mobile state immediately with SSR safety
@@ -25,8 +26,8 @@ export default function Header() {
 
 		// Also listen for resize events
 		const handleResize = () => checkMobile();
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
+		window.addEventListener("resize", handleResize);
+		return () => window.removeEventListener("resize", handleResize);
 	}, []);
 
 	useEffect(() => {
@@ -103,20 +104,22 @@ export default function Header() {
 			setPreviouslyFocusedElement(document.activeElement);
 
 			// Focus the menu
-			const menuElement = document.querySelector('[role="dialog"]') as HTMLElement;
+			const menuElement = document.querySelector(
+				'[role="dialog"]',
+			) as HTMLElement;
 			if (menuElement) {
 				menuElement.focus();
 			}
 
 			// Add keyboard listener for Escape key
 			const handleEscape = (e: KeyboardEvent) => {
-				if (e.key === 'Escape') {
+				if (e.key === "Escape") {
 					setMobileMenuOpen(false);
 				}
 			};
 
-			document.addEventListener('keydown', handleEscape);
-			return () => document.removeEventListener('keydown', handleEscape);
+			document.addEventListener("keydown", handleEscape);
+			return () => document.removeEventListener("keydown", handleEscape);
 		} else if (!mobileMenuOpen && previouslyFocusedElement) {
 			// Restore focus when menu closes
 			(previouslyFocusedElement as HTMLElement).focus();
@@ -134,7 +137,7 @@ export default function Header() {
 
 	// Always define the callback, regardless of mobile state
 	const toggleMobileMenu = useCallback(() => {
-		setMobileMenuOpen(prev => !prev);
+		setMobileMenuOpen((prev) => !prev);
 	}, []);
 
 	const handleNavClick = (
@@ -167,9 +170,15 @@ export default function Header() {
 					{/* Top gradient glow */}
 					<div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
 				</div>
-				
-				<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative" style={{ overflow: "visible" }}>
-					<div className="h-24 md:h-28 flex items-center justify-between py-2 overflow-visible" style={{ overflow: "visible" }}>
+
+				<div
+					className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
+					style={{ overflow: "visible" }}
+				>
+					<div
+						className="h-24 md:h-28 flex items-center justify-between py-2 overflow-visible"
+						style={{ overflow: "visible" }}
+					>
 						{/* Logo with graduation cap */}
 						<Link
 							href="/"
@@ -183,7 +192,10 @@ export default function Header() {
 							aria-label="JobPing Home"
 							style={{ overflow: "visible", paddingRight: "0.75rem" }}
 						>
-							<div className="scale-72 md:scale-80 origin-left overflow-visible pr-3 md:pr-4" style={{ overflow: "visible", minWidth: "fit-content" }}>
+							<div
+								className="scale-72 md:scale-80 origin-left overflow-visible pr-3 md:pr-4"
+								style={{ overflow: "visible", minWidth: "fit-content" }}
+							>
 								<LogoWordmark />
 							</div>
 						</Link>
@@ -201,16 +213,16 @@ export default function Header() {
 											? "text-white"
 											: "text-zinc-300 hover:text-white"
 									}`}
-									style={{ 
-										overflow: "visible", 
-										textOverflow: "clip", 
+									style={{
+										overflow: "visible",
+										textOverflow: "clip",
 										maxWidth: "none",
 										whiteSpace: "nowrap",
-										wordBreak: "keep-all"
+										wordBreak: "keep-all",
 									}}
 								>
 									<span className="relative z-10">{link.label}</span>
-									
+
 									{/* Animated underline */}
 									{activeSection === link.href ? (
 										<motion.div
@@ -226,7 +238,7 @@ export default function Header() {
 									) : (
 										<span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-500 group-hover:w-full transition-all duration-300 ease-out" />
 									)}
-									
+
 									{/* Subtle glow on hover */}
 									<span className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 rounded-lg blur-sm transition-all" />
 								</Link>
@@ -243,7 +255,6 @@ export default function Header() {
 									1,000+ students
 								</span>
 							</div>
-
 
 							{/* Enhanced CTA Button with shine effect */}
 							<Link
@@ -264,7 +275,9 @@ export default function Header() {
 
 								{/* Text */}
 								<span className="relative z-10 group-hover:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
-									<span className="hidden sm:inline">{CTA_GET_MY_5_FREE_MATCHES}</span>
+									<span className="hidden sm:inline">
+										{CTA_GET_MY_5_FREE_MATCHES}
+									</span>
 									<span className="sm:hidden">Get 5 Free Matches</span>
 									<BrandIcons.ArrowRight className="h-4 w-4" />
 								</span>
@@ -311,7 +324,11 @@ export default function Header() {
 							initial={{ x: "100%" }}
 							animate={{ x: 0 }}
 							exit={{ x: "100%" }}
-							transition={isMobile ? { duration: 0.3, ease: "easeOut" } : { type: "spring", damping: 25, stiffness: 200 }}
+							transition={
+								isMobile
+									? { duration: 0.3, ease: "easeOut" }
+									: { type: "spring", damping: 25, stiffness: 200 }
+							}
 							className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-black/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto"
 							role="dialog"
 							aria-modal="true"
@@ -330,7 +347,10 @@ export default function Header() {
 										<BrandIcons.X className="h-6 w-6" />
 									</button>
 								</div>
-								<nav className="flex flex-col gap-3" aria-label="Mobile navigation">
+								<nav
+									className="flex flex-col gap-3"
+									aria-label="Mobile navigation"
+								>
 									{navLinks.map((link) => (
 										<Link
 											key={link.href}
@@ -341,7 +361,9 @@ export default function Header() {
 													? "text-white bg-white/10"
 													: "text-content-disabled hover:text-white hover:bg-white/5"
 											}`}
-											aria-current={activeSection === link.href ? "page" : undefined}
+											aria-current={
+												activeSection === link.href ? "page" : undefined
+											}
 										>
 											{link.label}
 										</Link>

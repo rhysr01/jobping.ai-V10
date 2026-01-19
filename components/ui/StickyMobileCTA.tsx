@@ -3,18 +3,18 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BrandIcons } from "./BrandIcons";
 import { trackEvent } from "../../lib/analytics";
 import {
 	CTA_GET_MY_5_FREE_MATCHES,
 	CTA_GET_MY_5_FREE_MATCHES_ARIA,
 } from "../../lib/copy";
+import { BrandIcons } from "./BrandIcons";
 
 // Scroll trigger constants for better maintainability
 const SCROLL_TRIGGERS = {
-	SHOW_CTA_THRESHOLD: 0.8,    // Show CTA after scrolling 80% of viewport height
-	HIDE_CTA_THRESHOLD: 3.0,    // Hide CTA when scrolling beyond 3x viewport height
-	RESET_CTA_THRESHOLD: 0.5,   // Reset CTA visibility when scrolling above 50% of viewport
+	SHOW_CTA_THRESHOLD: 0.8, // Show CTA after scrolling 80% of viewport height
+	HIDE_CTA_THRESHOLD: 3.0, // Hide CTA when scrolling beyond 3x viewport height
+	RESET_CTA_THRESHOLD: 0.5, // Reset CTA visibility when scrolling above 50% of viewport
 } as const;
 
 export default function StickyMobileCTA() {
@@ -37,8 +37,10 @@ export default function StickyMobileCTA() {
 			const windowHeight = window.innerHeight;
 
 			// Show CTA after scrolling past hero section and hide when near top
-			if (scrollY > windowHeight * SCROLL_TRIGGERS.SHOW_CTA_THRESHOLD &&
-				scrollY < windowHeight * SCROLL_TRIGGERS.HIDE_CTA_THRESHOLD) {
+			if (
+				scrollY > windowHeight * SCROLL_TRIGGERS.SHOW_CTA_THRESHOLD &&
+				scrollY < windowHeight * SCROLL_TRIGGERS.HIDE_CTA_THRESHOLD
+			) {
 				setIsVisible(true);
 			} else if (scrollY < windowHeight * SCROLL_TRIGGERS.RESET_CTA_THRESHOLD) {
 				setIsVisible(false);
@@ -82,22 +84,22 @@ export default function StickyMobileCTA() {
 						>
 							{/* Gradient background */}
 							<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover:from-emerald-600 group-hover:to-emerald-700 transition-all duration-300" />
-							
+
 							{/* Shine effect on hover */}
 							<div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
 								<div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000" />
 							</div>
-							
+
 							{/* Shadow */}
 							<div className="absolute inset-0 shadow-lg shadow-emerald-500/30 group-hover:shadow-xl group-hover:shadow-emerald-500/40 rounded-xl transition-all" />
-							
+
 							{/* Content */}
 							<span className="relative z-10 flex items-center gap-2">
 								<BrandIcons.Mail className="w-5 h-5" />
 								<span>{CTA_GET_MY_5_FREE_MATCHES}</span>
 								<BrandIcons.ArrowRight className="w-5 h-5" />
 							</span>
-							
+
 							{/* Border glow */}
 							<div className="absolute inset-0 rounded-xl border border-emerald-400/50 group-hover:border-emerald-300 transition-colors" />
 						</motion.div>

@@ -1,13 +1,13 @@
 #!/usr/bin/env tsx
 /**
  * Extract and categorize all TODO/FIXME/HACK comments from the codebase
- * 
+ *
  * Usage:
  *   tsx scripts/extract-todos.ts > todos.json
  *   tsx scripts/extract-todos.ts --summary
  */
 
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 import { glob } from "glob";
 
 interface TODO {
@@ -88,7 +88,11 @@ function determinePriority(content: string): TODO["priority"] {
 	) {
 		return "high";
 	}
-	if (lower.includes("low") || lower.includes("nice") || lower.includes("maybe")) {
+	if (
+		lower.includes("low") ||
+		lower.includes("nice") ||
+		lower.includes("maybe")
+	) {
 		return "low";
 	}
 	if (lower.includes("medium")) {
@@ -144,11 +148,12 @@ if (summaryOnly) {
 	if (criticalHigh.length > 0) {
 		console.log(`\n⚠️  Critical/High Priority (${criticalHigh.length}):`);
 		criticalHigh.forEach((todo) => {
-			console.log(`  ${todo.file}:${todo.line} - ${todo.content.substring(0, 60)}`);
+			console.log(
+				`  ${todo.file}:${todo.line} - ${todo.content.substring(0, 60)}`,
+			);
 		});
 	}
 } else {
 	// Output full JSON
 	console.log(JSON.stringify(todos, null, 2));
 }
-

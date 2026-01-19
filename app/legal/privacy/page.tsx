@@ -50,10 +50,10 @@ export default function PrivacyPolicy() {
 								2.2. Data Storage Location
 							</h2>
 							<p className="text-zinc-300 mb-4">
-								All user data is stored and processed exclusively within the European Union
-								(Supabase EU-West-1 region, Frankfurt, Germany) to comply with GDPR data
-								localization requirements. We do not transfer personal data outside the EU
-								without explicit consent.
+								All user data is stored and processed exclusively within the
+								European Union (Supabase EU-West-1 region, Frankfurt, Germany)
+								to comply with GDPR data localization requirements. We do not
+								transfer personal data outside the EU without explicit consent.
 							</p>
 						</section>
 

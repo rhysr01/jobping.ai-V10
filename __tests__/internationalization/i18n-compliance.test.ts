@@ -33,7 +33,7 @@ describe("Internationalization & Localization", () => {
 			},
 		};
 
-		supportedLanguages.forEach(language => {
+		supportedLanguages.forEach((language) => {
 			it(`provides messages in ${language.toUpperCase()}`, async () => {
 				const request = createMocks({
 					method: "GET",
@@ -234,8 +234,8 @@ describe("Internationalization & Localization", () => {
 						email: `consent-${scenario.region.toLowerCase()}@example.com`,
 						cities: ["Test City"],
 						languages: ["English"],
-						country: scenario.region.split('-')[0],
-						state: scenario.region.split('-')[1],
+						country: scenario.region.split("-")[0],
+						state: scenario.region.split("-")[1],
 						consents: scenario.requiredConsents.reduce((acc, consent) => {
 							acc[consent] = true;
 							return acc;
@@ -301,7 +301,9 @@ describe("Internationalization & Localization", () => {
 
 			for (const scenario of conversionScenarios) {
 				const convertedAmount = scenario.amount * scenario.rate;
-				expect(Math.abs(convertedAmount - scenario.expected)).toBeLessThan(0.01);
+				expect(Math.abs(convertedAmount - scenario.expected)).toBeLessThan(
+					0.01,
+				);
 
 				// Should format currency correctly
 				const formatted = new Intl.NumberFormat(scenario.to.toLowerCase(), {
@@ -309,7 +311,7 @@ describe("Internationalization & Localization", () => {
 					currency: scenario.to,
 				}).format(convertedAmount);
 
-				expect(formatted).toContain(scenario.expected.toString().split('.')[0]);
+				expect(formatted).toContain(scenario.expected.toString().split(".")[0]);
 			}
 		});
 
@@ -318,7 +320,7 @@ describe("Internationalization & Localization", () => {
 				"US-CA": { premium: 5.99, currency: "USD" },
 				"EU-DE": { premium: 4.99, currency: "EUR" },
 				"EU-GB": { premium: 4.49, currency: "GBP" },
-				"IN": { premium: 299, currency: "INR" },
+				IN: { premium: 299, currency: "INR" },
 			};
 
 			Object.entries(regionalPricing).forEach(([region, pricing]) => {
@@ -345,7 +347,9 @@ describe("Internationalization & Localization", () => {
 			const testDate = new Date("2024-03-15");
 
 			for (const scenario of dateScenarios) {
-				const formattedDate = new Intl.DateTimeFormat(scenario.locale).format(testDate);
+				const formattedDate = new Intl.DateTimeFormat(scenario.locale).format(
+					testDate,
+				);
 				expect(formattedDate).toBeDefined();
 				expect(typeof formattedDate).toBe("string");
 				expect(formattedDate.length).toBeGreaterThan(0);
@@ -383,8 +387,13 @@ describe("Internationalization & Localization", () => {
 			];
 
 			for (const scenario of relativeTimeScenarios) {
-				const formatter = new Intl.RelativeTimeFormat(scenario.locale, { numeric: "auto" });
-				const formatted = formatter.format(scenario.value, scenario.unit as any);
+				const formatter = new Intl.RelativeTimeFormat(scenario.locale, {
+					numeric: "auto",
+				});
+				const formatted = formatter.format(
+					scenario.value,
+					scenario.unit as any,
+				);
 
 				expect(formatted).toBeDefined();
 				expect(typeof formatted).toBe("string");
@@ -480,7 +489,8 @@ describe("Internationalization & Localization", () => {
 				expect(rtlText.length).toBeGreaterThan(0);
 
 				// Should handle RTL in UI layout (would be tested in component tests)
-				const isRTL = lang === "ar" || lang === "he" || lang === "fa" || lang === "ur";
+				const isRTL =
+					lang === "ar" || lang === "he" || lang === "fa" || lang === "ur";
 				expect(isRTL).toBe(true);
 			}
 		});
@@ -531,7 +541,11 @@ describe("Internationalization & Localization", () => {
 		it("adapts features based on regional requirements", async () => {
 			const regionalFeatures = {
 				EU: {
-					mandatoryFeatures: ["gdprConsent", "ageVerification", "dataPortability"],
+					mandatoryFeatures: [
+						"gdprConsent",
+						"ageVerification",
+						"dataPortability",
+					],
 					optionalFeatures: ["marketingEmails", "analytics"],
 				},
 				"US-CA": {
@@ -551,7 +565,7 @@ describe("Internationalization & Localization", () => {
 				// EU should have more mandatory features than global
 				if (region === "EU") {
 					expect(features.mandatoryFeatures.length).toBeGreaterThan(
-						regionalFeatures.Global.mandatoryFeatures.length
+						regionalFeatures.Global.mandatoryFeatures.length,
 					);
 				}
 			});
@@ -621,24 +635,37 @@ describe("Internationalization & Localization", () => {
 				},
 			};
 
-			Object.entries(dataResidencyRequirements).forEach(([region, requirements]) => {
-				expect(requirements.dataLocation).toBeDefined();
-				expect(Array.isArray(requirements.transferMechanisms)).toBe(true);
-				expect(typeof requirements.localCompliance).toBe("boolean");
+			Object.entries(dataResidencyRequirements).forEach(
+				([region, requirements]) => {
+					expect(requirements.dataLocation).toBeDefined();
+					expect(Array.isArray(requirements.transferMechanisms)).toBe(true);
+					expect(typeof requirements.localCompliance).toBe("boolean");
 
-				// Regional restrictions should be properly defined
-				if (region !== "Global") {
-					expect(requirements.dataLocation).not.toBe("multiple regions");
-					expect(requirements.localCompliance).toBe(true);
-				}
-			});
+					// Regional restrictions should be properly defined
+					if (region !== "Global") {
+						expect(requirements.dataLocation).not.toBe("multiple regions");
+						expect(requirements.localCompliance).toBe(true);
+					}
+				},
+			);
 		});
 	});
 
 	describe("Internationalization Testing Infrastructure", () => {
 		it("provides comprehensive locale testing utilities", async () => {
 			const localeTestingUtils = {
-				supportedLocales: ["en", "de", "fr", "es", "it", "nl", "pt", "ja", "ko", "zh"],
+				supportedLocales: [
+					"en",
+					"de",
+					"fr",
+					"es",
+					"it",
+					"nl",
+					"pt",
+					"ja",
+					"ko",
+					"zh",
+				],
 				characterSets: {
 					latin: ["en", "de", "fr", "es", "it", "nl", "pt"],
 					cjk: ["ja", "ko", "zh"],
@@ -660,7 +687,9 @@ describe("Internationalization & Localization", () => {
 				...localeTestingUtils.textDirection.rtl,
 			];
 
-			expect(allLocales.length).toBeGreaterThan(localeTestingUtils.supportedLocales.length);
+			expect(allLocales.length).toBeGreaterThan(
+				localeTestingUtils.supportedLocales.length,
+			);
 
 			// No locale should be duplicated
 			const uniqueLocales = new Set(allLocales);
@@ -669,16 +698,16 @@ describe("Internationalization & Localization", () => {
 
 		it("validates translation completeness", async () => {
 			const translationCoverage = {
-				"en": { total: 100, translated: 100, coverage: 1.0 },
-				"de": { total: 100, translated: 95, coverage: 0.95 },
-				"fr": { total: 100, translated: 92, coverage: 0.92 },
-				"es": { total: 100, translated: 88, coverage: 0.88 },
-				"ja": { total: 100, translated: 85, coverage: 0.85 },
-				"ko": { total: 100, translated: 82, coverage: 0.82 },
-				"zh": { total: 100, translated: 78, coverage: 0.78 },
+				en: { total: 100, translated: 100, coverage: 1.0 },
+				de: { total: 100, translated: 95, coverage: 0.95 },
+				fr: { total: 100, translated: 92, coverage: 0.92 },
+				es: { total: 100, translated: 88, coverage: 0.88 },
+				ja: { total: 100, translated: 85, coverage: 0.85 },
+				ko: { total: 100, translated: 82, coverage: 0.82 },
+				zh: { total: 100, translated: 78, coverage: 0.78 },
 			};
 
-			Object.values(translationCoverage).forEach(locale => {
+			Object.values(translationCoverage).forEach((locale) => {
 				expect(locale.coverage).toBeGreaterThan(0.7); // At least 70% coverage
 				expect(locale.translated).toBeLessThanOrEqual(locale.total);
 				expect(locale.coverage).toBe(locale.translated / locale.total);
@@ -717,7 +746,7 @@ describe("Internationalization & Localization", () => {
 				expect(testCase.test).toBeDefined();
 
 				// Characters should be properly encoded
-				testCase.characters.forEach(char => {
+				testCase.characters.forEach((char) => {
 					expect(char.length).toBeGreaterThan(0);
 					expect(typeof char).toBe("string");
 				});
@@ -737,16 +766,18 @@ describe("Internationalization & Localization", () => {
 			};
 
 			expect(i18nHealthMetrics.completionRate).toBe(
-				i18nHealthMetrics.translationsComplete / i18nHealthMetrics.translationsTotal
+				i18nHealthMetrics.translationsComplete /
+					i18nHealthMetrics.translationsTotal,
 			);
 
 			expect(i18nHealthMetrics.completionRate).toBeGreaterThan(0.8);
 			expect(i18nHealthMetrics.failingLocales.length).toBeLessThan(
-				i18nHealthMetrics.localesSupported * 0.5
+				i18nHealthMetrics.localesSupported * 0.5,
 			);
 
 			expect(i18nHealthMetrics.missingTranslations).toBe(
-				i18nHealthMetrics.translationsTotal - i18nHealthMetrics.translationsComplete
+				i18nHealthMetrics.translationsTotal -
+					i18nHealthMetrics.translationsComplete,
 			);
 		});
 	});

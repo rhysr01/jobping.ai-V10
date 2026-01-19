@@ -42,7 +42,9 @@ async function main() {
 
 		console.log("🔄 Loading Adzuna scraper module...");
 		const adzunaModule = require("../../scripts/adzuna-categories-scraper.cjs");
-		console.log("✅ Adzuna module loaded, calling scrapeAllCitiesCategories...");
+		console.log(
+			"✅ Adzuna module loaded, calling scrapeAllCitiesCategories...",
+		);
 		const includeRemote =
 			String(process.env.INCLUDE_REMOTE).toLowerCase() === "true";
 		const result = await adzunaModule.scrapeAllCitiesCategories({
@@ -62,7 +64,7 @@ async function main() {
 			process.env.SUPABASE_SERVICE_ROLE_KEY,
 		);
 
-	// REMOVED: Form role filtering to reduce strictness
+		// REMOVED: Form role filtering to reduce strictness
 
 		const convertToDatabaseFormat = async (job) => {
 			// CRITICAL: Add null check at the start to prevent "Cannot read properties of null" errors
@@ -73,11 +75,14 @@ async function main() {
 
 			// CRITICAL: Ensure job has required title field
 			if (!job.title || typeof job.title !== "string") {
-				console.warn("⚠️  Adzuna: Skipping job with missing/invalid title:", JSON.stringify(job).substring(0, 100));
+				console.warn(
+					"⚠️  Adzuna: Skipping job with missing/invalid title:",
+					JSON.stringify(job).substring(0, 100),
+				);
 				return null;
 			}
 
-			const titleLower = (job.title || "").toLowerCase();
+			const _titleLower = (job.title || "").toLowerCase();
 
 			// Check early-career classification (graduate/intern terms only)
 			// REMOVED: Form role matching to reduce filtering strictness
@@ -95,7 +100,10 @@ async function main() {
 
 			// CRITICAL: Check if processing returned null or invalid result
 			if (!processed) {
-				console.warn("⚠️  Adzuna: processIncomingJob returned null for job:", job.title?.substring(0, 50));
+				console.warn(
+					"⚠️  Adzuna: processIncomingJob returned null for job:",
+					job.title?.substring(0, 50),
+				);
 				return null;
 			}
 
@@ -131,15 +139,20 @@ async function main() {
 			: validJobs.filter((j) => {
 					try {
 						return !localParseLocation(j.location || "").isRemote;
-					} catch (e) {
-						console.warn("⚠️  Adzuna: Error parsing location, skipping:", j?.title?.substring(0, 50));
+					} catch (_e) {
+						console.warn(
+							"⚠️  Adzuna: Error parsing location, skipping:",
+							j?.title?.substring(0, 50),
+						);
 						return false;
 					}
 				});
 
 		// Convert to database format
 		const dbJobsPromises = filteredJobs.map(convertToDatabaseFormat);
-		const dbJobs = (await Promise.all(dbJobsPromises)).filter((job) => job !== null);
+		const dbJobs = (await Promise.all(dbJobsPromises)).filter(
+			(job) => job !== null,
+		);
 
 		// CRITICAL: Validate jobs before saving (consolidates all validation logic)
 		const { validateJobs } = require("../shared/jobValidator.cjs");

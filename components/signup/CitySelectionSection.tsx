@@ -148,7 +148,8 @@ export function CitySelectionSection({
 						transition={{ delay: 0.4 }}
 						className="text-base text-zinc-300 leading-relaxed"
 					>
-						Select up to <span className="font-semibold text-brand-400">3 cities</span>.
+						Select up to{" "}
+						<span className="font-semibold text-brand-400">3 cities</span>.
 						We'll match you with graduate roles in these locations.
 					</motion.p>
 				</motion.div>
@@ -189,7 +190,8 @@ export function CitySelectionSection({
 					>
 						{CITIES.map((city, index) => {
 							const isSelected = cities.includes(city);
-							const isDisabled = isSubmitting || (!isSelected && cities.length >= 3);
+							const isDisabled =
+								isSubmitting || (!isSelected && cities.length >= 3);
 
 							return (
 								<motion.div
@@ -243,11 +245,17 @@ export function CitySelectionSection({
 				>
 					<div className="flex items-center gap-3">
 						<div className="flex items-center gap-2">
-							<div className={`w-2 h-2 rounded-full transition-colors ${
-								cities.length === 0 ? 'bg-zinc-600' :
-								cities.length === 1 ? 'bg-yellow-500' :
-								cities.length === 2 ? 'bg-orange-500' : 'bg-brand-500'
-							}`} />
+							<div
+								className={`w-2 h-2 rounded-full transition-colors ${
+									cities.length === 0
+										? "bg-zinc-600"
+										: cities.length === 1
+											? "bg-yellow-500"
+											: cities.length === 2
+												? "bg-orange-500"
+												: "bg-brand-500"
+								}`}
+							/>
 							<span className="text-sm font-medium text-zinc-300">
 								{cities.length}/3 selected
 							</span>
@@ -261,11 +269,12 @@ export function CitySelectionSection({
 									initial={false}
 									animate={{
 										scale: cities.length >= num ? 1.1 : 1,
-										backgroundColor: cities.length >= num ? '#6366f1' : '#374151'
+										backgroundColor:
+											cities.length >= num ? "#6366f1" : "#374151",
 									}}
 									transition={{ duration: 0.2 }}
 									className={`w-2 h-2 rounded-full ${
-										cities.length >= num ? 'bg-brand-500' : 'bg-zinc-600'
+										cities.length >= num ? "bg-brand-500" : "bg-zinc-600"
 									}`}
 								/>
 							))}

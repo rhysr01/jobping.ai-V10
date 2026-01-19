@@ -102,7 +102,8 @@ export async function POST(req: NextRequest) {
 
 			return NextResponse.json({
 				success: true,
-				message: "Promo code applied! You now have 1 month of free premium access.",
+				message:
+					"Promo code applied! You now have 1 month of free premium access.",
 				expiresAt: expirationDate.toISOString(),
 			});
 		}

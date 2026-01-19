@@ -9,7 +9,10 @@ import { TIMING } from "../../lib/constants";
 // Smart label collision detection - dynamically positions labels to avoid overlaps
 const calculateLabelPositions = (
 	selectedCities: string[],
-	cityEntries: [string, { lat: number; lon: number; country: string; x: number; y: number }][]
+	cityEntries: [
+		string,
+		{ lat: number; lon: number; country: string; x: number; y: number },
+	][],
 ): Map<string, { x: number; y: number }> => {
 	const positions = new Map<string, { x: number; y: number }>();
 	const LABEL_WIDTH = 80; // Approximate label width in pixels
@@ -163,7 +166,14 @@ const CITY_COORDINATES: Record<string, CityCoordinate> = {
 
 // Mobile-optimized city list - show only 8 most popular cities on mobile
 const MOBILE_CITIES = [
-	'London', 'Paris', 'Berlin', 'Amsterdam', 'Madrid', 'Milan', 'Dublin', 'Zurich'
+	"London",
+	"Paris",
+	"Berlin",
+	"Amsterdam",
+	"Madrid",
+	"Milan",
+	"Dublin",
+	"Zurich",
 ];
 
 interface EuropeMapProps {
@@ -397,29 +407,31 @@ const EuropeMap = memo(
 			// Mobile optimization: show only essential cities on mobile
 			const citiesToShow = isMobile
 				? Object.fromEntries(
-					Object.entries(CITY_COORDINATES).filter(([name]) =>
-						MOBILE_CITIES.includes(name)
+						Object.entries(CITY_COORDINATES).filter(([name]) =>
+							MOBILE_CITIES.includes(name),
+						),
 					)
-				)
 				: CITY_COORDINATES;
 
 			// Check if both Dublin and Belfast are selected
-			const bothSelected = selectedCities.includes("Dublin") && selectedCities.includes("Belfast");
+			const bothSelected =
+				selectedCities.includes("Dublin") && selectedCities.includes("Belfast");
 
 			return Object.entries(citiesToShow).map(([name, city]) => {
 				const { x, y } = project(city.lat, city.lon);
 				// Use overlap offsets if both Dublin and Belfast are selected
-				const offset = bothSelected && OVERLAP_OFFSETS[name]
-					? OVERLAP_OFFSETS[name]
-					: OFFSET[name] ?? { dx: 0, dy: 0 };
+				const offset =
+					bothSelected && OVERLAP_OFFSETS[name]
+						? OVERLAP_OFFSETS[name]
+						: (OFFSET[name] ?? { dx: 0, dy: 0 });
 				return [name, { ...city, x: x + offset.dx, y: y + offset.dy }];
 			});
 		}, [project, selectedCities, isMobile]);
 
 		// Smart collision detection for selected city labels - dynamically avoids overlaps
 		const selectedLabelPositions = useMemo(() => {
-		return calculateLabelPositions(selectedCities, cityEntries);
-	}, [selectedCities, cityEntries]);
+			return calculateLabelPositions(selectedCities, cityEntries);
+		}, [selectedCities, cityEntries]);
 
 		// Calculate hover label position (only when hovering, simple calculation)
 		const hoverLabelPosition = useMemo(() => {
@@ -855,8 +867,8 @@ const EuropeMap = memo(
 									/>
 
 									{/* Enhanced city label with premium styling */}
-									{(showLabel || touched) && (
-										isMobile ? (
+									{(showLabel || touched) &&
+										(isMobile ? (
 											<text
 												id={`city-label-${city.replace(/\s+/g, "-")}`}
 												x={labelX}
@@ -866,7 +878,6 @@ const EuropeMap = memo(
 												fontSize={selected ? "14" : "13"}
 												fontWeight={selected ? "800" : "700"}
 												className="pointer-events-none select-none"
-												aria-hidden="true"
 												style={{
 													...(selected
 														? {
@@ -926,8 +937,7 @@ const EuropeMap = memo(
 											>
 												{city}
 											</motion.text>
-										)
-									)}
+										))}
 								</g>
 							);
 						})}
@@ -935,8 +945,9 @@ const EuropeMap = memo(
 				</svg>
 
 				{/* Enhanced premium tooltip - static on mobile */}
-				{tooltip && (hoveredCity || touchedCity) && (
-					isMobile ? (
+				{tooltip &&
+					(hoveredCity || touchedCity) &&
+					(isMobile ? (
 						<div
 							className="absolute z-50 px-4 py-2.5 bg-gradient-to-br from-zinc-900/98 via-zinc-800/95 to-zinc-900/98 backdrop-blur-xl rounded-xl border-2 border-brand-500/40 shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_20px_rgba(20,184,166,0.2)] pointer-events-none touch-manipulation"
 							style={{
@@ -1032,8 +1043,7 @@ const EuropeMap = memo(
 								)}
 							</motion.div>
 						</AnimatePresence>
-					)
-				)}
+					))}
 
 				{/* Enhanced premium legend */}
 				<div

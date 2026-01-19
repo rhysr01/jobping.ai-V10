@@ -17,7 +17,8 @@ const TIERS = [
 		name: Copy.FREE_PLAN_TITLE,
 		price: "0",
 		tagline: "Your first 5 matches",
-		description: "5 instant matches to try JobPing (one-time preview, no ongoing emails)",
+		description:
+			"5 instant matches to try JobPing (one-time preview, no ongoing emails)",
 		features: Copy.FREE_PLAN_FEATURES,
 		cta: "Get 5 Free Matches",
 		href: "/signup/free",
@@ -28,7 +29,8 @@ const TIERS = [
 		name: Copy.PREMIUM_PLAN_TITLE,
 		price: "5",
 		tagline: "€5/month saves 40+ hours searching per month",
-		description: "5 fresh matches 3× per week (Mon/Wed/Fri) from companies actively hiring visa-sponsored roles",
+		description:
+			"5 fresh matches 3× per week (Mon/Wed/Fri) from companies actively hiring visa-sponsored roles",
 		features: Copy.PREMIUM_PLAN_FEATURES,
 		cta: "Get Premium Access",
 		href: "/signup",
@@ -50,40 +52,44 @@ function Pricing() {
 			{/* Visual Depth Gradients */}
 			<div className="absolute left-0 right-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
 			<div className="pointer-events-none absolute inset-x-0 -top-10 h-40 bg-gradient-to-b from-brand-600/20 to-transparent" />
-			
+
 			{/* Animated gradient orb - Brand purple only */}
 			<div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-brand-600/15 rounded-full blur-[120px] pointer-events-none" />
 
 			<div className="container-page relative z-10">
-			<motion.div
-				initial={{ opacity: 0, y: 16 }}
-				whileInView={{ opacity: 1, y: 0 }}
-				viewport={{ once: true }}
-				className="mx-auto max-w-3xl text-center mb-10 sm:mb-12 px-4 sm:px-6"
-			>
-				<span className="font-display inline-flex items-center gap-3 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 sm:px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-300 mb-4">
-					<BrandIcons.TrendingUp className="w-3.5 h-3.5" />
-					Join 1,000+ Students Landing EU Roles
-				</span>
-				<h2 className="font-display text-display-lg font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
-					Stop Scrolling LinkedIn.
-					<br />
-					<span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
-						Let AI Find Your Jobs.
+				<motion.div
+					initial={{ opacity: 0, y: 16 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					className="mx-auto max-w-3xl text-center mb-10 sm:mb-12 px-4 sm:px-6"
+				>
+					<span className="font-display inline-flex items-center gap-3 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 sm:px-4 py-1.5 text-xs font-bold tracking-wide text-emerald-300 mb-4">
+						<BrandIcons.TrendingUp className="w-3.5 h-3.5" />
+						Join 1,000+ Students Landing EU Roles
 					</span>
-				</h2>
-				<p className="text-zinc-300 text-base sm:text-lg md:text-xl">
-					Stop wasting hours scrolling job boards.
-					<br />
-					<span className="font-display text-emerald-400 font-semibold">We do it in seconds.</span>
-				</p>
-			</motion.div>
+					<h2 className="font-display text-display-lg font-black text-white mt-4 mb-4 sm:mb-6 leading-tight">
+						Stop Scrolling LinkedIn.
+						<br />
+						<span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
+							Let AI Find Your Jobs.
+						</span>
+					</h2>
+					<p className="text-zinc-300 text-base sm:text-lg md:text-xl">
+						Stop wasting hours scrolling job boards.
+						<br />
+						<span className="font-display text-emerald-400 font-semibold">
+							We do it in seconds.
+						</span>
+					</p>
+				</motion.div>
 
-			<div className={`${
-				isMobile
-					? "flex flex-col gap-6" // Simpler stacking on mobile
-					: "grid grid-cols-1 md:grid-cols-2 gap-8"
-			} max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16`}>
+				<div
+					className={`${
+						isMobile
+							? "flex flex-col gap-6" // Simpler stacking on mobile
+							: "grid grid-cols-1 md:grid-cols-2 gap-8"
+					} max-w-5xl mx-auto px-4 sm:px-6 mb-12 sm:mb-16`}
+				>
 					{TIERS.map((tier, index) => {
 						const Icon = tier.icon;
 						return (
@@ -122,21 +128,28 @@ function Pricing() {
 
 										<div className="relative z-10 p-8 sm:p-10">
 											{/* Icon with more breathing room */}
-											<div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-lg mb-8 ${
-												tier.popular
-													? "bg-gradient-to-br from-brand-500/20 to-brand-600/20 border border-brand-500/30 shadow-lg shadow-brand-500/20"
-													: "bg-white/5 border border-white/10"
-											}`}>
-												<Icon size={20} className={`sm:w-6 sm:h-6 ${tier.popular ? "text-brand-400" : "text-zinc-400"}`} />
+											<div
+												className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-lg mb-8 ${
+													tier.popular
+														? "bg-gradient-to-br from-brand-500/20 to-brand-600/20 border border-brand-500/30 shadow-lg shadow-brand-500/20"
+														: "bg-white/5 border border-white/10"
+												}`}
+											>
+												<Icon
+													size={20}
+													className={`sm:w-6 sm:h-6 ${tier.popular ? "text-brand-400" : "text-zinc-400"}`}
+												/>
 											</div>
 
 											<div className="mb-8">
 												<h3 className="font-display text-display-sm font-black text-white mb-1">
 													{tier.name}
 												</h3>
-												<p className={`text-sm font-medium mb-3 ${
-													tier.popular ? "text-emerald-300" : "text-zinc-500"
-												}`}>
+												<p
+													className={`text-sm font-medium mb-3 ${
+														tier.popular ? "text-emerald-300" : "text-zinc-500"
+													}`}
+												>
 													{tier.tagline}
 												</p>
 												<p className="text-zinc-300 text-sm leading-relaxed">
@@ -147,14 +160,18 @@ function Pricing() {
 											{/* Price with more breathing room */}
 											<div className="mb-10 pb-10 border-b border-white/10">
 												<div className="flex items-baseline gap-2">
-													<span className={`text-5xl font-black ${
-														tier.popular
-															? "bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent"
-															: "text-white"
-													}`}>
+													<span
+														className={`text-5xl font-black ${
+															tier.popular
+																? "bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent"
+																: "text-white"
+														}`}
+													>
 														€{tier.price}
 													</span>
-													<span className="text-zinc-400 text-lg font-medium">/month</span>
+													<span className="text-zinc-400 text-lg font-medium">
+														/month
+													</span>
 												</div>
 												{tier.savings && (
 													<p className="font-display text-sm text-emerald-400 mt-2 font-medium">
@@ -170,16 +187,20 @@ function Pricing() {
 														key={feature}
 														className="flex items-start gap-3 text-sm"
 													>
-														<div className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
-															tier.popular
-																? "bg-brand-500/20 border border-brand-500/50"
-																: "bg-white/5 border border-white/10"
-														}`}>
+														<div
+															className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+																tier.popular
+																	? "bg-brand-500/20 border border-brand-500/50"
+																	: "bg-white/5 border border-white/10"
+															}`}
+														>
 															<BrandIcons.Check
 																className={`w-3.5 h-3.5 ${tier.popular ? "text-brand-400" : "text-zinc-400"}`}
 															/>
 														</div>
-														<span className="text-zinc-200 leading-relaxed font-medium">{feature}</span>
+														<span className="text-zinc-200 leading-relaxed font-medium">
+															{feature}
+														</span>
 													</li>
 												))}
 											</ul>
@@ -203,7 +224,9 @@ function Pricing() {
 												)}
 												<span className="relative z-10 flex items-center justify-center gap-2">
 													{tier.cta}
-													<span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+													<span className="group-hover:translate-x-1 transition-transform inline-block">
+														→
+													</span>
 												</span>
 											</CustomButton>
 
@@ -241,7 +264,9 @@ function Pricing() {
 							<div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-500/10 border border-brand-500/30 mb-3">
 								<BrandIcons.TrendingUp className="w-6 h-6 text-brand-400" />
 							</div>
-							<h4 className="text-sm font-bold text-white mb-1">95%+ Match Rate</h4>
+							<h4 className="text-sm font-bold text-white mb-1">
+								95%+ Match Rate
+							</h4>
 							<p className="text-xs text-zinc-500">AI-powered accuracy</p>
 						</div>
 						<div className="text-center">

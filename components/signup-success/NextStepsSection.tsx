@@ -14,9 +14,7 @@ export function NextStepsSection({ email }: NextStepsSectionProps) {
 					<BrandIcons.CheckCircle className="w-5 h-5 text-success" />
 				</div>
 				<div>
-					<h3 className="text-lg font-semibold text-white">
-						What's Next?
-					</h3>
+					<h3 className="text-lg font-semibold text-white">What's Next?</h3>
 					<p className="text-sm text-content-secondary">
 						Your personalized job matching journey begins now
 					</p>
@@ -62,7 +60,8 @@ export function NextStepsSection({ email }: NextStepsSectionProps) {
 							Get Weekly Updates
 						</h4>
 						<p className="text-sm text-content-secondary">
-							Receive 15 new job matches every Monday, tailored to your preferences
+							Receive 15 new job matches every Monday, tailored to your
+							preferences
 						</p>
 					</div>
 				</div>
@@ -75,15 +74,19 @@ export function NextStepsSection({ email }: NextStepsSectionProps) {
 					</CustomButton>
 				</Link>
 				<Link href="/preferences">
-					<CustomButton variant="secondary">
-						Update Preferences
-					</CustomButton>
+					<CustomButton variant="secondary">Update Preferences</CustomButton>
 				</Link>
 			</div>
 
 			<div className="mt-4 text-center">
 				<p className="text-xs text-content-secondary">
-					Need help? <Link href="/contact" className="text-brand-400 hover:text-brand-300 underline">Contact our support team</Link>
+					Need help?{" "}
+					<Link
+						href="/contact"
+						className="text-brand-400 hover:text-brand-300 underline"
+					>
+						Contact our support team
+					</Link>
 				</p>
 			</div>
 		</div>

@@ -5,7 +5,10 @@ interface LanguageLocationSectionProps {
 	onUpdate: (updates: Partial<PreferencesFormData>) => void;
 }
 
-export function LanguageLocationSection({ formData, onUpdate }: LanguageLocationSectionProps) {
+export function LanguageLocationSection({
+	formData,
+	onUpdate,
+}: LanguageLocationSectionProps) {
 	return (
 		<div className="space-y-6">
 			<div>

@@ -13,7 +13,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { apiLogger } from "../../../../lib/api-logger";
 import { ENV } from "../../../../lib/env";
-import { isStripeConfigured, verifyWebhookSignature } from "../../../../lib/stripe";
+import {
+	isStripeConfigured,
+	verifyWebhookSignature,
+} from "../../../../lib/stripe";
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 
 export async function POST(req: NextRequest) {

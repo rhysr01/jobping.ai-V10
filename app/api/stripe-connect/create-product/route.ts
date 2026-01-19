@@ -9,7 +9,10 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { apiLogger } from "../../../../lib/api-logger";
-import { getStripeClientForAccount, isStripeConfigured } from "../../../../lib/stripe";
+import {
+	getStripeClientForAccount,
+	isStripeConfigured,
+} from "../../../../lib/stripe";
 
 export async function POST(req: NextRequest) {
 	try {
@@ -95,10 +98,14 @@ export async function POST(req: NextRequest) {
 			},
 		});
 	} catch (error: any) {
-		apiLogger.error("Failed to create product on connected account", error as Error, {
-			errorType: error.type,
-			errorCode: error.code,
-		});
+		apiLogger.error(
+			"Failed to create product on connected account",
+			error as Error,
+			{
+				errorType: error.type,
+				errorCode: error.code,
+			},
+		);
 
 		return NextResponse.json(
 			{

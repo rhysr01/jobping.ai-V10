@@ -578,11 +578,11 @@ async function processIncomingJob(job, options = {}) {
 	});
 
 	// Determine experience_required
-	let experienceRequired = "entry-level";
+	let _experienceRequired = "entry-level";
 	if (isInternship) {
-		experienceRequired = "internship";
+		_experienceRequired = "internship";
 	} else if (isGraduate) {
-		experienceRequired = "graduate";
+		_experienceRequired = "graduate";
 	}
 
 	// CRITICAL: Validate and prevent data quality issues
@@ -711,7 +711,8 @@ async function processIncomingJob(job, options = {}) {
 	}
 
 	// Determine if job has rich context (long description, URL, etc.)
-	const hasRichContext = (description && description.length > 100) && jobUrl && jobUrl !== "#";
+	const hasRichContext =
+		description && description.length > 100 && jobUrl && jobUrl !== "#";
 
 	console.log(
 		`[Processor] ✅ Accepting job with ${description.length} chars (rich context: ${hasRichContext})`,

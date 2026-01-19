@@ -4,8 +4,15 @@ import { motion } from "framer-motion";
 import { BrandIcons } from "../ui/BrandIcons";
 
 interface VisaSponsorshipSectionProps {
-	visaSponsorship: "eu" | "blue-card" | "student-visa" | "need-sponsorship" | "";
-	onChange: (value: "eu" | "blue-card" | "student-visa" | "need-sponsorship") => void;
+	visaSponsorship:
+		| "eu"
+		| "blue-card"
+		| "student-visa"
+		| "need-sponsorship"
+		| "";
+	onChange: (
+		value: "eu" | "blue-card" | "student-visa" | "need-sponsorship",
+	) => void;
 	isSubmitting: boolean;
 }
 
@@ -41,7 +48,8 @@ export function VisaSponsorshipSection({
 			value: "student-visa" as const,
 			title: "Student Visa Holder",
 			subtitle: "Limited work rights",
-			description: "You may be eligible for job seeker visa or graduate work permit",
+			description:
+				"You may be eligible for job seeker visa or graduate work permit",
 			icon: "🎓",
 			color: "from-emerald-300 to-emerald-400",
 			borderColor: "border-emerald-300",
@@ -121,7 +129,9 @@ export function VisaSponsorshipSection({
 							<label className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-white via-zinc-100 to-zinc-200 bg-clip-text text-transparent block">
 								Work Authorization Status
 							</label>
-							<span className="text-sm text-zinc-400 font-medium">Choose the option that best describes you</span>
+							<span className="text-sm text-zinc-400 font-medium">
+								Choose the option that best describes you
+							</span>
 						</div>
 						<span className="text-emerald-400 font-bold text-xl">*</span>
 					</div>
@@ -149,8 +159,10 @@ export function VisaSponsorshipSection({
 
 						<div className="relative">
 							<p className="text-zinc-300 leading-relaxed font-medium">
-								<span className="font-bold text-emerald-400">Important:</span> Your work authorization determines which jobs we can show you.
-								We'll filter opportunities that match your eligibility to maximize your chances of success.
+								<span className="font-bold text-emerald-400">Important:</span>{" "}
+								Your work authorization determines which jobs we can show you.
+								We'll filter opportunities that match your eligibility to
+								maximize your chances of success.
 							</p>
 						</div>
 					</motion.div>
@@ -176,14 +188,14 @@ export function VisaSponsorshipSection({
 							transition={{ delay: 0.8 + index * 0.1 }}
 							className={`relative p-6 rounded-3xl border-2 transition-all duration-300 overflow-hidden group ${
 								visaSponsorship === option.value
-									? `${option.borderColor} bg-gradient-to-br from-${option.color.split(' ')[0]}/20 to-${option.color.split(' ')[1]}/10 shadow-[0_0_35px_${option.shadowColor}]`
+									? `${option.borderColor} bg-gradient-to-br from-${option.color.split(" ")[0]}/20 to-${option.color.split(" ")[1]}/10 shadow-[0_0_35px_${option.shadowColor}]`
 									: "border-zinc-700/60 bg-zinc-900/50 hover:border-zinc-600/80 hover:bg-zinc-900/70 hover:shadow-[0_0_25px_rgba(63,63,70,0.15)]"
 							} ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
 						>
 							{/* Dynamic background effect */}
 							{visaSponsorship === option.value && (
 								<motion.div
-									className={`absolute inset-0 bg-gradient-to-br ${option.color.replace('from-', 'from-').replace('to-', 'to-')}/15`}
+									className={`absolute inset-0 bg-gradient-to-br ${option.color.replace("from-", "from-").replace("to-", "to-")}/15`}
 									initial={{ opacity: 0, scale: 0.8 }}
 									animate={{ opacity: 1, scale: 1 }}
 									transition={{ duration: 0.4 }}
@@ -192,7 +204,9 @@ export function VisaSponsorshipSection({
 
 							{/* Hover effect for unselected */}
 							{visaSponsorship !== option.value && (
-								<div className={`absolute inset-0 bg-gradient-to-br ${option.color.replace('from-', 'from-').replace('to-', 'to-')}/0 group-hover:${option.color.replace('from-', 'from-').replace('to-', 'to-')}/8 transition-all duration-300`} />
+								<div
+									className={`absolute inset-0 bg-gradient-to-br ${option.color.replace("from-", "from-").replace("to-", "to-")}/0 group-hover:${option.color.replace("from-", "from-").replace("to-", "to-")}/8 transition-all duration-300`}
+								/>
 							)}
 
 							{/* Floating particles effect */}
@@ -228,7 +242,11 @@ export function VisaSponsorshipSection({
 							<div className="relative flex flex-col items-center text-center">
 								{/* Icon */}
 								<motion.div
-									animate={visaSponsorship === option.value ? { scale: 1.15, rotate: [0, -5, 5, 0] } : { scale: 1 }}
+									animate={
+										visaSponsorship === option.value
+											? { scale: 1.15, rotate: [0, -5, 5, 0] }
+											: { scale: 1 }
+									}
 									transition={{ duration: 0.3 }}
 									className={`w-20 h-20 bg-gradient-to-br ${option.color} rounded-3xl flex items-center justify-center mb-4 shadow-xl relative overflow-hidden`}
 								>
@@ -243,30 +261,44 @@ export function VisaSponsorshipSection({
 											ease: "easeInOut",
 										}}
 									/>
-									<span className="text-3xl relative z-10" role="img" aria-label={option.title}>
+									<span
+										className="text-3xl relative z-10"
+										role="img"
+										aria-label={option.title}
+									>
 										{option.icon}
 									</span>
 								</motion.div>
 
 								{/* Content */}
 								<div className="space-y-2">
-									<h3 className={`text-lg font-bold leading-tight ${
-										visaSponsorship === option.value ? "text-white" : "text-zinc-200"
-									}`}>
+									<h3
+										className={`text-lg font-bold leading-tight ${
+											visaSponsorship === option.value
+												? "text-white"
+												: "text-zinc-200"
+										}`}
+									>
 										{option.title}
 									</h3>
 
-									<p className={`text-xs font-semibold px-2 py-1 rounded-full inline-block ${
-										visaSponsorship === option.value
-											? "bg-white/20 text-white"
-											: "bg-zinc-700/50 text-zinc-400"
-									}`}>
+									<p
+										className={`text-xs font-semibold px-2 py-1 rounded-full inline-block ${
+											visaSponsorship === option.value
+												? "bg-white/20 text-white"
+												: "bg-zinc-700/50 text-zinc-400"
+										}`}
+									>
 										{option.subtitle}
 									</p>
 
-									<p className={`text-sm leading-relaxed max-w-[280px] ${
-										visaSponsorship === option.value ? "text-zinc-100" : "text-zinc-400"
-									}`}>
+									<p
+										className={`text-sm leading-relaxed max-w-[280px] ${
+											visaSponsorship === option.value
+												? "text-zinc-100"
+												: "text-zinc-400"
+										}`}
+									>
 										{option.description}
 									</p>
 								</div>
@@ -294,8 +326,11 @@ export function VisaSponsorshipSection({
 					className="mt-6 p-4 bg-zinc-800/30 border border-zinc-700/50 rounded-2xl"
 				>
 					<p className="text-xs text-zinc-400 text-center leading-relaxed">
-						<span className="font-semibold text-zinc-300">💡 Pro tip:</span> If you're unsure about your status, we recommend consulting an immigration advisor or checking with your local authorities.
-						We'll help you find opportunities that match your current work authorization.
+						<span className="font-semibold text-zinc-300">💡 Pro tip:</span> If
+						you're unsure about your status, we recommend consulting an
+						immigration advisor or checking with your local authorities. We'll
+						help you find opportunities that match your current work
+						authorization.
 					</p>
 				</motion.div>
 			</div>

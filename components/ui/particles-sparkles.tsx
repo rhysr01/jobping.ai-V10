@@ -73,7 +73,10 @@ export const SparklesCore = (props: ParticlesProps) => {
 
 	// Debug logging
 	useEffect(() => {
-		if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+		if (
+			typeof window !== "undefined" &&
+			process.env.NODE_ENV === "development"
+		) {
 			console.log("🎆 SparklesCore render:", {
 				init,
 				error,

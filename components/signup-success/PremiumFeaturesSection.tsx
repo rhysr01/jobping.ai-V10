@@ -10,7 +10,10 @@ interface PremiumFeaturesSectionProps {
 	email: string;
 }
 
-export function PremiumFeaturesSection({ matchCount, email }: PremiumFeaturesSectionProps) {
+export function PremiumFeaturesSection({
+	matchCount,
+	email,
+}: PremiumFeaturesSectionProps) {
 	return (
 		<div className="text-center mb-8">
 			<SuccessAnimation message="Welcome to JobPing Premium!" />
@@ -25,8 +28,8 @@ export function PremiumFeaturesSection({ matchCount, email }: PremiumFeaturesSec
 			</h1>
 
 			<p className="text-lg text-content-secondary mb-8 max-w-2xl mx-auto">
-				You've been sent your first {matchCount} personalized job matches.
-				From now on, you'll receive{" "}
+				You've been sent your first {matchCount} personalized job matches. From
+				now on, you'll receive{" "}
 				<strong className="text-brand-400">
 					{PREMIUM_ROLES_PER_WEEK} jobs per week
 				</strong>{" "}
@@ -76,7 +79,9 @@ export function PremiumFeaturesSection({ matchCount, email }: PremiumFeaturesSec
 			<div className="bg-gradient-to-r from-brand-500/10 via-purple-500/10 to-pink-500/10 rounded-lg p-6 border border-brand-500/20 max-w-md mx-auto">
 				<div className="flex items-center justify-center gap-3 mb-4">
 					<BrandIcons.Mail className="w-6 h-6 text-brand-400" />
-					<span className="text-lg font-semibold text-white">Check Your Email</span>
+					<span className="text-lg font-semibold text-white">
+						Check Your Email
+					</span>
 				</div>
 				<p className="text-sm text-content-secondary mb-4">
 					We've sent your first batch of {matchCount} job matches to:

@@ -26,7 +26,8 @@ describe("Automated Alerting System", () => {
 			const errorStats = performanceMonitor.getMetricStats("api.errors");
 			const requestStats = performanceMonitor.getMetricStats("api.requests");
 
-			const errorRate = ((errorStats?.count || 0) / (requestStats?.count || 1)) * 100;
+			const errorRate =
+				((errorStats?.count || 0) / (requestStats?.count || 1)) * 100;
 
 			// Test that alert condition is detected
 			expect(errorRate).toBeGreaterThan(10);
@@ -39,7 +40,9 @@ describe("Automated Alerting System", () => {
 				performanceMonitor.recordMetric("database.connection_errors", 1);
 			}
 
-			const errorStats = performanceMonitor.getMetricStats("database.connection_errors");
+			const errorStats = performanceMonitor.getMetricStats(
+				"database.connection_errors",
+			);
 
 			// Test that critical alert condition is met
 			expect(errorStats?.count).toBeGreaterThanOrEqual(3);
@@ -50,12 +53,18 @@ describe("Automated Alerting System", () => {
 		it("should alert on response time degradation", () => {
 			// Record baseline performance
 			for (let i = 0; i < 10; i++) {
-				performanceMonitor.recordMetric("api.response_time", 200 + Math.random() * 100);
+				performanceMonitor.recordMetric(
+					"api.response_time",
+					200 + Math.random() * 100,
+				);
 			}
 
 			// Record degraded performance
 			for (let i = 0; i < 5; i++) {
-				performanceMonitor.recordMetric("api.response_time", 1000 + Math.random() * 500);
+				performanceMonitor.recordMetric(
+					"api.response_time",
+					1000 + Math.random() * 500,
+				);
 			}
 
 			const stats = performanceMonitor.getMetricStats("api.response_time");
@@ -68,8 +77,11 @@ describe("Automated Alerting System", () => {
 		it("should monitor memory usage trends", () => {
 			// Simulate increasing memory usage
 			const memoryUsage = [200, 250, 300, 400, 550]; // MB
-			memoryUsage.forEach(usage => {
-				performanceMonitor.recordMetric("memory.heap_used", usage * 1024 * 1024);
+			memoryUsage.forEach((usage) => {
+				performanceMonitor.recordMetric(
+					"memory.heap_used",
+					usage * 1024 * 1024,
+				);
 			});
 
 			const memoryStats = performanceMonitor.getMetricStats("memory.heap_used");
@@ -87,7 +99,8 @@ describe("Automated Alerting System", () => {
 				performanceMonitor.recordMetric("auth.failed_logins", 1);
 			}
 
-			const failedLoginStats = performanceMonitor.getMetricStats("auth.failed_logins");
+			const failedLoginStats =
+				performanceMonitor.getMetricStats("auth.failed_logins");
 
 			// Test that suspicious pattern is detected
 			expect(failedLoginStats?.count).toBeGreaterThanOrEqual(5);
@@ -99,7 +112,9 @@ describe("Automated Alerting System", () => {
 				performanceMonitor.recordMetric("api.rate_limit_hits", 1);
 			}
 
-			const rateLimitStats = performanceMonitor.getMetricStats("api.rate_limit_hits");
+			const rateLimitStats = performanceMonitor.getMetricStats(
+				"api.rate_limit_hits",
+			);
 
 			// Test that excessive rate limiting is detected
 			expect(rateLimitStats?.count).toBeGreaterThanOrEqual(10);
@@ -111,7 +126,9 @@ describe("Automated Alerting System", () => {
 			// Simulate low signup numbers
 			performanceMonitor.recordMetric("business.daily_signups", 2); // Very low
 
-			const signupStats = performanceMonitor.getMetricStats("business.daily_signups");
+			const signupStats = performanceMonitor.getMetricStats(
+				"business.daily_signups",
+			);
 
 			// Test that critically low engagement is detected
 			expect(signupStats?.avg).toBeLessThan(5);
@@ -126,10 +143,13 @@ describe("Automated Alerting System", () => {
 				performanceMonitor.recordMetric("email.sent", 1);
 			}
 
-			const failureStats = performanceMonitor.getMetricStats("email.delivery_failures");
+			const failureStats = performanceMonitor.getMetricStats(
+				"email.delivery_failures",
+			);
 			const sentStats = performanceMonitor.getMetricStats("email.sent");
 
-			const failureRate = ((failureStats?.count || 0) / (sentStats?.count || 1)) * 100;
+			const failureRate =
+				((failureStats?.count || 0) / (sentStats?.count || 1)) * 100;
 
 			// Test that high failure rate is detected
 			expect(failureRate).toBeGreaterThan(10);
@@ -148,13 +168,14 @@ describe("Automated Alerting System", () => {
 			// Test error rate threshold
 			performanceMonitor.recordMetric("api.errors", 10);
 			performanceMonitor.recordMetric("api.requests", 150);
-			const errorRate = 10 / 150 * 100;
+			const errorRate = (10 / 150) * 100;
 
 			expect(errorRate).toBeGreaterThan(thresholds.errorRate);
 
 			// Test response time threshold
 			performanceMonitor.recordMetric("api.response_time", 1200);
-			const responseStats = performanceMonitor.getMetricStats("api.response_time");
+			const responseStats =
+				performanceMonitor.getMetricStats("api.response_time");
 
 			expect(responseStats?.avg).toBeGreaterThan(thresholds.responseTime);
 		});
@@ -170,7 +191,7 @@ describe("Automated Alerting System", () => {
 			// Test different severity levels
 			const errorCounts = [2, 7, 15, 25];
 
-			errorCounts.forEach(count => {
+			errorCounts.forEach((count) => {
 				let severity = "low";
 				if (count >= severityLevels.critical.threshold) severity = "critical";
 				else if (count >= severityLevels.high.threshold) severity = "high";
@@ -206,7 +227,7 @@ describe("Automated Alerting System", () => {
 				Date.now() - 10000, // 10 seconds ago
 			];
 
-			timestamps.forEach(timestamp => {
+			timestamps.forEach((timestamp) => {
 				alertHistory.push({
 					type: "high_error_rate",
 					timestamp,
@@ -216,7 +237,7 @@ describe("Automated Alerting System", () => {
 
 			// Count alerts in last 5 minutes
 			const recentAlerts = alertHistory.filter(
-				alert => Date.now() - alert.timestamp < 5 * 60 * 1000
+				(alert) => Date.now() - alert.timestamp < 5 * 60 * 1000,
 			);
 
 			expect(recentAlerts.length).toBe(3);

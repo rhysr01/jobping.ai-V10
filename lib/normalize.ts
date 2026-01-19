@@ -14,15 +14,22 @@ type JobTrack =
 
 export function inferTrack(text: string): JobTrack {
 	const normalizedText = text.toLowerCase();
-	if (/(consultant|consulting|advisory)/.test(normalizedText)) return "consulting";
+	if (/(consultant|consulting|advisory)/.test(normalizedText))
+		return "consulting";
 	if (/(investment|bank|finance|equity|audit|account)/.test(normalizedText))
 		return "finance";
-	if (/(strategy|corporate strategy|strategic)/.test(normalizedText)) return "strategy";
-	if (/(operations|supply chain|logistics|ops)/.test(normalizedText)) return "operations";
-	if (/(marketing|brand|growth|digital marketing)/.test(normalizedText)) return "marketing";
-	if (/(product manager|product management)/.test(normalizedText)) return "product";
-	if (/(data analyst|business intelligence|analytics)/.test(normalizedText)) return "data";
-	if (/(sustainab|esg|csr|climate)/.test(normalizedText)) return "sustainability";
+	if (/(strategy|corporate strategy|strategic)/.test(normalizedText))
+		return "strategy";
+	if (/(operations|supply chain|logistics|ops)/.test(normalizedText))
+		return "operations";
+	if (/(marketing|brand|growth|digital marketing)/.test(normalizedText))
+		return "marketing";
+	if (/(product manager|product management)/.test(normalizedText))
+		return "product";
+	if (/(data analyst|business intelligence|analytics)/.test(normalizedText))
+		return "data";
+	if (/(sustainab|esg|csr|climate)/.test(normalizedText))
+		return "sustainability";
 	return "other";
 }
 

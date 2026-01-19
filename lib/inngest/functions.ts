@@ -61,10 +61,13 @@ export const performAIMatching = inngest.createFunction(
 		const hasOpenAIKey = openaiKey && openaiKey.startsWith("sk-");
 
 		if (!hasOpenAIKey) {
-			logger.warn("OPENAI_API_KEY not set or invalid, will use rule-based matching", {
-				email: userPrefs.email,
-				openaiKeyStatus: openaiKey ? "set but invalid format" : "not set",
-			});
+			logger.warn(
+				"OPENAI_API_KEY not set or invalid, will use rule-based matching",
+				{
+					email: userPrefs.email,
+					openaiKeyStatus: openaiKey ? "set but invalid format" : "not set",
+				},
+			);
 		}
 		// Step 1: Perform matching with timeout protection
 		const matchResult = await step.run("perform-matching", async () => {
@@ -80,7 +83,7 @@ export const performAIMatching = inngest.createFunction(
 				const result = await simplifiedMatchingEngine.findMatchesForUser(
 					userPrefs as any,
 					jobs as any[],
-					{ useAI: !!hasOpenAIKey }
+					{ useAI: !!hasOpenAIKey },
 				);
 
 				const duration = Date.now() - startTime;
@@ -104,11 +107,12 @@ export const performAIMatching = inngest.createFunction(
 					email: userPrefs.email,
 				});
 
-				const fallbackResult = await simplifiedMatchingEngine.findMatchesForUser(
-					userPrefs as any,
-					jobs as any[],
-					{ useAI: false }, // Force rule-based matching
-				);
+				const fallbackResult =
+					await simplifiedMatchingEngine.findMatchesForUser(
+						userPrefs as any,
+						jobs as any[],
+						{ useAI: false }, // Force rule-based matching
+					);
 
 				return fallbackResult;
 			}

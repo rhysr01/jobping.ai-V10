@@ -33,7 +33,9 @@ describe("Stripe Subscription Integration", () => {
 
 		// Check if server is available for API tests
 		try {
-			const response = await fetch("http://localhost:3000/api/health").catch(() => null);
+			const response = await fetch("http://localhost:3000/api/health").catch(
+				() => null,
+			);
 			serverAvailable = response?.ok || false;
 		} catch {
 			serverAvailable = false;
@@ -143,7 +145,7 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Create subscription with trial
-			const trialEnd = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 days
+			const trialEnd = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7 days
 			const subscription = await stripe.subscriptions.create({
 				customer: customer.id,
 				items: [{ price: price.id }],
@@ -185,9 +187,12 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Attach to customer
-			const attachedMethod = await stripe.paymentMethods.attach(paymentMethod.id, {
-				customer: customer.id,
-			});
+			const attachedMethod = await stripe.paymentMethods.attach(
+				paymentMethod.id,
+				{
+					customer: customer.id,
+				},
+			);
 
 			expect(attachedMethod.customer).toBe(customer.id);
 			expect(attachedMethod.type).toBe("card");
@@ -203,7 +208,9 @@ describe("Stripe Subscription Integration", () => {
 			expect(paymentMethods.data[0].id).toBe(paymentMethod.id);
 
 			// Detach payment method
-			const detachedMethod = await stripe.paymentMethods.detach(paymentMethod.id);
+			const detachedMethod = await stripe.paymentMethods.detach(
+				paymentMethod.id,
+			);
 			expect(detachedMethod.customer).toBeNull();
 
 			// Clean up
@@ -252,7 +259,7 @@ describe("Stripe Subscription Integration", () => {
 					customer: customer.id,
 					items: [{ price: price.id }],
 					default_payment_method: paymentMethod.id,
-				})
+				}),
 			).rejects.toThrow();
 
 			// Clean up
@@ -310,7 +317,9 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Finalize invoice
-			const finalizedInvoice = await stripe.invoices.finalizeInvoice(invoice.id);
+			const finalizedInvoice = await stripe.invoices.finalizeInvoice(
+				invoice.id,
+			);
 
 			expect(finalizedInvoice.status).toBe("open");
 			expect(finalizedInvoice.amount_due).toBe(5000);
@@ -400,15 +409,18 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Update subscription to new price
-			const updatedSubscription = await stripe.subscriptions.update(subscription.id, {
-				items: [
-					{
-						id: subscription.items.data[0].id,
-						price: price2.id,
-					},
-				],
-				proration_behavior: "create_prorations",
-			});
+			const updatedSubscription = await stripe.subscriptions.update(
+				subscription.id,
+				{
+					items: [
+						{
+							id: subscription.items.data[0].id,
+							price: price2.id,
+						},
+					],
+					proration_behavior: "create_prorations",
+				},
+			);
 
 			expect(updatedSubscription.items.data[0].price.id).toBe(price2.id);
 
@@ -463,18 +475,24 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Pause subscription
-			const pausedSubscription = await stripe.subscriptions.update(subscription.id, {
-				pause_collection: {
-					behavior: "void",
+			const pausedSubscription = await stripe.subscriptions.update(
+				subscription.id,
+				{
+					pause_collection: {
+						behavior: "void",
+					},
 				},
-			});
+			);
 
 			expect(pausedSubscription.pause_collection?.behavior).toBe("void");
 
 			// Resume subscription
-			const resumedSubscription = await stripe.subscriptions.update(subscription.id, {
-				pause_collection: "",
-			});
+			const resumedSubscription = await stripe.subscriptions.update(
+				subscription.id,
+				{
+					pause_collection: "",
+				},
+			);
 
 			expect(resumedSubscription.pause_collection).toBeNull();
 
@@ -528,7 +546,9 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Cancel immediately
-			const canceledSubscription = await stripe.subscriptions.cancel(subscription.id);
+			const canceledSubscription = await stripe.subscriptions.cancel(
+				subscription.id,
+			);
 
 			expect(canceledSubscription.status).toBe("canceled");
 			expect(canceledSubscription.canceled_at).toBeDefined();
@@ -582,9 +602,12 @@ describe("Stripe Subscription Integration", () => {
 			});
 
 			// Cancel at period end
-			const canceledSubscription = await stripe.subscriptions.update(subscription.id, {
-				cancel_at_period_end: true,
-			});
+			const canceledSubscription = await stripe.subscriptions.update(
+				subscription.id,
+				{
+					cancel_at_period_end: true,
+				},
+			);
 
 			expect(canceledSubscription.cancel_at_period_end).toBe(true);
 			expect(canceledSubscription.status).toBe("active");
@@ -709,7 +732,9 @@ describe("Stripe Subscription Integration", () => {
 				items: [{ price: price.id }],
 			});
 
-			expect(subscription.items.data[0].price.recurring?.usage_type).toBe("metered");
+			expect(subscription.items.data[0].price.recurring?.usage_type).toBe(
+				"metered",
+			);
 
 			// Report usage
 			const usageRecord = await stripe.subscriptionItems.createUsageRecord(
@@ -717,7 +742,7 @@ describe("Stripe Subscription Integration", () => {
 				{
 					quantity: 100,
 					timestamp: Math.floor(Date.now() / 1000),
-				}
+				},
 			);
 
 			expect(usageRecord.quantity).toBe(100);

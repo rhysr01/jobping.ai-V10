@@ -38,12 +38,17 @@ export function JobStatsDisclaimer({
 
 					<div className="text-left space-y-3">
 						<p className="text-sm text-zinc-300 leading-relaxed">
-							<span className="font-medium text-white">JobPing</span> aggregates jobs from trusted public sources and company career pages. We are not affiliated with these companies and match you with available listings.
+							<span className="font-medium text-white">JobPing</span> aggregates
+							jobs from trusted public sources and company career pages. We are
+							not affiliated with these companies and match you with available
+							listings.
 						</p>
 
 						{/* Job Sources Badges */}
 						<div className="flex flex-wrap items-center gap-2">
-							<span className="text-xs text-zinc-400 font-medium">Sources:</span>
+							<span className="text-xs text-zinc-400 font-medium">
+								Sources:
+							</span>
 							{jobSources.map((source) => (
 								<Badge
 									key={source}

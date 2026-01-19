@@ -46,13 +46,19 @@ function PreferencesContent() {
 					{/* Language & Location Section */}
 					<div className="bg-white/5 rounded-2xl p-6 border border-white/10">
 						<h2 className="text-xl font-semibold mb-6">Language & Location</h2>
-						<LanguageLocationSection formData={formData} onUpdate={updateFormData} />
+						<LanguageLocationSection
+							formData={formData}
+							onUpdate={updateFormData}
+						/>
 					</div>
 
 					{/* Career Preferences Section */}
 					<div className="bg-white/5 rounded-2xl p-6 border border-white/10">
 						<h2 className="text-xl font-semibold mb-6">Career Preferences</h2>
-						<CareerPreferencesSection formData={formData} onUpdate={updateFormData} />
+						<CareerPreferencesSection
+							formData={formData}
+							onUpdate={updateFormData}
+						/>
 					</div>
 
 					{/* Error Display */}

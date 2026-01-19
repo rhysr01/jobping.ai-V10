@@ -65,105 +65,219 @@ function getCountryVariations(country: string): string[] {
 	// Comprehensive country variations for job matching across different data sources
 	const variations: Record<string, string[]> = {
 		uk: [
-			"uk", "united kingdom", "gb", "great britain", "england", "scotland", "wales",
-			"northern ireland", "britain", "ukraine" // Note: ukraine is intentionally excluded to avoid confusion
+			"uk",
+			"united kingdom",
+			"gb",
+			"great britain",
+			"england",
+			"scotland",
+			"wales",
+			"northern ireland",
+			"britain",
+			"ukraine", // Note: ukraine is intentionally excluded to avoid confusion
 		],
 		germany: [
-			"germany", "deutschland", "de", "federal republic of germany", "bundesrepublik deutschland",
-			"deutschland bundesrepublik", "german federal republic"
+			"germany",
+			"deutschland",
+			"de",
+			"federal republic of germany",
+			"bundesrepublik deutschland",
+			"deutschland bundesrepublik",
+			"german federal republic",
 		],
 		france: [
-			"france", "fr", "french republic", "république française", "republique francaise"
+			"france",
+			"fr",
+			"french republic",
+			"république française",
+			"republique francaise",
 		],
 		netherlands: [
-			"netherlands", "holland", "nl", "nederland", "the netherlands", "kingdom of the netherlands"
+			"netherlands",
+			"holland",
+			"nl",
+			"nederland",
+			"the netherlands",
+			"kingdom of the netherlands",
 		],
-		spain: [
-			"spain", "es", "españa", "kingdom of spain", "reino de españa"
-		],
-		italy: [
-			"italy", "it", "italia", "italian republic", "repubblica italiana"
-		],
+		spain: ["spain", "es", "españa", "kingdom of spain", "reino de españa"],
+		italy: ["italy", "it", "italia", "italian republic", "repubblica italiana"],
 		sweden: [
-			"sweden", "se", "sverige", "kingdom of sweden", "konungariket sverige"
+			"sweden",
+			"se",
+			"sverige",
+			"kingdom of sweden",
+			"konungariket sverige",
 		],
 		denmark: [
-			"denmark", "dk", "danmark", "kingdom of denmark", "kongeriget danmark"
+			"denmark",
+			"dk",
+			"danmark",
+			"kingdom of denmark",
+			"kongeriget danmark",
 		],
-		norway: [
-			"norway", "no", "norge", "kingdom of norway", "kongeriket norge"
-		],
+		norway: ["norway", "no", "norge", "kingdom of norway", "kongeriket norge"],
 		finland: [
-			"finland", "fi", "suomi", "republic of finland", "suomen tasavalta"
+			"finland",
+			"fi",
+			"suomi",
+			"republic of finland",
+			"suomen tasavalta",
 		],
 		poland: [
-			"poland", "pl", "polska", "republic of poland", "rzeczpospolita polska"
+			"poland",
+			"pl",
+			"polska",
+			"republic of poland",
+			"rzeczpospolita polska",
 		],
 		belgium: [
-			"belgium", "be", "belgië", "belgique", "kingdom of belgium", "koninkrijk belgië"
+			"belgium",
+			"be",
+			"belgië",
+			"belgique",
+			"kingdom of belgium",
+			"koninkrijk belgië",
 		],
 		austria: [
-			"austria", "at", "österreich", "republik österreich", "republic of austria"
+			"austria",
+			"at",
+			"österreich",
+			"republik österreich",
+			"republic of austria",
 		],
 		switzerland: [
-			"switzerland", "ch", "schweiz", "suisse", "svizzera", "svizra", "swiss confederation",
-			"schweizerische eidgenossenschaft", "confédération suisse", "confederazione svizzera"
+			"switzerland",
+			"ch",
+			"schweiz",
+			"suisse",
+			"svizzera",
+			"svizra",
+			"swiss confederation",
+			"schweizerische eidgenossenschaft",
+			"confédération suisse",
+			"confederazione svizzera",
 		],
 		portugal: [
-			"portugal", "pt", "portuguesa", "república portuguesa", "portuguese republic"
+			"portugal",
+			"pt",
+			"portuguesa",
+			"república portuguesa",
+			"portuguese republic",
 		],
 		ireland: [
-			"ireland", "ie", "éire", "ireland republic", "republic of ireland", "poblacht na héireann"
+			"ireland",
+			"ie",
+			"éire",
+			"ireland republic",
+			"republic of ireland",
+			"poblacht na héireann",
 		],
 		czechia: [
-			"czechia", "czech republic", "cz", "česko", "česká republika", "ceska republika"
+			"czechia",
+			"czech republic",
+			"cz",
+			"česko",
+			"česká republika",
+			"ceska republika",
 		],
 		hungary: [
-			"hungary", "hu", "magyarország", "republic of hungary", "magyar köztársaság"
+			"hungary",
+			"hu",
+			"magyarország",
+			"republic of hungary",
+			"magyar köztársaság",
 		],
 		romania: [
-			"romania", "ro", "românia", "republic of romania", "republica românia"
+			"romania",
+			"ro",
+			"românia",
+			"republic of romania",
+			"republica românia",
 		],
 		greece: [
-			"greece", "gr", "ελλάδα", "hellas", "hellenic republic", "ελληνική δημοκρατία"
+			"greece",
+			"gr",
+			"ελλάδα",
+			"hellas",
+			"hellenic republic",
+			"ελληνική δημοκρατία",
 		],
 		bulgaria: [
-			"bulgaria", "bg", "българия", "republic of bulgaria", "република българия"
+			"bulgaria",
+			"bg",
+			"българия",
+			"republic of bulgaria",
+			"република българия",
 		],
 		croatia: [
-			"croatia", "hr", "hrvatska", "republic of croatia", "republika hrvatska"
+			"croatia",
+			"hr",
+			"hrvatska",
+			"republic of croatia",
+			"republika hrvatska",
 		],
 		slovenia: [
-			"slovenia", "si", "slovenija", "republic of slovenia", "republika slovenija"
+			"slovenia",
+			"si",
+			"slovenija",
+			"republic of slovenia",
+			"republika slovenija",
 		],
 		slovakia: [
-			"slovakia", "sk", "slovensko", "slovak republic", "slovenská republika"
+			"slovakia",
+			"sk",
+			"slovensko",
+			"slovak republic",
+			"slovenská republika",
 		],
 		estonia: [
-			"estonia", "ee", "eesti", "republic of estonia", "eesti vabariik"
+			"estonia",
+			"ee",
+			"eesti",
+			"republic of estonia",
+			"eesti vabariik",
 		],
 		latvia: [
-			"latvia", "lv", "latvija", "republic of latvia", "latvijas republika"
+			"latvia",
+			"lv",
+			"latvija",
+			"republic of latvia",
+			"latvijas republika",
 		],
 		lithuania: [
-			"lithuania", "lt", "lietuva", "republic of lithuania", "lietuvos respublika"
+			"lithuania",
+			"lt",
+			"lietuva",
+			"republic of lithuania",
+			"lietuvos respublika",
 		],
 		luxembourg: [
-			"luxembourg", "lu", "luxembourg", "grand duchy of luxembourg", "grand-duché de luxembourg"
+			"luxembourg",
+			"lu",
+			"luxembourg",
+			"grand duchy of luxembourg",
+			"grand-duché de luxembourg",
 		],
-		malta: [
-			"malta", "mt", "repubblika ta' malta", "republic of malta"
-		],
+		malta: ["malta", "mt", "repubblika ta' malta", "republic of malta"],
 		cyprus: [
-			"cyprus", "cy", "κύπρος", "kıbrıs", "republic of cyprus", "κυπριακή δημοκρατία"
+			"cyprus",
+			"cy",
+			"κύπρος",
+			"kıbrıs",
+			"republic of cyprus",
+			"κυπριακή δημοκρατία",
 		],
 		iceland: [
-			"iceland", "is", "ísland", "republic of iceland", "lýðveldið ísland"
+			"iceland",
+			"is",
+			"ísland",
+			"republic of iceland",
+			"lýðveldið ísland",
 		],
 	};
 	return variations[country.toLowerCase()] || [country];
 }
-
 
 // Note: createConsolidatedMatcher import removed - using simplified matching engine
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
@@ -421,7 +535,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		.is("filtered_reason", null)
 		.gte("created_at", sixtyDaysAgo.toISOString()) // Only recent jobs
 		.order("id", { ascending: false }); // Pseudo-random for variety
-		// REMOVED LIMIT - let PrefilterService filter by location/career first
+	// REMOVED LIMIT - let PrefilterService filter by location/career first
 
 	apiLogger.info("Free signup - simplified job fetching", {
 		email: normalizedEmail,
@@ -541,7 +655,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// REFACTORED: Use consolidated matching service
 	const matchingConfig = SignupMatchingService.getConfig("free");
-	const matchingResult = await SignupMatchingService.runMatching(userPrefs, matchingConfig);
+	const matchingResult = await SignupMatchingService.runMatching(
+		userPrefs,
+		matchingConfig,
+	);
 
 	const matchesCount = matchingResult.matchCount;
 
@@ -554,7 +671,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				cities: targetCities,
 				careerPath: userData.career_path,
 				visaStatus: userData.visa_status,
-			}
+			},
 		});
 		return NextResponse.json(
 			{ error: "No matches found. Try different cities or career paths." },

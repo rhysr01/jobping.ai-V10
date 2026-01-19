@@ -6,8 +6,18 @@ interface PersonalInfoSectionProps {
 	isSubmitting: boolean;
 }
 
-export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSectionProps) {
-	const { formData, setFormData, setTouchedFields, emailValidation, nameValidation, shouldShowError } = formState;
+export function PersonalInfoSection({
+	formState,
+	isSubmitting,
+}: PersonalInfoSectionProps) {
+	const {
+		formData,
+		setFormData,
+		setTouchedFields,
+		emailValidation,
+		nameValidation,
+		shouldShowError,
+	} = formState;
 
 	const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setFormData((prev) => ({ ...prev, email: e.target.value }));
@@ -40,11 +50,13 @@ export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSec
 					type="text"
 					disabled={isSubmitting}
 					value={formData.university || ""}
-					onChange={(e) => setFormData((prev) => ({ ...prev, university: e.target.value }))}
+					onChange={(e) =>
+						setFormData((prev) => ({ ...prev, university: e.target.value }))
+					}
 					placeholder="e.g., University of Oxford"
 					autoComplete="organization"
 					inputMode="text"
-					style={{ fontSize: '16px' }} // Prevent iOS zoom
+					style={{ fontSize: "16px" }} // Prevent iOS zoom
 					className="w-full px-4 py-4 sm:py-3 min-h-[52px] sm:min-h-[48px] bg-black/50 border-2 rounded-xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base font-medium backdrop-blur-sm border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
 				/>
 				<p className="text-sm text-content-secondary mt-2">
@@ -71,7 +83,7 @@ export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSec
 					placeholder="you@example.com"
 					autoComplete="email"
 					inputMode="email"
-					style={{ fontSize: '16px' }} // Prevent iOS zoom
+					style={{ fontSize: "16px" }} // Prevent iOS zoom
 					aria-describedby={
 						formData.email.length > 0
 							? emailValidation.isValid
@@ -79,9 +91,7 @@ export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSec
 								: "email-error"
 							: undefined
 					}
-					aria-invalid={
-						formData.email.length > 0 && !emailValidation.isValid
-					}
+					aria-invalid={formData.email.length > 0 && !emailValidation.isValid}
 					className="w-full px-4 py-4 sm:py-3 min-h-[52px] sm:min-h-[48px] bg-black/50 border-2 rounded-xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base font-medium backdrop-blur-sm border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
 				/>
 				<p className="text-sm text-content-secondary mt-2">
@@ -119,7 +129,7 @@ export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSec
 					autoCorrect="off"
 					autoCapitalize="words"
 					inputMode="text"
-					style={{ fontSize: '16px' }} // Prevent iOS zoom
+					style={{ fontSize: "16px" }} // Prevent iOS zoom
 					aria-describedby={
 						formData.fullName.length > 0
 							? nameValidation.isValid
@@ -127,9 +137,7 @@ export function PersonalInfoSection({ formState, isSubmitting }: PersonalInfoSec
 								: "fullName-error"
 							: undefined
 					}
-					aria-invalid={
-						formData.fullName.length > 0 && !nameValidation.isValid
-					}
+					aria-invalid={formData.fullName.length > 0 && !nameValidation.isValid}
 					className="w-full px-4 py-4 sm:py-3 min-h-[52px] sm:min-h-[48px] bg-black/50 border-2 rounded-xl text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 transition-all text-base font-medium backdrop-blur-sm border-border-default disabled:opacity-50 disabled:cursor-not-allowed"
 				/>
 				{shouldShowError(

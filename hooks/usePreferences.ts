@@ -160,7 +160,8 @@ export function usePreferences(): UsePreferencesReturn {
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState(false);
 	const [userData, setUserData] = useState<any>(null);
-	const [formData, setFormData] = useState<PreferencesFormData>(INITIAL_FORM_DATA);
+	const [formData, setFormData] =
+		useState<PreferencesFormData>(INITIAL_FORM_DATA);
 
 	// Load user preferences
 	useEffect(() => {
@@ -198,7 +199,11 @@ export function usePreferences(): UsePreferencesReturn {
 					visaStatus: data.visa_status || "",
 					entryLevelPreferences: data.entry_level_preferences || [],
 					targetCompanies: data.target_companies || [],
-					careerPath: Array.isArray(data.career_path) ? data.career_path : data.career_path ? [data.career_path] : [],
+					careerPath: Array.isArray(data.career_path)
+						? data.career_path
+						: data.career_path
+							? [data.career_path]
+							: [],
 					roles: data.roles || [],
 				});
 			} catch (error) {
@@ -212,53 +217,62 @@ export function usePreferences(): UsePreferencesReturn {
 		loadPreferences();
 	}, [token, email]);
 
-	const updateFormData = useCallback((updates: Partial<PreferencesFormData>) => {
-		setFormData(prev => ({ ...prev, ...updates }));
-	}, []);
+	const updateFormData = useCallback(
+		(updates: Partial<PreferencesFormData>) => {
+			setFormData((prev) => ({ ...prev, ...updates }));
+		},
+		[],
+	);
 
-	const handleSubmit = useCallback(async (e: React.FormEvent) => {
-		e.preventDefault();
+	const handleSubmit = useCallback(
+		async (e: React.FormEvent) => {
+			e.preventDefault();
 
-		if (!token || !email) {
-			setError("Missing authentication. Please use the link from your email.");
-			return;
-		}
-
-		setSaving(true);
-		setError("");
-		setSuccess(false);
-
-		try {
-			const response = await fetch("/api/preferences", {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					token,
-					email,
-					...formData,
-				}),
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.error || "Failed to save preferences");
+			if (!token || !email) {
+				setError(
+					"Missing authentication. Please use the link from your email.",
+				);
+				return;
 			}
 
-			setSuccess(true);
-			showToast.success("Preferences saved successfully!");
+			setSaving(true);
+			setError("");
+			setSuccess(false);
 
-			// Redirect to matches after a delay
-			setTimeout(() => {
-				window.location.href = "/matches";
-			}, 2000);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : "Failed to save preferences";
-			setError(message);
-			showToast.error(message);
-		} finally {
-			setSaving(false);
-		}
-	}, [token, email, formData]);
+			try {
+				const response = await fetch("/api/preferences", {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						token,
+						email,
+						...formData,
+					}),
+				});
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || "Failed to save preferences");
+				}
+
+				setSuccess(true);
+				showToast.success("Preferences saved successfully!");
+
+				// Redirect to matches after a delay
+				setTimeout(() => {
+					window.location.href = "/matches";
+				}, 2000);
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Failed to save preferences";
+				setError(message);
+				showToast.error(message);
+			} finally {
+				setSaving(false);
+			}
+		},
+		[token, email, formData],
+	);
 
 	const resetForm = useCallback(() => {
 		setFormData(INITIAL_FORM_DATA);

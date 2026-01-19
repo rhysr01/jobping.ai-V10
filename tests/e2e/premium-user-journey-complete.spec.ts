@@ -41,7 +41,11 @@ test.describe("Complete Premium User Journey", () => {
 
 		// Complete basic preferences
 		await expect(page.locator("text=Your career path")).toBeVisible();
-		await page.locator('button:has-text("Tech")').or(page.locator('button:has-text("Technology")')).first().click();
+		await page
+			.locator('button:has-text("Tech")')
+			.or(page.locator('button:has-text("Technology")'))
+			.first()
+			.click();
 		await page.locator('button:has-text("Continue")').first().click();
 
 		// Complete location preferences
@@ -54,7 +58,11 @@ test.describe("Complete Premium User Journey", () => {
 		await page.locator('button:has-text("Continue")').first().click();
 
 		// Submit free signup
-		await page.locator('button:has-text("Get my matches")').or(page.locator('button:has-text("Complete")')).first().click();
+		await page
+			.locator('button:has-text("Get my matches")')
+			.or(page.locator('button:has-text("Complete")'))
+			.first()
+			.click();
 
 		// Should reach success page
 		await expect(page.locator("text=success")).toBeVisible();
@@ -96,7 +104,10 @@ test.describe("Complete Premium User Journey", () => {
 		await expect(page.locator("text=month")).toBeVisible();
 
 		// Click upgrade CTA
-		const upgradeButton = page.locator("text=Upgrade").or(page.locator("text=Subscribe")).first();
+		const upgradeButton = page
+			.locator("text=Upgrade")
+			.or(page.locator("text=Subscribe"))
+			.first();
 		await expect(upgradeButton).toBeVisible();
 		await upgradeButton.click();
 	});
@@ -114,7 +125,9 @@ test.describe("Complete Premium User Journey", () => {
 		await page.locator('button:has-text("Continue")').first().click();
 
 		// Premium users get enhanced preferences
-		await expect(page.locator("text=Advanced")).or(page.locator("text=Premium")).toBeVisible();
+		await expect(page.locator("text=Advanced"))
+			.or(page.locator("text=Premium"))
+			.toBeVisible();
 
 		// Complete enhanced preferences
 		await page.locator('button:has-text("Tech")').first().click();
@@ -131,7 +144,11 @@ test.describe("Complete Premium User Journey", () => {
 		await page.locator('button:has-text("Continue")').first().click();
 
 		// Premium-specific preferences
-		await page.locator('button:has-text("Senior")').or(page.locator('button:has-text("5+ years")')).first().click();
+		await page
+			.locator('button:has-text("Senior")')
+			.or(page.locator('button:has-text("5+ years")'))
+			.first()
+			.click();
 		await page.locator('button:has-text("Continue")').first().click();
 
 		// Visa preferences (premium feature)
@@ -146,7 +163,9 @@ test.describe("Complete Premium User Journey", () => {
 		await page.locator("text=Upgrade").first().click();
 
 		// Should reach payment form
-		await expect(page.locator("text=Payment")).or(page.locator("text=Subscribe")).toBeVisible();
+		await expect(page.locator("text=Payment"))
+			.or(page.locator("text=Subscribe"))
+			.toBeVisible();
 
 		// Verify pricing display
 		await expect(page.locator("text=€5")).toBeVisible();
@@ -156,7 +175,9 @@ test.describe("Complete Premium User Journey", () => {
 		await expect(page.locator('input[type="email"]')).toBeVisible();
 
 		// Verify secure payment indicators
-		await expect(page.locator("text=Secure")).or(page.locator("text=SSL")).toBeVisible();
+		await expect(page.locator("text=Secure"))
+			.or(page.locator("text=SSL"))
+			.toBeVisible();
 	});
 
 	test("Phase 6: Premium User Dashboard", async ({ page }) => {
@@ -210,7 +231,9 @@ test.describe("Complete Premium User Journey", () => {
 		expect(matchResponse.status()).toBe(200);
 
 		// Verify premium email was queued/sent
-		const emailCheckResponse = await request.get(`/api/admin/emails?user=${encodeURIComponent(testUserEmail)}`);
+		const emailCheckResponse = await request.get(
+			`/api/admin/emails?user=${encodeURIComponent(testUserEmail)}`,
+		);
 		if (emailCheckResponse.status() === 200) {
 			const emailData = await emailCheckResponse.json();
 			expect(emailData.premiumEmails).toBeDefined();
@@ -222,7 +245,9 @@ test.describe("Complete Premium User Journey", () => {
 		await page.goto("/matches/premium");
 
 		// Should redirect to login or show upgrade prompt
-		await expect(page.locator("text=Premium")).or(page.locator("text=Upgrade")).toBeVisible();
+		await expect(page.locator("text=Premium"))
+			.or(page.locator("text=Upgrade"))
+			.toBeVisible();
 
 		// Test premium API endpoints
 		const apiResponse = await page.request.get("/api/matches/premium");
@@ -236,7 +261,9 @@ test.describe("Complete Premium User Journey", () => {
 		await expect(page.locator("text=Premium")).toBeVisible();
 
 		// Check for usage statistics (premium feature)
-		await expect(page.locator("text=matches used")).or(page.locator("text=50")).toBeVisible();
+		await expect(page.locator("text=matches used"))
+			.or(page.locator("text=50"))
+			.toBeVisible();
 
 		// Verify no upgrade prompts for premium users
 		await expect(page.locator("text=Upgrade")).not.toBeVisible();
@@ -246,10 +273,14 @@ test.describe("Complete Premium User Journey", () => {
 		await page.goto("/billing");
 
 		// Verify billing management is available
-		await expect(page.locator("text=Billing")).or(page.locator("text=Subscription")).toBeVisible();
+		await expect(page.locator("text=Billing"))
+			.or(page.locator("text=Subscription"))
+			.toBeVisible();
 
 		// Test cancellation flow (UI only, no actual cancellation)
-		const cancelButton = page.locator("text=Cancel").or(page.locator("text=Manage"));
+		const cancelButton = page
+			.locator("text=Cancel")
+			.or(page.locator("text=Manage"));
 		if (await cancelButton.isVisible()) {
 			await expect(cancelButton).toBeVisible();
 		}
@@ -275,7 +306,9 @@ test.describe("Complete Premium User Journey", () => {
 		await page.goto("/dashboard");
 
 		// Verify premium users have access to support
-		const supportLink = page.locator("text=Support").or(page.locator("text=Help"));
+		const supportLink = page
+			.locator("text=Support")
+			.or(page.locator("text=Help"));
 		if (await supportLink.isVisible()) {
 			await expect(supportLink).toBeVisible();
 		}

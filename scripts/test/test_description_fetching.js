@@ -9,16 +9,25 @@ async function testDescriptionFetching() {
 	const shortDescription = "This is a short job description.";
 	const jobUrl = "https://www.reed.co.uk/jobs/123456"; // Example URL
 
-	console.log(`Original description: "${shortDescription}" (${shortDescription.length} chars)`);
+	console.log(
+		`Original description: "${shortDescription}" (${shortDescription.length} chars)`,
+	);
 
 	try {
-		const fullDescription = await fetchFullJobDescription(jobUrl, shortDescription);
-		console.log(`Fetched description: "${fullDescription.substring(0, 200)}..." (${fullDescription.length} chars)`);
+		const fullDescription = await fetchFullJobDescription(
+			jobUrl,
+			shortDescription,
+		);
+		console.log(
+			`Fetched description: "${fullDescription.substring(0, 200)}..." (${fullDescription.length} chars)`,
+		);
 
 		if (fullDescription.length > shortDescription.length) {
 			console.log("✅ SUCCESS: Full description fetching worked!");
 		} else {
-			console.log("⚠️  No improvement: Description stayed the same or got shorter");
+			console.log(
+				"⚠️  No improvement: Description stayed the same or got shorter",
+			);
 		}
 	} catch (error) {
 		console.error("❌ Error:", error.message);

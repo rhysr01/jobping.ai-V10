@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Accessibility: Keyboard Navigation", () => {
 	test("Premium signup form keyboard navigation", async ({ page }) => {
@@ -11,7 +11,9 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 		await page.keyboard.press("Tab");
 
 		// Check that we're on the first input field (full name)
-		const activeElement = await page.evaluate(() => document.activeElement?.tagName);
+		const activeElement = await page.evaluate(
+			() => document.activeElement?.tagName,
+		);
 		expect(activeElement).toBe("INPUT");
 
 		// Navigate through all form fields
@@ -33,12 +35,16 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 			"birthYear",
 			"ageVerification",
 			"termsAcceptance",
-			"gdprConsent"
+			"gdprConsent",
 		];
 
 		// Tab through each field and verify focus
 		for (const fieldName of expectedFields) {
-			const field = page.locator(`[data-testid="${fieldName}"], #${fieldName}, input[name="${fieldName}"], [aria-label*="${fieldName}"]`).first();
+			const field = page
+				.locator(
+					`[data-testid="${fieldName}"], #${fieldName}, input[name="${fieldName}"], [aria-label*="${fieldName}"]`,
+				)
+				.first();
 			if (await field.isVisible()) {
 				await expect(field).toBeFocused();
 			}
@@ -51,7 +57,9 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 
 		// Test Enter key submission (should show validation errors since form is empty)
 		await page.keyboard.press("Enter");
-		await expect(page.locator("text=Please fill in all required fields")).toBeVisible();
+		await expect(
+			page.locator("text=Please fill in all required fields"),
+		).toBeVisible();
 	});
 
 	test("Free signup form keyboard navigation", async ({ page }) => {
@@ -61,7 +69,9 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 		await page.locator('a[href*="free"]').first().click();
 
 		// Wait for free signup form
-		await expect(page.locator("h1")).toContainText(/Get Your 5 Free Matches|Find Your Dream Job/);
+		await expect(page.locator("h1")).toContainText(
+			/Get Your 5 Free Matches|Find Your Dream Job/,
+		);
 
 		// Start keyboard navigation
 		await page.keyboard.press("Tab");
@@ -76,11 +86,13 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 			"birthYear",
 			"ageVerification",
 			"termsAcceptance",
-			"gdprConsent"
+			"gdprConsent",
 		];
 
 		for (const fieldName of freeFormFields) {
-			const field = page.locator(`input[name="${fieldName}"], [data-testid="${fieldName}"]`).first();
+			const field = page
+				.locator(`input[name="${fieldName}"], [data-testid="${fieldName}"]`)
+				.first();
 			if (await field.isVisible()) {
 				// Field should be focusable
 				await expect(field).toBeVisible();
@@ -110,13 +122,17 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 		await page.goto("/");
 
 		// Trigger any modal/popup if available
-		const modalTrigger = page.locator('[role="dialog"], .modal, [data-modal]').first();
+		const modalTrigger = page
+			.locator('[role="dialog"], .modal, [data-modal]')
+			.first();
 		if (await modalTrigger.isVisible()) {
 			await modalTrigger.click();
 
 			// Check that focus is trapped within modal
 			await page.keyboard.press("Tab");
-			const focusedElement = await page.evaluate(() => document.activeElement?.closest('[role="dialog"]'));
+			const focusedElement = await page.evaluate(() =>
+				document.activeElement?.closest('[role="dialog"]'),
+			);
 			expect(focusedElement).not.toBeNull();
 
 			// Test Escape key closes modal
@@ -133,7 +149,9 @@ test.describe("Accessibility: Keyboard Navigation", () => {
 		await submitButton.click();
 
 		// Check that error messages are announced and focusable
-		const errorMessage = page.locator('[role="alert"], .error, text="required"').first();
+		const errorMessage = page
+			.locator('[role="alert"], .error, text="required"')
+			.first();
 		if (await errorMessage.isVisible()) {
 			// Error should be keyboard accessible
 			await page.keyboard.press("Tab");

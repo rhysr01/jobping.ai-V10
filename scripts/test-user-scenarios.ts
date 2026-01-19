@@ -49,7 +49,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -73,7 +75,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -97,7 +101,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -122,7 +128,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -146,7 +154,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -171,7 +181,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -195,7 +207,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -220,7 +234,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -244,8 +260,12 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
+		posted_at: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 60 * 1000,
+		).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
@@ -269,7 +289,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -293,7 +315,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English", "German"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -318,7 +342,9 @@ const TEST_JOBS: Job[] = [
 		company_profile_url: "",
 		language_requirements: ["English"],
 		scrape_timestamp: new Date().toISOString(),
-		original_posted_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+		original_posted_date: new Date(
+			Date.now() - 7 * 24 * 60 * 60 * 1000,
+		).toISOString(),
 		posted_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
@@ -433,30 +459,34 @@ interface ScenarioResult {
 async function testUserScenario(
 	scenarioName: string,
 	user: UserPreferences,
-	expectedMatches: number = 3
+	expectedMatches: number = 3,
 ): Promise<ScenarioResult> {
 	console.log(`\n🎯 Testing: ${scenarioName}`);
 	console.log(`   User: ${user.email} (${user.subscription_tier} tier)`);
-	console.log(`   Career: ${Array.isArray(user.career_path) ? user.career_path.join(' + ') : user.career_path}`);
-	console.log(`   Location: ${user.target_cities?.join(', ')}`);
+	console.log(
+		`   Career: ${Array.isArray(user.career_path) ? user.career_path.join(" + ") : user.career_path}`,
+	);
+	console.log(`   Location: ${user.target_cities?.join(", ")}`);
 	console.log(`   Visa: ${user.visa_status}`);
 
 	// Filter jobs that should match this user
-	const relevantJobs = TEST_JOBS.filter(job => {
+	const relevantJobs = TEST_JOBS.filter((job) => {
 		// Location match
-		const locationMatch = user.target_cities?.some(city =>
-			job.city?.toLowerCase().includes(city.toLowerCase())
-		) ?? false;
+		const locationMatch =
+			user.target_cities?.some((city) =>
+				job.city?.toLowerCase().includes(city.toLowerCase()),
+			) ?? false;
 
 		// Career path match
 		const careerMatch = Array.isArray(user.career_path)
-			? user.career_path.some(path => job.categories?.includes(path))
+			? user.career_path.some((path) => job.categories?.includes(path))
 			: job.categories?.includes(user.career_path);
 
 		// Language match
-		const languageMatch = user.languages_spoken?.some(lang =>
-			job.language_requirements?.includes(lang)
-		) ?? false;
+		const languageMatch =
+			user.languages_spoken?.some((lang) =>
+				job.language_requirements?.includes(lang),
+			) ?? false;
 
 		return locationMatch && careerMatch && languageMatch;
 	});
@@ -468,31 +498,38 @@ async function testUserScenario(
 
 	if (relevantJobs.length >= 2) {
 		// Test AI matching
-		const { aiMatchingService } = await import("../Utils/matching/core/ai-matching.service");
+		const { aiMatchingService } = await import(
+			"../Utils/matching/core/ai-matching.service"
+		);
 
 		try {
 			const aiResults = await aiMatchingService.findMatches(
 				user,
 				relevantJobs,
-				{ useCache: false }
+				{ useCache: false },
 			);
 
 			result = {
-				matches: aiResults.slice(0, expectedMatches).map(match => ({
+				matches: aiResults.slice(0, expectedMatches).map((match) => ({
 					job_hash: match.job.job_hash,
 					match_score: match.matchScore,
 					match_reason: match.matchReason,
 					confidence_score: match.confidenceScore,
 				})),
 				method: aiResults.length > 0 ? "ai" : "fallback",
-				averageScore: aiResults.length > 0
-					? Math.round(aiResults.reduce((sum, m) => sum + m.matchScore, 0) / aiResults.length)
-					: 0,
+				averageScore:
+					aiResults.length > 0
+						? Math.round(
+								aiResults.reduce((sum, m) => sum + m.matchScore, 0) /
+									aiResults.length,
+							)
+						: 0,
 				processingTime: Date.now() - startTime,
 			};
 
-			console.log(`   ✅ AI matching: ${aiResults.length} matches, avg score: ${result.averageScore}%`);
-
+			console.log(
+				`   ✅ AI matching: ${aiResults.length} matches, avg score: ${result.averageScore}%`,
+			);
 		} catch (error) {
 			console.log(`   ❌ AI failed: ${error.message}, using fallback`);
 			result = await getFallbackResult(user, expectedMatches, startTime);
@@ -519,13 +556,19 @@ async function testUserScenario(
 /**
  * Get fallback result when AI isn't available
  */
-async function getFallbackResult(user: UserPreferences, expectedMatches: number, startTime: number) {
-	const { fallbackService } = await import("../Utils/matching/core/fallback.service");
+async function getFallbackResult(
+	user: UserPreferences,
+	expectedMatches: number,
+	startTime: number,
+) {
+	const { fallbackService } = await import(
+		"../Utils/matching/core/fallback.service"
+	);
 
 	const fallbackResult = fallbackService.generateFallbackMatches(
 		TEST_JOBS.slice(0, 10),
 		user,
-		expectedMatches
+		expectedMatches,
 	);
 
 	return {
@@ -536,9 +579,13 @@ async function getFallbackResult(user: UserPreferences, expectedMatches: number,
 			confidence_score: match.confidenceScore,
 		})),
 		method: "fallback",
-		averageScore: fallbackResult.length > 0
-			? Math.round(fallbackResult.reduce((sum, m) => sum + m.matchScore, 0) / fallbackResult.length)
-			: 0,
+		averageScore:
+			fallbackResult.length > 0
+				? Math.round(
+						fallbackResult.reduce((sum, m) => sum + m.matchScore, 0) /
+							fallbackResult.length,
+					)
+				: 0,
 		processingTime: Date.now() - startTime,
 	};
 }
@@ -548,7 +595,9 @@ async function getFallbackResult(user: UserPreferences, expectedMatches: number,
  */
 async function runUserScenarioTests(): Promise<void> {
 	console.log("🎭 USER SCENARIO TESTS");
-	console.log("Testing different user types: EU citizens, visa-needing users, different tiers");
+	console.log(
+		"Testing different user types: EU citizens, visa-needing users, different tiers",
+	);
 	console.log("=".repeat(80));
 
 	const scenarios = [
@@ -563,7 +612,11 @@ async function runUserScenarioTests(): Promise<void> {
 
 	for (const [scenarioName, user, expectedMatches] of scenarios) {
 		try {
-			const result = await testUserScenario(scenarioName, user, expectedMatches);
+			const result = await testUserScenario(
+				scenarioName,
+				user,
+				expectedMatches,
+			);
 			results.push(result);
 		} catch (error) {
 			console.log(`   ❌ Scenario failed: ${error.message}`);
@@ -580,36 +633,54 @@ async function runUserScenarioTests(): Promise<void> {
 	}
 
 	// Display results
-	console.log("\n" + "=".repeat(80));
+	console.log(`\n${"=".repeat(80)}`);
 	console.log("📊 USER SCENARIO TEST RESULTS");
 	console.log("=".repeat(80));
 
 	console.log("🎯 INDIVIDUAL RESULTS:");
-	results.forEach(result => {
+	results.forEach((result) => {
 		console.log(`   ${result.scenario}`);
-		console.log(`     Matches: ${result.matches}, Method: ${result.method}, Avg Score: ${result.averageScore}%`);
-		console.log(`     Visa Filtered: ${result.visaFiltered ? '✅' : '❌'}, Time: ${result.processingTime}ms`);
+		console.log(
+			`     Matches: ${result.matches}, Method: ${result.method}, Avg Score: ${result.averageScore}%`,
+		);
+		console.log(
+			`     Visa Filtered: ${result.visaFiltered ? "✅" : "❌"}, Time: ${result.processingTime}ms`,
+		);
 		console.log("");
 	});
 
 	// Summary by user type
 	console.log("📈 SUMMARY BY USER TYPE:");
 
-	const euUsers = results.filter(r => r.userType.includes('eu'));
-	const visaUsers = results.filter(r => r.userType.includes('need-sponsorship'));
-	const freeUsers = results.filter(r => r.userType.includes('free'));
-	const premiumUsers = results.filter(r => r.userType.includes('premium'));
+	const euUsers = results.filter((r) => r.userType.includes("eu"));
+	const visaUsers = results.filter((r) =>
+		r.userType.includes("need-sponsorship"),
+	);
+	const freeUsers = results.filter((r) => r.userType.includes("free"));
+	const premiumUsers = results.filter((r) => r.userType.includes("premium"));
 
-	console.log(`   🇪🇺 EU Citizens (${euUsers.length}): Avg ${euUsers.reduce((sum, r) => sum + r.averageScore, 0) / euUsers.length}%`);
-	console.log(`   ✈️  Visa-Needed (${visaUsers.length}): Avg ${visaUsers.reduce((sum, r) => sum + r.averageScore, 0) / visaUsers.length}%`);
-	console.log(`   🆓 Free Tier (${freeUsers.length}): Avg ${freeUsers.reduce((sum, r) => sum + r.averageScore, 0) / freeUsers.length}%`);
-	console.log(`   💎 Premium Tier (${premiumUsers.length}): Avg ${premiumUsers.reduce((sum, r) => sum + r.averageScore, 0) / premiumUsers.length}%`);
+	console.log(
+		`   🇪🇺 EU Citizens (${euUsers.length}): Avg ${euUsers.reduce((sum, r) => sum + r.averageScore, 0) / euUsers.length}%`,
+	);
+	console.log(
+		`   ✈️  Visa-Needed (${visaUsers.length}): Avg ${visaUsers.reduce((sum, r) => sum + r.averageScore, 0) / visaUsers.length}%`,
+	);
+	console.log(
+		`   🆓 Free Tier (${freeUsers.length}): Avg ${freeUsers.reduce((sum, r) => sum + r.averageScore, 0) / freeUsers.length}%`,
+	);
+	console.log(
+		`   💎 Premium Tier (${premiumUsers.length}): Avg ${premiumUsers.reduce((sum, r) => sum + r.averageScore, 0) / premiumUsers.length}%`,
+	);
 
-	const aiResults = results.filter(r => r.method === 'ai');
-	const fallbackResults = results.filter(r => r.method === 'fallback');
+	const aiResults = results.filter((r) => r.method === "ai");
+	const fallbackResults = results.filter((r) => r.method === "fallback");
 
-	console.log(`   🤖 AI Matching (${aiResults.length}): Avg ${aiResults.reduce((sum, r) => sum + r.averageScore, 0) / aiResults.length || 0}%`);
-	console.log(`   🔄 Fallback Matching (${fallbackResults.length}): Avg ${fallbackResults.reduce((sum, r) => sum + r.averageScore, 0) / fallbackResults.length || 0}%`);
+	console.log(
+		`   🤖 AI Matching (${aiResults.length}): Avg ${aiResults.reduce((sum, r) => sum + r.averageScore, 0) / aiResults.length || 0}%`,
+	);
+	console.log(
+		`   🔄 Fallback Matching (${fallbackResults.length}): Avg ${fallbackResults.reduce((sum, r) => sum + r.averageScore, 0) / fallbackResults.length || 0}%`,
+	);
 
 	console.log("\n🎉 SCENARIO TESTING COMPLETE!");
 	console.log("   ✅ Tested EU citizens vs visa-needing users");

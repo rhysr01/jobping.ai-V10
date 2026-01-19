@@ -6,25 +6,30 @@
 import { z } from "zod";
 
 // Common validation schemas
-export const emailSchema = z.string()
+export const emailSchema = z
+	.string()
 	.email("Invalid email address")
 	.max(255, "Email too long")
-	.transform(s => s.toLowerCase().trim());
+	.transform((s) => s.toLowerCase().trim());
 
-export const passwordSchema = z.string()
+export const passwordSchema = z
+	.string()
 	.min(8, "Password must be at least 8 characters")
 	.max(128, "Password too long");
 
-export const nameSchema = z.string()
+export const nameSchema = z
+	.string()
 	.min(1, "Name is required")
 	.max(100, "Name too long")
 	.trim();
 
-export const urlSchema = z.string()
+export const urlSchema = z
+	.string()
 	.url("Invalid URL")
 	.max(2048, "URL too long");
 
-export const citySchema = z.string()
+export const citySchema = z
+	.string()
 	.min(1, "City is required")
 	.max(100, "City name too long")
 	.trim();
@@ -33,19 +38,32 @@ export const citySchema = z.string()
 export const signupBasicSchema = z.object({
 	email: emailSchema,
 	fullName: nameSchema,
-	cities: z.array(citySchema).min(1, "Select at least one city").max(5, "Maximum 5 cities"),
-	languages: z.array(z.string()).min(1, "Select at least one language").max(5, "Maximum 5 languages"),
-	gdprConsent: z.boolean().refine(val => val === true, "GDPR consent required"),
+	cities: z
+		.array(citySchema)
+		.min(1, "Select at least one city")
+		.max(5, "Maximum 5 cities"),
+	languages: z
+		.array(z.string())
+		.min(1, "Select at least one language")
+		.max(5, "Maximum 5 languages"),
+	gdprConsent: z
+		.boolean()
+		.refine((val) => val === true, "GDPR consent required"),
 });
 
 export const signupPreferencesSchema = z.object({
 	visaStatus: z.string().min(1, "Visa status is required"),
-	entryLevelPreferences: z.array(z.string()).min(1, "Select at least one role type"),
+	entryLevelPreferences: z
+		.array(z.string())
+		.min(1, "Select at least one role type"),
 });
 
 export const signupCareerSchema = z.object({
 	careerPath: z.string().min(1, "Career path is required"),
-	roles: z.array(z.string()).min(1, "Select at least one role").max(10, "Maximum 10 roles"),
+	roles: z
+		.array(z.string())
+		.min(1, "Select at least one role")
+		.max(10, "Maximum 10 roles"),
 });
 
 export const signupMatchingSchema = z.object({
@@ -84,7 +102,10 @@ export function validateSignupData(data: any, step: number) {
 		case 4:
 			return signupMatchingSchema.safeParse(data);
 		default:
-			return { success: false, error: { issues: [{ message: "Invalid step" }] } };
+			return {
+				success: false,
+				error: { issues: [{ message: "Invalid step" }] },
+			};
 	}
 }
 

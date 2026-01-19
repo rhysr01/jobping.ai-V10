@@ -4,7 +4,7 @@
  */
 
 // Rate limiting configuration - per-test to avoid conflicts
-const RATE_LIMIT_DELAY = 500; // 500ms between requests (reduced for parallel tests)
+const _RATE_LIMIT_DELAY = 500; // 500ms between requests (reduced for parallel tests)
 
 /**
  * Rate-limited request wrapper
@@ -13,12 +13,12 @@ const RATE_LIMIT_DELAY = 500; // 500ms between requests (reduced for parallel te
  */
 export async function rateLimitedRequest<T>(
 	requestFn: () => Promise<T>,
-	context?: string
+	_context?: string,
 ): Promise<T> {
 	// Small delay to prevent overwhelming the server
 	// Reduced from 1000ms to 500ms and made non-blocking for parallel tests
 	const delay = Math.random() * 200 + 100; // Random delay 100-300ms
-	await new Promise(resolve => setTimeout(resolve, delay));
+	await new Promise((resolve) => setTimeout(resolve, delay));
 
 	return await requestFn();
 }
@@ -29,22 +29,27 @@ export async function rateLimitedRequest<T>(
 export async function resilientRequest<T>(
 	requestFn: () => Promise<T>,
 	maxRetries = 3,
-	context?: string
+	context?: string,
 ): Promise<T> {
 	let lastError: Error;
 
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
-			return await rateLimitedRequest(requestFn, `${context} (attempt ${attempt})`);
+			return await rateLimitedRequest(
+				requestFn,
+				`${context} (attempt ${attempt})`,
+			);
 		} catch (error) {
 			lastError = error as Error;
-			console.warn(`⚠️ Request failed (attempt ${attempt}/${maxRetries}): ${error.message}`);
+			console.warn(
+				`⚠️ Request failed (attempt ${attempt}/${maxRetries}): ${error.message}`,
+			);
 
 			// Don't retry on the last attempt
 			if (attempt < maxRetries) {
-				const backoffDelay = Math.min(Math.pow(2, attempt) * 500, 3000); // Faster exponential backoff, max 3s
+				const backoffDelay = Math.min(2 ** attempt * 500, 3000); // Faster exponential backoff, max 3s
 				console.log(`⏳ Retrying in ${backoffDelay}ms...`);
-				await new Promise(resolve => setTimeout(resolve, backoffDelay));
+				await new Promise((resolve) => setTimeout(resolve, backoffDelay));
 			}
 		}
 	}
@@ -57,12 +62,12 @@ export async function resilientRequest<T>(
  */
 export async function waitForPageLoad(page: any) {
 	// Wait for network to be idle (faster than waiting for load event)
-	await page.waitForLoadState('networkidle', { timeout: 5000 });
+	await page.waitForLoadState("networkidle", { timeout: 5000 });
 
 	// Quick check for critical elements
 	try {
-		await page.locator('body').waitFor({ timeout: 2000 });
-	} catch (e) {
+		await page.locator("body").waitFor({ timeout: 2000 });
+	} catch (_e) {
 		// Element not found quickly, continue
 	}
 }
@@ -70,6 +75,10 @@ export async function waitForPageLoad(page: any) {
 /**
  * Fast element wait with optimized timeout
  */
-export async function fastWaitForSelector(page: any, selector: string, timeout = 3000) {
-	return await page.locator(selector).waitFor({ timeout, state: 'visible' });
+export async function fastWaitForSelector(
+	page: any,
+	selector: string,
+	timeout = 3000,
+) {
+	return await page.locator(selector).waitFor({ timeout, state: "visible" });
 }

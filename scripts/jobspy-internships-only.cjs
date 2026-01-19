@@ -12,7 +12,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
@@ -153,7 +153,10 @@ function _parseLocation(location) {
 	let city = parts.length > 0 ? parts[0] : loc;
 	let country = parts.length > 1 ? parts[parts.length - 1] : "";
 
-	city = city.replace(/\s+(eng|gb|de|fr|es|it|nl|be|ch|ie|se|dk|at|cz|pl)$/i, "");
+	city = city.replace(
+		/\s+(eng|gb|de|fr|es|it|nl|be|ch|ie|se|dk|at|cz|pl)$/i,
+		"",
+	);
 
 	if (parts.length === 1 && euCities.has(city)) {
 		country = "";
@@ -301,97 +304,101 @@ async function saveJobs(jobs, source) {
 	const nonRemote = jobs.filter(
 		(j) => !(j.location || "").toLowerCase().includes("remote"),
 	);
-	const rows = nonRemote.map((j) => {
-		let description = (
-			(j.description && j.description.trim().length > 50
-				? j.description
-				: "") ||
-			j.company_description ||
-			"" ||
-			j.skills ||
-			""
-		).trim();
+	const rows = nonRemote
+		.map((j) => {
+			let description = (
+				(j.description && j.description.trim().length > 50
+					? j.description
+					: "") ||
+				j.company_description ||
+				"" ||
+				j.skills ||
+				""
+			).trim();
 
-		if (description.length < 100 && (j.company_description || j.skills)) {
-			const parts = [];
-			if (description) parts.push(description);
-			if (
-				j.company_description &&
-				!description.includes(j.company_description)
-			) {
-				parts.push(j.company_description);
+			if (description.length < 100 && (j.company_description || j.skills)) {
+				const parts = [];
+				if (description) parts.push(description);
+				if (
+					j.company_description &&
+					!description.includes(j.company_description)
+				) {
+					parts.push(j.company_description);
+				}
+				if (j.skills && !description.includes(j.skills)) {
+					parts.push(j.skills);
+				}
+				description = parts.join(" ").trim();
 			}
-			if (j.skills && !description.includes(j.skills)) {
-				parts.push(j.skills);
+
+			if (description.length < 20) {
+				description =
+					`${j.title || ""} at ${j.company || ""}. ${description}`.trim();
 			}
-			description = parts.join(" ").trim();
-		}
 
-		if (description.length < 20) {
-			description =
-				`${j.title || ""} at ${j.company || ""}. ${description}`.trim();
-		}
+			const processed = processIncomingJob(
+				{
+					title: j.title,
+					company: j.company,
+					location: j.location,
+					description: description,
+					url: j.job_url || j.url,
+					posted_at: j.posted_at,
+				},
+				{
+					source,
+				},
+			);
 
-		const processed = processIncomingJob(
-			{
+			// CRITICAL: Check if processing returned null (job was filtered out, e.g., job board)
+			if (!processed) {
+				return null; // Skip this job
+			}
+
+			// CRITICAL: Only save if it's classified as an internship
+			const { isInternship } = _classifyJobType({
 				title: j.title,
-				company: j.company,
-				location: j.location,
 				description: description,
-				url: j.job_url || j.url,
-				posted_at: j.posted_at,
-			},
-			{
-				source,
-			},
-		);
+				company_description: j.company_description,
+				skills: j.skills,
+			});
 
-		// CRITICAL: Check if processing returned null (job was filtered out, e.g., job board)
-		if (!processed) {
-			return null; // Skip this job
-		}
-
-		// CRITICAL: Only save if it's classified as an internship
-		const { isInternship } = _classifyJobType({
-			title: j.title,
-			description: description,
-			company_description: j.company_description,
-			skills: j.skills,
-		});
-
-		// If not an internship, skip it
-		if (!isInternship) {
-			return null;
-		}
-
-		// Build categories array - internships get "internship" category
-		const { CAREER_PATH_KEYWORDS } = require("../scrapers/shared/helpers.cjs");
-		let categories = ["early-career", "internship"];
-
-		const fullText = `${(j.title || "").toLowerCase()} ${description.toLowerCase()}`;
-		const {
-			addCategoryFromPath,
-			validateAndFixCategories,
-		} = require("../scrapers/shared/categoryMapper.cjs");
-
-		Object.entries(CAREER_PATH_KEYWORDS).forEach(([path, keywords]) => {
-			const keywordLower = keywords.map((k) => k.toLowerCase());
-			if (keywordLower.some((kw) => fullText.includes(kw))) {
-				categories = addCategoryFromPath(path, categories);
+			// If not an internship, skip it
+			if (!isInternship) {
+				return null;
 			}
-		});
 
-		categories = validateAndFixCategories(categories);
+			// Build categories array - internships get "internship" category
+			const {
+				CAREER_PATH_KEYWORDS,
+			} = require("../scrapers/shared/helpers.cjs");
+			let categories = ["early-career", "internship"];
 
-		const job_hash = hashJob(j.title, processed.company, j.location);
+			const fullText = `${(j.title || "").toLowerCase()} ${description.toLowerCase()}`;
+			const {
+				addCategoryFromPath,
+				validateAndFixCategories,
+			} = require("../scrapers/shared/categoryMapper.cjs");
 
-		return {
-			...processed,
-			job_hash,
-			categories,
-			is_internship: true, // Force internship flag
-		};
-	}).filter(Boolean); // Remove null entries (non-internships)
+			Object.entries(CAREER_PATH_KEYWORDS).forEach(([path, keywords]) => {
+				const keywordLower = keywords.map((k) => k.toLowerCase());
+				if (keywordLower.some((kw) => fullText.includes(kw))) {
+					categories = addCategoryFromPath(path, categories);
+				}
+			});
+
+			categories = validateAndFixCategories(categories);
+
+			const job_hash = hashJob(j.title, processed.company, j.location);
+
+			return {
+				...processed,
+				job_hash,
+				categories,
+				is_internship: true, // Force internship flag
+			};
+		})
+		.filter(Boolean); // Remove null entries (non-internships)
 
 	// CRITICAL: Use comprehensive validator
 	const { validateJobs } = require("../scrapers/shared/jobValidator.cjs");
@@ -568,11 +575,7 @@ async function main() {
 			"prácticas tech",
 			"prácticas hr",
 		],
-		Barcelona: [
-			"prácticas",
-			"becario",
-			"prácticas marketing",
-		],
+		Barcelona: ["prácticas", "becario", "prácticas marketing"],
 		Berlin: [
 			"praktikum",
 			"praktikant",
@@ -582,16 +585,8 @@ async function main() {
 			"praktikum tech",
 			"praktikum hr",
 		],
-		Hamburg: [
-			"praktikum",
-			"praktikant",
-			"werkstudent",
-		],
-		Munich: [
-			"praktikum",
-			"praktikant",
-			"werkstudent",
-		],
+		Hamburg: ["praktikum", "praktikant", "werkstudent"],
+		Munich: ["praktikum", "praktikant", "werkstudent"],
 		Amsterdam: [
 			"stage",
 			"traineeship",
@@ -601,11 +596,7 @@ async function main() {
 			"stage tech",
 			"stage hr",
 		],
-		Brussels: [
-			"stagiaire",
-			"stage",
-			"stagiaire marketing",
-		],
+		Brussels: ["stagiaire", "stage", "stagiaire marketing"],
 		Paris: [
 			"stagiaire",
 			"stage",
@@ -615,12 +606,7 @@ async function main() {
 			"stagiaire tech",
 			"stagiaire hr",
 		],
-		Zurich: [
-			"praktikum",
-			"praktikant",
-			"stagiaire",
-			"stage",
-		],
+		Zurich: ["praktikum", "praktikant", "stagiaire", "stage"],
 		Milan: [
 			"stage",
 			"tirocinio",
@@ -629,33 +615,14 @@ async function main() {
 			"stage tech",
 			"stage hr",
 		],
-		Rome: [
-			"stage",
-			"tirocinio",
-		],
+		Rome: ["stage", "tirocinio"],
 		Dublin: [],
 		Belfast: [],
-		Stockholm: [
-			"praktikant",
-			"praktik",
-		],
-		Copenhagen: [
-			"praktikant",
-			"praktik",
-		],
-		Vienna: [
-			"praktikum",
-			"praktikant",
-		],
-		Prague: [
-			"praktikant",
-			"praktika",
-		],
-		Warsaw: [
-			"stażysta",
-			"praktykant",
-			"staż",
-		],
+		Stockholm: ["praktikant", "praktik"],
+		Copenhagen: ["praktikant", "praktik"],
+		Vienna: ["praktikum", "praktikant"],
+		Prague: ["praktikant", "praktika"],
+		Warsaw: ["stażysta", "praktykant", "staż"],
 	};
 
 	const PRIORITY_CITIES = [
@@ -685,7 +652,10 @@ async function main() {
 	];
 	const cities = [...PRIORITY_CITIES, ...OTHER_CITIES];
 
-	const MAX_Q_PER_CITY = parseInt(process.env.JOBSPY_INTERNSHIPS_MAX_Q_PER_CITY || "4", 10);
+	const MAX_Q_PER_CITY = parseInt(
+		process.env.JOBSPY_INTERNSHIPS_MAX_Q_PER_CITY || "4",
+		10,
+	);
 	const PRIORITY_MAX_Q = parseInt(
 		process.env.JOBSPY_INTERNSHIPS_PRIORITY_MAX_Q || "6",
 		10,
@@ -771,7 +741,7 @@ async function main() {
 
 	function filterInternshipJobs(jobs) {
 		let kept = 0;
-		let filteredOut = 0;
+		const filteredOut = 0;
 		let noFields = 0;
 		let notInternship = 0;
 
@@ -793,7 +763,9 @@ async function main() {
 				notInternship++;
 				// DEBUG: Log first few non-internship jobs to understand the data
 				if (notInternship <= 3) {
-					console.log(`   🚫 Not internship: "${j.title}" - ${j.company || 'Unknown'}`);
+					console.log(
+						`   🚫 Not internship: "${j.title}" - ${j.company || "Unknown"}`,
+					);
 				}
 				return false; // Reject non-internships
 			}
@@ -803,7 +775,9 @@ async function main() {
 		});
 
 		// Log filtering summary
-		console.log(`   📊 Internship filtering: ${kept} kept, ${filteredOut + noFields + notInternship} filtered (${noFields} no fields, ${notInternship} not internships)`);
+		console.log(
+			`   📊 Internship filtering: ${kept} kept, ${filteredOut + noFields + notInternship} filtered (${noFields} no fields, ${notInternship} not internships)`,
+		);
 
 		return result;
 	}
@@ -813,12 +787,15 @@ async function main() {
 	for (const city of cities) {
 		const cityResults = [];
 		const isPriority = PRIORITY_CITIES.includes(city);
-		const maxQueries = isPriority ? PRIORITY_MAX_Q : MAX_Q_PER_CITY;
+		const _maxQueries = isPriority ? PRIORITY_MAX_Q : MAX_Q_PER_CITY;
 		const resultsWanted = isPriority ? PRIORITY_RESULTS_WANTED : RESULTS_WANTED;
 		const localized = CITY_LOCAL_INTERNSHIPS[city] || [];
 
 		const country =
-			city === "London" || city === "Manchester" || city === "Birmingham" || city === "Belfast"
+			city === "London" ||
+			city === "Manchester" ||
+			city === "Birmingham" ||
+			city === "Belfast"
 				? "united kingdom"
 				: city === "Paris"
 					? "france"
@@ -907,14 +884,9 @@ cols=[c for c in ['title','company','location','job_url','description','company_
 print(df[cols].to_csv(index=False))
 `;
 
-		const indeedRows = await runJobSpyScraper(
-			indeedPython,
-			`Indeed [${city}]`,
-		);
+		const indeedRows = await runJobSpyScraper(indeedPython, `Indeed [${city}]`);
 		if (indeedRows && indeedRows.length > 0) {
-			console.log(
-				`→ Indeed [${city}]: Collected ${indeedRows.length} rows`,
-			);
+			console.log(`→ Indeed [${city}]: Collected ${indeedRows.length} rows`);
 			indeedRows.forEach((r) => cityResults.push(r));
 		}
 
@@ -930,7 +902,7 @@ print(df[cols].to_csv(index=False))
 					description_length: cityResults[0].description?.length || 0,
 					has_description: !!cityResults[0].description,
 					has_company_description: !!cityResults[0].company_description,
-					has_skills: !!cityResults[0].skills
+					has_skills: !!cityResults[0].skills,
 				});
 			}
 
@@ -944,13 +916,19 @@ print(df[cols].to_csv(index=False))
 					`💾 Saving ${internshipFiltered.length} internships for ${city} to Supabase...`,
 				);
 				try {
-					const saved = await saveJobs(internshipFiltered, "jobspy-internships");
+					const saved = await saveJobs(
+						internshipFiltered,
+						"jobspy-internships",
+					);
 					totalSaved += saved || internshipFiltered.length;
 					console.log(
 						`✅ ${city}: Saved ${internshipFiltered.length} internships (total so far: ${totalSaved})`,
 					);
 				} catch (error) {
-					console.error(`❌ ${city}: Failed to save internships:`, error.message);
+					console.error(
+						`❌ ${city}: Failed to save internships:`,
+						error.message,
+					);
 				}
 			} else {
 				console.log(`⚠️  ${city}: No internships found`);
@@ -978,4 +956,3 @@ main().catch((e) => {
 module.exports = {
 	main,
 };
-

@@ -30,20 +30,21 @@ export interface APISuccess<T = any> {
 export function createErrorResponse(
 	error: APIError | Error | string,
 	status: number = 500,
-	requestId?: string
+	requestId?: string,
 ): NextResponse {
-	const errorObj: APIError = typeof error === 'string'
-		? { message: error, status }
-		: error instanceof Error
-			? { message: error.message, status, details: error.stack }
-			: { ...error, status: error.status || status };
+	const errorObj: APIError =
+		typeof error === "string"
+			? { message: error, status }
+			: error instanceof Error
+				? { message: error.message, status, details: error.stack }
+				: { ...error, status: error.status || status };
 
 	// Log error
 	apiLogger.error("API Error Response", new Error(errorObj.message), {
 		...(errorObj.code && { code: errorObj.code }),
 		status: errorObj.status,
 		requestId,
-		details: errorObj.details
+		details: errorObj.details,
 	});
 
 	return NextResponse.json(
@@ -54,7 +55,7 @@ export function createErrorResponse(
 			},
 			timestamp: new Date().toISOString(),
 		},
-		{ status: errorObj.status || status }
+		{ status: errorObj.status || status },
 	);
 }
 
@@ -64,8 +65,8 @@ export function createErrorResponse(
 export function createSuccessResponse<T = any>(
 	data: T,
 	message?: string,
-	meta?: APISuccess['meta'],
-	status: number = 200
+	meta?: APISuccess["meta"],
+	status: number = 200,
 ): NextResponse {
 	const response: APISuccess<T> = {
 		data,
@@ -81,14 +82,17 @@ export function createSuccessResponse<T = any>(
  */
 export function createValidationError(
 	errors: Record<string, string>,
-	message: string = "Validation failed"
+	message: string = "Validation failed",
 ): NextResponse {
-	return createErrorResponse({
-		message,
-		code: "VALIDATION_ERROR",
-		details: errors,
-		status: 400
-	}, 400);
+	return createErrorResponse(
+		{
+			message,
+			code: "VALIDATION_ERROR",
+			details: errors,
+			status: 400,
+		},
+		400,
+	);
 }
 
 /**
@@ -96,17 +100,20 @@ export function createValidationError(
  */
 export function createNotFoundError(
 	resource: string,
-	identifier?: string
+	identifier?: string,
 ): NextResponse {
 	const message = identifier
 		? `${resource} not found: ${identifier}`
 		: `${resource} not found`;
 
-	return createErrorResponse({
-		message,
-		code: "NOT_FOUND",
-		status: 404
-	}, 404);
+	return createErrorResponse(
+		{
+			message,
+			code: "NOT_FOUND",
+			status: 404,
+		},
+		404,
+	);
 }
 
 /**
@@ -114,14 +121,17 @@ export function createNotFoundError(
  */
 export function createRateLimitError(
 	retryAfter: number,
-	message: string = "Too many requests"
+	message: string = "Too many requests",
 ): NextResponse {
-	const response = createErrorResponse({
-		message,
-		code: "RATE_LIMIT_EXCEEDED",
-		details: { retryAfter },
-		status: 429
-	}, 429);
+	const response = createErrorResponse(
+		{
+			message,
+			code: "RATE_LIMIT_EXCEEDED",
+			details: { retryAfter },
+			status: 429,
+		},
+		429,
+	);
 
 	response.headers.set("Retry-After", retryAfter.toString());
 	return response;
@@ -131,24 +141,30 @@ export function createRateLimitError(
  * Authentication error response
  */
 export function createAuthError(
-	message: string = "Authentication required"
+	message: string = "Authentication required",
 ): NextResponse {
-	return createErrorResponse({
-		message,
-		code: "AUTHENTICATION_REQUIRED",
-		status: 401
-	}, 401);
+	return createErrorResponse(
+		{
+			message,
+			code: "AUTHENTICATION_REQUIRED",
+			status: 401,
+		},
+		401,
+	);
 }
 
 /**
  * Authorization error response
  */
 export function createForbiddenError(
-	message: string = "Insufficient permissions"
+	message: string = "Insufficient permissions",
 ): NextResponse {
-	return createErrorResponse({
-		message,
-		code: "FORBIDDEN",
-		status: 403
-	}, 403);
+	return createErrorResponse(
+		{
+			message,
+			code: "FORBIDDEN",
+			status: 403,
+		},
+		403,
+	);
 }

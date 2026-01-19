@@ -3,12 +3,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BrandIcons } from "./BrandIcons";
 import { trackEvent } from "../../lib/analytics";
 import {
 	CTA_GET_MY_5_FREE_MATCHES,
 	TRUST_TEXT_NO_CARD_SETUP,
 } from "../../lib/copy";
+import { BrandIcons } from "./BrandIcons";
 
 export default function ScrollCTA() {
 	const [isVisible, setIsVisible] = useState(false);
@@ -86,7 +86,7 @@ export default function ScrollCTA() {
 					>
 						{/* Emerald glow on hover */}
 						<div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-opacity duration-300" />
-						
+
 						<div className="relative flex items-center gap-4">
 							<div className="flex-1">
 								<p className="font-display text-sm font-semibold text-white mb-1">
@@ -109,21 +109,21 @@ export default function ScrollCTA() {
 							>
 								{/* Gradient background */}
 								<div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-600 group-hover/btn:from-emerald-600 group-hover/btn:to-emerald-700 transition-all duration-300" />
-								
+
 								{/* Shine effect on hover */}
 								<div className="absolute inset-0 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500">
 									<div className="absolute inset-0 translate-x-[-100%] group-hover/btn:translate-x-[100%] bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000" />
 								</div>
-								
+
 								{/* Shadow */}
 								<div className="absolute inset-0 shadow-lg shadow-emerald-500/30 group-hover/btn:shadow-xl group-hover/btn:shadow-emerald-500/40 rounded-xl transition-all" />
-								
+
 								{/* Text */}
 								<span className="relative z-10 group-hover/btn:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
 									{CTA_GET_MY_5_FREE_MATCHES}
 									<BrandIcons.ArrowRight className="h-4 w-4" />
 								</span>
-								
+
 								{/* Border glow */}
 								<div className="absolute inset-0 rounded-xl border border-emerald-400/50 group-hover/btn:border-emerald-300 transition-colors" />
 							</Link>

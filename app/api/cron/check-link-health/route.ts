@@ -9,7 +9,6 @@ import { apiLogger } from "../../../../lib/api-logger";
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import type { LinkHealthResult } from "../../../../lib/link-health-types";
 
-
 /**
  * Check link health with proper User-Agent and 403 handling
  * Same logic as bridge route

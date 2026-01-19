@@ -4,9 +4,9 @@
 // Result: 15 matches
 
 import { apiLogger } from "../../lib/api-logger";
+import type { JobWithMetadata } from "../../lib/types/job";
 import { getDatabaseClient } from "../core/database-pool";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
-import type { JobWithMetadata } from "../../lib/types/job";
 
 export interface PremiumUserPreferences {
 	email: string;
@@ -82,40 +82,45 @@ export async function runPremiumMatching(
 			if (!cityMatch) return false;
 
 			// Career path matching
-			const careerMatch = !userPrefs.career_path?.length ||
-				userPrefs.career_path.some(career =>
-					job.categories?.some(cat =>
-						cat.toLowerCase().includes(career.toLowerCase())
-					)
+			const careerMatch =
+				!userPrefs.career_path?.length ||
+				userPrefs.career_path.some((career) =>
+					job.categories?.some((cat) =>
+						cat.toLowerCase().includes(career.toLowerCase()),
+					),
 				);
 			if (!careerMatch) return false;
 
 			// Skills matching (premium feature)
-			const skillsMatch = !userPrefs.skills?.length ||
-				userPrefs.skills.some(skill =>
-					job.title?.toLowerCase().includes(skill.toLowerCase()) ||
-					job.description?.toLowerCase().includes(skill.toLowerCase()) ||
-					job.categories?.some(cat =>
-						cat.toLowerCase().includes(skill.toLowerCase())
-					)
+			const skillsMatch =
+				!userPrefs.skills?.length ||
+				userPrefs.skills.some(
+					(skill) =>
+						job.title?.toLowerCase().includes(skill.toLowerCase()) ||
+						job.description?.toLowerCase().includes(skill.toLowerCase()) ||
+						job.categories?.some((cat) =>
+							cat.toLowerCase().includes(skill.toLowerCase()),
+						),
 				);
 
 			// Industries matching (premium feature)
-			const industryMatch = !userPrefs.industries?.length ||
-				userPrefs.industries.some(industry =>
-					job.company?.toLowerCase().includes(industry.toLowerCase()) ||
-					job.description?.toLowerCase().includes(industry.toLowerCase())
+			const industryMatch =
+				!userPrefs.industries?.length ||
+				userPrefs.industries.some(
+					(industry) =>
+						job.company?.toLowerCase().includes(industry.toLowerCase()) ||
+						job.description?.toLowerCase().includes(industry.toLowerCase()),
 				);
 
 			// Work environment matching
-			const workEnvMatch = !userPrefs.work_environment ||
+			const workEnvMatch =
+				!userPrefs.work_environment ||
 				userPrefs.work_environment === "unclear" ||
 				job.work_environment === userPrefs.work_environment;
 
 			// Visa status matching (if specified)
-			const visaMatch = !userPrefs.visa_status ||
-				job.visa_sponsorship ||
-				job.visa_friendly;
+			const visaMatch =
+				!userPrefs.visa_status || job.visa_sponsorship || job.visa_friendly;
 
 			return skillsMatch && industryMatch && workEnvMatch && visaMatch;
 		});
@@ -137,7 +142,8 @@ export async function runPremiumMatching(
 		if (preFiltered.length === 0) {
 			apiLogger.warn("[PREMIUM] No jobs after comprehensive pre-filtering", {
 				email: userPrefs.email,
-				reason: "Filters too restrictive - premium users have specific requirements",
+				reason:
+					"Filters too restrictive - premium users have specific requirements",
 			});
 
 			// Fallback: Relax some constraints but keep core requirements
@@ -146,15 +152,17 @@ export async function runPremiumMatching(
 				const cityMatch = userPrefs.target_cities.some(
 					(city) => job.city?.toLowerCase() === city.toLowerCase(),
 				);
-				const careerMatch = !userPrefs.career_path?.length ||
-					userPrefs.career_path.some(career =>
-						job.categories?.some(cat =>
-							cat.toLowerCase().includes(career.toLowerCase())
-						)
+				const careerMatch =
+					!userPrefs.career_path?.length ||
+					userPrefs.career_path.some((career) =>
+						job.categories?.some((cat) =>
+							cat.toLowerCase().includes(career.toLowerCase()),
+						),
 					);
 
 				// Relax skills/industries but keep work env and visa
-				const workEnvMatch = !userPrefs.work_environment ||
+				const workEnvMatch =
+					!userPrefs.work_environment ||
 					userPrefs.work_environment === "unclear" ||
 					job.work_environment === userPrefs.work_environment;
 
@@ -220,10 +228,11 @@ async function rankAndReturnMatches(
 		}));
 
 		// Use simplified matching engine with premium configuration
-		const matchResult = await simplifiedMatchingEngine.findMatchesForPremiumUser(
-			userPrefs as any,
-			normalizedJobs as any,
-		);
+		const matchResult =
+			await simplifiedMatchingEngine.findMatchesForPremiumUser(
+				userPrefs as any,
+				normalizedJobs as any,
+			);
 
 		const matches = (matchResult?.matches || [])
 			.slice(0, 15) // PREMIUM: Always 15 matches max
@@ -260,10 +269,14 @@ async function rankAndReturnMatches(
 				.select();
 
 			if (saveError) {
-				apiLogger.error("[PREMIUM] Failed to save premium matches", saveError as Error, {
-					email: userPrefs.email,
-					matchCount: matchesToSave.length,
-				});
+				apiLogger.error(
+					"[PREMIUM] Failed to save premium matches",
+					saveError as Error,
+					{
+						email: userPrefs.email,
+						matchCount: matchesToSave.length,
+					},
+				);
 			} else {
 				apiLogger.info("[PREMIUM] Premium matches saved", {
 					email: userPrefs.email,

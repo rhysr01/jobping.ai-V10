@@ -5,7 +5,17 @@ import { asyncHandler } from "../../../lib/errors";
 
 // Popular cities and career paths for sample jobs
 const POPULAR_CITIES = ["London", "Paris", "Madrid", "Berlin", "Amsterdam"];
-const POPULAR_CAREER_PATHS = ["Strategy", "Product", "Data", "Marketing", "Tech", "Business", "Consulting", "Design", "Engineering"];
+const POPULAR_CAREER_PATHS = [
+	"Strategy",
+	"Product",
+	"Data",
+	"Marketing",
+	"Tech",
+	"Business",
+	"Consulting",
+	"Design",
+	"Engineering",
+];
 
 interface SampleJob {
 	title: string;
@@ -71,27 +81,29 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Filter jobs to include those from popular cities (case-insensitive matching)
-	const filteredJobs = jobs?.filter((job) => {
-		const jobCity = job.city?.toLowerCase();
-		const jobCountry = job.country?.toLowerCase();
+	const filteredJobs =
+		jobs?.filter((job) => {
+			const jobCity = job.city?.toLowerCase();
+			const jobCountry = job.country?.toLowerCase();
 
-		// Check if job is in one of our popular cities
-		const cityMatch = POPULAR_CITIES.some((city) =>
-			jobCity?.includes(city.toLowerCase()) ||
-			job.location?.toLowerCase().includes(city.toLowerCase())
-		);
+			// Check if job is in one of our popular cities
+			const cityMatch = POPULAR_CITIES.some(
+				(city) =>
+					jobCity?.includes(city.toLowerCase()) ||
+					job.location?.toLowerCase().includes(city.toLowerCase()),
+			);
 
-		// Also include jobs from countries that contain our cities
-		const countryMatch = jobCountry && (
-			jobCountry.includes("uk") ||
-			jobCountry.includes("france") ||
-			jobCountry.includes("spain") ||
-			jobCountry.includes("germany") ||
-			jobCountry.includes("netherlands")
-		);
+			// Also include jobs from countries that contain our cities
+			const countryMatch =
+				jobCountry &&
+				(jobCountry.includes("uk") ||
+					jobCountry.includes("france") ||
+					jobCountry.includes("spain") ||
+					jobCountry.includes("germany") ||
+					jobCountry.includes("netherlands"));
 
-		return cityMatch || countryMatch;
-	}) || [];
+			return cityMatch || countryMatch;
+		}) || [];
 
 	if (!jobs || filteredJobs.length === 0) {
 		apiLogger.warn("No sample jobs found in database after filtering", {
@@ -130,7 +142,8 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 		// Freshness bonus
 		const daysOld = job.created_at
-			? (Date.now() - new Date(job.created_at).getTime()) / (1000 * 60 * 60 * 24)
+			? (Date.now() - new Date(job.created_at).getTime()) /
+				(1000 * 60 * 60 * 24)
 			: 30;
 		if (daysOld < 7) {
 			score += 5;
@@ -187,7 +200,8 @@ function getFallbackSampleJobs(): SampleJob[] {
 			company: "McKinsey & Company",
 			location: "London, UK",
 			matchScore: 95,
-			matchReason: "Perfect for Strategy career path. Located in London, visa sponsorship available.",
+			matchReason:
+				"Perfect for Strategy career path. Located in London, visa sponsorship available.",
 			workEnvironment: "Hybrid",
 			isInternship: true,
 		},
@@ -196,7 +210,8 @@ function getFallbackSampleJobs(): SampleJob[] {
 			company: "BCG",
 			location: "Amsterdam, Netherlands",
 			matchScore: 92,
-			matchReason: "Ideal for recent graduates in Strategy. Visa sponsorship available for non-EU candidates.",
+			matchReason:
+				"Ideal for recent graduates in Strategy. Visa sponsorship available for non-EU candidates.",
 			workEnvironment: "Hybrid",
 			isGraduate: true,
 		},
@@ -205,7 +220,8 @@ function getFallbackSampleJobs(): SampleJob[] {
 			company: "Deloitte",
 			location: "Dublin, Ireland",
 			matchScore: 89,
-			matchReason: "Great entry-level role matching your career path. Dublin location with visa support.",
+			matchReason:
+				"Great entry-level role matching your career path. Dublin location with visa support.",
 			workEnvironment: "On-site",
 		},
 		{
@@ -213,7 +229,8 @@ function getFallbackSampleJobs(): SampleJob[] {
 			company: "PwC",
 			location: "Berlin, Germany",
 			matchScore: 86,
-			matchReason: "Entry-level role in Strategy consulting. Berlin office with relocation support.",
+			matchReason:
+				"Entry-level role in Strategy consulting. Berlin office with relocation support.",
 			workEnvironment: "Hybrid",
 		},
 		{
@@ -221,7 +238,8 @@ function getFallbackSampleJobs(): SampleJob[] {
 			company: "EY",
 			location: "Paris, France",
 			matchScore: 84,
-			matchReason: "Internship opportunity in Business Design. Paris location, French language preferred.",
+			matchReason:
+				"Internship opportunity in Business Design. Paris location, French language preferred.",
 			workEnvironment: "Hybrid",
 			isInternship: true,
 		},

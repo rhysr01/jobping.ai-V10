@@ -5,7 +5,9 @@ import { logger } from "../lib/monitoring";
  * CSRF Protection Middleware
  * Protects state-changing API requests from cross-site request forgery
  */
-export function handleCSRFProtection(request: NextRequest): NextResponse | null {
+export function handleCSRFProtection(
+	request: NextRequest,
+): NextResponse | null {
 	const stateChangingMethods = ["POST", "PUT", "DELETE", "PATCH"];
 
 	if (
@@ -58,7 +60,9 @@ export function handleCSRFProtection(request: NextRequest): NextResponse | null 
  * HTTPS Enforcement Middleware
  * Redirects HTTP requests to HTTPS in production
  */
-export function handleHTTPSEnforcement(request: NextRequest): NextResponse | null {
+export function handleHTTPSEnforcement(
+	request: NextRequest,
+): NextResponse | null {
 	if (process.env.NODE_ENV === "production") {
 		const proto = request.headers.get("x-forwarded-proto");
 		if (proto === "http") {
@@ -102,7 +106,9 @@ export function handleBasicAuth(request: NextRequest): NextResponse | null {
 
 		try {
 			const base64Credentials = authHeader.split(" ")[1];
-			const credentials = Buffer.from(base64Credentials, "base64").toString("ascii");
+			const credentials = Buffer.from(base64Credentials, "base64").toString(
+				"ascii",
+			);
 			const [username, password] = credentials.split(":");
 
 			if (username !== basicUser || password !== basicPass) {

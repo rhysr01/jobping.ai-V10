@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
-import { logger } from "../lib/monitoring";
+import { trackPerformance } from "../app/api/match-users/handlers/helpers";
+import {
+	fetchUsersAndJobs,
+	processUsers,
+} from "../app/api/match-users/handlers/orchestration";
+import { checkSLO } from "../app/api/match-users/handlers/response";
+import type { MatchResult } from "../app/api/match-users/handlers/types";
+import {
+	validateDatabaseSchema,
+	verifyHMACFromParams,
+} from "../app/api/match-users/handlers/validation";
 import { apiLogger } from "../lib/api-logger";
+import { logger } from "../lib/monitoring";
+import {
+	formatErrorResponse,
+	formatProcessingInProgressResponse,
+	formatSuccessResponse,
+} from "../utils/api-responses";
+import { isHMACRequired } from "../utils/authentication/hmac";
 import { getDatabaseClient } from "../utils/core/database-pool";
 import { withRedisLock } from "../utils/core/locks";
 import { getProductionRateLimiter } from "../utils/production-rate-limiter";
-import { trackPerformance } from "../app/api/match-users/handlers/helpers";
-import { fetchUsersAndJobs, processUsers } from "../app/api/match-users/handlers/orchestration";
-import { validateDatabaseSchema } from "../app/api/match-users/handlers/validation";
-import { checkSLO } from "../app/api/match-users/handlers/response";
-import { formatErrorResponse, formatSuccessResponse, formatProcessingInProgressResponse } from "../utils/api-responses";
-import type { MatchResult } from "../app/api/match-users/handlers/types";
-import { isHMACRequired } from "../utils/authentication/hmac";
-import { verifyHMACFromParams } from "../app/api/match-users/handlers/validation";
 
 export interface MatchUsersParams {
 	userLimit: number;
@@ -79,7 +88,8 @@ export class MatchUsersService {
 						ip,
 					});
 
-				const userCap = process.env.NODE_ENV === "test" ? Math.min(userLimit, 50) : userLimit;
+				const userCap =
+					process.env.NODE_ENV === "test" ? Math.min(userLimit, 50) : userLimit;
 				const jobCap = jobLimit;
 
 				const supabase = getDatabaseClient();
@@ -114,7 +124,9 @@ export class MatchUsersService {
 						}
 						if (error.message === "No active jobs to process") {
 							apiLogger.info("No active jobs to process");
-							return NextResponse.json({ message: "No active jobs to process" });
+							return NextResponse.json({
+								message: "No active jobs to process",
+							});
 						}
 					}
 					apiLogger.error("Failed to fetch users or jobs", error as Error, {

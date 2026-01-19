@@ -74,7 +74,8 @@ export async function fetchUsersAndJobs(
 			email: user.email,
 			target_cities: user.target_cities || [],
 			career_path: user.career_path ? [user.career_path] : [],
-			entry_level_preference: user.entry_level_preference || "graduate, intern, junior",
+			entry_level_preference:
+				user.entry_level_preference || "graduate, intern, junior",
 			work_environment: user.work_environment,
 			languages_spoken: user.languages_spoken || [],
 			roles_selected: user.roles_selected || [],
@@ -140,10 +141,14 @@ export async function processUsers(
 					.upsert(matchRecords, { onConflict: "user_email,job_hash" });
 
 				if (saveError) {
-					apiLogger.error("Failed to save matches for user", saveError as Error, {
-						userEmail,
-						matchCount: matchResult.matches.length,
-					});
+					apiLogger.error(
+						"Failed to save matches for user",
+						saveError as Error,
+						{
+							userEmail,
+							matchCount: matchResult.matches.length,
+						},
+					);
 
 					results.push({
 						user: userEmail,

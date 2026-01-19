@@ -7,7 +7,7 @@ import CustomButton from "./CustomButton";
 
 // Mobile CTA visibility constants
 const MOBILE_CTA_TRIGGERS = {
-	SHOW_THRESHOLD: 0.8,  // Show mobile CTA after scrolling 80% of viewport height
+	SHOW_THRESHOLD: 0.8, // Show mobile CTA after scrolling 80% of viewport height
 } as const;
 
 export default function CookieBanner() {
@@ -37,7 +37,9 @@ export default function CookieBanner() {
 				// Show mobile CTA after scrolling past hero section
 				const scrollY = window.scrollY;
 				const windowHeight = window.innerHeight;
-				setMobileCTAVisible(scrollY > windowHeight * MOBILE_CTA_TRIGGERS.SHOW_THRESHOLD);
+				setMobileCTAVisible(
+					scrollY > windowHeight * MOBILE_CTA_TRIGGERS.SHOW_THRESHOLD,
+				);
 			} else {
 				setMobileCTAVisible(false);
 			}
@@ -103,7 +105,7 @@ export default function CookieBanner() {
 					exit={{ y: 100, opacity: 0 }}
 					transition={{ type: "spring", damping: 25, stiffness: 200 }}
 					className={`fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 pointer-events-none ${
-						mobileCTAVisible ? 'pb-24' : ''
+						mobileCTAVisible ? "pb-24" : ""
 					}`}
 					role="dialog"
 					aria-label="Cookie consent"

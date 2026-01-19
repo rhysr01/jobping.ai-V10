@@ -6,7 +6,9 @@ async function checkJobs() {
 	// Check postal jobs specifically
 	const { data: postalJobs, error: postalError } = await supabase
 		.from("jobs")
-		.select("id, title, company, city, country, categories, description, created_at")
+		.select(
+			"id, title, company, city, country, categories, description, created_at",
+		)
 		.eq("is_active", true)
 		.eq("status", "active")
 		.ilike("title", "%postal%")
@@ -21,7 +23,7 @@ async function checkJobs() {
 			console.log(`Company: ${job.company}`);
 			console.log(`Categories: ${JSON.stringify(job.categories)}`);
 			console.log(`City: ${job.city}, Country: ${job.country}`);
-			console.log(`Created: ${job.created_at?.split('T')[0]}`);
+			console.log(`Created: ${job.created_at?.split("T")[0]}`);
 			console.log("---");
 		});
 	}

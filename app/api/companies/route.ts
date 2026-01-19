@@ -115,14 +115,51 @@ const getCompaniesHandler = asyncHandler(async (_req: NextRequest) => {
 
 					// Check if the logo file actually exists by checking against our known existing logos
 					const existingLogos = [
-						'accenture', 'adobe', 'airbnb', 'amazon', 'apple', 'bmw', 'bostonconsultinggroup',
-						'deloitte', 'github', 'glovo', 'google', 'ibm', 'ikea', 'justeat', 'klarna', 'kpmg',
-						'mckinsey', 'meta', 'microsoft', 'monzo', 'n26', 'netflix', 'notion', 'oracle', 'pwc',
-						'revolut', 'salesforce', 'sap', 'shopify', 'siemens', 'spotify', 'stripe', 'tesla',
-						'uber', 'vercel', 'volkswagen', 'volvo', 'wise', 'zalando'
+						"accenture",
+						"adobe",
+						"airbnb",
+						"amazon",
+						"apple",
+						"bmw",
+						"bostonconsultinggroup",
+						"deloitte",
+						"github",
+						"glovo",
+						"google",
+						"ibm",
+						"ikea",
+						"justeat",
+						"klarna",
+						"kpmg",
+						"mckinsey",
+						"meta",
+						"microsoft",
+						"monzo",
+						"n26",
+						"netflix",
+						"notion",
+						"oracle",
+						"pwc",
+						"revolut",
+						"salesforce",
+						"sap",
+						"shopify",
+						"siemens",
+						"spotify",
+						"stripe",
+						"tesla",
+						"uber",
+						"vercel",
+						"volkswagen",
+						"volvo",
+						"wise",
+						"zalando",
 					];
 
-					const logoFilename = logo.logoPath.split('/').pop()?.replace('.svg', '');
+					const logoFilename = logo.logoPath
+						.split("/")
+						.pop()
+						?.replace(".svg", "");
 					if (!logoFilename || !existingLogos.includes(logoFilename)) {
 						apiLogger.debug("Logo file does not exist", {
 							endpoint: "/api/companies",

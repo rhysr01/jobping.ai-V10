@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, ReactNode } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 
 interface IntersectionObserverProps {
 	children: ReactNode;
@@ -23,7 +23,7 @@ export function IntersectionObserver({
 	rootMargin = "50px",
 	disabled = false,
 	fallback,
-	onIntersect
+	onIntersect,
 }: IntersectionObserverProps) {
 	const [isIntersecting, setIsIntersecting] = useState(disabled);
 	const ref = useRef<HTMLDivElement>(null);
@@ -50,8 +50,8 @@ export function IntersectionObserver({
 			},
 			{
 				threshold,
-				rootMargin
-			}
+				rootMargin,
+			},
 		);
 
 		observer.observe(element);
@@ -59,7 +59,7 @@ export function IntersectionObserver({
 		return () => {
 			try {
 				observer.disconnect();
-			} catch (e) {
+			} catch (_e) {
 				// Ignore cleanup errors
 			}
 		};
@@ -108,7 +108,7 @@ export function LazyInteraction({
 	children,
 	className = "",
 	threshold = 0.2,
-	rootMargin = "100px"
+	rootMargin = "100px",
 }: LazyInteractionProps) {
 	const [isVisible, setIsVisible] = useState(false);
 	const ref = useRef<HTMLDivElement>(null);
@@ -124,7 +124,7 @@ export function LazyInteraction({
 					setIsVisible(entry.isIntersecting);
 				}
 			},
-			{ threshold, rootMargin }
+			{ threshold, rootMargin },
 		);
 
 		observer.observe(element);
@@ -132,7 +132,7 @@ export function LazyInteraction({
 		return () => {
 			try {
 				observer.disconnect();
-			} catch (e) {
+			} catch (_e) {
 				// Ignore cleanup errors
 			}
 		};

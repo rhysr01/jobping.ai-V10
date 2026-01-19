@@ -1,6 +1,5 @@
+import { spawn } from "node:child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { spawn } from "child_process";
-import { resolve } from "path";
 
 export class SupabaseMCP {
 	private supabase: SupabaseClient;

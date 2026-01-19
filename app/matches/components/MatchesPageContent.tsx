@@ -45,17 +45,19 @@ export default function MatchesPageContent() {
 
 	if (loading && !showMatchingSuite) {
 		// Simple stage progression
-		const [currentStage, setCurrentStage] = useState<'validating' | 'matching' | 'preparing'>('validating');
+		const [currentStage, setCurrentStage] = useState<
+			"validating" | "matching" | "preparing"
+		>("validating");
 
 		useEffect(() => {
 			const stages = [
-				{ stage: 'validating' as const, delay: 0 },
-				{ stage: 'matching' as const, delay: 2000 },
-				{ stage: 'preparing' as const, delay: 6000 },
+				{ stage: "validating" as const, delay: 0 },
+				{ stage: "matching" as const, delay: 2000 },
+				{ stage: "preparing" as const, delay: 6000 },
 			];
 
 			const timeouts = stages.map(({ stage, delay }) =>
-				setTimeout(() => setCurrentStage(stage), delay)
+				setTimeout(() => setCurrentStage(stage), delay),
 			);
 
 			return () => timeouts.forEach(clearTimeout);
@@ -93,7 +95,9 @@ export default function MatchesPageContent() {
 							/>
 						</svg>
 					</div>
-					<h2 className="text-xl font-bold text-white mb-4">Oops! Something went wrong</h2>
+					<h2 className="text-xl font-bold text-white mb-4">
+						Oops! Something went wrong
+					</h2>
 					<p className="text-zinc-300 mb-6">{error}</p>
 					<a href="/signup/free" className="inline-block">
 						<button className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
@@ -117,7 +121,10 @@ export default function MatchesPageContent() {
 			)}
 
 			{/* Upgrade Banner */}
-			<UpgradeBanner showUpgradeBanner={showUpgradeBanner} jobsViewed={jobsViewed} />
+			<UpgradeBanner
+				showUpgradeBanner={showUpgradeBanner}
+				jobsViewed={jobsViewed}
+			/>
 
 			{/* Main Content */}
 			<div className="container mx-auto px-4 max-w-4xl">
@@ -173,9 +180,7 @@ export default function MatchesPageContent() {
 				</div>
 
 				{/* Ghost Matches for Empty State */}
-				{jobs.length === 0 && !loading && (
-					<GhostMatches />
-				)}
+				{jobs.length === 0 && !loading && <GhostMatches />}
 
 				{/* Job Closed Modal */}
 				{showJobClosedModal && jobClosedData && (

@@ -428,7 +428,6 @@ const PREMIUM_USER_LONDON: UserPreferences = {
 	target_cities: ["London"],
 	career_path: ["tech"],
 	professional_expertise: "software development",
-	work_environment: "hybrid",
 	visa_status: "eu-citizen",
 	entry_level_preference: "entry",
 	languages_spoken: ["English"],
@@ -458,16 +457,16 @@ async function testFreeTierMatching(): Promise<TierTestResult[]> {
 		);
 
 		// Add freshness tier and prefilter score to jobs (simulating prefilter output)
-		const jobsWithFreshness = PRODUCTION_TEST_JOBS.map(job => ({
+		const jobsWithFreshness = PRODUCTION_TEST_JOBS.map((job) => ({
 			...job,
 			freshnessTier: "recent" as const,
-			prefilterScore: 80 // High score to ensure they pass
+			prefilterScore: 80, // High score to ensure they pass
 		}));
 
 		const startTime = Date.now();
 		const result = await simplifiedMatchingEngine.findMatchesForFreeUser(
 			FREE_USER_LONDON,
-			jobsWithFreshness
+			jobsWithFreshness,
 		);
 		const processingTime = Date.now() - startTime;
 
@@ -481,14 +480,19 @@ async function testFreeTierMatching(): Promise<TierTestResult[]> {
 				expectedMatches: 5,
 				method: result.method,
 				processingTime,
-				averageScore: result.matches.reduce((sum, m) => sum + m.match_score, 0) / result.matches.length,
+				averageScore:
+					result.matches.reduce((sum, m) => sum + m.match_score, 0) /
+					result.matches.length,
 			},
 		});
 
-		console.log(`   ✅ Free Match Count: ${result.matches.length}/5 matches (${result.method})`);
-		console.log(`   📊 Average Score: ${(result.details.averageScore * 100).toFixed(1)}%`);
+		console.log(
+			`   ✅ Free Match Count: ${result.matches.length}/5 matches (${result.method})`,
+		);
+		console.log(
+			`   📊 Average Score: ${(result.details.averageScore * 100).toFixed(1)}%`,
+		);
 		console.log(`   ⏱️  Processing Time: ${processingTime}ms`);
-
 	} catch (error) {
 		results.push({
 			tier: "free",
@@ -517,15 +521,15 @@ async function testPremiumTierMatching(): Promise<TierTestResult[]> {
 		);
 
 		// Add freshness tier to jobs (required by prefilter)
-		const jobsWithFreshness = PRODUCTION_TEST_JOBS.map(job => ({
+		const jobsWithFreshness = PRODUCTION_TEST_JOBS.map((job) => ({
 			...job,
-			freshnessTier: "recent" as const
+			freshnessTier: "recent" as const,
 		}));
 
 		const startTime = Date.now();
 		const result = await simplifiedMatchingEngine.findMatchesForPremiumUser(
 			PREMIUM_USER_LONDON,
-			jobsWithFreshness
+			jobsWithFreshness,
 		);
 		const processingTime = Date.now() - startTime;
 
@@ -540,14 +544,19 @@ async function testPremiumTierMatching(): Promise<TierTestResult[]> {
 				expectedMatches: "6+ (from eligible jobs)",
 				method: result.method,
 				processingTime,
-				averageScore: result.matches.reduce((sum, m) => sum + m.match_score, 0) / result.matches.length,
+				averageScore:
+					result.matches.reduce((sum, m) => sum + m.match_score, 0) /
+					result.matches.length,
 			},
 		});
 
-		console.log(`   ✅ Premium Match Count: ${result.matches.length} matches (${result.method})`);
-		console.log(`   📊 Average Score: ${(result.details.averageScore * 100).toFixed(1)}%`);
+		console.log(
+			`   ✅ Premium Match Count: ${result.matches.length} matches (${result.method})`,
+		);
+		console.log(
+			`   📊 Average Score: ${(result.details.averageScore * 100).toFixed(1)}%`,
+		);
 		console.log(`   ⏱️  Processing Time: ${processingTime}ms`);
-
 	} catch (error) {
 		results.push({
 			tier: "premium",
@@ -568,10 +577,12 @@ function calculateTierInsights(results: TierTestResult[]): TierInsights[] {
 	const tierInsights: TierInsights[] = [];
 
 	// Free tier insights
-	const freeResults = results.filter(r => r.tier === "free");
+	const freeResults = results.filter((r) => r.tier === "free");
 	if (freeResults.length > 0) {
-		const freeMatchTest = freeResults.find(r => r.testName === "Free Match Count");
-		if (freeMatchTest && freeMatchTest.details.averageScore) {
+		const freeMatchTest = freeResults.find(
+			(r) => r.testName === "Free Match Count",
+		);
+		if (freeMatchTest?.details.averageScore) {
 			tierInsights.push({
 				tier: "free",
 				matchQuality: Math.round(freeMatchTest.details.averageScore * 100),
@@ -584,10 +595,12 @@ function calculateTierInsights(results: TierTestResult[]): TierInsights[] {
 	}
 
 	// Premium tier insights
-	const premiumResults = results.filter(r => r.tier === "premium");
+	const premiumResults = results.filter((r) => r.tier === "premium");
 	if (premiumResults.length > 0) {
-		const premiumMatchTest = premiumResults.find(r => r.testName === "Premium Match Count");
-		if (premiumMatchTest && premiumMatchTest.details.averageScore) {
+		const premiumMatchTest = premiumResults.find(
+			(r) => r.testName === "Premium Match Count",
+		);
+		if (premiumMatchTest?.details.averageScore) {
 			tierInsights.push({
 				tier: "premium",
 				matchQuality: Math.round(premiumMatchTest.details.averageScore * 100),
@@ -607,8 +620,12 @@ function calculateTierInsights(results: TierTestResult[]): TierInsights[] {
  */
 async function runTierSpecificTests(): Promise<void> {
 	console.log("🎯 TIER-SPECIFIC MATCHING TESTS");
-	console.log("This addresses the misleading 63% average from mixing free (68%) + premium (54%)");
-	console.log("======================================================================");
+	console.log(
+		"This addresses the misleading 63% average from mixing free (68%) + premium (54%)",
+	);
+	console.log(
+		"======================================================================",
+	);
 
 	try {
 		// Run tier-specific tests
@@ -621,43 +638,63 @@ async function runTierSpecificTests(): Promise<void> {
 		const tierInsights = calculateTierInsights(allResults);
 
 		// Display results
-		console.log("\n======================================================================");
+		console.log(
+			"\n======================================================================",
+		);
 		console.log("📊 TIER-SPECIFIC TEST RESULTS");
-		console.log("======================================================================");
+		console.log(
+			"======================================================================",
+		);
 
-		console.log(`✅ Tests Passed: ${allResults.filter(r => r.passed).length}/${allResults.length}`);
+		console.log(
+			`✅ Tests Passed: ${allResults.filter((r) => r.passed).length}/${allResults.length}`,
+		);
 
 		console.log("\n🆓 FREE TIER PERFORMANCE:");
-		const freeInsight = tierInsights.find(i => i.tier === "free");
+		const freeInsight = tierInsights.find((i) => i.tier === "free");
 		if (freeInsight) {
 			console.log(`   📊 Match Quality: ${freeInsight.matchQuality}%`);
 			console.log(`   ⏱️  Processing Time: ${freeInsight.processingTime}ms`);
 			console.log(`   🎯 Method Used: ${freeInsight.methodUsed}`);
-			console.log(`   🔍 Hard Filtering: ${(freeInsight.hardFilteringEfficiency * 100).toFixed(0)}%`);
+			console.log(
+				`   🔍 Hard Filtering: ${(freeInsight.hardFilteringEfficiency * 100).toFixed(0)}%`,
+			);
 		}
 
 		console.log("\n💎 PREMIUM TIER PERFORMANCE:");
-		const premiumInsight = tierInsights.find(i => i.tier === "premium");
+		const premiumInsight = tierInsights.find((i) => i.tier === "premium");
 		if (premiumInsight) {
 			console.log(`   📊 Match Quality: ${premiumInsight.matchQuality}%`);
 			console.log(`   ⏱️  Processing Time: ${premiumInsight.processingTime}ms`);
 			console.log(`   🎯 Method Used: ${premiumInsight.methodUsed}`);
-			console.log(`   🔍 Hard Filtering: ${(premiumInsight.hardFilteringEfficiency * 100).toFixed(0)}%`);
+			console.log(
+				`   🔍 Hard Filtering: ${(premiumInsight.hardFilteringEfficiency * 100).toFixed(0)}%`,
+			);
 		}
 
 		// Compare tiers
 		if (freeInsight && premiumInsight) {
 			console.log("\n⚖️  TIER COMPARISON:");
-			const qualityDiff = premiumInsight.matchQuality - freeInsight.matchQuality;
-			const timeDiff = premiumInsight.processingTime - freeInsight.processingTime;
+			const qualityDiff =
+				premiumInsight.matchQuality - freeInsight.matchQuality;
+			const timeDiff =
+				premiumInsight.processingTime - freeInsight.processingTime;
 
-			console.log(`   📊 Quality Difference: ${qualityDiff > 0 ? '+' : ''}${qualityDiff}% (Premium vs Free)`);
-			console.log(`   ⏱️  Time Difference: ${timeDiff > 0 ? '+' : ''}${timeDiff}ms (Premium vs Free)`);
+			console.log(
+				`   📊 Quality Difference: ${qualityDiff > 0 ? "+" : ""}${qualityDiff}% (Premium vs Free)`,
+			);
+			console.log(
+				`   ⏱️  Time Difference: ${timeDiff > 0 ? "+" : ""}${timeDiff}ms (Premium vs Free)`,
+			);
 
 			if (premiumInsight.matchQuality > freeInsight.matchQuality) {
-				console.log("   ✅ Premium delivers higher quality matches (as expected)");
+				console.log(
+					"   ✅ Premium delivers higher quality matches (as expected)",
+				);
 			} else {
-				console.log("   ⚠️  Premium quality lower than free - investigate AI processing");
+				console.log(
+					"   ⚠️  Premium quality lower than free - investigate AI processing",
+				);
 			}
 		}
 
@@ -665,7 +702,6 @@ async function runTierSpecificTests(): Promise<void> {
 		console.log("   ✅ Separate tier metrics prevent misleading averages");
 		console.log("   ✅ Free tier: Optimized for speed & conversion");
 		console.log("   ✅ Premium tier: Optimized for quality & satisfaction");
-
 	} catch (error) {
 		console.error("❌ Test runner failed:", error);
 		process.exit(1);

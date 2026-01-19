@@ -3,10 +3,7 @@
 import { motion } from "framer-motion";
 import React, { useRef } from "react";
 import { BrandIcons } from "../ui/BrandIcons";
-import {
-	FormFieldError,
-	FormFieldSuccess,
-} from "../ui/FormFieldFeedback";
+import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
 import { MobileNavigation } from "./MobileNavigation";
 import { CAREER_PATHS } from "./constants";
 import { showToast } from "../../lib/toast";
@@ -45,7 +42,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 		setTouchedFields((prev) => new Set(prev).add("careerPath"));
 
 		// Show success feedback
-		const selectedPath = CAREER_PATHS.find(p => p.value === pathValue);
+		const selectedPath = CAREER_PATHS.find((p) => p.value === pathValue);
 		if (selectedPath) {
 			showToast.success(`Selected ${selectedPath.label} - great choice!`);
 		}
@@ -74,7 +71,9 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					Select your career path to get personalized matches
 				</p>
 				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-					<span className="text-sm font-medium text-purple-200">🎉 Almost done - your matches are ready!</span>
+					<span className="text-sm font-medium text-purple-200">
+						🎉 Almost done - your matches are ready!
+					</span>
 				</div>
 			</div>
 
@@ -85,10 +84,16 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
 					<span>Career Path</span>
-					<span className="text-error text-sm" aria-label="required">*</span>
+					<span className="text-error text-sm" aria-label="required">
+						*
+					</span>
 				</label>
-				<p id="career-help" className="text-sm text-zinc-400 mb-4 leading-relaxed">
-					Choose the type of role that interests you most. This helps us find the perfect matches.
+				<p
+					id="career-help"
+					className="text-sm text-zinc-400 mb-4 leading-relaxed"
+				>
+					Choose the type of role that interests you most. This helps us find
+					the perfect matches.
 				</p>
 
 				{/* Career Path Selection */}
@@ -117,19 +122,25 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 										}`}
 									>
 										<div className="flex items-center gap-3">
-											<div className={`p-2 rounded-lg ${
-												isSelected ? "bg-brand-500/20" : "bg-zinc-700/50"
-											}`}>
-												<BrandIcons.Briefcase className={`w-5 h-5 ${
-													isSelected ? "text-brand-300" : "text-zinc-400"
-												}`} />
+											<div
+												className={`p-2 rounded-lg ${
+													isSelected ? "bg-brand-500/20" : "bg-zinc-700/50"
+												}`}
+											>
+												<BrandIcons.Briefcase
+													className={`w-5 h-5 ${
+														isSelected ? "text-brand-300" : "text-zinc-400"
+													}`}
+												/>
 											</div>
 											<div className="flex-1">
-															<h3 className={`font-semibold text-base sm:text-lg ${
-																isSelected ? "text-white" : "text-zinc-100"
-															}`}>
-																{path.label}
-															</h3>
+												<h3
+													className={`font-semibold text-base sm:text-lg ${
+														isSelected ? "text-white" : "text-zinc-100"
+													}`}
+												>
+													{path.label}
+												</h3>
 											</div>
 											{isSelected && (
 												<BrandIcons.Check className="w-6 h-6 text-brand-400" />
@@ -141,10 +152,15 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 									<div className="space-y-3">
 										<h4 className="font-bold text-white">{path.label}</h4>
 										<div>
-											<p className="text-xs font-semibold text-zinc-400 mb-2">POPULAR ROLES:</p>
+											<p className="text-xs font-semibold text-zinc-400 mb-2">
+												POPULAR ROLES:
+											</p>
 											<div className="flex flex-wrap gap-1">
 												{path.popularRoles?.slice(0, 4).map((role) => (
-													<span key={role} className="text-xs bg-zinc-800 text-zinc-300 px-2 py-1 rounded">
+													<span
+														key={role}
+														className="text-xs bg-zinc-800 text-zinc-300 px-2 py-1 rounded"
+													>
 														{role}
 													</span>
 												))}
@@ -167,7 +183,8 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					<div className="mt-4 p-3 bg-white/5 rounded-lg">
 						<p className="text-sm text-zinc-300 mb-1">Selected:</p>
 						<p className="text-sm font-medium text-white">
-							{CAREER_PATHS.find(p => p.value === formData.careerPath[0])?.label || formData.careerPath[0]}
+							{CAREER_PATHS.find((p) => p.value === formData.careerPath[0])
+								?.label || formData.careerPath[0]}
 						</p>
 					</div>
 				)}
@@ -195,7 +212,9 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					<input
 						type="checkbox"
 						checked={formData.gdprConsent || false}
-						onChange={(e) => setFormData({ ...formData, gdprConsent: e.target.checked })}
+						onChange={(e) =>
+							setFormData({ ...formData, gdprConsent: e.target.checked })
+						}
 						className="mt-1 w-4 h-4 text-brand-500 bg-black/50 border-zinc-600 rounded focus:ring-brand-500 focus:ring-2 touch-manipulation"
 					/>
 					<span className="text-sm text-zinc-300 leading-relaxed">
@@ -217,7 +236,8 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 						>
 							Privacy Policy
 						</a>
-						. I understand my data will be used to provide job matching services.
+						. I understand my data will be used to provide job matching
+						services.
 					</span>
 				</label>
 			</div>

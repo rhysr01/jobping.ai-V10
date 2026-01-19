@@ -59,7 +59,8 @@ export function handleRateLimiting(request: NextRequest): NextResponse | null {
 	entry.count++;
 
 	// Clean up old entries periodically
-	if (Math.random() < 0.01) { // 1% chance to cleanup
+	if (Math.random() < 0.01) {
+		// 1% chance to cleanup
 		for (const [k, v] of rateLimitStore.entries()) {
 			if (now > v.resetTime) {
 				rateLimitStore.delete(k);

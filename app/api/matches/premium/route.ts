@@ -21,11 +21,16 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get user email from cookie (set by premium signup flows)
 	const cookies = request.cookies;
-	const userEmail = cookies.get("premium_user_email")?.value?.toLowerCase().trim();
+	const userEmail = cookies
+		.get("premium_user_email")
+		?.value?.toLowerCase()
+		.trim();
 
 	if (!userEmail) {
 		apiLogger.warn("Premium matches accessed without cookie", {
-			ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip"),
+			ip:
+				request.headers.get("x-forwarded-for") ||
+				request.headers.get("x-real-ip"),
 			userAgent: request.headers.get("user-agent"),
 		});
 		return NextResponse.json(
@@ -53,7 +58,8 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		return NextResponse.json(
 			{
 				error: "user_not_found",
-				message: "Premium account not found. Please sign up for premium access.",
+				message:
+					"Premium account not found. Please sign up for premium access.",
 			},
 			{ status: 404 },
 		);
@@ -121,9 +127,13 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		.order("matched_at", { ascending: false });
 
 	if (matchesError) {
-		apiLogger.error("Failed to fetch premium user matches", matchesError as Error, {
-			email: userEmail,
-		});
+		apiLogger.error(
+			"Failed to fetch premium user matches",
+			matchesError as Error,
+			{
+				email: userEmail,
+			},
+		);
 		return NextResponse.json(
 			{
 				error: "database_error",
@@ -152,7 +162,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 			match_score: match.match_score,
 			match_reason: match.match_reason,
 			visa_confidence: jobData?.visa_friendly ? "verified" : "likely", // Premium gets better visa confidence
-			visa_confidence_label: jobData?.visa_friendly ? "Visa Friendly" : "Likely Compatible",
+			visa_confidence_label: jobData?.visa_friendly
+				? "Visa Friendly"
+				: "Likely Compatible",
 			categories: jobData?.categories || [],
 			is_internship: jobData?.is_internship,
 			is_graduate: jobData?.is_graduate,
@@ -190,13 +202,16 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		.order("matched_at", { ascending: false });
 
 	// Aggregate target companies with premium-level detail
-	const companyStats = new Map<string, {
-		count: number;
-		lastMatchedAt: string;
-		roles: string[];
-		careerPaths: string[];
-		latestCategory: string;
-	}>();
+	const companyStats = new Map<
+		string,
+		{
+			count: number;
+			lastMatchedAt: string;
+			roles: string[];
+			careerPaths: string[];
+			latestCategory: string;
+		}
+	>();
 	(targetCompanies || []).forEach((match: any) => {
 		const company = match.jobs?.company;
 		const postedAt = match.jobs?.posted_at;
@@ -211,7 +226,8 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				latestCategory: category || "",
 			};
 			existing.count++;
-			existing.lastMatchedAt = postedAt > existing.lastMatchedAt ? postedAt : existing.lastMatchedAt;
+			existing.lastMatchedAt =
+				postedAt > existing.lastMatchedAt ? postedAt : existing.lastMatchedAt;
 			if (careerPath && !existing.careerPaths.includes(careerPath)) {
 				existing.careerPaths.push(careerPath);
 			}

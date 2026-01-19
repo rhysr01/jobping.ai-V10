@@ -25,7 +25,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	if (!userEmail) {
 		apiLogger.warn("Free matches accessed without cookie", {
-			ip: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip"),
+			ip:
+				request.headers.get("x-forwarded-for") ||
+				request.headers.get("x-real-ip"),
 			userAgent: request.headers.get("user-agent"),
 		});
 		return NextResponse.json(
@@ -95,9 +97,13 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		.order("matched_at", { ascending: false });
 
 	if (matchesError) {
-		apiLogger.error("Failed to fetch free user matches", matchesError as Error, {
-			email: userEmail,
-		});
+		apiLogger.error(
+			"Failed to fetch free user matches",
+			matchesError as Error,
+			{
+				email: userEmail,
+			},
+		);
 		return NextResponse.json(
 			{
 				error: "database_error",
@@ -126,7 +132,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 			match_score: match.match_score,
 			match_reason: match.match_reason,
 			visa_confidence: jobData?.visa_friendly ? "likely" : "unknown",
-			visa_confidence_label: jobData?.visa_friendly ? "Visa Friendly" : "Unknown",
+			visa_confidence_label: jobData?.visa_friendly
+				? "Visa Friendly"
+				: "Unknown",
 			categories: jobData?.categories || [],
 			is_internship: jobData?.is_internship,
 			is_graduate: jobData?.is_graduate,
@@ -151,14 +159,22 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		.order("matched_at", { ascending: false });
 
 	// Aggregate target companies
-	const companyStats = new Map<string, { count: number; lastMatchedAt: string; roles: string[] }>();
+	const companyStats = new Map<
+		string,
+		{ count: number; lastMatchedAt: string; roles: string[] }
+	>();
 	(targetCompanies || []).forEach((match: any) => {
 		const company = match.jobs?.company;
 		const postedAt = match.jobs?.posted_at;
 		if (company && postedAt) {
-			const existing = companyStats.get(company) || { count: 0, lastMatchedAt: postedAt, roles: [] };
+			const existing = companyStats.get(company) || {
+				count: 0,
+				lastMatchedAt: postedAt,
+				roles: [],
+			};
 			existing.count++;
-			existing.lastMatchedAt = postedAt > existing.lastMatchedAt ? postedAt : existing.lastMatchedAt;
+			existing.lastMatchedAt =
+				postedAt > existing.lastMatchedAt ? postedAt : existing.lastMatchedAt;
 			companyStats.set(company, existing);
 		}
 	});

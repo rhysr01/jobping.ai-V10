@@ -150,7 +150,9 @@ export function FreeMatchingSuite({
 							<h2 className="text-3xl font-bold text-white mb-2">Success!</h2>
 							<p className="text-zinc-400 text-lg">
 								Found{" "}
-								<span className="text-brand-400 font-semibold">{matchCount}</span>{" "}
+								<span className="text-brand-400 font-semibold">
+									{matchCount}
+								</span>{" "}
 								{matchCount === 1 ? "match" : "matches"} for you.
 							</p>
 						</motion.div>
@@ -175,4 +177,3 @@ export function FreeMatchingSuite({
 		</div>
 	);
 }
-

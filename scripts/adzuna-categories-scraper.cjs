@@ -1,7 +1,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const axios = require("axios");
 const { recordApiRequest } = require("../scrapers/shared/telemetry.cjs");
@@ -9,9 +9,17 @@ const { recordApiRequest } = require("../scrapers/shared/telemetry.cjs");
 // Check for required API credentials
 if (!process.env.ADZUNA_APP_ID || !process.env.ADZUNA_APP_KEY) {
 	console.error("❌ ADZUNA CREDENTIALS MISSING:");
-	console.error("   - ADZUNA_APP_ID:", process.env.ADZUNA_APP_ID ? "✅ Set" : "❌ Missing");
-	console.error("   - ADZUNA_APP_KEY:", process.env.ADZUNA_APP_KEY ? "✅ Set" : "❌ Missing");
-	console.error("   📝 Add these to your environment variables or GitHub Actions secrets");
+	console.error(
+		"   - ADZUNA_APP_ID:",
+		process.env.ADZUNA_APP_ID ? "✅ Set" : "❌ Missing",
+	);
+	console.error(
+		"   - ADZUNA_APP_KEY:",
+		process.env.ADZUNA_APP_KEY ? "✅ Set" : "❌ Missing",
+	);
+	console.error(
+		"   📝 Add these to your environment variables or GitHub Actions secrets",
+	);
 	console.error("   🔗 Get credentials: https://developer.adzuna.com/");
 	process.exit(1);
 }
@@ -22,9 +30,10 @@ async function testAdzunaCredentials() {
 		const testUrl = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${process.env.ADZUNA_APP_ID}&app_key=${process.env.ADZUNA_APP_KEY}&what=developer&results_per_page=1`;
 		const response = await axios.get(testUrl, {
 			headers: {
-				"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+				"User-Agent":
+					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
 			},
-			timeout: 10000
+			timeout: 10000,
 		});
 
 		if (response.status === 200) {
@@ -35,7 +44,9 @@ async function testAdzunaCredentials() {
 		console.error("❌ ADZUNA API CREDENTIALS INVALID:");
 		if (error.response?.status === 401) {
 			console.error("   - HTTP 401: Invalid API credentials");
-			console.error("   📝 Check your ADZUNA_APP_ID and ADZUNA_APP_KEY in GitHub secrets");
+			console.error(
+				"   📝 Check your ADZUNA_APP_ID and ADZUNA_APP_KEY in GitHub secrets",
+			);
 			console.error("   🔗 Renew credentials: https://developer.adzuna.com/");
 		} else {
 			console.error("   - API test failed:", error.message);
@@ -93,34 +104,62 @@ let scrapeErrors = 0;
  *                HU (Hungary), RO (Romania), BG (Bulgaria)
  */
 const ADZUNA_SUPPORTED_COUNTRIES = new Set([
-	"gb", "fr", "de", "it", "nl", "es", "pl", "at", "be", "ch",
-	"us", "au", "ca", "mx", "br", "in", "sg", "za", "nz", "ru"
+	"gb",
+	"fr",
+	"de",
+	"it",
+	"nl",
+	"es",
+	"pl",
+	"at",
+	"be",
+	"ch",
+	"us",
+	"au",
+	"ca",
+	"mx",
+	"br",
+	"in",
+	"sg",
+	"za",
+	"nz",
+	"ru",
 ]);
 
 // Explicitly list unsupported countries for filtering
 const ADZUNA_UNSUPPORTED_COUNTRIES = new Set([
-	"ie", "se", "dk", "cz", "fi", "no", "pt", "gr", "hu", "ro", "bg"
+	"ie",
+	"se",
+	"dk",
+	"cz",
+	"fi",
+	"no",
+	"pt",
+	"gr",
+	"hu",
+	"ro",
+	"bg",
 ]);
 
 function getCountryCode(cityName, fallbackCountryCode = "gb") {
 	const countryCode = fallbackCountryCode.toLowerCase();
-	
+
 	// CRITICAL: First check if country is explicitly unsupported
 	if (ADZUNA_UNSUPPORTED_COUNTRIES.has(countryCode)) {
 		console.warn(
-			`⚠️  Adzuna: Country code '${fallbackCountryCode.toUpperCase()}' (${cityName}) is not supported by Adzuna API. Skipping.`
+			`⚠️  Adzuna: Country code '${fallbackCountryCode.toUpperCase()}' (${cityName}) is not supported by Adzuna API. Skipping.`,
 		);
 		return null; // Signal to skip this city
 	}
-	
+
 	// Validate that the country code is supported by Adzuna
 	if (!ADZUNA_SUPPORTED_COUNTRIES.has(countryCode)) {
 		console.warn(
-			`⚠️  Adzuna: Country code '${fallbackCountryCode}' not supported for city '${cityName}'. Skipping.`
+			`⚠️  Adzuna: Country code '${fallbackCountryCode}' not supported for city '${cityName}'. Skipping.`,
 		);
 		return null; // Signal to skip this city
 	}
-	
+
 	// For all cities in EU_CITIES_CATEGORIES, use the provided fallback (from EU_CITIES_CATEGORIES)
 	// This handles all supported countries correctly (es, de, fr, it, nl, etc.)
 	return fallbackCountryCode;
@@ -249,46 +288,137 @@ console.log(
 	`🔄 Adzuna using query set: ${currentSet} - rotating between internship, graduate programme, and early career queries for career paths`,
 );
 
-	// EXPANDED: Local language terms by country (maximum early career coverage)
-	const LOCAL_EARLY_CAREER_TERMS = {
-		gb: [], // English only set is CORE_ENGLISH_TERMS
-		es: [
-			// EXPANDED: Maximum Spanish early career terms
-			"programa de graduados", "becario", "prácticas", "junior", "recién graduado",
-			"nivel inicial", "coordinador", "asistente", "representante", "especialista",
-			"ingeniero", "prácticas marketing", "prácticas finance", "prácticas tech",
-			"prácticas hr", "prácticas sostenibilidad", "graduado", "pasante",
-			"aprendiz", "trainee", "formación dual", "primer empleo", "entrada laboral",
-			"coordinador junior", "asistente junior", "especialista junior", "ingeniero junior"
-		],
+// EXPANDED: Local language terms by country (maximum early career coverage)
+const LOCAL_EARLY_CAREER_TERMS = {
+	gb: [], // English only set is CORE_ENGLISH_TERMS
+	es: [
+		// EXPANDED: Maximum Spanish early career terms
+		"programa de graduados",
+		"becario",
+		"prácticas",
+		"junior",
+		"recién graduado",
+		"nivel inicial",
+		"coordinador",
+		"asistente",
+		"representante",
+		"especialista",
+		"ingeniero",
+		"prácticas marketing",
+		"prácticas finance",
+		"prácticas tech",
+		"prácticas hr",
+		"prácticas sostenibilidad",
+		"graduado",
+		"pasante",
+		"aprendiz",
+		"trainee",
+		"formación dual",
+		"primer empleo",
+		"entrada laboral",
+		"coordinador junior",
+		"asistente junior",
+		"especialista junior",
+		"ingeniero junior",
+	],
 	de: [
 		// EXPANDED: Maximum German early career terms
-		"absolvent", "trainee", "praktikant", "junior", "berufseinsteiger",
-		"nachwuchskraft", "praktikum", "werkstudent", "koordinator", "assistent",
-		"vertreter", "spezialist", "ingenieur", "praktikum marketing", "praktikum finance",
-		"praktikum tech", "praktikum hr", "praktikum nachhaltigkeit", "ausbildung",
-		"duales studium", "azubi", "berufseinstieg", "karrierestart", "einsteiger",
-		"praktikumsplatz", "koordinator junior", "assistent junior", "spezialist junior",
-		"ingenieur junior", "volontariat", "freiwilligendienst", "fsj"
+		"absolvent",
+		"trainee",
+		"praktikant",
+		"junior",
+		"berufseinsteiger",
+		"nachwuchskraft",
+		"praktikum",
+		"werkstudent",
+		"koordinator",
+		"assistent",
+		"vertreter",
+		"spezialist",
+		"ingenieur",
+		"praktikum marketing",
+		"praktikum finance",
+		"praktikum tech",
+		"praktikum hr",
+		"praktikum nachhaltigkeit",
+		"ausbildung",
+		"duales studium",
+		"azubi",
+		"berufseinstieg",
+		"karrierestart",
+		"einsteiger",
+		"praktikumsplatz",
+		"koordinator junior",
+		"assistent junior",
+		"spezialist junior",
+		"ingenieur junior",
+		"volontariat",
+		"freiwilligendienst",
+		"fsj",
 	],
 	nl: [
 		// EXPANDED: Maximum Dutch early career terms
-		"afgestudeerde", "traineeship", "starter", "junior", "beginnend",
-		"werkstudent", "coördinator", "assistent", "vertegenwoordiger", "specialist",
-		"ingenieur", "stage marketing", "stage finance", "stage tech", "stage hr",
-		"stage duurzaamheid", "student", "afstudeerstagiair", "young professional",
-		"startende medewerker", "beroepseinstieg", "junior medewerker", "coördinator junior",
-		"assistent junior", "specialist junior", "ingenieur junior", "stagiair",
-		"leerling", "beroepsopleiding", "dual learning", "werkervaringsplaats"
+		"afgestudeerde",
+		"traineeship",
+		"starter",
+		"junior",
+		"beginnend",
+		"werkstudent",
+		"coördinator",
+		"assistent",
+		"vertegenwoordiger",
+		"specialist",
+		"ingenieur",
+		"stage marketing",
+		"stage finance",
+		"stage tech",
+		"stage hr",
+		"stage duurzaamheid",
+		"student",
+		"afstudeerstagiair",
+		"young professional",
+		"startende medewerker",
+		"beroepseinstieg",
+		"junior medewerker",
+		"coördinator junior",
+		"assistent junior",
+		"specialist junior",
+		"ingenieur junior",
+		"stagiair",
+		"leerling",
+		"beroepsopleiding",
+		"dual learning",
+		"werkervaringsplaats",
 	],
 	fr: [
 		// EXPANDED: Maximum French early career terms
-		"jeune diplômé", "stagiaire", "alternance", "junior", "débutant",
-		"programme graduate", "coordinateur", "assistant", "représentant", "spécialiste",
-		"ingénieur", "stagiaire marketing", "stagiaire finance", "stagiaire tech",
-		"stagiaire hr", "stagiaire esg", "diplômé", "alternant", "apprenti",
-		"premier emploi", "jeune professionnel", "coordinateur junior", "assistant junior",
-		"spécialiste junior", "ingénieur junior", "stagiaire commercial", "stagiaire opérationnel"
+		"jeune diplômé",
+		"stagiaire",
+		"alternance",
+		"junior",
+		"débutant",
+		"programme graduate",
+		"coordinateur",
+		"assistant",
+		"représentant",
+		"spécialiste",
+		"ingénieur",
+		"stagiaire marketing",
+		"stagiaire finance",
+		"stagiaire tech",
+		"stagiaire hr",
+		"stagiaire esg",
+		"diplômé",
+		"alternant",
+		"apprenti",
+		"premier emploi",
+		"jeune professionnel",
+		"coordinateur junior",
+		"assistant junior",
+		"spécialiste junior",
+		"ingénieur junior",
+		"stagiaire commercial",
+		"stagiaire opérationnel",
 	],
 	ch: [
 		"absolvent",
@@ -305,13 +435,37 @@ console.log(
 	],
 	it: [
 		// EXPANDED: Maximum Italian early career terms
-		"neolaureato", "stage", "tirocinio", "junior", "primo lavoro",
-		"laureato", "coordinatore", "assistente", "rappresentante", "specialista",
-		"ingegnere", "stage marketing", "stage finance", "stage tech", "stage hr",
-		"stage sostenibilità", "laureando", "tirocinante", "apprendista", "praticante",
-		"inserimento lavorativo", "primo impiego", "neoassunto", "coordinatore junior",
-		"assistente junior", "specialista junior", "ingegnere junior", "borsista",
-		"collaboratore", "tirocinio curriculare", "tirocinio extracurriculare"
+		"neolaureato",
+		"stage",
+		"tirocinio",
+		"junior",
+		"primo lavoro",
+		"laureato",
+		"coordinatore",
+		"assistente",
+		"rappresentante",
+		"specialista",
+		"ingegnere",
+		"stage marketing",
+		"stage finance",
+		"stage tech",
+		"stage hr",
+		"stage sostenibilità",
+		"laureando",
+		"tirocinante",
+		"apprendista",
+		"praticante",
+		"inserimento lavorativo",
+		"primo impiego",
+		"neoassunto",
+		"coordinatore junior",
+		"assistente junior",
+		"specialista junior",
+		"ingegnere junior",
+		"borsista",
+		"collaboratore",
+		"tirocinio curriculare",
+		"tirocinio extracurriculare",
 	],
 	ie: [], // English only set is CORE_ENGLISH_TERMS
 	be: [
@@ -415,83 +569,83 @@ const HIGH_PERFORMING_SECTORS = [
 function generateCityQueries(countryCode) {
 	// OPTIMIZED QUERIES: Use proven high-performers based on actual data
 	// Marketing is top sector (24 jobs Madrid), broad terms cast wide net (50-100 jobs each)
-	
+
 	if (countryCode === "gb" || countryCode === "ie") {
 		// UK/Ireland: English queries only
 		return [
 			// Tier 1: Broad terms (highest volume) - 4 queries
-			"graduate programme",      // UK standard - VERY HIGH VOLUME
-			"internship",             // Universal - VERY HIGH VOLUME
-			"graduate",               // Broad catch-all - HIGH VOLUME
-			"entry level",            // Junior roles - HIGH VOLUME
-			
+			"graduate programme", // UK standard - VERY HIGH VOLUME
+			"internship", // Universal - VERY HIGH VOLUME
+			"graduate", // Broad catch-all - HIGH VOLUME
+			"entry level", // Junior roles - HIGH VOLUME
+
 			// Tier 2: Sector-specific (proven winners) - 2 queries
-			"marketing graduate",      // Top sector from HIGH_PERFORMING_SECTORS
-			"finance graduate",        // Proven performer
-			
+			"marketing graduate", // Top sector from HIGH_PERFORMING_SECTORS
+			"finance graduate", // Proven performer
+
 			// Tier 3: Role-specific (quality) - 2 queries
-			"business analyst",        // Popular early-career role
-			"graduate analyst",        // Clear early-career signal
+			"business analyst", // Popular early-career role
+			"graduate analyst", // Clear early-career signal
 		];
 	} else if (countryCode === "es") {
 		// Spain: Spanish queries (prácticas is THE winner - 24 jobs Madrid!)
 		return [
-			"prácticas",               // Generic Spanish internship - HIGHEST VOLUME
-			"prácticas marketing",     // PROVEN WINNER (24 jobs Madrid!)
-			"prácticas finance",       // Proven (8 jobs Madrid)
-			"programa de graduados",   // Graduate program
-			"becario",                 // Intern
-			"junior",                  // Junior roles
-			"graduado",                // Graduate
-			"recién graduado",         // Recent graduate
+			"prácticas", // Generic Spanish internship - HIGHEST VOLUME
+			"prácticas marketing", // PROVEN WINNER (24 jobs Madrid!)
+			"prácticas finance", // Proven (8 jobs Madrid)
+			"programa de graduados", // Graduate program
+			"becario", // Intern
+			"junior", // Junior roles
+			"graduado", // Graduate
+			"recién graduado", // Recent graduate
 		];
 	} else if (countryCode === "fr") {
 		// France: French queries
 		return [
-			"stage",                   // Internship (French) - HIGH VOLUME
-			"alternance",              // Work-study program - HIGH VOLUME
-			"jeune diplômé",           // Recent graduate
-			"stagiaire",               // Intern
-			"programme graduate",      // Graduate program
-			"junior",                  // Junior roles
-			"débutant",                // Beginner
-			"assistant",               // Assistant roles
+			"stage", // Internship (French) - HIGH VOLUME
+			"alternance", // Work-study program - HIGH VOLUME
+			"jeune diplômé", // Recent graduate
+			"stagiaire", // Intern
+			"programme graduate", // Graduate program
+			"junior", // Junior roles
+			"débutant", // Beginner
+			"assistant", // Assistant roles
 		];
 	} else if (countryCode === "de") {
 		// Germany: German queries
 		return [
-			"praktikum",               // Internship (German) - HIGH VOLUME
-			"trainee",                 // Trainee program - HIGH VOLUME
-			"absolvent",               // Graduate
-			"junior",                  // Junior roles
-			"berufseinsteiger",        // Career starter
-			"werkstudent",             // Working student
-			"praktikum marketing",     // Marketing internship
-			"praktikum finance",       // Finance internship
+			"praktikum", // Internship (German) - HIGH VOLUME
+			"trainee", // Trainee program - HIGH VOLUME
+			"absolvent", // Graduate
+			"junior", // Junior roles
+			"berufseinsteiger", // Career starter
+			"werkstudent", // Working student
+			"praktikum marketing", // Marketing internship
+			"praktikum finance", // Finance internship
 		];
 	} else if (countryCode === "it") {
 		// Italy: Italian queries
 		return [
-			"stage",                   // Internship (Italian) - HIGH VOLUME
-			"tirocinio",               // Internship formal - HIGH VOLUME
-			"neolaureato",             // Recent graduate
-			"junior",                  // Junior roles
-			"laureato",                // Graduate
-			"primo lavoro",            // First job
-			"stage marketing",         // Marketing internship
-			"stage finance",           // Finance internship
+			"stage", // Internship (Italian) - HIGH VOLUME
+			"tirocinio", // Internship formal - HIGH VOLUME
+			"neolaureato", // Recent graduate
+			"junior", // Junior roles
+			"laureato", // Graduate
+			"primo lavoro", // First job
+			"stage marketing", // Marketing internship
+			"stage finance", // Finance internship
 		];
 	} else if (countryCode === "nl") {
 		// Netherlands: Dutch queries
 		return [
-			"stage",                   // Internship (Dutch) - HIGH VOLUME
-			"traineeship",             // Trainee program - HIGH VOLUME
-			"afgestudeerde",           // Graduate
-			"junior",                  // Junior roles
-			"starter",                 // Starter
-			"werkstudent",             // Working student
-			"stage marketing",         // Marketing internship
-			"stage finance",           // Finance internship
+			"stage", // Internship (Dutch) - HIGH VOLUME
+			"traineeship", // Trainee program - HIGH VOLUME
+			"afgestudeerde", // Graduate
+			"junior", // Junior roles
+			"starter", // Starter
+			"werkstudent", // Working student
+			"stage marketing", // Marketing internship
+			"stage finance", // Finance internship
 		];
 	} else {
 		// Other countries: Default to English broad terms
@@ -517,24 +671,32 @@ function generateCityQueries(countryCode) {
 function getMaxPagesForQuery(query, rolePages = null, genericPages = null) {
 	// Check if it's an exact role name query (from signup form roles)
 	const { getAllRoles } = require("../scrapers/shared/roles.cjs");
-	const allRoles = getAllRoles().map(r => r.toLowerCase());
+	const allRoles = getAllRoles().map((r) => r.toLowerCase());
 	const queryLower = query.toLowerCase().trim();
-	const isExactRoleQuery = allRoles.some(role => {
-		const roleWords = role.split(" ").filter(w => w.length > 3);
-		return roleWords.length > 0 && roleWords.every(word => queryLower.includes(word));
+	const isExactRoleQuery = allRoles.some((role) => {
+		const roleWords = role.split(" ").filter((w) => w.length > 3);
+		return (
+			roleWords.length > 0 &&
+			roleWords.every((word) => queryLower.includes(word))
+		);
 	});
-	
+
 	// Career path queries (e.g., "strategy internship", "finance graduate programme")
-	const careerPathPattern = /^(strategy|finance|sales|marketing|data|operations|product|tech|sustainability|people-hr|legal|creative|general-management)\s+(internship|graduate programme|graduate scheme|early career|prácticas|stagiaire|praktikum|stage|programa de graduados|absolventenprogramm|inicio de carrera|début de carrière|berufseinstieg)/i;
+	const careerPathPattern =
+		/^(strategy|finance|sales|marketing|data|operations|product|tech|sustainability|people-hr|legal|creative|general-management)\s+(internship|graduate programme|graduate scheme|early career|prácticas|stagiaire|praktikum|stage|programa de graduados|absolventenprogramm|inicio de carrera|début de carrière|berufseinstieg)/i;
 	const isCareerPathQuery = careerPathPattern.test(query.trim());
 
 	// Use dynamic pages if provided, otherwise fall back to defaults
 	if (isExactRoleQuery || isCareerPathQuery) {
 		// Role-based queries (exact roles or career paths) - use role pages
-		return rolePages !== null ? rolePages : parseInt(process.env.ADZUNA_MAX_PAGES_ROLE || "4", 10);
+		return rolePages !== null
+			? rolePages
+			: parseInt(process.env.ADZUNA_MAX_PAGES_ROLE || "4", 10);
 	}
 	// Generic queries - use generic pages
-	return genericPages !== null ? genericPages : parseInt(process.env.ADZUNA_MAX_PAGES_GENERIC || "3", 10);
+	return genericPages !== null
+		? genericPages
+		: parseInt(process.env.ADZUNA_MAX_PAGES_GENERIC || "3", 10);
 }
 
 /**
@@ -577,7 +739,9 @@ async function scrapeCityCategories(
 			// Smart pagination: more pages for role-based queries, fewer for generic
 			// Use dynamic pages if provided (for low-coverage cities), otherwise use maxPages or default
 			const queryMaxPages =
-				maxPages !== null ? maxPages : getMaxPagesForQuery(query, rolePages, genericPages);
+				maxPages !== null
+					? maxPages
+					: getMaxPagesForQuery(query, rolePages, genericPages);
 
 			if (verbose)
 				console.log(
@@ -595,7 +759,7 @@ async function scrapeCityCategories(
 				if (!apiCountryCode) {
 					// Country not supported, skip this query
 					console.warn(
-						`⚠️  Adzuna: Skipping ${cityName} (${countryCode.toUpperCase()}) - country not supported by Adzuna API`
+						`⚠️  Adzuna: Skipping ${cityName} (${countryCode.toUpperCase()}) - country not supported by Adzuna API`,
 					);
 					break; // Skip to next query
 				}
@@ -862,9 +1026,9 @@ async function scrapeAllCitiesCategories(options = {}) {
 		// Was: 8 cities × 2 career paths = ~14,000/month (5.6x over limit)
 	]);
 	const HIGH_COVERAGE_CITIES = new Set([
-		"london" // Only London - has best coverage, focus here only
+		"london", // Only London - has best coverage, focus here only
 	]);
-	
+
 	const maxQueriesPerCity =
 		typeof overrideMaxQueriesPerCity === "number"
 			? overrideMaxQueriesPerCity
@@ -899,23 +1063,23 @@ async function scrapeAllCitiesCategories(options = {}) {
 		process.env.ADZUNA_MAX_PAGES_GENERIC || "3",
 		10,
 	);
-	
+
 	// Calculate estimated requests (only for cities that will actually be processed)
 	// We filter cities during processing, so only count cities that pass our filters
-	const actuallyProcessedCities = EU_CITIES_CATEGORIES.filter(c => {
+	const actuallyProcessedCities = EU_CITIES_CATEGORIES.filter((c) => {
 		const cityName = c.name.toLowerCase();
 		const isLow = LOW_COVERAGE_CITIES.has(cityName);
 		const isHigh = HIGH_COVERAGE_CITIES.has(cityName);
-		const isStandard = !isLow && !isHigh;
+		const _isStandard = !isLow && !isHigh;
 		// We process low + high coverage cities (standard are filtered out due to API limits)
 		return isLow || isHigh;
 	});
 
-	const lowCoverageCount = actuallyProcessedCities.filter(c =>
-		LOW_COVERAGE_CITIES.has(c.name.toLowerCase())
+	const lowCoverageCount = actuallyProcessedCities.filter((c) =>
+		LOW_COVERAGE_CITIES.has(c.name.toLowerCase()),
 	).length;
-	const highCoverageCount = actuallyProcessedCities.filter(c =>
-		HIGH_COVERAGE_CITIES.has(c.name.toLowerCase())
+	const highCoverageCount = actuallyProcessedCities.filter((c) =>
+		HIGH_COVERAGE_CITIES.has(c.name.toLowerCase()),
 	).length;
 	const standardCount = 0; // We don't process standard cities to stay within limits
 
@@ -925,9 +1089,9 @@ async function scrapeAllCitiesCategories(options = {}) {
 	// Standard: 2 career paths × (2 role queries × 5 pages + 1 generic × 4 pages) = 2 × 14 = 28 requests per city
 	// EMERGENCY REDUCTION: Only 1 high-coverage city = ~22 requests per run
 	const estimatedRequests =
-		(lowCoverageCount * 2 * (2 * 5 + 1 * 4)) +
-		(highCoverageCount * 2 * (2 * 4 + 1 * 3)) +
-		(standardCount * 2 * (2 * 5 + 1 * 4));
+		lowCoverageCount * 2 * (2 * 5 + 1 * 4) +
+		highCoverageCount * 2 * (2 * 4 + 1 * 3) +
+		standardCount * 2 * (2 * 5 + 1 * 4);
 
 	console.log(
 		`📊 City Priority Breakdown: ${lowCoverageCount} low-coverage, ${highCoverageCount} high-coverage, ${standardCount} standard`,
@@ -981,7 +1145,7 @@ async function scrapeAllCitiesCategories(options = {}) {
 		citiesToProcess = EU_CITIES_CATEGORIES.filter((c) =>
 			normalizedTargetCities.includes(c.name.toLowerCase()),
 		);
-		
+
 		// CRITICAL: Filter out any cities from unsupported countries
 		citiesToProcess = citiesToProcess.filter((c) => {
 			const countryCode = c.country.toLowerCase();
@@ -993,7 +1157,7 @@ async function scrapeAllCitiesCategories(options = {}) {
 			}
 			return true;
 		});
-		
+
 		if (citiesToProcess.length === 0) {
 			console.warn(
 				"⚠️  Signup cities did not match predefined EU list or were from unsupported countries; falling back to default cities",
@@ -1003,7 +1167,7 @@ async function scrapeAllCitiesCategories(options = {}) {
 	} else {
 		citiesToProcess = EU_CITIES_CATEGORIES;
 	}
-	
+
 	// Final safety check: Ensure all cities are from supported countries
 	citiesToProcess = citiesToProcess.filter((c) => {
 		const countryCode = c.country.toLowerCase();
@@ -1021,12 +1185,13 @@ async function scrapeAllCitiesCategories(options = {}) {
 			const cityNameLower = city.name.toLowerCase();
 			const isLowCoverage = LOW_COVERAGE_CITIES.has(cityNameLower);
 			const isHighCoverage = HIGH_COVERAGE_CITIES.has(cityNameLower);
-			
+
 			// Dynamic query allocation based on coverage
 			let cityMaxQueries, cityRolePages, cityGenericPages;
 			if (isLowCoverage) {
 				// Low-coverage cities: Moderate queries and pages to stay within limits
-				cityMaxQueries = maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 3) : 3; // REDUCED from 5 to 3
+				cityMaxQueries =
+					maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 3) : 3; // REDUCED from 5 to 3
 				cityRolePages = Math.max(baseRolePages, 5); // REDUCED from 6 to 5
 				cityGenericPages = Math.max(baseGenericPages, 4); // REDUCED from 5 to 4
 			} else if (isHighCoverage) {
@@ -1036,19 +1201,21 @@ async function scrapeAllCitiesCategories(options = {}) {
 				cityGenericPages = baseGenericPages;
 			} else {
 				// Standard cities: Moderate increase
-				cityMaxQueries = maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 4) : 4;
+				cityMaxQueries =
+					maxQueriesPerCity > 0 ? Math.max(maxQueriesPerCity, 4) : 4;
 				cityRolePages = Math.max(baseRolePages, 5); // Increased from 4 to 5
 				cityGenericPages = Math.max(baseGenericPages, 4); // Increased from 3 to 4
 			}
-			
+
 			const cityQueries = generateCityQueries(city.country);
 			const limitedCityQueries =
-				cityMaxQueries > 0
-					? cityQueries.slice(0, cityMaxQueries)
-					: cityQueries;
-			
-			const priorityLabel = isLowCoverage ? "🎯 [LOW COVERAGE - PRIORITY] " : 
-			                     isHighCoverage ? "✅ [HIGH COVERAGE] " : "";
+				cityMaxQueries > 0 ? cityQueries.slice(0, cityMaxQueries) : cityQueries;
+
+			const priorityLabel = isLowCoverage
+				? "🎯 [LOW COVERAGE - PRIORITY] "
+				: isHighCoverage
+					? "✅ [HIGH COVERAGE] "
+					: "";
 			console.log(
 				`\n${priorityLabel}🌍 Processing ${city.name} (${city.country.toUpperCase()}) - ${limitedCityQueries.length}/${cityQueries.length} queries, ${cityRolePages} role pages, ${cityGenericPages} generic pages...`,
 			);

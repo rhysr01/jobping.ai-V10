@@ -14,7 +14,11 @@ describe("Background Processing - Cron Jobs", () => {
 				},
 			};
 
-			const endpoints = ["check-link-health", "process-digests", "process-scraping-queue"];
+			const endpoints = [
+				"check-link-health",
+				"process-digests",
+				"process-scraping-queue",
+			];
 
 			for (const endpoint of endpoints) {
 				// Test without secret
@@ -47,7 +51,7 @@ describe("Background Processing - Cron Jobs", () => {
 
 			const invalidSecrets = ["", "wrong-secret", "123456", null];
 
-			invalidSecrets.forEach(secret => {
+			invalidSecrets.forEach((secret) => {
 				const hasAccess = cronAuth.validateSecret(secret);
 				expect(hasAccess).toBe(false);
 			});
@@ -65,7 +69,7 @@ describe("Background Processing - Cron Jobs", () => {
 
 			const invalidMethods = ["POST", "PUT", "DELETE", "PATCH"];
 
-			invalidMethods.forEach(method => {
+			invalidMethods.forEach((method) => {
 				const response = cronEndpoint.handleRequest(method);
 				expect(response.status).toBe(405);
 				expect(response.error).toBe("Method not allowed");
@@ -98,7 +102,10 @@ describe("Background Processing - Cron Jobs", () => {
 				},
 			};
 
-			const allLinks = Array.from({ length: 25 }, (_, i) => `https://example.com/job-${i}`);
+			const allLinks = Array.from(
+				{ length: 25 },
+				(_, i) => `https://example.com/job-${i}`,
+			);
 
 			// Process in batches
 			const batch1 = await linkChecker.processBatch(allLinks.slice(0, 10));
@@ -116,7 +123,7 @@ describe("Background Processing - Cron Jobs", () => {
 				checkLink: async (url: string) => {
 					// Simulate different link scenarios
 					if (url.includes("timeout")) {
-						await new Promise(resolve => setTimeout(resolve, 1000)); // Shorter timeout for tests
+						await new Promise((resolve) => setTimeout(resolve, 1000)); // Shorter timeout for tests
 						return { healthy: false, error: "timeout" };
 					}
 					if (url.includes("404")) {
@@ -126,7 +133,11 @@ describe("Background Processing - Cron Jobs", () => {
 						return { healthy: false, error: "server error", statusCode: 500 };
 					}
 					if (url.includes("redirect")) {
-						return { healthy: true, redirected: true, finalUrl: "https://final-url.com" };
+						return {
+							healthy: true,
+							redirected: true,
+							finalUrl: "https://final-url.com",
+						};
 					}
 
 					return { healthy: true, responseTime: Math.random() * 500 };
@@ -135,8 +146,14 @@ describe("Background Processing - Cron Jobs", () => {
 
 			const testCases = [
 				{ url: "https://healthy.com", expected: { healthy: true } },
-				{ url: "https://404.com", expected: { healthy: false, error: "not found" } },
-				{ url: "https://redirect.com", expected: { healthy: true, redirected: true } },
+				{
+					url: "https://404.com",
+					expected: { healthy: false, error: "not found" },
+				},
+				{
+					url: "https://redirect.com",
+					expected: { healthy: true, redirected: true },
+				},
 			];
 
 			for (const testCase of testCases) {
@@ -201,7 +218,10 @@ describe("Background Processing - Cron Jobs", () => {
 				processHealthResults: async (results: any[]) => {
 					const updates = [];
 					for (const result of results) {
-						const update = await database.updateLinkHealth(result.linkId, result.health);
+						const update = await database.updateLinkHealth(
+							result.linkId,
+							result.health,
+						);
 						updates.push(update);
 					}
 					return updates;
@@ -214,7 +234,8 @@ describe("Background Processing - Cron Jobs", () => {
 				{ linkId: "link3", health: { status: "healthy", responseTime: 150 } },
 			];
 
-			const updateResults = await linkHealthProcessor.processHealthResults(healthResults);
+			const updateResults =
+				await linkHealthProcessor.processHealthResults(healthResults);
 
 			expect(database.updates.length).toBe(3);
 			expect(updateResults.length).toBe(3);
@@ -256,7 +277,8 @@ describe("Background Processing - Cron Jobs", () => {
 
 				sendDigestEmail: async (digest: any) => {
 					// Simulate email sending with occasional failures
-					if (Math.random() < 0.05) { // 5% failure rate
+					if (Math.random() < 0.05) {
+						// 5% failure rate
 						throw new Error("Email service unavailable");
 					}
 
@@ -278,14 +300,17 @@ describe("Background Processing - Cron Jobs", () => {
 
 			expect(results.length).toBe(10);
 			expect(digestProcessor.processedDigests).toBeGreaterThan(8); // Most should succeed
-			expect(digestProcessor.sentEmails).toBeGreaterThanOrEqual(digestProcessor.processedDigests - 1);
+			expect(digestProcessor.sentEmails).toBeGreaterThanOrEqual(
+				digestProcessor.processedDigests - 1,
+			);
 		});
 
 		it("respects user preferences for digest frequency", async () => {
 			const digestScheduler = {
 				shouldSendDigest: (user: any, lastSent: Date) => {
 					const now = new Date();
-					const hoursSinceLastSent = (now.getTime() - lastSent.getTime()) / (1000 * 60 * 60);
+					const hoursSinceLastSent =
+						(now.getTime() - lastSent.getTime()) / (1000 * 60 * 60);
 
 					switch (user.digestFrequency) {
 						case "daily":
@@ -318,9 +343,18 @@ describe("Background Processing - Cron Jobs", () => {
 				},
 			];
 
-			const shouldSend1 = digestScheduler.shouldSendDigest(users[0], users[0].lastDigestSent);
-			const shouldSend2 = digestScheduler.shouldSendDigest(users[1], users[1].lastDigestSent);
-			const shouldSend3 = digestScheduler.shouldSendDigest(users[2], users[2].lastDigestSent);
+			const shouldSend1 = digestScheduler.shouldSendDigest(
+				users[0],
+				users[0].lastDigestSent,
+			);
+			const shouldSend2 = digestScheduler.shouldSendDigest(
+				users[1],
+				users[1].lastDigestSent,
+			);
+			const shouldSend3 = digestScheduler.shouldSendDigest(
+				users[2],
+				users[2].lastDigestSent,
+			);
 
 			expect(shouldSend1).toBe(true); // 25 hours > 24 hours
 			expect(shouldSend2).toBe(true); // 7 days >= 7 days
@@ -347,18 +381,28 @@ describe("Background Processing - Cron Jobs", () => {
 
 					for (let attempt = 1; attempt <= maxRetries; attempt++) {
 						try {
-							const result = await emailService.sendEmail(email.to, email.subject, email.content);
+							const result = await emailService.sendEmail(
+								email.to,
+								email.subject,
+								email.content,
+							);
 							return { success: true, attempt, result };
 						} catch (error) {
 							lastError = error;
 							if (attempt < maxRetries) {
 								// Wait before retry
-								await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+								await new Promise((resolve) =>
+									setTimeout(resolve, 1000 * attempt),
+								);
 							}
 						}
 					}
 
-					return { success: false, attempts: maxRetries, error: lastError.message };
+					return {
+						success: false,
+						attempts: maxRetries,
+						error: lastError.message,
+					};
 				},
 			};
 
@@ -382,7 +426,11 @@ describe("Background Processing - Cron Jobs", () => {
 
 				processBatch: async (digests: any[]) => {
 					const batches = [];
-					for (let i = 0; i < digests.length; i += batchEmailProcessor.batchSize) {
+					for (
+						let i = 0;
+						i < digests.length;
+						i += batchEmailProcessor.batchSize
+					) {
 						const batch = digests.slice(i, i + batchEmailProcessor.batchSize);
 						batches.push(batch);
 					}
@@ -390,7 +438,7 @@ describe("Background Processing - Cron Jobs", () => {
 					const results = [];
 					for (const batch of batches) {
 						// Simulate batch processing
-						await new Promise(resolve => setTimeout(resolve, 100)); // Batch processing time
+						await new Promise((resolve) => setTimeout(resolve, 100)); // Batch processing time
 
 						for (const digest of batch) {
 							batchEmailProcessor.totalEmailsSent++;
@@ -417,10 +465,13 @@ describe("Background Processing - Cron Jobs", () => {
 			expect(batchEmailProcessor.totalEmailsSent).toBe(120);
 
 			// Check batching - should have 3 batches (50 + 50 + 20)
-			const batchSizes = results.reduce((acc, result) => {
-				acc[result.batchSize] = (acc[result.batchSize] || 0) + 1;
-				return acc;
-			}, {} as Record<number, number>);
+			const batchSizes = results.reduce(
+				(acc, result) => {
+					acc[result.batchSize] = (acc[result.batchSize] || 0) + 1;
+					return acc;
+				},
+				{} as Record<number, number>,
+			);
 
 			expect(batchSizes[50]).toBe(100); // 2 full batches of 50
 			expect(batchSizes[20]).toBe(20); // 1 partial batch of 20
@@ -432,16 +483,29 @@ describe("Background Processing - Cron Jobs", () => {
 			const cleanupService = {
 				deletedUsers: 0,
 				cleanupFreeUsers: async (inactiveDaysThreshold: number = 90) => {
-					const cutoffDate = new Date(Date.now() - inactiveDaysThreshold * 24 * 60 * 60 * 1000);
+					const cutoffDate = new Date(
+						Date.now() - inactiveDaysThreshold * 24 * 60 * 60 * 1000,
+					);
 
 					// Simulate finding and deleting inactive users
 					const inactiveUsers = [
-						{ id: "user1", lastActive: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000) }, // 100 days ago
-						{ id: "user2", lastActive: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000) }, // 80 days ago - should keep
-						{ id: "user3", lastActive: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000) }, // 95 days ago
+						{
+							id: "user1",
+							lastActive: new Date(Date.now() - 100 * 24 * 60 * 60 * 1000),
+						}, // 100 days ago
+						{
+							id: "user2",
+							lastActive: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000),
+						}, // 80 days ago - should keep
+						{
+							id: "user3",
+							lastActive: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000),
+						}, // 95 days ago
 					];
 
-					const toDelete = inactiveUsers.filter(user => user.lastActive < cutoffDate);
+					const toDelete = inactiveUsers.filter(
+						(user) => user.lastActive < cutoffDate,
+					);
 
 					for (const user of toDelete) {
 						// Simulate deletion
@@ -476,7 +540,9 @@ describe("Background Processing - Cron Jobs", () => {
 
 					const validJobIds = new Set(["existing-job-1", "existing-job-2"]);
 
-					const toRemove = orphanedApplications.filter(app => !validJobIds.has(app.jobId));
+					const toRemove = orphanedApplications.filter(
+						(app) => !validJobIds.has(app.jobId),
+					);
 
 					for (const app of toRemove) {
 						cleanupService.removedApplications++;
@@ -501,15 +567,26 @@ describe("Background Processing - Cron Jobs", () => {
 				archivedLogs: 0,
 
 				archiveOldLogs: async (retentionDays: number = 365) => {
-					const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+					const cutoffDate = new Date(
+						Date.now() - retentionDays * 24 * 60 * 60 * 1000,
+					);
 
 					const logs = [
-						{ id: "log1", created: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000) }, // 400 days old
-						{ id: "log2", created: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000) }, // 200 days old - keep
-						{ id: "log3", created: new Date(Date.now() - 500 * 24 * 60 * 60 * 1000) }, // 500 days old
+						{
+							id: "log1",
+							created: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000),
+						}, // 400 days old
+						{
+							id: "log2",
+							created: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000),
+						}, // 200 days old - keep
+						{
+							id: "log3",
+							created: new Date(Date.now() - 500 * 24 * 60 * 60 * 1000),
+						}, // 500 days old
 					];
 
-					const toArchive = logs.filter(log => log.created < cutoffDate);
+					const toArchive = logs.filter((log) => log.created < cutoffDate);
 
 					for (const log of toArchive) {
 						archiveService.archivedLogs++;
@@ -546,7 +623,7 @@ describe("Background Processing - Cron Jobs", () => {
 					const results = [];
 					for (const indexName of indexes) {
 						// Simulate index rebuild
-						await new Promise(resolve => setTimeout(resolve, 50));
+						await new Promise((resolve) => setTimeout(resolve, 50));
 						maintenanceService.indexesRebuilt++;
 						results.push({
 							indexName,
@@ -563,7 +640,7 @@ describe("Background Processing - Cron Jobs", () => {
 
 			expect(results.length).toBe(4);
 			expect(maintenanceService.indexesRebuilt).toBe(4);
-			results.forEach(result => {
+			results.forEach((result) => {
 				expect(result.status).toBe("rebuilt");
 				expect(result.duration).toBeGreaterThan(0);
 			});
@@ -581,9 +658,12 @@ describe("Background Processing - Cron Jobs", () => {
 						{ name: "referential_integrity", status: "failed", issues: 1 },
 					];
 
-					const issues = checks.filter(check => check.status === "failed");
+					const issues = checks.filter((check) => check.status === "failed");
 
-					integrityChecker.issuesFound = issues.reduce((sum, check) => sum + (check.issues || 0), 0);
+					integrityChecker.issuesFound = issues.reduce(
+						(sum, check) => sum + (check.issues || 0),
+						0,
+					);
 
 					return {
 						checks,
@@ -616,7 +696,7 @@ describe("Background Processing - Cron Jobs", () => {
 					const results = [];
 					for (const optimization of optimizations) {
 						// Simulate optimization
-						await new Promise(resolve => setTimeout(resolve, 200));
+						await new Promise((resolve) => setTimeout(resolve, 200));
 						optimizer.optimizationsPerformed++;
 						results.push({
 							optimization,
@@ -633,7 +713,7 @@ describe("Background Processing - Cron Jobs", () => {
 
 			expect(results.length).toBe(4);
 			expect(optimizer.optimizationsPerformed).toBe(4);
-			results.forEach(result => {
+			results.forEach((result) => {
 				expect(result.status).toBe("completed");
 				expect(result.improvement).toBeGreaterThan(5);
 			});

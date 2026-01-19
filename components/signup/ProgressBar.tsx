@@ -36,12 +36,21 @@ export function ProgressBar({ step }: ProgressBarProps) {
 				</div>
 				<div className="flex items-center justify-between px-4 py-3 text-sm font-semibold">
 					<span className="text-zinc-300">Step {step} of 4</span>
-					<span className="text-emerald-400">{Math.round((step / 4) * 100)}%</span>
+					<span className="text-emerald-400">
+						{Math.round((step / 4) * 100)}%
+					</span>
 				</div>
 			</div>
 
 			{/* Desktop Progress Indicator - Hidden on mobile */}
-			<div className="mb-10 sm:mb-16 hidden sm:block" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={4} aria-label={`Signup progress: Step ${step} of 4`}>
+			<div
+				className="mb-10 sm:mb-16 hidden sm:block"
+				role="progressbar"
+				aria-valuenow={step}
+				aria-valuemin={1}
+				aria-valuemax={4}
+				aria-label={`Signup progress: Step ${step} of 4`}
+			>
 				<div className="flex justify-between mb-3 sm:mb-4 px-1 sm:px-2">
 					{[1, 2, 3, 4].map((i) => (
 						<div key={i} className="flex items-center gap-1 sm:gap-3">
@@ -94,7 +103,7 @@ export function ProgressBar({ step }: ProgressBarProps) {
 								repeatDelay: 1,
 								ease: "easeInOut",
 							}}
-					/>
+						/>
 					</motion.div>
 				</div>
 				<div className="text-xs text-zinc-400 text-center mt-2 font-medium">

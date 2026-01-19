@@ -16,13 +16,16 @@ export async function GET(request: NextRequest) {
 		if (token === "valid-admin-token") {
 			return NextResponse.json({
 				message: "Admin access granted",
-				user: { role: "admin", id: "admin-123" }
+				user: { role: "admin", id: "admin-123" },
 			});
 		}
 
 		return NextResponse.json({ error: "Invalid token" }, { status: 403 });
 	} catch (error) {
 		apiLogger.error("Admin verification failed", error as Error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }

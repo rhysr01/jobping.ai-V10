@@ -9,10 +9,13 @@ interface LiveMatchingMessagesProps {
 
 const DEFAULT_JOB_COUNT = 4200;
 
-export function LiveMatchingMessages({ estimatedJobCount = DEFAULT_JOB_COUNT }: LiveMatchingMessagesProps) {
-	const formattedJobCount = estimatedJobCount >= 1000
-		? `${Math.floor(estimatedJobCount / 1000)},${(estimatedJobCount % 1000).toString().padStart(3, '0')}+`
-		: `${estimatedJobCount}+`;
+export function LiveMatchingMessages({
+	estimatedJobCount = DEFAULT_JOB_COUNT,
+}: LiveMatchingMessagesProps) {
+	const formattedJobCount =
+		estimatedJobCount >= 1000
+			? `${Math.floor(estimatedJobCount / 1000)},${(estimatedJobCount % 1000).toString().padStart(3, "0")}+`
+			: `${estimatedJobCount}+`;
 
 	const SCANNING_MESSAGES = [
 		`Scanning ${formattedJobCount} active jobs...`,
@@ -48,4 +51,3 @@ export function LiveMatchingMessages({ estimatedJobCount = DEFAULT_JOB_COUNT }: 
 		</div>
 	);
 }
-

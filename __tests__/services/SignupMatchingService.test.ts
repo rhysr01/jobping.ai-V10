@@ -29,9 +29,14 @@ jest.mock("../../../utils/strategies/PremiumMatchingStrategy", () => ({
 	runPremiumMatching: jest.fn(),
 }));
 
-const mockRunFreeMatching = require("../../../utils/strategies/FreeMatchingStrategy").runFreeMatching as jest.MockedFunction<any>;
-const mockRunPremiumMatching = require("../../../utils/strategies/PremiumMatchingStrategy").runPremiumMatching as jest.MockedFunction<any>;
-const mockGetDatabaseClient = require("../../../utils/core/database-pool").getDatabaseClient as jest.MockedFunction<any>;
+const mockRunFreeMatching =
+	require("../../../utils/strategies/FreeMatchingStrategy")
+		.runFreeMatching as jest.MockedFunction<any>;
+const mockRunPremiumMatching =
+	require("../../../utils/strategies/PremiumMatchingStrategy")
+		.runPremiumMatching as jest.MockedFunction<any>;
+const mockGetDatabaseClient = require("../../../utils/core/database-pool")
+	.getDatabaseClient as jest.MockedFunction<any>;
 
 describe("SignupMatchingService - Strategy Pattern", () => {
 	let service: SignupMatchingService;
@@ -104,7 +109,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 
 			mockRunFreeMatching.mockResolvedValue(mockFreeResult);
 
-			const result = await SignupMatchingService.runMatching(mockUser, freeConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				freeConfig,
+			);
 
 			expect(mockRunFreeMatching).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -113,7 +121,7 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 					career_path: null,
 					subscription_tier: "free",
 				}),
-				expect.any(Array)
+				expect.any(Array),
 			);
 			expect(result.success).toBe(true);
 			expect(result.matchCount).toBe(1);
@@ -122,7 +130,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 
 		it("should delegate to PremiumMatchingStrategy for premium tier", async () => {
 			const premiumConfig = { ...mockConfig, tier: "premium_pending" as const };
-			const premiumUser = { ...mockUser, subscription_tier: "premium_pending" as const };
+			const premiumUser = {
+				...mockUser,
+				subscription_tier: "premium_pending" as const,
+			};
 			const mockPremiumResult = {
 				matches: [
 					{ job_hash: "job1", title: "Software Engineer" },
@@ -135,7 +146,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 
 			mockRunPremiumMatching.mockResolvedValue(mockPremiumResult);
 
-			const result = await SignupMatchingService.runMatching(premiumUser, premiumConfig);
+			const result = await SignupMatchingService.runMatching(
+				premiumUser,
+				premiumConfig,
+			);
 
 			expect(mockRunPremiumMatching).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -144,7 +158,7 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 					career_path: premiumUser.career_path,
 					subscription_tier: "premium_pending",
 				}),
-				expect.any(Array)
+				expect.any(Array),
 			);
 			expect(result.success).toBe(true);
 			expect(result.matchCount).toBe(2);
@@ -164,7 +178,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 				}),
 			});
 
-			const result = await SignupMatchingService.runMatching(mockUser, mockConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				mockConfig,
+			);
 
 			expect(result.success).toBe(true);
 			expect(result.matchCount).toBe(3);
@@ -198,7 +215,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 				duration: 100,
 			});
 
-			const result = await SignupMatchingService.runMatching(mockUser, mockConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				mockConfig,
+			);
 
 			expect(mockRunFreeMatching).toHaveBeenCalled();
 			expect(result.success).toBe(true);
@@ -240,7 +260,11 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 		});
 
 		it("should fetch jobs with correct freshness for premium tier", async () => {
-			const premiumConfig = { ...mockConfig, tier: "premium_pending" as const, jobFreshnessDays: 7 };
+			const premiumConfig = {
+				...mockConfig,
+				tier: "premium_pending" as const,
+				jobFreshnessDays: 7,
+			};
 
 			mockSupabase.from.mockReturnValue({
 				select: jest.fn().mockReturnValue({
@@ -276,7 +300,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 				}),
 			});
 
-			const result = await SignupMatchingService.runMatching(mockUser, mockConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				mockConfig,
+			);
 
 			expect(result.success).toBe(false);
 			expect(result.matchCount).toBe(0);
@@ -308,7 +335,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 		it("should handle strategy failures gracefully", async () => {
 			mockRunFreeMatching.mockRejectedValue(new Error("Strategy failed"));
 
-			const result = await SignupMatchingService.runMatching(mockUser, mockConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				mockConfig,
+			);
 
 			expect(result.success).toBe(false);
 			expect(result.matchCount).toBe(0);
@@ -318,7 +348,10 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 		it("should handle database errors in idempotency check", async () => {
 			mockSupabase.from.mockRejectedValue(new Error("Database error"));
 
-			const result = await SignupMatchingService.runMatching(mockUser, mockConfig);
+			const result = await SignupMatchingService.runMatching(
+				mockUser,
+				mockConfig,
+			);
 
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("Database error");
@@ -363,7 +396,7 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 					email: mockUser.email,
 					tier: "free",
 					maxMatches: 5,
-				})
+				}),
 			);
 		});
 
@@ -379,7 +412,7 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 					tier: "free",
 					matchesFound: 1,
 					method: "free_ai_ranked",
-				})
+				}),
 			);
 		});
 
@@ -395,7 +428,7 @@ describe("SignupMatchingService - Strategy Pattern", () => {
 				expect.objectContaining({
 					email: mockUser.email,
 					tier: "free",
-				})
+				}),
 			);
 		});
 	});

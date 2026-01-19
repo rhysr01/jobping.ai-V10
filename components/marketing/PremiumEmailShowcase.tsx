@@ -35,7 +35,8 @@ const EMAIL_JOBS = {
 			title: "Corporate or Retail Banking - Strategic Analyst",
 			company: "eFinancialCareers",
 			location: "London, UK",
-			jobUrl: "https://www.reed.co.uk/jobs/corporate-or-retail-banking-strategic-analyst/56264348",
+			jobUrl:
+				"https://www.reed.co.uk/jobs/corporate-or-retail-banking-strategic-analyst/56264348",
 			score: 92,
 			matchReason:
 				"Hot match! A tier 1 strategy and analytics group looking for talented bankers to pivot into strategic projects. This team consists of ex-bankers working with Heads of Product and Strategy at major banks.",
@@ -67,8 +68,7 @@ const EMAIL_JOBS = {
 				"Great entry point into strategy and business consulting. This trainee role offers structured training and exposure to multiple industries. Located in London with excellent career progression opportunities.",
 			visaConfidence: "likely",
 			tags: ["On-Site", "Entry Level"],
-			description:
-				"Trainee Recruitment Consultant at G2 Recruitment.",
+			description: "Trainee Recruitment Consultant at G2 Recruitment.",
 		},
 		{
 			title: "Assistant Consultant Communication en Alternance",
@@ -121,8 +121,7 @@ const EMAIL_JOBS = {
 				"Strong alignment with Strategy and Business Design. This pricing consultant role involves strategic analysis and business modeling. Based in Paris with CDI contract, offering stability and growth.",
 			visaConfidence: "likely",
 			tags: ["On-Site", "Entry Level"],
-			description:
-				"Consultant Pricing H/F - CDI at Converteo at Converteo",
+			description: "Consultant Pricing H/F - CDI at Converteo at Converteo",
 		},
 		{
 			title: "Inbound Headhunter & Career Consultant",
@@ -134,8 +133,7 @@ const EMAIL_JOBS = {
 				"Good match for strategy-minded professionals. This consulting role focuses on career strategy and talent acquisition. Located in London, offering exposure to strategic workforce planning.",
 			visaConfidence: "likely",
 			tags: ["On-Site", "Entry Level"],
-			description:
-				"Inbound Headhunter & Career Consultant at Empire.",
+			description: "Inbound Headhunter & Career Consultant at Empire.",
 		},
 		{
 			title: "CONSULTANT CHANGE MANAGEMENT",
@@ -188,8 +186,7 @@ const EMAIL_JOBS = {
 				"Good entry point for consulting and business strategy. This role involves strategic property management and client relationship building. Located in London with clear progression paths.",
 			visaConfidence: "likely",
 			tags: ["On-Site", "Entry Level"],
-			description:
-				"Lettings Consultant at DEX Property Management.",
+			description: "Lettings Consultant at DEX Property Management.",
 		},
 		{
 			title: "Recruitment Consultant",
@@ -214,8 +211,7 @@ const EMAIL_JOBS = {
 				"Alternative path for strategy professionals interested in healthcare consulting. This consultant role offers strategic impact in healthcare transformation. Permanent position in London.",
 			visaConfidence: "verified",
 			tags: ["On-Site", "Entry Level"],
-			description:
-				"This post is permanent or for a secondment opportunity",
+			description: "This post is permanent or for a secondment opportunity",
 		},
 	],
 };
@@ -281,153 +277,177 @@ const getVisaStyle = (confidence: string) => {
 	}
 };
 
-const renderContent = (email: typeof PREMIUM_DAYS[0]) => {
+const renderContent = (email: (typeof PREMIUM_DAYS)[0]) => {
 	// All emails show the same format: scrollable email with all 5 jobs
 	// Note: IPhoneShell already provides overflow-y-auto, we just need to fill the space
 	return (
 		<div className="h-full bg-zinc-950 flex flex-col">
-		{/* Email Header - Sticky */}
-		<div className="px-3 py-2 border-b border-white/5 bg-surface-elevated/20 shrink-0">
-			<div className="text-xs text-zinc-400 mb-0.5">
-				From: <span className="text-emerald-400 font-medium">{email.from}</span>
-			</div>
-			<div className="text-[10px] text-zinc-400">
-				Subject: <span className="text-white font-semibold">{email.subject}</span>
-			</div>
-		</div>
-
-		{/* Email Body - All content flows naturally for scrolling */}
-		<div className="p-3 space-y-2.5">
-			{/* Premium Badge */}
-			<div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500/20 to-brand-600/20 px-2 py-0.5 text-xs font-bold text-brand-300 border border-brand-500/30 shadow-lg shadow-brand-500/20">
-				<div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
-				<span>Premium Member</span>
-			</div>
-
-			{/* Title */}
-			<h1 className="text-sm font-bold text-white">
-				{email.subject}
-			</h1>
-
-			{/* Profile Section - Matches production detailed box */}
-			<div className="rounded-lg bg-purple-500/15 border border-purple-500/35 px-2.5 py-2 mb-2">
-				<div className="text-xs font-bold text-brand-500 uppercase tracking-wider mb-1.5">📋 Your Profile</div>
-				<div className="space-y-0.5 text-xs text-content-heading leading-relaxed">
-					<div><strong>Career Path:</strong> {USER_PROFILE.careerPath}</div>
-					<div><strong>Cities:</strong> {USER_PROFILE.cities.join(", ")}</div>
-					<div><strong>Visa:</strong> {USER_PROFILE.visa}</div>
-					<div><strong>Level:</strong> {USER_PROFILE.level}</div>
-					<div><strong>Work Style:</strong> {USER_PROFILE.workStyle}</div>
+			{/* Email Header - Sticky */}
+			<div className="px-3 py-2 border-b border-white/5 bg-surface-elevated/20 shrink-0">
+				<div className="text-xs text-zinc-400 mb-0.5">
+					From:{" "}
+					<span className="text-emerald-400 font-medium">{email.from}</span>
+				</div>
+				<div className="text-[10px] text-zinc-400">
+					Subject:{" "}
+					<span className="text-white font-semibold">{email.subject}</span>
 				</div>
 			</div>
+
+			{/* Email Body - All content flows naturally for scrolling */}
+			<div className="p-3 space-y-2.5">
+				{/* Premium Badge */}
+				<div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-brand-500/20 to-brand-600/20 px-2 py-0.5 text-xs font-bold text-brand-300 border border-brand-500/30 shadow-lg shadow-brand-500/20">
+					<div className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse" />
+					<span>Premium Member</span>
+				</div>
+
+				{/* Title */}
+				<h1 className="text-sm font-bold text-white">{email.subject}</h1>
+
+				{/* Profile Section - Matches production detailed box */}
+				<div className="rounded-lg bg-purple-500/15 border border-purple-500/35 px-2.5 py-2 mb-2">
+					<div className="text-xs font-bold text-brand-500 uppercase tracking-wider mb-1.5">
+						📋 Your Profile
+					</div>
+					<div className="space-y-0.5 text-xs text-content-heading leading-relaxed">
+						<div>
+							<strong>Career Path:</strong> {USER_PROFILE.careerPath}
+						</div>
+						<div>
+							<strong>Cities:</strong> {USER_PROFILE.cities.join(", ")}
+						</div>
+						<div>
+							<strong>Visa:</strong> {USER_PROFILE.visa}
+						</div>
+						<div>
+							<strong>Level:</strong> {USER_PROFILE.level}
+						</div>
+						<div>
+							<strong>Work Style:</strong> {USER_PROFILE.workStyle}
+						</div>
+					</div>
+				</div>
 
 				{/* All 5 Job Cards */}
 				<div className="space-y-2.5 pt-1">
 					{email.jobs.map((job, index) => (
-						<div
-							key={index}
-							className="group relative"
-						>
+						<div key={index} className="group relative">
 							{/* Glow effect on hover */}
 							<div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 to-purple-500 rounded-lg opacity-0 group-hover:opacity-20 blur-lg transition-opacity duration-500" />
-							
+
 							{/* Card */}
-							<div className="relative rounded-lg bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5"
+							<div
+								className="relative rounded-lg bg-white/[0.03] backdrop-blur-[12px] border border-white/8 p-2.5 transition-all duration-500 ease-out hover:bg-white/[0.06] hover:border-emerald-500/30 hover:-translate-y-0.5"
 								style={{
-									boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+									boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
 								}}
 							>
-				{/* Match Score & Company */}
-				<div className="flex items-center justify-between mb-1.5">
-					{/* Custom Match Badge - No Emoji */}
-					<div className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg ${
-						job.score >= 92
-							? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
-							: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
-					}`}>
-						<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-						<span className="text-xs font-bold text-white">
-							{job.score}% Match
-						</span>
-					</div>
-					<div className="text-xs font-semibold text-content-heading truncate ml-2">
-						{job.company}
-					</div>
-				</div>
+								{/* Match Score & Company */}
+								<div className="flex items-center justify-between mb-1.5">
+									{/* Custom Match Badge - No Emoji */}
+									<div
+										className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg ${
+											job.score >= 92
+												? "bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25"
+												: "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25"
+										}`}
+									>
+										<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+										<span className="text-xs font-bold text-white">
+											{job.score}% Match
+										</span>
+									</div>
+									<div className="text-xs font-semibold text-content-heading truncate ml-2">
+										{job.company}
+									</div>
+								</div>
 
-				{/* Job Title */}
-				<h3 className="text-sm font-bold text-white mb-1.5 leading-tight line-clamp-2">
-					{job.title}
-				</h3>
+								{/* Job Title */}
+								<h3 className="text-sm font-bold text-white mb-1.5 leading-tight line-clamp-2">
+									{job.title}
+								</h3>
 
-				{/* Location */}
-				<div className="flex items-center gap-1 text-[10px] text-content-secondary mb-2">
-					<MapPin size={10} className="shrink-0" />
-					{job.location}
-				</div>
+								{/* Location */}
+								<div className="flex items-center gap-1 text-[10px] text-content-secondary mb-2">
+									<MapPin size={10} className="shrink-0" />
+									{job.location}
+								</div>
 
-				{/* Match Reason */}
-				<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500/40 rounded backdrop-blur-sm">
-					<div className="text-[9px] font-bold text-brand-500 uppercase tracking-wider mb-0.5 flex items-center gap-1">
-						<svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-							<path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-						</svg>
-						Why This Matches
-					</div>
-					<p className="text-[10px] text-content-heading leading-relaxed line-clamp-2">
-						{job.matchReason}
-					</p>
-				</div>
+								{/* Match Reason */}
+								<div className="mb-1.5 p-1.5 bg-purple-500/15 border-l-2 border-purple-500/40 rounded backdrop-blur-sm">
+									<div className="text-[9px] font-bold text-brand-500 uppercase tracking-wider mb-0.5 flex items-center gap-1">
+										<svg
+											className="w-2.5 h-2.5"
+											fill="none"
+											viewBox="0 0 24 24"
+											stroke="currentColor"
+											strokeWidth={2}
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+											/>
+										</svg>
+										Why This Matches
+									</div>
+									<p className="text-[10px] text-content-heading leading-relaxed line-clamp-2">
+										{job.matchReason}
+									</p>
+								</div>
 
-				{/* Tags */}
-				<div className="flex flex-wrap gap-1 mb-2">
-					{job.tags.map((tag) => (
-						<span
-							key={tag}
-							className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/35 text-content-heading text-[9px] font-semibold"
-						>
-							{tag}
-						</span>
-					))}
-					{job.visaConfidence && (
-						<span
-							className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold border ${getVisaStyle(job.visaConfidence).bg} ${getVisaStyle(job.visaConfidence).text} ${getVisaStyle(job.visaConfidence).border}`}
-						>
-							<span className="text-[8px]">{getVisaStyle(job.visaConfidence).icon}</span>
-							{getVisaStyle(job.visaConfidence).label}
-						</span>
-					)}
-				</div>
+								{/* Tags */}
+								<div className="flex flex-wrap gap-1 mb-2">
+									{job.tags.map((tag) => (
+										<span
+											key={tag}
+											className="px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/35 text-content-heading text-[9px] font-semibold"
+										>
+											{tag}
+										</span>
+									))}
+									{job.visaConfidence && (
+										<span
+											className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold border ${getVisaStyle(job.visaConfidence).bg} ${getVisaStyle(job.visaConfidence).text} ${getVisaStyle(job.visaConfidence).border}`}
+										>
+											<span className="text-[8px]">
+												{getVisaStyle(job.visaConfidence).icon}
+											</span>
+											{getVisaStyle(job.visaConfidence).label}
+										</span>
+									)}
+								</div>
 
-				{/* Action Buttons */}
-				<div className="space-y-1 relative z-10">
-					<a
-						href={job.jobUrl}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="block w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold px-2 py-1.5 rounded-lg text-[10px] text-center hover:from-purple-500 hover:to-purple-600 transition-colors pointer-events-auto cursor-pointer shadow-lg shadow-purple-500/25"
-						onClick={(e) => {
-							e.stopPropagation();
-							window.open(job.jobUrl, '_blank', 'noopener,noreferrer');
-						}}
-					>
-						View Match Evidence →
-					</a>
-					<div className="flex gap-1 mt-1">
-						<button
-							type="button"
-							className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-emerald-500/20 transition-colors min-h-[48px]"
-						>
-							👍 Good match
-						</button>
-						<button
-							type="button"
-							className="flex-1 bg-red-500/10 border border-red-500/30 text-error px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-red-500/20 transition-colors min-h-[48px]"
-						>
-							👎 Not for me
-						</button>
-					</div>
-				</div>
+								{/* Action Buttons */}
+								<div className="space-y-1 relative z-10">
+									<a
+										href={job.jobUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="block w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold px-2 py-1.5 rounded-lg text-[10px] text-center hover:from-purple-500 hover:to-purple-600 transition-colors pointer-events-auto cursor-pointer shadow-lg shadow-purple-500/25"
+										onClick={(e) => {
+											e.stopPropagation();
+											window.open(job.jobUrl, "_blank", "noopener,noreferrer");
+										}}
+									>
+										View Match Evidence →
+									</a>
+									<div className="flex gap-1 mt-1">
+										<button
+											type="button"
+											className="flex-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-emerald-500/20 transition-colors min-h-[48px]"
+										>
+											👍 Good match
+										</button>
+										<button
+											type="button"
+											className="flex-1 bg-red-500/10 border border-red-500/30 text-error px-2 py-2 rounded-lg text-[9px] font-semibold pointer-events-auto hover:bg-red-500/20 transition-colors min-h-[48px]"
+										>
+											👎 Not for me
+										</button>
+									</div>
+								</div>
 							</div>
 						</div>
 					))}
@@ -448,7 +468,9 @@ export function PremiumEmailShowcase() {
 	};
 
 	const prevEmail = () => {
-		setActiveIndex((prev) => (prev - 1 + PREMIUM_DAYS.length) % PREMIUM_DAYS.length);
+		setActiveIndex(
+			(prev) => (prev - 1 + PREMIUM_DAYS.length) % PREMIUM_DAYS.length,
+		);
 	};
 
 	const goToEmail = (index: number) => {
@@ -456,7 +478,10 @@ export function PremiumEmailShowcase() {
 	};
 
 	return (
-		<section id="how-it-works" className="py-24 sm:py-32 md:py-40 bg-black border-t border-border-subtle scroll-snap-section relative">
+		<section
+			id="how-it-works"
+			className="py-24 sm:py-32 md:py-40 bg-black border-t border-border-subtle scroll-snap-section relative"
+		>
 			{/* Scroll momentum fade */}
 			<div className="absolute left-0 right-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
 

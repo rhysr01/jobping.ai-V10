@@ -122,7 +122,9 @@ describe("Signup Verification Flow", () => {
 		});
 
 		it("should handle email sending failures gracefully", async () => {
-			mockSendVerificationEmail.mockRejectedValue(new Error("Email service down"));
+			mockSendVerificationEmail.mockRejectedValue(
+				new Error("Email service down"),
+			);
 
 			// Even if email fails, premium signup should still create the user
 			const signupResult = {
@@ -153,7 +155,9 @@ describe("Signup Verification Flow", () => {
 
 			// Should reject duplicate premium signup
 			expect(existingPremiumUser.email).toBe(newSignupAttempt.email);
-			expect(existingPremiumUser.subscription_tier).toBe(newSignupAttempt.subscription_tier);
+			expect(existingPremiumUser.subscription_tier).toBe(
+				newSignupAttempt.subscription_tier,
+			);
 			// This should result in a conflict error
 		});
 

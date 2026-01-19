@@ -105,9 +105,9 @@ describe("External API Integration Tests", () => {
 		it("should handle OpenAI API errors gracefully", async () => {
 			// Mock an error scenario
 			const originalCreate = openaiClient.chat.completions.create;
-			openaiClient.chat.completions.create = jest.fn().mockRejectedValue(
-				new Error("OpenAI API Error"),
-			);
+			openaiClient.chat.completions.create = jest
+				.fn()
+				.mockRejectedValue(new Error("OpenAI API Error"));
 
 			try {
 				await openaiClient.chat.completions.create({
@@ -141,10 +141,14 @@ describe("External API Integration Tests", () => {
 
 		it("should handle Redis connection errors gracefully", async () => {
 			// Test error scenario with mocked client
-			redisClient.get.mockRejectedValueOnce(new Error("Redis connection failed"));
+			redisClient.get.mockRejectedValueOnce(
+				new Error("Redis connection failed"),
+			);
 
 			try {
-				await redisClient.get("nonexistent_key_with_very_long_name_that_should_not_exist");
+				await redisClient.get(
+					"nonexistent_key_with_very_long_name_that_should_not_exist",
+				);
 				fail("Expected error to be thrown");
 			} catch (error) {
 				expect(error).toBeDefined();
@@ -192,7 +196,7 @@ describe("External API Integration Tests", () => {
 				"NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
 			];
 
-			allTestedVars.forEach(varName => {
+			allTestedVars.forEach((varName) => {
 				if (process.env[varName]) {
 					expect(process.env[varName]?.length).toBeGreaterThan(0);
 				}
@@ -202,7 +206,7 @@ describe("External API Integration Tests", () => {
 		it("should validate URL formats", () => {
 			const urlVars = ["NEXT_PUBLIC_SUPABASE_URL", "REDIS_URL"];
 
-			urlVars.forEach(varName => {
+			urlVars.forEach((varName) => {
 				if (process.env[varName]) {
 					expect(process.env[varName]).toMatch(/^https?:\/\//);
 				}
@@ -237,7 +241,9 @@ describe("External API Integration Tests", () => {
 			// Test Supabase
 			if (supabaseClient) {
 				try {
-					await supabaseClient.from("users").select("count", { count: "exact", head: true });
+					await supabaseClient
+						.from("users")
+						.select("count", { count: "exact", head: true });
 					healthStatus.supabase = true;
 				} catch (error) {
 					console.warn("Supabase health check failed:", error);

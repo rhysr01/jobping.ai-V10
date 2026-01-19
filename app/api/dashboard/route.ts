@@ -26,10 +26,14 @@ async function getDatabaseMetrics(): Promise<DatabaseMetrics> {
 		]);
 
 		return {
-			users: usersResult.status === "fulfilled" ? (usersResult.value.count ?? 0) : 0,
-			jobs: jobsResult.status === "fulfilled" ? (jobsResult.value.count ?? 0) : 0,
+			users:
+				usersResult.status === "fulfilled" ? (usersResult.value.count ?? 0) : 0,
+			jobs:
+				jobsResult.status === "fulfilled" ? (jobsResult.value.count ?? 0) : 0,
 			matches:
-				matchesResult.status === "fulfilled" ? (matchesResult.value.count ?? 0) : 0,
+				matchesResult.status === "fulfilled"
+					? (matchesResult.value.count ?? 0)
+					: 0,
 			timestamp: new Date().toISOString(),
 		};
 	} catch (error) {

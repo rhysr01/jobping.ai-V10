@@ -8,7 +8,10 @@ interface UpgradeBannerProps {
 	jobsViewed: number;
 }
 
-export function UpgradeBanner({ showUpgradeBanner, jobsViewed }: UpgradeBannerProps) {
+export function UpgradeBanner({
+	showUpgradeBanner,
+	jobsViewed,
+}: UpgradeBannerProps) {
 	if (!showUpgradeBanner) return null;
 
 	return (
@@ -28,8 +31,8 @@ export function UpgradeBanner({ showUpgradeBanner, jobsViewed }: UpgradeBannerPr
 					</h3>
 
 					<p className="mb-4 text-sm text-amber-200">
-						You've viewed {jobsViewed} job{jobsViewed !== 1 ? "s" : ""}. Premium users get{" "}
-						<strong>15 jobs per week</strong> instead of 5.
+						You've viewed {jobsViewed} job{jobsViewed !== 1 ? "s" : ""}. Premium
+						users get <strong>15 jobs per week</strong> instead of 5.
 					</p>
 
 					<div className="flex gap-3">

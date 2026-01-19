@@ -1,7 +1,7 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 }
 const { createClient } = require("@supabase/supabase-js");
 const {
@@ -17,7 +17,10 @@ const {
 	getRoleVariations,
 	cleanRoleForSearch,
 } = require("./shared/roles.cjs");
-const { recordScraperRun, recordApiRequest } = require("./shared/telemetry.cjs");
+const {
+	recordScraperRun,
+	recordApiRequest,
+} = require("./shared/telemetry.cjs");
 const { processIncomingJob } = require("./shared/processor.cjs");
 
 const BASE_URL = "https://www.arbeitnow.com/api/job-board-api";
@@ -519,17 +522,19 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 			);
 
 			// Exponential backoff: 5s, 10s, 20s, then give up
-			const backoffTime = Math.min(5000 * Math.pow(2, retries), 30000);
+			const backoffTime = Math.min(5000 * 2 ** retries, 30000);
 			console.log(`[Arbeitnow] Waiting ${backoffTime}ms before retry...`);
 
-			await new Promise(resolve => setTimeout(resolve, backoffTime));
+			await new Promise((resolve) => setTimeout(resolve, backoffTime));
 			retries++;
-
 		} catch (error) {
-			console.error(`[Arbeitnow] Network error on attempt ${retries + 1}:`, error.message);
+			console.error(
+				`[Arbeitnow] Network error on attempt ${retries + 1}:`,
+				error.message,
+			);
 			retries++;
 			if (retries <= 3) {
-				await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+				await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1s before retry
 			}
 		}
 	}
@@ -537,13 +542,17 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 	try {
 		if (!response || !response.ok) {
 			if (response?.status === 429 && retries > 3) {
-				console.error(`[Arbeitnow] Rate limit persists after ${retries} retries - skipping`);
+				console.error(
+					`[Arbeitnow] Rate limit persists after ${retries} retries - skipping`,
+				);
 			} else if (response) {
 				console.error(
 					`[Arbeitnow] API error ${response.status} for ${keyword} in ${location.name}`,
 				);
 			} else {
-				console.error(`[Arbeitnow] Failed to get response after ${retries} retries`);
+				console.error(
+					`[Arbeitnow] Failed to get response after ${retries} retries`,
+				);
 			}
 			return totalSaved; // Return what we have on errors
 		}
@@ -557,110 +566,107 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 
 		// If no jobs found, return early
 		if (jobs.length === 0) {
-			console.log(`[Arbeitnow] No jobs found for "${keyword}" in ${location.name}`);
+			console.log(
+				`[Arbeitnow] No jobs found for "${keyword}" in ${location.name}`,
+			);
 			return totalSaved;
 		}
 
 		// Process each job and add to batch
 		for (const job of jobs) {
-				try {
-					// Extract city and country
-					const city = extractCity(job.location);
-					const country = inferCountry(job.location);
+			try {
+				// Extract city and country
+				const city = extractCity(job.location);
+				const country = inferCountry(job.location);
 
-					// Create normalized job object for early-career check
-					const normalizedJob = {
-						title: job.title || "",
-						company: job.company_name || "",
-						location: city,
-						description: job.description || "",
-					};
+				// Create normalized job object for early-career check
+				const normalizedJob = {
+					title: job.title || "",
+					company: job.company_name || "",
+					location: city,
+					description: job.description || "",
+				};
 
-					// Check if it's early career
-					const isEarlyCareer = classifyEarlyCareer(normalizedJob);
-					if (!isEarlyCareer) {
-						continue; // Skip non-early-career jobs
-					}
+				// Check if it's early career
+				const isEarlyCareer = classifyEarlyCareer(normalizedJob);
+				if (!isEarlyCareer) {
+					continue; // Skip non-early-career jobs
+				}
 
-					// Process through standardization pipe
-					const processed = await processIncomingJob(
-						{
-							title: job.title,
-							company: job.company_name,
-							location: job.location,
-							description: job.description,
-							url: job.url,
-							posted_at: normalizeDate(job.created_at),
-							created_at: job.created_at,
-						},
-						{
-							source: "arbeitnow",
-							defaultCity: city,
-							defaultCountry: country,
-						},
+				// Process through standardization pipe
+				const processed = await processIncomingJob(
+					{
+						title: job.title,
+						company: job.company_name,
+						location: job.location,
+						description: job.description,
+						url: job.url,
+						posted_at: normalizeDate(job.created_at),
+						created_at: job.created_at,
+					},
+					{
+						source: "arbeitnow",
+						defaultCity: city,
+						defaultCountry: country,
+					},
+				);
+
+				// CRITICAL: Skip if processor rejected (e.g., job board company)
+				if (!processed) {
+					continue;
+				}
+
+				// Generate job_hash
+				const job_hash = makeJobHash({
+					title: processed.title,
+					company: processed.company,
+					location: processed.location,
+				});
+
+				// Infer categories from tags (Arbeitnow-specific)
+				const categories = inferCategoriesFromTags(job.tags || [], job.title);
+
+				// Prepare database record with all standardized fields
+				const jobRecord = {
+					...processed,
+					job_hash,
+					categories, // Override with Arbeitnow-specific categories
+				};
+
+				// CRITICAL: Validate before adding to batch
+				const { validateJob } = require("./shared/jobValidator.cjs");
+				const validation = validateJob(jobRecord);
+				if (!validation.valid) {
+					console.warn(
+						`[Arbeitnow] Skipping invalid job: ${validation.errors.join(", ")}`,
 					);
+					continue;
+				}
 
-					// CRITICAL: Skip if processor rejected (e.g., job board company)
-					if (!processed) {
-						continue;
-					}
+				// Add to batch instead of saving immediately
+				jobBatch.push(validation.job);
 
-					// Generate job_hash
-					const job_hash = makeJobHash({
-						title: processed.title,
-						company: processed.company,
-						location: processed.location,
+				// Save batch when it reaches BATCH_SIZE
+				if (jobBatch.length >= BATCH_SIZE) {
+					// CRITICAL FIX: Use ignoreDuplicates: true to prevent timeout on updates
+					// This avoids expensive UPDATE operations for existing jobs
+					// last_seen_at will be updated by the matching engine, not by scrapers
+					const { error } = await supabase.from("jobs").upsert(jobBatch, {
+						onConflict: "job_hash",
+						ignoreDuplicates: true, // Changed from false to true to prevent timeouts
 					});
 
-					// Infer categories from tags (Arbeitnow-specific)
-					const categories = inferCategoriesFromTags(job.tags || [], job.title);
-
-					// Prepare database record with all standardized fields
-					const jobRecord = {
-						...processed,
-						job_hash,
-						categories, // Override with Arbeitnow-specific categories
-					};
-
-					// CRITICAL: Validate before adding to batch
-					const { validateJob } = require("./shared/jobValidator.cjs");
-					const validation = validateJob(jobRecord);
-					if (!validation.valid) {
-						console.warn(
-							`[Arbeitnow] Skipping invalid job: ${validation.errors.join(", ")}`,
-						);
-						continue;
+					if (error) {
+						console.error(`[Arbeitnow] Error saving batch:`, error.message);
+					} else {
+						console.log(`[Arbeitnow] Saved batch of ${jobBatch.length} jobs`);
 					}
-
-					// Add to batch instead of saving immediately
-					jobBatch.push(validation.job);
-
-					// Save batch when it reaches BATCH_SIZE
-					if (jobBatch.length >= BATCH_SIZE) {
-						// CRITICAL FIX: Use ignoreDuplicates: true to prevent timeout on updates
-						// This avoids expensive UPDATE operations for existing jobs
-						// last_seen_at will be updated by the matching engine, not by scrapers
-						const { error } = await supabase.from("jobs").upsert(jobBatch, {
-							onConflict: "job_hash",
-							ignoreDuplicates: true, // Changed from false to true to prevent timeouts
-						});
-
-						if (error) {
-							console.error(
-								`[Arbeitnow] Error saving batch:`,
-								error.message,
-							);
-						} else {
-							console.log(
-								`[Arbeitnow] Saved batch of ${jobBatch.length} jobs`,
-							);
-						}
-						jobBatch.length = 0; // Clear batch
-					}
-				} catch (jobError) {
-					console.error("[Arbeitnow] Error processing job:", jobError.message);
+					jobBatch.length = 0; // Clear batch
 				}
+			} catch (jobError) {
+				console.error("[Arbeitnow] Error processing job:", jobError.message);
 			}
+		}
 
 		// Save any remaining jobs in the batch
 	} catch (error) {
@@ -678,16 +684,11 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 		});
 
 		if (error) {
-			console.error(
-				`[Arbeitnow] Error saving final batch:`,
-				error.message,
-			);
+			console.error(`[Arbeitnow] Error saving final batch:`, error.message);
 		} else {
 			const saved = Array.isArray(data) ? data.length : jobBatch.length;
 			totalSaved += saved;
-			console.log(
-				`[Arbeitnow] Saved final batch of ${jobBatch.length} jobs`,
-			);
+			console.log(`[Arbeitnow] Saved final batch of ${jobBatch.length} jobs`);
 		}
 	}
 
@@ -718,13 +719,13 @@ async function scrapeArbeitnow() {
 
 	const queries = generateSearchQueries();
 
-// CRITICAL FIX: Drastically reduce queries to prevent 120s GitHub Actions timeout
-// REDUCED from 40 to 6 queries to prevent timeouts
-// 2 cities × 6 queries × 2 pages avg = ~24 requests max
-// With rate limiting (2s between queries), this completes in ~48 seconds
-const limitedQueries = queries.slice(0, 6); // Emergency reduction for timeout prevention
-	
-	const MAX_PAGES = parseInt(process.env.ARBEITNOW_MAX_PAGES || "1000", 10);
+	// CRITICAL FIX: Drastically reduce queries to prevent 120s GitHub Actions timeout
+	// REDUCED from 40 to 6 queries to prevent timeouts
+	// 2 cities × 6 queries × 2 pages avg = ~24 requests max
+	// With rate limiting (2s between queries), this completes in ~48 seconds
+	const limitedQueries = queries.slice(0, 6); // Emergency reduction for timeout prevention
+
+	const _MAX_PAGES = parseInt(process.env.ARBEITNOW_MAX_PAGES || "1000", 10);
 	console.log(
 		`[Arbeitnow] Using ${limitedQueries.length} queries across ${CITIES.length} cities (unlimited pages per query, will fetch all available)`,
 	);

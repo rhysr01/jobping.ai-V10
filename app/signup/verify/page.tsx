@@ -53,7 +53,8 @@ export default function EmailVerificationPage() {
 					</h1>
 
 					<p className="text-lg text-zinc-400 mb-8">
-						We sent a verification link to <strong className="text-white">{email}</strong>
+						We sent a verification link to{" "}
+						<strong className="text-white">{email}</strong>
 					</p>
 
 					<div className="bg-white/5 rounded-2xl p-8 border border-white/10 mb-8">
@@ -64,7 +65,8 @@ export default function EmailVerificationPage() {
 							<div className="text-left">
 								<h3 className="text-xl font-bold mb-2">Verify to Continue</h3>
 								<p className="text-zinc-400 mb-4">
-									Click the verification link in your email to activate your account and proceed to payment.
+									Click the verification link in your email to activate your
+									account and proceed to payment.
 								</p>
 								<ul className="text-sm text-zinc-400 space-y-1">
 									<li>• Link expires in 24 hours</li>
@@ -98,7 +100,13 @@ export default function EmailVerificationPage() {
 					</div>
 
 					<div className="text-sm text-zinc-500">
-						Need help? <a href="mailto:contact@getjobping.com" className="text-purple-400 hover:text-purple-300 underline">Contact Support</a>
+						Need help?{" "}
+						<a
+							href="mailto:contact@getjobping.com"
+							className="text-purple-400 hover:text-purple-300 underline"
+						>
+							Contact Support
+						</a>
 					</div>
 				</div>
 			</div>

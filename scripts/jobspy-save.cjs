@@ -11,10 +11,10 @@
 // Load environment variables conditionally
 // In production/GitHub Actions, env vars are already set
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
-    require("dotenv").config({ path: ".env.local" });
+	require("dotenv").config({ path: ".env.local" });
 } else if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    // Fallback: try loading .env.local even in production if Supabase vars aren't set
-    require("dotenv").config({ path: ".env.local" });
+	// Fallback: try loading .env.local even in production if Supabase vars aren't set
+	require("dotenv").config({ path: ".env.local" });
 }
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
@@ -773,7 +773,7 @@ function _detectVisaRequirements(description) {
 }
 
 // Extract salary range - ENHANCED with more patterns
-function extractSalaryRange(description) {
+function _extractSalaryRange(description) {
 	if (!description) return null;
 
 	// Match various salary formats - expanded patterns
@@ -842,116 +842,127 @@ async function saveJobs(jobs, source) {
 	const nonRemote = jobs.filter(
 		(j) => !(j.location || "").toLowerCase().includes("remote"),
 	);
-	const rows = nonRemote.map((j) => {
-		// ENHANCED: Prioritize description field, enrich with company_description + skills if needed
-		let description = (
-			(j.description && j.description.trim().length > 50
-				? j.description
-				: "") ||
-			j.company_description ||
-			"" ||
-			j.skills ||
-			""
-		).trim();
+	const rows = nonRemote
+		.map((j) => {
+			// ENHANCED: Prioritize description field, enrich with company_description + skills if needed
+			let description = (
+				(j.description && j.description.trim().length > 50
+					? j.description
+					: "") ||
+				j.company_description ||
+				"" ||
+				j.skills ||
+				""
+			).trim();
 
-		// If description is too short, try to enrich it
-		if (description.length < 100 && (j.company_description || j.skills)) {
-			const parts = [];
-			if (description) parts.push(description);
+			// If description is too short, try to enrich it
+			if (description.length < 100 && (j.company_description || j.skills)) {
+				const parts = [];
+				if (description) parts.push(description);
+				if (
+					j.company_description &&
+					!description.includes(j.company_description)
+				) {
+					parts.push(j.company_description);
+				}
+				if (j.skills && !description.includes(j.skills)) {
+					parts.push(j.skills);
+				}
+				description = parts.join(" ").trim();
+			}
+
+			// Ensure minimum description length for quality
+			if (description.length < 20) {
+				description =
+					`${j.title || ""} at ${j.company || ""}. ${description}`.trim();
+			}
+
+			// Debug missing/empty fields for JobSpy
 			if (
-				j.company_description &&
-				!description.includes(j.company_description)
+				source === "jobspy" &&
+				(!j.title ||
+					!j.company ||
+					!j.job_url ||
+					j.title === "" ||
+					j.company === "")
 			) {
-				parts.push(j.company_description);
+				console.log(`[JobSpy Debug] Missing/empty fields for job:`, {
+					title: `"${j.title}"`,
+					company: `"${j.company}"`,
+					job_url: `"${j.job_url}"`,
+					url: `"${j.url}"`,
+					location: `"${j.location}"`,
+					description_length: description.length,
+					description_preview: description.substring(0, 50),
+					raw_keys: Object.keys(j),
+				});
 			}
-			if (j.skills && !description.includes(j.skills)) {
-				parts.push(j.skills);
+
+			// Process through standardization pipe
+			const processed = processIncomingJob(
+				{
+					title: j.title,
+					company: j.company,
+					location: j.location,
+					description: description,
+					url: j.job_url || j.url,
+					posted_at: j.posted_at,
+				},
+				{
+					source,
+				},
+			);
+
+			// CRITICAL: Check if processing returned null (job was filtered out, e.g., job board)
+			if (!processed) {
+				return null; // Skip this job
 			}
-			description = parts.join(" ").trim();
-		}
 
-		// Ensure minimum description length for quality
-		if (description.length < 20) {
-			description =
-				`${j.title || ""} at ${j.company || ""}. ${description}`.trim();
-		}
+			// ENHANCED: Build categories array using CAREER_PATH_KEYWORDS (JobSpy-specific enhancement)
+			const {
+				CAREER_PATH_KEYWORDS,
+			} = require("../scrapers/shared/helpers.cjs");
+			let categories = [...(processed.categories || [])]; // Start with processor categories
 
-		// Debug missing/empty fields for JobSpy
-		if (source === 'jobspy' && (!j.title || !j.company || !j.job_url || j.title === '' || j.company === '')) {
-			console.log(`[JobSpy Debug] Missing/empty fields for job:`, {
-				title: `"${j.title}"`,
-				company: `"${j.company}"`,
-				job_url: `"${j.job_url}"`,
-				url: `"${j.url}"`,
-				location: `"${j.location}"`,
-				description_length: description.length,
-				description_preview: description.substring(0, 50),
-				raw_keys: Object.keys(j)
+			// Infer career path categories from title and description
+			const fullText = `${(j.title || "").toLowerCase()} ${description.toLowerCase()}`;
+			const {
+				addCategoryFromPath,
+				validateAndFixCategories,
+			} = require("../scrapers/shared/categoryMapper.cjs");
+
+			Object.entries(CAREER_PATH_KEYWORDS).forEach(([path, keywords]) => {
+				const keywordLower = keywords.map((k) => k.toLowerCase());
+				if (keywordLower.some((kw) => fullText.includes(kw))) {
+					// Use shared category mapper to ensure consistency
+					categories = addCategoryFromPath(path, categories);
+				}
 			});
-		}
 
-		// Process through standardization pipe
-		const processed = processIncomingJob(
-			{
-				title: j.title,
-				company: j.company,
-				location: j.location,
-				description: description,
-				url: j.job_url || j.url,
-				posted_at: j.posted_at,
-			},
-			{
-				source,
-			},
-		);
+			// CRITICAL: Validate and fix categories before saving
+			categories = validateAndFixCategories(categories);
 
-		// CRITICAL: Check if processing returned null (job was filtered out, e.g., job board)
-		if (!processed) {
-			return null; // Skip this job
-		}
-
-		// ENHANCED: Build categories array using CAREER_PATH_KEYWORDS (JobSpy-specific enhancement)
-		const { CAREER_PATH_KEYWORDS } = require("../scrapers/shared/helpers.cjs");
-		let categories = [...(processed.categories || [])]; // Start with processor categories
-
-		// Infer career path categories from title and description
-		const fullText = `${(j.title || "").toLowerCase()} ${description.toLowerCase()}`;
-		const {
-			addCategoryFromPath,
-			validateAndFixCategories,
-		} = require("../scrapers/shared/categoryMapper.cjs");
-
-		Object.entries(CAREER_PATH_KEYWORDS).forEach(([path, keywords]) => {
-			const keywordLower = keywords.map((k) => k.toLowerCase());
-			if (keywordLower.some((kw) => fullText.includes(kw))) {
-				// Use shared category mapper to ensure consistency
-				categories = addCategoryFromPath(path, categories);
+			// If no specific category found, add 'general'
+			if (categories.length === 1) {
+				categories.push("general");
 			}
-		});
 
-		// CRITICAL: Validate and fix categories before saving
-		categories = validateAndFixCategories(categories);
+			// JobSpy-specific extractions (keep these as they're additional metadata)
+			const _industries = extractIndustries(description);
+			const _companySize = extractCompanySize(description, processed.company);
+			const _skills = extractSkills(description);
+			// Note: salary_range field removed - not in database schema
 
-		// If no specific category found, add 'general'
-		if (categories.length === 1) {
-			categories.push("general");
-		}
+			// Generate job_hash
+			const job_hash = hashJob(j.title, processed.company, j.location);
 
-		// JobSpy-specific extractions (keep these as they're additional metadata)
-		const _industries = extractIndustries(description);
-		const _companySize = extractCompanySize(description, processed.company);
-		const _skills = extractSkills(description);
-		// Note: salary_range field removed - not in database schema
-
-		// Generate job_hash
-		const job_hash = hashJob(j.title, processed.company, j.location);
-
-		return {
-			...processed,
-			job_hash,
-			categories, // Use enhanced categories
-		};
-	}).filter(Boolean); // Remove null entries (filtered jobs)
+			return {
+				...processed,
+				job_hash,
+				categories, // Use enhanced categories
+			};
+		})
+		.filter(Boolean); // Remove null entries (filtered jobs)
 	// CRITICAL: Use comprehensive validator to prevent data quality issues
 	const { validateJobs } = require("../scrapers/shared/jobValidator.cjs");
 	const validationResult = validateJobs(rows);
@@ -1033,12 +1044,14 @@ async function saveJobs(jobs, source) {
 							error: errorMessage,
 							errorName,
 							batchSize: slice.length,
-							firstJob: slice[0] ? {
-								title: slice[0].title,
-								company_name: slice[0].company_name,
-								job_url: slice[0].job_url,
-								has_job_hash: !!slice[0].job_hash
-							} : null
+							firstJob: slice[0]
+								? {
+										title: slice[0].title,
+										company_name: slice[0].company_name,
+										job_url: slice[0].job_url,
+										has_job_hash: !!slice[0].job_hash,
+									}
+								: null,
 						});
 						const errorCode = error?.code || error?.cause?.code || "";
 
@@ -1626,18 +1639,8 @@ async function main() {
 	};
 	// Priority cities: Adzuna doesn't cover these, so JobSpy must prioritize them
 	// REDUCED: Only 8 priority cities to prevent timeouts
-	const PRIORITY_CITIES = [
-		"London",
-		"Berlin",
-		"Paris",
-		"Amsterdam",
-		"Munich",
-	];
-	const OTHER_CITIES = [
-		"Madrid",
-		"Milan",
-		"Dublin",
-	];
+	const PRIORITY_CITIES = ["London", "Berlin", "Paris", "Amsterdam", "Munich"];
+	const OTHER_CITIES = ["Madrid", "Milan", "Dublin"];
 	// Process priority cities first, then others
 	const cities = [...PRIORITY_CITIES, ...OTHER_CITIES];
 
@@ -2015,7 +2018,9 @@ async function main() {
 			"working student",
 		];
 		const internshipLocal = localized.filter((t) =>
-			/(praktik|stage|stagiaire|prácticas|tirocinio|staż|werkstudent|becario)/i.test(t),
+			/(praktik|stage|stagiaire|prácticas|tirocinio|staż|werkstudent|becario)/i.test(
+				t,
+			),
 		);
 		const internshipBatch = `("${internshipTerms.join('" OR "')}"${internshipLocal.length > 0 ? ` OR "${internshipLocal.join('" OR "')}"` : ""})`;
 
@@ -2079,7 +2084,7 @@ async function main() {
 			);
 
 			// Optimize: Skip Glassdoor for cities where it's blocked
-			const GLASSDOOR_BLOCKED_CITIES = [
+			const _GLASSDOOR_BLOCKED_CITIES = [
 				"Stockholm",
 				"Copenhagen",
 				"Prague",
