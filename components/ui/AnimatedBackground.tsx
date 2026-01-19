@@ -39,11 +39,8 @@ export default function AnimatedBackground() {
 
 	return (
 		<div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
-			{/* Base gradient with parallax */}
-			<motion.div
-				className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950"
-				style={{ y: parallaxSlow }}
-			/>
+			{/* Base gradient */}
+			<div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950" />
 
 
 			{/* Perspective Grid - clean, professional background */}
