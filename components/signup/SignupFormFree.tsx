@@ -43,6 +43,7 @@ function SignupFormFree() {
 		setError,
 		setSuccessState,
 		setFormData,
+		updateFormData,
 		toggleArrayValue,
 	} = signupState;
 
@@ -59,7 +60,7 @@ function SignupFormFree() {
 	// Form persistence hook
 	const { clearProgress } = useFormPersistence(
 		formData as any,
-		setFormData as any,
+		updateFormData as any,
 		{ tier: "free", hasStep: true, minStepForSave: 1 },
 		setStep,
 		step,
@@ -355,7 +356,7 @@ function SignupFormFree() {
 							<Step2FreeCities
 								key="step2"
 								formData={formData}
-								setFormData={setFormData}
+								setFormData={updateFormData}
 								touchedFields={new Set()}
 								setTouchedFields={() => {}}
 								loading={loading}
