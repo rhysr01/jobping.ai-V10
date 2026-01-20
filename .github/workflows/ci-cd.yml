@@ -126,16 +126,25 @@ jobs:
           echo "📄 Static files:"
           find .next/static -name "*.js" -exec wc -c {} \; | awk '{sum += $1} END {print "Total JS size: " sum/1024 " KB"}'
 
-      - name: 🧪 Run E2E tests
-        run: npm run test:e2e
+      - name: 🧪 Quality Assurance Suite
+        run: npm run test:quality-gate
         env:
           NEXT_PUBLIC_BASE_URL: "${{ secrets.NEXT_PUBLIC_BASE_URL }}"
 
-      - name: ⚡ Performance tests
-        run: npm run test:e2e:performance
+      - name: 🤖 MCP Test Analysis
+        if: failure()
+        run: |
+          # Analyze test failures and create automated issues
+          npm run test:failure-analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-      - name: ♿ Accessibility tests
-        run: npm run test:e2e:accessibility
+      - name: 📊 Generate Test Health Report
+        run: |
+          # Generate comprehensive test health insights
+          npm run test:health-dashboard
 
       - name: 📸 Upload build artifacts
         uses: actions/upload-artifact@v4

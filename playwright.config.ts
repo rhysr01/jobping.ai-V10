@@ -54,6 +54,12 @@ export default defineConfig({
 
 		// Viewport size
 		viewport: { width: 1280, height: 720 },
+
+		// Visual regression settings
+		screenshot: {
+			mode: "only-on-failure",
+			fullPage: true,
+		},
 	},
 
 	// Maximum time for expect assertions
