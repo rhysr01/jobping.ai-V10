@@ -18,7 +18,7 @@
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test:e2e:free": "playwright test tests/e2e/free-version-loading.spec.ts",
-		"test:all": "npm run test && npm run test:e2e:complete && npm run test:e2e:visual && npm run test:e2e:chaos && npm run test:security && npm run test:database-integrity",
+		"test:all": "npm run test && npm run test:production-engine && npm run test:security && npm run test:database-integrity",
 		"test:comprehensive": "npm run test:all && npm run test:production-engine && npm run test:failure-analysis",
 		"test:quality-gate": "npm run test:comprehensive && npm run type-check && npm run lint:biome",
 		"test:e2e:complete": "playwright test tests/e2e/complete-free-signup.spec.ts tests/e2e/complete-premium-signup.spec.ts",

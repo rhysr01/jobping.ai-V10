@@ -37,6 +37,7 @@ export interface MatchingResult {
 export async function runFreeMatching(
 	userPrefs: FreeUserPreferences,
 	jobs: JobWithMetadata[],
+	maxMatches: number = 5,
 ): Promise<MatchingResult> {
 	const startTime = Date.now();
 
@@ -128,6 +129,7 @@ export async function runFreeMatching(
 					fallbackFiltered,
 					"free_fallback",
 					startTime,
+					maxMatches,
 				);
 			}
 
@@ -144,12 +146,13 @@ export async function runFreeMatching(
 		// 1. User hasn't provided much data (just cities + career)
 		// 2. We want fast results (no heavy processing)
 		// 3. 5 matches is small, doesn't need complex ranking
-		return await rankAndReturnMatches(
-			userPrefs,
-			preFiltered,
-			"free_ai_ranked",
-			startTime,
-		);
+				return await rankAndReturnMatches(
+					userPrefs,
+					preFiltered,
+					"free_ai_ranked",
+					startTime,
+					maxMatches,
+				);
 	} catch (error) {
 		apiLogger.error("[FREE] Matching error", error as Error, {
 			email: userPrefs.email,
@@ -166,6 +169,7 @@ async function rankAndReturnMatches(
 	jobs: JobWithMetadata[],
 	method: string,
 	startTime: number,
+	maxMatches: number,
 ): Promise<MatchingResult> {
 	try {
 		// Use simplified matching engine with free tier configuration
@@ -191,7 +195,7 @@ async function rankAndReturnMatches(
 		);
 
 		const matches = (matchResult?.matches || [])
-			.slice(0, 5) // FREE: Always 5 matches max
+			.slice(0, maxMatches) // FREE: Use configurable match count
 			.map((m: any) => ({
 				...m.job,
 				match_score: m.match_score,

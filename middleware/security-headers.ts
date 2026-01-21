@@ -17,8 +17,8 @@ export function addSecurityHeaders(response: NextResponse): void {
 	const isDevelopment = process.env.NODE_ENV !== "production";
 
 	const scriptSrc = isDevelopment
-		? `'self' 'nonce-${nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io`
-		: `'self' 'nonce-${nonce}' 'sha256-kqFzuQJivdoTtSFw6wC6ycybBAlKswA7hJ7PojqXc7Q=' 'sha256-S/UEtrQCu6TgVoi5WG9EmfntThy9qa0ZZqFKfu1n76w=' 'sha256-K2qBnrJSupBJBzTvPD141bNBx/+m8R4iJQNj2EHmozM=' 'sha256-6BVL0DgOeCbtUrFGJAsqrMsuY26fcarXXnMdHEfKW3Y=' 'sha256-gjKA4KaUqCuh6Z8uiLLjc/ejIMPbHQttPwGl2h8rL9g=' 'sha256-NAH07B08mzYM3EU9WiA+8U25CIu0RUXeauLJC+NvFZ4=' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io`;
+		? `'self' 'nonce-${nonce}' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io https://challenges.cloudflare.com`
+		: `'self' 'nonce-${nonce}' 'sha256-kqFzuQJivdoTtSFw6wC6ycybBAlKswA7hJ7PojqXc7Q=' 'sha256-S/UEtrQCu6TgVoi5WG9EmfntThy9qa0ZZqFKfu1n76w=' 'sha256-K2qBnrJSupBJBzTvPD141bNBx/+m8R4iJQNj2EHmozM=' 'sha256-6BVL0DgOeCbtUrFGJAsqrMsuY26fcarXXnMdHEfKW3Y=' 'sha256-gjKA4KaUqCuh6Z8uiLLjc/ejIMPbHQttPwGl2h8rL9g=' 'sha256-NAH07B08mzYM3EU9WiA+8U25CIu0RUXeauLJC+NvFZ4=' https://www.googletagmanager.com https://www.google-analytics.com https://*.supabase.co https://cdn.jsdelivr.net https://*.sentry.io https://challenges.cloudflare.com`;
 
 	response.headers.set(
 		"Content-Security-Policy",
@@ -27,7 +27,7 @@ export function addSecurityHeaders(response: NextResponse): void {
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com; " +
 			"font-src 'self' https://fonts.gstatic.com https://api.fontshare.com https://cdn.fontshare.com; " +
 			"img-src 'self' data: https: blob:; " +
-			"connect-src 'self' https://*.supabase.co https://api.resend.com https://api.openai.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io; " +
+			"connect-src 'self' https://*.supabase.co https://api.resend.com https://api.openai.com https://*.google-analytics.com https://www.googletagmanager.com https://*.sentry.io https://challenges.cloudflare.com; " +
 			"object-src 'none'; " +
 			"base-uri 'self'; " +
 			"form-action 'self'",

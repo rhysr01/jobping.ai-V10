@@ -509,6 +509,13 @@ async function processIncomingJob(job, options = {}) {
 		defaultCountry = null,
 	} = options;
 
+	// CRITICAL: Validate source to prevent null sources
+	if (!source || source === "unknown") {
+		console.error(`[Processor] ❌ Rejecting job with invalid source: "${source}"`);
+		console.error(`[Processor] Job details: ${job.title || 'No title'} at ${job.company || 'No company'}`);
+		return null; // Reject jobs with invalid sources
+	}
+
 	const nowIso = new Date().toISOString();
 
 	// Extract and normalize basic fields

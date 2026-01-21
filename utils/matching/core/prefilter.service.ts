@@ -678,9 +678,13 @@ export class PrefilterService {
 		userCareerPaths.forEach((path) => {
 			const mappedCategories = careerPathMapping[path];
 			if (mappedCategories) {
+				// If there's a mapping, use the mapped categories
 				mappedCategories.forEach((cat) => {
 					targetCategories.add(cat);
 				});
+			} else {
+				// If no mapping found, assume it's already a database category
+				targetCategories.add(path);
 			}
 		});
 

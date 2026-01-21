@@ -41,6 +41,7 @@ if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
 import type { Job } from "../scrapers/types";
 // Now import after environment is set up
 import type { UserPreferences } from "../Utils/matching/types";
+import { getDatabaseClient } from "../utils/core/database-pool";
 
 // interface TestResult {
 // 	testName: string;
@@ -66,7 +67,6 @@ async function fetchRealTestJobs(): Promise<Job[]> {
 			.select("*")
 			.eq("is_active", true)
 			.eq("status", "active")
-			.is("filtered_reason", null)
 			.gte("created_at", sixtyDaysAgo.toISOString())
 			.or(
 				"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
@@ -896,54 +896,60 @@ class ProductionMatchingEngineTester {
 
 	private async testProductionCaching(): Promise<TestResult> {
 		console.log(
-			"💾 Testing Fallback Consistency: Should return consistent results...",
+			"💾 Testing AI Caching Performance: Should cache AI responses for better performance...",
 		);
 
-		// Test fallback service consistency
-		const { fallbackService } = await import(
-			"../Utils/matching/core/fallback.service"
+		// Test actual AI caching with the simplified matching engine
+		const { simplifiedMatchingEngine } = await import(
+			"../Utils/matching/core/matching-engine"
 		);
 
-		// First request
+		// First request (should do AI processing)
 		const start1 = Date.now();
-		const result1 = fallbackService.generateFallbackMatches(
+		const result1 = await simplifiedMatchingEngine.findMatchesForPremiumUser(
+			PREMIUM_USER_LONDON,
 			PRODUCTION_TEST_JOBS,
-			FREE_USER_LONDON,
-			5,
 		);
 		const time1 = Date.now() - start1;
 
-		// Second request (should be similar)
+		// Second request (should use cache)
 		const start2 = Date.now();
-		const result2 = fallbackService.generateFallbackMatches(
+		const result2 = await simplifiedMatchingEngine.findMatchesForPremiumUser(
+			PREMIUM_USER_LONDON,
 			PRODUCTION_TEST_JOBS,
-			FREE_USER_LONDON,
-			5,
 		);
 		const time2 = Date.now() - start2;
 
-		// Check consistency
-		const resultsConsistent = result1.length === result2.length;
-		const performanceSimilar = Math.abs(time1 - time2) < 50; // Within 50ms
+		// Check consistency and performance improvement
+		const resultsConsistent = result1.matches.length === result2.matches.length;
+		const performanceImproved = time2 < time1 * 0.5; // Second request should be much faster
+		const cachingEfficiency = time1 > 0 ? Math.max(0, Math.min(1, (time1 - time2) / time1)) : 0;
 
 		console.log(
-			`   Request 1: ${time1}ms (${result1.length} matches), Request 2: ${time2}ms (${result2.length} matches)`,
+			`   First request: ${time1}ms (${result1.matches.length} matches)`,
 		);
 		console.log(
-			`   Consistency: ${resultsConsistent ? "✅" : "❌"} (${performanceSimilar ? "stable" : "variable"})`,
+			`   Second request: ${time2}ms (${result2.matches.length} matches)`,
+		);
+		console.log(
+			`   Caching efficiency: ${Math.round(cachingEfficiency * 100)}% performance improvement`,
+		);
+		console.log(
+			`   Results consistent: ${resultsConsistent ? "✅" : "❌"}`,
 		);
 
 		return {
 			testName: "Production Caching",
-			passed: resultsConsistent,
+			passed: resultsConsistent && cachingEfficiency > 0.3, // At least 30% improvement
 			details: {
-				request1Method: "fallback",
-				request2Method: "fallback",
+				request1Method: result1.method,
+				request2Method: result2.method,
 				time1,
 				time2,
-				cachingWorked: true, // Fallback is always "cached" in a sense
+				cachingWorked: performanceImproved,
 				resultsConsistent,
-				performanceImproved: performanceSimilar,
+				cachingEfficiency,
+				performanceImprovement: cachingEfficiency * 100,
 			},
 		};
 	}
@@ -1013,8 +1019,12 @@ class ProductionMatchingEngineTester {
 			(t) => t.testName === "Production Caching",
 		);
 		if (cacheTest) {
-			insights.cachingEfficiency =
-				cacheTest.details.performanceImprovement / 100;
+			// Calculate actual caching efficiency based on performance improvement
+			const time1 = cacheTest.details.time1 || 0;
+			const time2 = cacheTest.details.time2 || 0;
+			const avgTime = (time1 + time2) / 2;
+			const performanceImprovement = cacheTest.details.performanceImproved ? 1 : 0;
+			insights.cachingEfficiency = performanceImprovement;
 		}
 
 		// Determine production readiness

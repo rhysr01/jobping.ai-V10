@@ -21,6 +21,7 @@ import { PremiumMatchBuilder } from "./prompts/premium-match-builder";
 export interface MatchingOptions {
 	useAI: boolean;
 	maxJobsForAI: number;
+	maxMatches?: number;
 	fallbackThreshold: number;
 	includePrefilterScore: boolean;
 }
@@ -125,7 +126,7 @@ export class SimplifiedMatchingEngine {
 			// Step 3: Use fallback if AI didn't work or wasn't enough
 			if (matches.length < opts.fallbackThreshold) {
 				const fallbackResults = fallbackService.generateFallbackMatches(
-					prefilterResult.jobs.map((j) => j as Job),
+					jobsWithFreshness, // Use all jobs for fallback, not just prefiltered
 					user,
 					opts.fallbackThreshold * 2,
 				);
@@ -134,6 +135,7 @@ export class SimplifiedMatchingEngine {
 					convertFallbackMatchesToJobMatches(fallbackResults);
 
 				// Combine with AI results if any
+				const maxResults = opts.maxMatches || opts.fallbackThreshold * 2;
 				matches = [...matches, ...fallbackMatches]
 					.filter(
 						(match, index, arr) =>
@@ -142,7 +144,7 @@ export class SimplifiedMatchingEngine {
 							index,
 					)
 					.sort((a, b) => b.match_score - a.match_score)
-					.slice(0, opts.fallbackThreshold * 2);
+					.slice(0, maxResults);
 
 				method = opts.useAI ? "ai" : "fallback";
 			}

@@ -149,8 +149,6 @@ await supabase.from('scraper_runs').insert(telemetry);
 - **Performance**: Processing time per job
 - **Error rates**: Failure tracking and alerting
 
-
-
 ## Data Quality Enforcement
 
 ### Work-Type Categories Validation
@@ -164,7 +162,23 @@ JobPing implements a 4-layer enforcement system to ensure all jobs have proper w
 - **Database Trigger**: Prevents jobs without categories from being saved
 
 #### Inference Logic
-The system automatically infers work-type categories from job descriptions using pattern matching and keyword analysis.
+The system automatically infers work-type categories from job descriptions:
+
+```javascript
+// Strong positive signals
+if (description.match(/(remote|work from home|flexible location)/i)) {
+  categories.push('remote');
+}
+
+if (description.match(/(full.?time|permanent|full time)/i)) {
+  categories.push('full-time');
+}
+
+// Company size inference
+if (company.match(/(google|microsoft|meta|amazon)/i)) {
+  categories.push('large-enterprise');
+}
+```
 
 #### Validation Rules
 - **Required**: At least one work-type category per job
@@ -172,7 +186,31 @@ The system automatically infers work-type categories from job descriptions using
 - **Fallback**: Unknown categories are rejected, not saved
 - **Audit**: All category assignments are logged
 
+#### Verification Queries
+```sql
+-- Check jobs with missing categories
+SELECT COUNT(*) as jobs_without_categories
+FROM jobs
+WHERE categories IS NULL OR array_length(categories, 1) = 0;
+
+-- Verify category distribution
+SELECT unnest(categories) as category, COUNT(*) as count
+FROM jobs
+WHERE categories IS NOT NULL
+GROUP BY unnest(categories)
+ORDER BY count DESC;
+
+-- Recent category assignments
+SELECT title, company, categories, created_at
+FROM jobs
+WHERE created_at > NOW() - INTERVAL '24 hours'
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
 #### Quality Metrics
 - **Coverage Rate**: >99.5% of jobs have work-type categories
 - **Accuracy Rate**: >95% of inferred categories are correct
 - **Rejection Rate**: <0.1% of jobs rejected due to category issues
+
+This enforcement ensures consistent, high-quality job data for reliable matching across all user preferences.

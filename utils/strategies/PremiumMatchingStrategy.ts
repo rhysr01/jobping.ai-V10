@@ -45,6 +45,7 @@ export interface MatchingResult {
 export async function runPremiumMatching(
 	userPrefs: PremiumUserPreferences,
 	jobs: JobWithMetadata[],
+	maxMatches: number = 15,
 ): Promise<MatchingResult> {
 	const startTime = Date.now();
 
@@ -180,6 +181,7 @@ export async function runPremiumMatching(
 					fallbackFiltered,
 					"premium_fallback",
 					startTime,
+					maxMatches,
 				);
 			}
 
@@ -202,6 +204,7 @@ export async function runPremiumMatching(
 			preFiltered,
 			"premium_ai_ranked",
 			startTime,
+			maxMatches,
 		);
 	} catch (error) {
 		apiLogger.error("[PREMIUM] Matching error", error as Error, {
@@ -219,6 +222,7 @@ async function rankAndReturnMatches(
 	jobs: JobWithMetadata[],
 	method: string,
 	startTime: number,
+	maxMatches: number,
 ): Promise<MatchingResult> {
 	try {
 		// Normalize jobs for consistent processing
@@ -235,7 +239,7 @@ async function rankAndReturnMatches(
 			);
 
 		const matches = (matchResult?.matches || [])
-			.slice(0, 15) // PREMIUM: Always 15 matches max
+			.slice(0, maxMatches) // PREMIUM: Use configurable match count
 			.map((m: any) => ({
 				...m.job,
 				match_score: m.match_score,

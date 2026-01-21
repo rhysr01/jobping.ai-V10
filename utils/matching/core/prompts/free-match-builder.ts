@@ -41,7 +41,8 @@ ${jobList}`;
 		return {
 			useAI: true, // Re-enable AI
 			maxJobsForAI: 10,
-			fallbackThreshold: 1, // Low threshold to ensure AI is attempted
+			maxMatches: 5, // FREE TIER: Exactly 5 matches
+			fallbackThreshold: 5, // Match maxMatches to ensure fallback provides enough matches
 			includePrefilterScore: false,
 		};
 	}
@@ -86,7 +87,9 @@ NOTE: This student used JobPing's simple form - focus on one clear career direct
 	 * Task instruction for free tier - career counselor approach
 	 */
 	private static taskInstruction(_user: UserPreferences): string {
-		return `As this student's career counselor, select EXACTLY 5 entry-level positions from the provided job list that match their profile. Use this scoring system:
+		return `CRITICAL: You MUST respond with VALID JSON only. No text, no explanations, no markdown formatting.
+
+Select EXACTLY 5 entry-level positions from the provided job list that match the student's profile.
 
 JOB SELECTION CRITERIA (must meet ALL):
 1. LOCATION: Job city matches student's target cities
@@ -100,14 +103,15 @@ SCORING WEIGHTS:
 - Experience fit: 20% (entry-level focus)
 - Company reputation: 10% (bonus factor)
 
-Output EXACTLY 5 matches ranked by overall fit score. Focus on jobs where the student has genuine qualifications and would realistically apply and interview for.`;
+OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, no markdown. Just the JSON object with EXACTLY 5 matches.`;
 	}
 
 	/**
 	 * Output schema for free tier - structured JSON for reliable parsing
 	 */
 	private static get outputSchema(): string {
-		return `{
+		return `REQUIRED JSON OUTPUT FORMAT (return ONLY this structure):
+{
   "matches": [
     {
       "jobIndex": 0,
@@ -124,12 +128,13 @@ Output EXACTLY 5 matches ranked by overall fit score. Focus on jobs where the st
   ]
 }
 
-REQUIREMENTS:
+MANDATORY REQUIREMENTS:
 - EXACTLY 5 matches from the JOBS list
-- jobIndex must be a valid index from the provided jobs array
-- matchScore: 0-100 (higher = better fit)
-- confidenceScore: 0-100 (higher = more certain about fit)
-- matchReason: Specific explanation why this job fits their career + location + experience`;
+- jobIndex must be a valid index from the provided jobs array (0-4 for 5 jobs)
+- matchScore: 70-100 (entry-level appropriate scores)
+- confidenceScore: 70-100
+- matchReason: Specific explanation (50+ characters)
+- VALID JSON ONLY - no other text or formatting`;
 	}
 
 	/**

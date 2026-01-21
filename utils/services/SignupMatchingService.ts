@@ -177,7 +177,7 @@ export class SignupMatchingService {
 					subscription_tier: "free",
 				};
 
-				strategyResult = await runFreeMatching(freePrefs, jobs);
+				strategyResult = await runFreeMatching(freePrefs, jobs, config.maxMatches);
 			} else {
 				// Use Premium Matching Strategy
 				const premiumPrefs: PremiumUserPreferences = {
@@ -196,7 +196,7 @@ export class SignupMatchingService {
 					subscription_tier: "premium_pending",
 				};
 
-				strategyResult = await runPremiumMatching(premiumPrefs, jobs);
+				strategyResult = await runPremiumMatching(premiumPrefs, jobs, config.maxMatches);
 			}
 
 			const processingTime = Date.now() - startTime;

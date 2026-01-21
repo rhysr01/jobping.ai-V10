@@ -115,7 +115,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				metadata: { matchingMethod: "premium_ai_ranked" },
 			});
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(
 				mockSimplifiedMatchingEngine.findMatchesForUser,
@@ -148,7 +148,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		});
 
 		it("should apply all filtering criteria", async () => {
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			// Should only match job1 (London + tech + hybrid + visa sponsorship)
 			expect(
@@ -175,7 +175,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should filter by city", async () => {
 			const londonOnlyUser = { ...mockUser, target_cities: ["London"] };
 
-			await runPremiumMatching(londonOnlyUser, mockJobs);
+			await runPremiumMatching(londonOnlyUser, mockJobs, 15);
 
 			// Should include London job, exclude Berlin and Manchester
 			expect(
@@ -189,7 +189,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 		it("should filter by career path", async () => {
 			// Should match tech and product categories
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			// job1 has "tech" category, job2 has "product" category
 			expect(
@@ -206,7 +206,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 		it("should filter by skills", async () => {
 			// Should match jobs containing React/Python/SQL keywords
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			// job1 description contains "React/Python"
 			expect(
@@ -221,7 +221,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should filter by work environment", async () => {
 			const remoteUser = { ...mockUser, work_environment: "remote" };
 
-			await runPremiumMatching(remoteUser, mockJobs);
+			await runPremiumMatching(remoteUser, mockJobs, 15);
 
 			// Should only include job3 (remote), exclude job1/job2 (hybrid)
 			expect(
@@ -235,7 +235,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 		it("should filter by visa requirements", async () => {
 			// User needs visa sponsorship, job1 has it, job2 doesn't
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			// Should include job1 (visa sponsorship), exclude job2 (no visa)
 			expect(
@@ -257,7 +257,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				} as JobWithMetadata,
 			];
 
-			const result = await runPremiumMatching(mockUser, restrictiveJobs);
+			const result = await runPremiumMatching(mockUser, restrictiveJobs, 15);
 
 			// Should fall back to less restrictive filtering
 			expect(result.method).toBe("premium_fallback");
@@ -278,7 +278,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				metadata: { matchingMethod: "premium_ai_ranked" },
 			});
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(
 				mockSimplifiedMatchingEngine.findMatchesForUser,
@@ -307,7 +307,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				metadata: { matchingMethod: "premium_ai_ranked" },
 			});
 
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(result.matches).toHaveLength(15); // PREMIUM: Always 15 matches max
 			expect(result.matchCount).toBe(15);
@@ -330,7 +330,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		});
 
 		it("should save premium matches to database", async () => {
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(mockSupabase.from).toHaveBeenCalledWith("matches");
 			expect(mockSupabase.upsert).toHaveBeenCalledWith(
@@ -352,7 +352,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should handle database save failures gracefully", async () => {
 			mockSupabase.upsert.mockRejectedValue(new Error("Database error"));
 
-			const result = await runPremiumMatching(mockUser, mockJobs);
+			const result = await runPremiumMatching(mockUser, mockJobs, 15);
 
 			// Should still return matches even if saving fails
 			expect(result.matchCount).toBe(1);
@@ -362,7 +362,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 
 	describe("Error Handling", () => {
 		it("should handle empty job list", async () => {
-			const result = await runPremiumMatching(mockUser, []);
+			const result = await runPremiumMatching(mockUser, [], 15);
 
 			expect(result.matchCount).toBe(0);
 			expect(result.method).toBe("no_jobs_available");
@@ -374,7 +374,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				new Error("Premium AI service unavailable"),
 			);
 
-			await expect(runPremiumMatching(mockUser, mockJobs)).rejects.toThrow(
+			await expect(runPremiumMatching(mockUser, mockJobs, 15)).rejects.toThrow(
 				"Premium AI service unavailable",
 			);
 		});
@@ -398,7 +398,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should log premium matching start with comprehensive details", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"[PREMIUM] Starting premium tier matching",
@@ -416,7 +416,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should log detailed pre-filtering results", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"[PREMIUM] Pre-filtered jobs",
@@ -439,7 +439,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should log deep AI ranking completion", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"[PREMIUM] Deep AI ranking complete",
@@ -455,7 +455,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should log premium database saves", async () => {
 			const mockLogger = require("../../../lib/api-logger").apiLogger;
 
-			await runPremiumMatching(mockUser, mockJobs);
+			await runPremiumMatching(mockUser, mockJobs, 15);
 
 			expect(mockLogger.info).toHaveBeenCalledWith(
 				"[PREMIUM] Premium matches saved",
@@ -472,7 +472,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				new Error("Premium AI failed"),
 			);
 
-			await expect(runPremiumMatching(mockUser, mockJobs)).rejects.toThrow();
+			await expect(runPremiumMatching(mockUser, mockJobs, 15)).rejects.toThrow();
 
 			expect(mockLogger.error).toHaveBeenCalledWith(
 				"[PREMIUM] Deep AI ranking error",

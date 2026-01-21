@@ -119,8 +119,22 @@ export class AIMatchingService {
 		if (options.useCache) {
 			const cached = this.cache.get(cacheKey);
 			if (cached) {
+				apiLogger.info("AI cache hit", {
+					metadata: {
+						userEmail: user.email,
+						jobsCount: jobs.length,
+						cacheKey: cacheKey.substring(0, 50) + "...",
+					},
+				});
 				return cached;
 			}
+			apiLogger.info("AI cache miss", {
+				metadata: {
+					userEmail: user.email,
+					jobsCount: jobs.length,
+					cacheKey: cacheKey.substring(0, 50) + "...",
+				},
+			});
 		}
 
 		const results = await this.callOpenAI(user, jobs, options);
@@ -128,6 +142,14 @@ export class AIMatchingService {
 		// Cache results
 		if (options.useCache) {
 			this.cache.set(cacheKey, results);
+			apiLogger.info("AI cache set", {
+				metadata: {
+					userEmail: user.email,
+					jobsCount: jobs.length,
+					resultsCount: results.length,
+					cacheKey: cacheKey.substring(0, 50) + "...",
+				},
+			});
 		}
 
 		return results;
@@ -205,12 +227,26 @@ export class AIMatchingService {
 	}
 
 	/**
-	 * Parse OpenAI response
+	 * Parse OpenAI response - ROBUST parsing to handle various AI response formats
 	 */
 	private parseResponse(content: string, jobs: Job[]): AIMatchResult[] {
 		try {
 			// Strip markdown code block formatting if present
 			let cleanContent = content.trim();
+
+			// Remove any text before JSON starts
+			const jsonStartIndex = cleanContent.indexOf('{');
+			if (jsonStartIndex > 0) {
+				cleanContent = cleanContent.substring(jsonStartIndex);
+			}
+
+			// Remove any text after JSON ends
+			const jsonEndIndex = cleanContent.lastIndexOf('}');
+			if (jsonEndIndex > 0 && jsonEndIndex < cleanContent.length - 1) {
+				cleanContent = cleanContent.substring(0, jsonEndIndex + 1);
+			}
+
+			// Strip markdown code block formatting if present
 			if (cleanContent.startsWith("```json")) {
 				cleanContent = cleanContent
 					.replace(/^```json\s*/, "")
@@ -222,21 +258,50 @@ export class AIMatchingService {
 					.replace(/\s*```$/, "");
 			}
 
+			// Clean up any remaining markdown or extra text
+			cleanContent = cleanContent.trim();
+
+			// Fix common AI typos (like "matche" instead of "matches")
+			cleanContent = cleanContent.replace(/"matche":/g, '"matches":');
+
 			const parsed = JSON.parse(cleanContent);
 			const matches = parsed.matches || [];
 
+			// Validate that we have an array
+			if (!Array.isArray(matches)) {
+				apiLogger.warn("AI response does not contain matches array", {
+					responsePreview: cleanContent.substring(0, 200)
+				});
+				return [];
+			}
+
 			return matches
 				.map((match: any) => {
-					const jobIndex = match.jobIndex;
+					const jobIndex = match.jobIndex || match.job_index;
 					const job = jobs[jobIndex];
 
-					if (!job) return null;
+					if (!job || jobIndex === undefined || jobIndex === null) {
+						apiLogger.warn("Invalid jobIndex in AI response", {
+							jobIndex,
+							availableJobs: jobs.length
+						});
+						return null;
+					}
 
-					// Extract scores from FreeMatchBuilder format
+					// Extract scores from response (handle different possible field names)
 					const overallScore = Math.max(
 						0,
-						Math.min(100, match.matchScore || 0),
+						Math.min(100, match.matchScore || match.match_score || match.score || 0),
 					);
+
+					// Skip matches with very low scores
+					if (overallScore < 30) {
+						apiLogger.info("Skipping low-score match from AI", {
+							jobIndex,
+							score: overallScore
+						});
+						return null;
+					}
 
 					// Distribute overall score across components
 					const components: ScoreComponents = {
@@ -250,7 +315,7 @@ export class AIMatchingService {
 					const unifiedScore: UnifiedScore = {
 						overall: overallScore,
 						components,
-						confidence: Math.max(0, Math.min(100, match.confidenceScore || 85)),
+						confidence: Math.max(0, Math.min(100, match.confidenceScore || match.confidence_score || 85)),
 						method: "ai",
 					};
 
@@ -263,12 +328,15 @@ export class AIMatchingService {
 					return {
 						job,
 						unifiedScore,
-						matchReason: match.matchReason || "AI analyzed match",
+						matchReason: match.matchReason || match.match_reason || match.reason || "AI analyzed match",
 					};
 				})
 				.filter(Boolean) as AIMatchResult[];
 		} catch (error) {
-			apiLogger.error("Failed to parse OpenAI response", error as Error);
+			apiLogger.error("Failed to parse OpenAI response", error as Error, {
+				responsePreview: content.substring(0, 500),
+				errorMessage: (error as Error).message
+			});
 			return [];
 		}
 	}

@@ -223,12 +223,12 @@ function SignupFormFree() {
 		<div className="min-h-screen bg-black relative overflow-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))]">
 			{/* Background Effects - Simplified for mobile */}
 			<div
-				className="absolute inset-0 enhanced-grid opacity-30"
+				className="absolute inset-0 enhanced-grid opacity-30 pointer-events-none"
 				aria-hidden="true"
 			/>
 			{/* Remove performance-killing infinite animation */}
 			<div
-				className="absolute top-20 right-10 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl hidden sm:block opacity-30"
+				className="absolute top-20 right-10 w-96 h-96 bg-brand-500/20 rounded-full blur-3xl hidden sm:block opacity-30 pointer-events-none"
 				aria-hidden="true"
 			/>
 

@@ -595,6 +595,100 @@ class RealJobRunner {
 		}
 	}
 
+	// Run JobSpy Career Paths scraper (targets specific career areas)
+	async runJobSpyCareerPathsScraper() {
+		try {
+			console.log("🎯 Running JobSpy Career Paths scraper...");
+
+			// Check if file exists before running
+			const fs = require("fs");
+			const path = require("path");
+			const scriptPath = path.join(
+				process.cwd(),
+				"scripts",
+				"jobspy-career-paths.cjs",
+			);
+			if (!fs.existsSync(scriptPath)) {
+				console.warn(
+					`⚠️  JobSpy Career Paths scraper file not found: ${scriptPath}`,
+				);
+				console.warn(
+					"⚠️  Skipping JobSpy Career Paths scraper - file does not exist. This scraper is currently disabled.",
+				);
+				return 0;
+			}
+
+			const { stdout, stderr } = await this.withTimeout(
+				execAsync(
+					"NODE_ENV=production node scripts/jobspy-career-paths.cjs",
+					{
+						cwd: process.cwd(),
+						// Remove timeout from execAsync, let withTimeout handle it
+						env: { ...process.env },
+					},
+				),
+				900000, // 15 minutes timeout (career paths take longer)
+				"JobSpy Career Paths scraper",
+			);
+
+			// Log stderr if present
+			if (stderr?.trim()) {
+				console.warn(
+					"⚠️  JobSpy Career Paths stderr:",
+					stderr.substring(0, 1000),
+				);
+			}
+
+			// Parse job count from the result
+			let jobsSaved = 0;
+			const savedMatch = stdout.match(
+				/💾 Total Jobs Saved: (\d+)/,
+			);
+			if (savedMatch) {
+				jobsSaved = parseInt(savedMatch[1]);
+			} else {
+				// Fallback to DB count (last 15 minutes)
+				const { count, error } = await supabase
+					.from("jobs")
+					.select("id", { count: "exact", head: false })
+					.eq("source", "jobspy-career-strategy") // Check one of the career path sources
+					.gte(
+						"created_at",
+						new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+					);
+				jobsSaved = error ? 0 : count || 0;
+				if (jobsSaved) {
+					console.log(
+						`ℹ️  JobSpy Career Paths: DB fallback count: ${jobsSaved} jobs`,
+					);
+				} else {
+					console.warn(
+						"⚠️  JobSpy Career Paths: No jobs found - showing last output",
+					);
+					const lines = stdout.split("\n").filter((l) => l.trim());
+					if (lines.length > 0) {
+						console.log("📋 Last output:", lines.slice(-20).join("\n"));
+					}
+				}
+			}
+
+			console.log(`✅ JobSpy Career Paths: ${jobsSaved} jobs processed`);
+			return jobsSaved;
+		} catch (error) {
+			console.error("❌ JobSpy Career Paths scraper failed:", error.message);
+			if (error.code === "ETIMEDOUT") {
+				console.error(
+					"❌ JobSpy Career Paths scraper timed out after 25 minutes",
+				);
+			}
+			if (error.stdout)
+				console.error("❌ stdout:", error.stdout.substring(0, 500));
+			if (error.stderr)
+				console.error("❌ stderr:", error.stderr.substring(0, 500));
+			return 0;
+		}
+	}
+
 	// Run Reed scraper with real API
 	async runReedScraper(targets) {
 		try {
@@ -1350,13 +1444,15 @@ class RealJobRunner {
 			let jobspyJobs = 0;
 			let jobspyInternshipsJobs = 0;
 			let careerPathRolesJobs = 0;
+			let careerPathsJobs = 0;
 
 			try {
-				const [jobspyResult, internshipsResult, careerPathResult] =
+				const [jobspyResult, internshipsResult, careerPathResult, careerPathsResult] =
 					await Promise.allSettled([
 						this.runJobSpyScraper(),
 						this.runJobSpyInternshipsScraper(),
 						this.runJobSpyCareerPathRolesScraper(signupTargets),
+						this.runJobSpyCareerPathsScraper(),
 					]);
 
 				jobspyJobs =
@@ -1367,6 +1463,8 @@ class RealJobRunner {
 						: 0;
 				careerPathRolesJobs =
 					careerPathResult.status === "fulfilled" ? careerPathResult.value : 0;
+				careerPathsJobs =
+					careerPathsResult.status === "fulfilled" ? careerPathsResult.value : 0;
 
 				if (jobspyResult.status === "rejected") {
 					console.error(
@@ -1386,9 +1484,15 @@ class RealJobRunner {
 						careerPathResult.reason?.message ?? "Unknown error",
 					);
 				}
+				if (careerPathsResult.status === "rejected") {
+					console.error(
+						"❌ Career Paths scraper failed:",
+						careerPathsResult.reason?.message ?? "Unknown error",
+					);
+				}
 
 				console.log(
-					`✅ JobSpy parallel execution completed: ${jobspyJobs} general + ${jobspyInternshipsJobs} internships + ${careerPathRolesJobs} career roles`,
+					`✅ JobSpy parallel execution completed: ${jobspyJobs} general + ${jobspyInternshipsJobs} internships + ${careerPathRolesJobs} career roles + ${careerPathsJobs} career paths`,
 				);
 			} catch (error) {
 				console.error("❌ JobSpy parallel execution failed:", error.message);
@@ -1524,6 +1628,7 @@ class RealJobRunner {
 				jobspyJobs +
 				jobspyInternshipsJobs +
 				careerPathRolesJobs +
+				careerPathsJobs +
 				reedJobs +
 				careerjetJobs +
 				arbeitnowJobs +
@@ -1580,6 +1685,7 @@ class RealJobRunner {
 			console.log(
 				`   - JobSpy (Internships Only): ${jobspyInternshipsJobs} jobs`,
 			);
+			console.log(`   - JobSpy (Career Paths): ${careerPathsJobs} jobs`);
 			console.log(`   - Career Path Roles: ${careerPathRolesJobs} jobs`);
 			console.log(`   - Reed: ${reedJobs} jobs (increased priority)`);
 			console.log(`   - Adzuna: ${adzunaJobs} jobs (reduced priority)`);

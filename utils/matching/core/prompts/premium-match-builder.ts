@@ -41,7 +41,8 @@ ${jobList}`;
 		return {
 			useAI: true,
 			maxJobsForAI: 30,
-			fallbackThreshold: 5,
+			maxMatches: 15, // PREMIUM TIER: Exactly 15 matches
+			fallbackThreshold: 3, // Lower threshold to ensure AI gets attempted even with limited jobs
 			includePrefilterScore: true,
 		};
 	}
@@ -101,18 +102,18 @@ NOTE: This premium student can explore up to 2 career paths. Show you understand
 	 * Task instruction for premium tier - career counselor with 4-step depth
 	 */
 	private static taskInstruction(_user: UserPreferences): string {
-		return `As this student's premium career counselor, recommend 15 strategic positions that represent genuine career progression opportunities. Leverage their comprehensive 4-step profile:
+		return `CRITICAL: You MUST respond with VALID JSON only. No text, no explanations, no markdown formatting.
 
-CAREER COUNSELING APPROACH:
-- Multi-path career exploration (they can choose up to 2 career directions)
-- Long-term career trajectory alignment across their chosen paths
-- Realistic advancement opportunities in each career direction
-- Company culture fit for their detailed work style preferences
-- Industry growth potential that matches their strategic thinking
-- Skill development pathways that align with their stated goals
-- Geographic considerations that support their career plans
+As this student's premium career counselor, analyze the job list and return EXACTLY 15 high-quality matches in the specified JSON format.
 
-Focus on TRUST: Show you understand their multi-path career exploration by recommending positions across their chosen career directions. They should feel like personalized career advice from someone who understands they want to explore multiple professional paths, not generic job matches.`;
+MATCHING CRITERIA:
+- Match scores: 85-100 (premium quality only)
+- Career alignment: 90%+ match with user's career paths
+- Skills fit: 90%+ match with user's technical skills
+- Geographic fit: Perfect city match required
+- Company quality: Prioritize established companies
+
+OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, no markdown. Just the JSON object.`;
 	}
 
 	/**
@@ -123,19 +124,34 @@ Focus on TRUST: Show you understand their multi-path career exploration by recom
   "matches": [
     {
       "jobIndex": 0,
-      "matchScore": 87,
-      "confidenceScore": 92,
-      "matchReason": "Strategic career move: Product Manager role at growing SaaS company matches your interest in digital transformation, offers clear path to senior leadership, company culture emphasizes innovation and work-life balance you prefer, located in Munich with excellent public transport",
+      "matchScore": 95,
+      "confidenceScore": 98,
+      "matchReason": "Exceptional strategic career move: Senior Product Manager at industry-leading SaaS unicorn matches your digital transformation expertise perfectly, offers direct path to C-level leadership, company culture of innovation and work-life balance aligns with your preferences, Munich location provides ideal European hub positioning",
       "scoreBreakdown": {
-        "skills": 85,
-        "experience": 90,
-        "location": 88,
-        "company": 85,
-        "overall": 87
+        "skills": 98,
+        "experience": 95,
+        "location": 96,
+        "company": 92,
+        "career_progression": 97,
+        "overall": 95
       }
+    },
+    {
+      "jobIndex": 1,
+      "matchScore": 92,
+      "confidenceScore": 95,
+      "matchReason": "Premium career advancement opportunity: Tech Lead role at established fintech leader leverages your full-stack development background, provides technical leadership track, company known for exceptional engineering culture and Munich's vibrant tech ecosystem"
     }
   ]
-}`;
+}
+
+REQUIREMENTS FOR PREMIUM OUTPUT:
+- EXACTLY 15 matches from the provided jobs list
+- Match scores: 85-100 (premium quality threshold)
+- Confidence scores: 90-100 (high certainty required)
+- Detailed reasoning showing strategic career thinking
+- Focus on career advancement and company prestige
+- Geographic and cultural fit considerations`;
 	}
 
 	/**
