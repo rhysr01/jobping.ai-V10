@@ -117,8 +117,11 @@ function SignupFormFree() {
 		setValidationErrors(errors);
 
 		if (Object.keys(errors).length > 0) {
+			console.log('Validation failed - blocking submission:', errors);
 			return;
 		}
+
+		console.log('Validation passed - proceeding with submission');
 
 		setIsSubmitting(true);
 		setLoading(true);
