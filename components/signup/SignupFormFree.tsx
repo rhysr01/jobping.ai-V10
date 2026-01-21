@@ -203,13 +203,40 @@ function SignupFormFree() {
 		} catch (error) {
 			setSubmissionProgress(0);
 			setSubmissionStage("");
-			const errorMessage =
-				error instanceof ApiError
-					? error.message
-					: "Unable to connect. Please check your internet connection and try again.";
+
+			// Enhanced error handling for debugging
+			let errorMessage = "Unable to connect. Please check your internet connection and try again.";
+			let errorDetails = {};
+
+			if (error instanceof ApiError) {
+				errorMessage = error.message;
+
+				// If it's a validation error, show the details
+				if (error.status === 400 && error.response?.details) {
+					console.error('API Validation Error Details:', error.response.details);
+					errorDetails = error.response.details;
+				}
+			}
+
+			console.error('Signup submission error:', {
+				error: error.message,
+				status: error.status,
+				details: errorDetails,
+				formData: {
+					email: formData.email,
+					fullName: formData.fullName,
+					cities: formData.cities,
+					careerPath: formData.careerPath,
+					gdprConsent: formData.gdprConsent
+				}
+			});
+
 			setError(errorMessage);
-			setValidationErrors({ general: errorMessage });
+			setValidationErrors({ general: errorMessage, ...errorDetails });
 			showToast.error(errorMessage);
+
+			// Also show alert for debugging
+			alert(`Signup Error: ${errorMessage}\n\nCheck browser console (F12) for detailed debugging info.`);
 		} finally {
 			setLoading(false);
 			setIsSubmitting(false);
