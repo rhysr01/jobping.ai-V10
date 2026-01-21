@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -259,7 +260,72 @@ function SignupFormFree() {
 				if (error.status === 400 && error.response?.details) {
 					console.error('API Validation Error Details:', error.response.details);
 					errorDetails = error.response.details;
+					
+					// Track validation errors in Sentry for monitoring
+					Sentry.captureMessage("Free signup client-side validation error", {
+						level: "warning",
+						tags: { 
+							endpoint: "signup-free", 
+							error_type: "client_validation",
+							status_code: error.status 
+						},
+						extra: {
+							errorMessage,
+							validationDetails: errorDetails,
+							formData: {
+								email: formData.email,
+								fullName: formData.fullName,
+								cities: formData.cities,
+								citiesLength: formData.cities?.length,
+								careerPath: formData.careerPath,
+								careerPathLength: formData.careerPath?.length,
+								gdprConsent: formData.gdprConsent,
+								ageVerified: formData.ageVerified,
+								termsAccepted: formData.gdprConsent, // Map to terms_accepted
+							},
+							apiResponse: error.response,
+						},
+					});
+				} else {
+					// Track other API errors (network, server errors, etc.)
+					Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+						tags: { 
+							endpoint: "signup-free", 
+							error_type: "api_error",
+							status_code: error.status 
+						},
+						extra: {
+							errorMessage,
+							status: error.status,
+							formData: {
+								email: formData.email,
+								fullName: formData.fullName,
+								cities: formData.cities,
+								citiesLength: formData.cities?.length,
+								careerPath: formData.careerPath,
+								careerPathLength: formData.careerPath?.length,
+							},
+							apiResponse: error.response,
+						},
+					});
 				}
+			} else {
+				// Track unexpected errors (not ApiError instances)
+				Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+					tags: { 
+						endpoint: "signup-free", 
+						error_type: "unexpected_error" 
+					},
+					extra: {
+						errorMessage: String(error),
+						formData: {
+							email: formData.email,
+							fullName: formData.fullName,
+							cities: formData.cities,
+							careerPath: formData.careerPath,
+						},
+					},
+				});
 			}
 
 			console.error('Signup submission error:', {

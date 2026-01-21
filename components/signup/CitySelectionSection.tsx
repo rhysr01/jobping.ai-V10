@@ -134,7 +134,6 @@ export function CitySelectionSection({
 						</motion.div>
 						<label
 							id="cities-label"
-							htmlFor="cities-field"
 							className="text-xl sm:text-2xl font-black bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
 						>
 							Where would you like to work?
@@ -160,6 +159,8 @@ export function CitySelectionSection({
 					animate={{ opacity: 1, scale: 1 }}
 					transition={{ delay: 0.6, duration: 0.5 }}
 					className="hidden sm:block mb-8"
+					role="group"
+					aria-labelledby="cities-label"
 				>
 					<EuropeMap
 						selectedCities={cities}

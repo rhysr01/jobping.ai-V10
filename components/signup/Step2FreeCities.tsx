@@ -103,7 +103,6 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			<div>
 				<label
 					id="cities-label"
-					htmlFor="cities-field"
 					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
 					<span>Preferred Cities</span>

@@ -238,7 +238,6 @@ export const Step1Basics = React.memo(function Step1Basics({
 			<div>
 				<label
 					id="cities-label"
-					htmlFor="cities-field"
 					className="block text-base font-bold text-white mb-3 flex items-center gap-2"
 				>
 					<span>Preferred Cities</span>
@@ -264,6 +263,7 @@ export const Step1Basics = React.memo(function Step1Basics({
 				{/* Interactive Europe Map - Hidden on mobile */}
 				<motion.div
 					id="cities-field"
+					role="group"
 					aria-labelledby="cities-label"
 					aria-describedby={
 						shouldShowError(
