@@ -32,10 +32,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 
 	const [showAllCities, setShowAllCities] = useState(false);
 
-	const displayedCities = useMemo(
-		() => (showAllCities ? ALL_CITIES : POPULAR_CITIES),
-		[showAllCities],
-	);
+	const displayedCities = showAllCities ? ALL_CITIES : POPULAR_CITIES;
 
 	const handleCityToggle = (city: string) => {
 		if ("vibrate" in navigator) {
