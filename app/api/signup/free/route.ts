@@ -422,25 +422,49 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
 
-	// WORKAROUND: Use raw SQL to bypass PostgREST schema cache issues
 	// Check if email already used (any tier)
+	// NOTE: exec_sql RPC doesn't exist, using direct query instead
 	let existingUser = null;
 	try {
-		const { data, error } = await supabase.rpc('exec_sql', {
-			sql: `SELECT id, subscription_tier FROM users WHERE email = $1 LIMIT 1`,
-			params: [normalizedEmail]
-		});
-		if (!error && data && data.length > 0) {
-			existingUser = data[0];
-		}
-	} catch (e) {
-		// Fallback to regular query if RPC fails
-		const { data } = await supabase
+		const { data, error } = await supabase
 			.from("users")
 			.select("id, subscription_tier")
 			.eq("email", normalizedEmail)
 			.maybeSingle();
-		existingUser = data;
+		
+		if (error) {
+			apiLogger.warn("Error checking existing user", error as Error, {
+				requestId,
+				email: normalizedEmail,
+				errorCode: error.code,
+				errorMessage: error.message,
+			});
+			Sentry.captureException(error, {
+				tags: { endpoint: "signup-free", error_type: "user_check" },
+				extra: {
+					requestId,
+					email: normalizedEmail,
+					errorCode: error.code,
+				},
+			});
+		} else {
+			existingUser = data;
+		}
+	} catch (e) {
+		const errorMessage = e instanceof Error ? e.message : String(e);
+		apiLogger.error("Unexpected error checking existing user", e as Error, {
+			requestId,
+			email: normalizedEmail,
+			error: errorMessage,
+		});
+		Sentry.captureException(e instanceof Error ? e : new Error(errorMessage), {
+			tags: { endpoint: "signup-free", error_type: "user_check_unexpected" },
+			extra: {
+				requestId,
+				email: normalizedEmail,
+			},
+		});
+		// Continue - don't block signup if check fails
 	}
 
 	if (existingUser) {
@@ -488,14 +512,29 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Clean up any promo_pending entries - promo codes are for premium only, not free
+	// NOTE: exec_sql RPC doesn't exist, using direct query instead
 	try {
-		await supabase.rpc('exec_sql', {
-			sql: `DELETE FROM promo_pending WHERE email = $1`,
-			params: [normalizedEmail]
-		});
+		const { error: deleteError } = await supabase
+			.from("promo_pending")
+			.delete()
+			.eq("email", normalizedEmail);
+		
+		if (deleteError) {
+			// Log but don't fail - this is cleanup, not critical
+			apiLogger.warn("Failed to clean up promo_pending", deleteError as Error, {
+				requestId,
+				email: normalizedEmail,
+				errorCode: deleteError.code,
+			});
+		}
 	} catch (e) {
-		// Fallback if RPC fails
-		await supabase.from("promo_pending").delete().eq("email", normalizedEmail);
+		// Log but don't fail - this is cleanup, not critical
+		const errorMessage = e instanceof Error ? e.message : String(e);
+		apiLogger.warn("Unexpected error cleaning up promo_pending", {
+			requestId,
+			email: normalizedEmail,
+			error: errorMessage,
+		});
 	}
 
 	// Create free user record

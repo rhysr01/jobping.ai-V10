@@ -96,6 +96,9 @@ export function useFormPersistence(
 
 	// Save progress based on tier-specific logic
 	useEffect(() => {
+		// SSR safety: Only run in browser
+		if (typeof window === "undefined") return;
+		
 		const shouldSave =
 			tier === "premium"
 				? currentStep && currentStep >= minStepForSave
@@ -142,6 +145,10 @@ export function useFormPersistence(
 	// Restore progress on mount (only once)
 	useEffect(() => {
 		if (hasRestoredRef.current) return;
+		
+		// SSR safety: Only run in browser
+		if (typeof window === "undefined") return;
+		
 		hasRestoredRef.current = true;
 
 		try {
@@ -170,41 +177,45 @@ export function useFormPersistence(
 				}
 				showToast.success("Welcome back! Your progress has been restored.");
 			} else {
-				// Free: convert FreeFormData back to SignupFormData and restore if user confirms
-				const shouldRestore = confirm(
-					"We found your previous progress. Would you like to restore it?",
-				);
-				if (shouldRestore) {
-					const freeData = parsed.formData as FreeFormData;
-					const signupData = {
-						fullName: freeData.fullName || "",
-						email: freeData.email || "",
-						cities: freeData.cities || [],
-						languages: [],
-						workEnvironment: [],
-						visaStatus:
-							freeData.visaSponsorship === "yes"
-								? "Non-EU (require sponsorship)"
-								: "EU citizen",
-						entryLevelPreferences: [],
-						targetCompanies: [],
-						careerPath: freeData.careerPath ? [freeData.careerPath] : [], // Convert string to array
-						roles: [],
-						industries: [],
-						companySizePreference: "",
-						skills: [],
-						careerKeywords: "",
-						gdprConsent: freeData.gdprConsent || false,
-						birthYear: freeData.birthYear,
-						ageVerified: freeData.ageVerified || false,
-						termsAccepted: freeData.termsAccepted || false,
-					};
-					setFormData(signupData as any);
-				}
+				// Free: Auto-restore silently (non-blocking)
+				// Removed blocking confirm() dialog that was causing errors
+				const freeData = parsed.formData as FreeFormData;
+				const signupData = {
+					fullName: freeData.fullName || "",
+					email: freeData.email || "",
+					cities: freeData.cities || [],
+					languages: [],
+					workEnvironment: [],
+					visaStatus:
+						freeData.visaSponsorship === "yes"
+							? "Non-EU (require sponsorship)"
+							: "EU citizen",
+					entryLevelPreferences: [],
+					targetCompanies: [],
+					careerPath: freeData.careerPath ? [freeData.careerPath] : [], // Convert string to array
+					roles: [],
+					industries: [],
+					companySizePreference: "",
+					skills: [],
+					careerKeywords: "",
+					gdprConsent: freeData.gdprConsent || false,
+					birthYear: freeData.birthYear,
+					ageVerified: freeData.ageVerified || false,
+					termsAccepted: freeData.termsAccepted || false,
+				};
+				setFormData(signupData as any);
+				// Show non-blocking toast notification instead of blocking confirm
+				showToast.success("Your previous progress has been restored.");
 			}
 		} catch (error) {
 			// Corrupted data or parsing error - remove it
-			localStorage.removeItem(STORAGE_KEY);
+			console.warn("Failed to restore form progress:", error);
+			try {
+				localStorage.removeItem(STORAGE_KEY);
+			} catch (removeError) {
+				// localStorage might be disabled - fail silently
+				console.warn("Failed to remove corrupted form data:", removeError);
+			}
 		}
 	}, [STORAGE_KEY, setFormData, setStep, hasStep, tier]);
 
@@ -212,6 +223,9 @@ export function useFormPersistence(
 	 * Get stored user preferences for matches page
 	 */
 	const getStoredUserPreferences = useCallback(() => {
+		// SSR safety: Only run in browser
+		if (typeof window === "undefined") return null;
+		
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY);
 			if (!stored) return null;
@@ -243,6 +257,9 @@ export function useFormPersistence(
 	 * This persists even after clearProgress() is called
 	 */
 	const savePreferencesForMatches = useCallback((formData: FormDataType) => {
+		// SSR safety: Only run in browser
+		if (typeof window === "undefined") return;
+		
 		try {
 			const PREFERENCES_KEY = `jobping_${tier}_preferences_v${STORAGE_VERSION}`;
 			let preferencesToSave: { cities: string[]; careerPath: string[]; tier: 'free' | 'premium' };
@@ -275,7 +292,15 @@ export function useFormPersistence(
 	}, [tier]);
 
 	return {
-		clearProgress: () => localStorage.removeItem(STORAGE_KEY),
+		clearProgress: () => {
+			if (typeof window !== "undefined") {
+				try {
+					localStorage.removeItem(STORAGE_KEY);
+				} catch (error) {
+					console.warn("Failed to clear form progress:", error);
+				}
+			}
+		},
 		getStoredUserPreferences,
 		savePreferencesForMatches,
 	};
@@ -290,6 +315,9 @@ export function getStoredUserPreferencesForMatches(): {
 	careerPath: string[];
 	tier: 'free' | 'premium';
 } | null {
+	// SSR safety: Only run in browser
+	if (typeof window === "undefined") return null;
+	
 	const STORAGE_VERSION = 1;
 	const EXPIRATION_MS = TIMING.FORM_PREFERENCES_EXPIRATION_MS;
 
