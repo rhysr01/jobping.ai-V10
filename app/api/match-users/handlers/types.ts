@@ -8,7 +8,7 @@ import type {
 	MatchProvenance,
 } from "../../../../lib/matching-types";
 
-export type User = Database["public"]["Tables"]["users"]["Row"];
+export type User = Database["public"]["Views"]["users"]["Row"];
 
 export interface PerformanceMetrics {
 	jobFetchTime: number;

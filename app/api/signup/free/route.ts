@@ -476,7 +476,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Now try to update with additional fields (this might fail due to schema cache)
-	let userData = minimalUserData;
+	let userData: any = minimalUserData;
 	try {
 		const { data: updatedUserData, error: updateError } = await supabase
 			.from("users")
@@ -504,7 +504,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	} catch (updateError) {
 		apiLogger.warn("Failed to update user with additional fields, continuing with minimal data", {
 			email: normalizedEmail,
-			error: updateError.message,
+			error: updateError instanceof Error ? updateError.message : String(updateError),
 		});
 	}
 
