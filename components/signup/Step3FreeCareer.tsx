@@ -194,7 +194,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 				{formData.cities && formData.cities.length > 0 && (
 					<JobCountTeaser
 						cities={formData.cities}
-						careerPath={formData.careerPath || []}
+						careerPath={formData.careerPath}
 					/>
 				)}
 

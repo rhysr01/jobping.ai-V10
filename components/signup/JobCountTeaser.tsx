@@ -21,34 +21,39 @@ export function JobCountTeaser({ cities, careerPath }: JobCountTeaserProps) {
 	const [error, setError] = useState(false);
 
 	const fetchJobCount = async () => {
-		if (cities.length === 0) return; // Only require cities, not career path
+		// Require BOTH cities and career path
+		if (cities.length === 0 || careerPath.length === 0) {
+			console.log('JobCountTeaser: Skipping fetch - need both cities and career path');
+			return;
+		}
 
 		setLoading(true);
 		setError(false);
+		console.log('JobCountTeaser: Fetching with', { cities, careerPath: careerPath[0] });
 
 		try {
-		const response = await fetch("/api/preview-matches", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({
-		cities,
-		careerPath: careerPath.length > 0 ? careerPath[0] : undefined, // Optional career path
-		limit: 0, // Count only
-		isPreview: false, // Fast count query
-		}),
-		});
+			const response = await fetch("/api/preview-matches", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+				cities,
+				careerPath: careerPath[0], // Send the actual career path
+				limit: 0, // Count only
+				isPreview: false, // Fast count query
+				}),
+			});
 
-		if (!response.ok) {
-					console.error('API Response:', response.status, await response.text());
-		 throw new Error("Failed to fetch");
-		}
+			if (!response.ok) {
+				console.error('API Response:', response.status, await response.text());
+				throw new Error("Failed to fetch");
+			}
 
-		const data = await response.json();
-		console.log('API Data:', data); // Debug logging
-				setJobCount({
-					count: data.count || 0,
-					isLowCount: data.count < 20,
-				});
+			const data = await response.json();
+			console.log('API Data:', data); // Debug logging
+			setJobCount({
+				count: data.count || 0,
+				isLowCount: data.count < 20,
+			});
 		} catch (err) {
 			console.error("JobCountTeaser fetch error:", err);
 			setError(true);

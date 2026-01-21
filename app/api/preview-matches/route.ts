@@ -53,12 +53,8 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			throw new AppError("Cities array is required", 400, "VALIDATION_ERROR");
 		}
 
-		if (
-			!careerPath ||
-			(typeof careerPath !== "string" && !Array.isArray(careerPath))
-		) {
-			throw new AppError("Career path is required", 400, "VALIDATION_ERROR");
-		}
+		// Career path is optional for all queries - only used for filtering when provided
+		// No validation needed for careerPath since it's truly optional
 
 		apiLogger.info("Preview matches request", {
 			cities,
