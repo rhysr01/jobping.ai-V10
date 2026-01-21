@@ -32,9 +32,11 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 
 	const [showAllCities, setShowAllCities] = useState(false);
 
-	const displayedCities = showAllCities ? ALL_CITIES : POPULAR_CITIES;
+	const displayedCities = showAllCities ? ALL_CITIES : POPULAR_CITIES || [];
 
 	const handleCityToggle = (city: string) => {
+		if (!city || typeof city !== 'string') return;
+
 		if ("vibrate" in navigator) {
 			navigator.vibrate(10);
 		}
@@ -126,7 +128,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					aria-describedby="cities-help"
 					onBlur={handleCitiesBlur}
 				>
-					{displayedCities.map((city) => {
+					{displayedCities?.map((city) => {
+						if (!city || typeof city !== 'string') return null;
 						const isSelected = formData.cities.includes(city);
 						const isDisabled = !isSelected && formData.cities.length >= 3;
 						return (
