@@ -152,6 +152,16 @@ function SignupFormFree() {
 				age_verified: formData.ageVerified,
 			};
 
+			console.log('Submitting form data:', {
+				email: apiData.email,
+				full_name: apiData.full_name,
+				cities: apiData.cities,
+				citiesLength: apiData.cities?.length,
+				careerPath: apiData.careerPath,
+				careerPathLength: apiData.careerPath?.length,
+				visaStatus: apiData.visaStatus,
+			});
+
 			const response = await apiCallJson<{
 				userId: string;
 				email: string;

@@ -347,7 +347,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			email: body.email,
 			full_name: body.full_name,
 			cities: body.cities,
+			citiesLength: body.cities?.length,
 			careerPath: body.careerPath,
+			careerPathLength: body.careerPath?.length,
 			visaStatus: body.visaStatus,
 			requestBody: body,
 		});
