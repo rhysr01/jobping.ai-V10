@@ -211,19 +211,40 @@ function SignupFormFree() {
 			setSubmissionProgress(40);
 
 			// Transform form data to match API expectations
+			// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
+			// If gdprConsent is true, both must be true for validation to pass
 			const apiData = {
 				email: formData.email,
 				full_name: formData.fullName,
-				cities: formData.cities,
-				careerPath: formData.careerPath,
-				entryLevelPreferences: formData.entryLevelPreferences,
-				visaStatus: formData.visaStatus,
+				cities: formData.cities || [],
+				careerPath: formData.careerPath || [],
+				entryLevelPreferences: formData.entryLevelPreferences || [],
+				visaStatus: formData.visaStatus || "",
 				birth_year: formData.birthYear,
 				// Map gdprConsent to terms_accepted (required by API)
-				terms_accepted: formData.gdprConsent || false,
+				// API validation requires exactly true, not just truthy
+				terms_accepted: formData.gdprConsent === true,
 				// Set age_verified to true when user accepts terms (accepting terms implies age verification)
-				age_verified: formData.gdprConsent || formData.ageVerified || false,
+				// API validation requires exactly true, not just truthy
+				age_verified: formData.gdprConsent === true,
 			};
+
+			// Validate critical fields before sending
+			if (!apiData.cities || apiData.cities.length === 0) {
+				throw new Error("Please select at least one city");
+			}
+			if (!apiData.careerPath || apiData.careerPath.length === 0) {
+				throw new Error("Please select at least one career path");
+			}
+			if (!apiData.visaStatus || apiData.visaStatus.trim() === "") {
+				throw new Error("Please select your visa status");
+			}
+			if (!apiData.terms_accepted) {
+				throw new Error("Please accept the Terms of Service and Privacy Policy");
+			}
+			if (!apiData.age_verified) {
+				throw new Error("Age verification is required");
+			}
 
 			if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 				console.group("🟢 [FREE SIGNUP CLIENT] Submitting to API");
@@ -358,36 +379,65 @@ function SignupFormFree() {
 				});
 				errorMessage = error.message;
 
-				// If it's a validation error, show the details
-				if (error.status === 400 && error.response?.details) {
-					console.error('API Validation Error Details:', error.response.details);
-					errorDetails = error.response.details;
-					
-					// Track validation errors in Sentry for monitoring
-					Sentry.captureMessage("Free signup client-side validation error", {
-						level: "warning",
-						tags: { 
-							endpoint: "signup-free", 
-							error_type: "client_validation",
-							status_code: error.status 
-						},
-						extra: {
-							errorMessage,
-							validationDetails: errorDetails,
-							formData: {
-								email: formData.email,
-								fullName: formData.fullName,
-								cities: formData.cities,
-								citiesLength: formData.cities?.length,
-								careerPath: formData.careerPath,
-								careerPathLength: formData.careerPath?.length,
-								gdprConsent: formData.gdprConsent,
-								ageVerified: formData.ageVerified,
-								termsAccepted: formData.gdprConsent, // Map to terms_accepted
-							},
-							apiResponse: error.response,
-						},
+			// If it's a validation error, show the details
+			if (error.status === 400 && error.response?.details) {
+				console.error('API Validation Error Details:', error.response.details);
+				errorDetails = error.response.details;
+				
+				// Parse zod validation errors into user-friendly messages
+				if (Array.isArray(error.response.details)) {
+					const fieldErrors: Record<string, string> = {};
+					error.response.details.forEach((detail: any) => {
+						if (detail.path && detail.path.length > 0) {
+							const fieldName = detail.path[0];
+							fieldErrors[fieldName] = detail.message || "Invalid value";
+						}
 					});
+					
+					// Map API field names to form field names
+					const mappedErrors: Record<string, string> = {};
+					if (fieldErrors.full_name) mappedErrors.fullName = fieldErrors.full_name;
+					if (fieldErrors.careerPath) mappedErrors.careerPath = fieldErrors.careerPath;
+					if (fieldErrors.terms_accepted) mappedErrors.gdprConsent = fieldErrors.terms_accepted;
+					if (fieldErrors.age_verified) mappedErrors.ageVerified = fieldErrors.age_verified;
+					if (fieldErrors.visaStatus) mappedErrors.visaStatus = fieldErrors.visaStatus;
+					if (fieldErrors.cities) mappedErrors.cities = fieldErrors.cities;
+					
+					setValidationErrors(mappedErrors);
+					
+					// Update error message to be more helpful
+					const errorMessages = Object.values(mappedErrors);
+					if (errorMessages.length > 0) {
+						errorMessage = errorMessages[0];
+					}
+				}
+				
+				// Track validation errors in Sentry for monitoring
+				Sentry.captureMessage("Free signup API validation error", {
+					level: "warning",
+					tags: { 
+						endpoint: "signup-free", 
+						error_type: "api_validation",
+						status_code: error.status 
+					},
+					extra: {
+						errorMessage,
+						validationDetails: errorDetails,
+						formData: {
+							email: formData.email,
+							fullName: formData.fullName,
+							cities: formData.cities,
+							citiesLength: formData.cities?.length,
+							careerPath: formData.careerPath,
+							careerPathLength: formData.careerPath?.length,
+							gdprConsent: formData.gdprConsent,
+							ageVerified: formData.ageVerified,
+							termsAccepted: formData.gdprConsent, // Map to terms_accepted
+							visaStatus: formData.visaStatus,
+						},
+						apiResponse: error.response,
+					},
+				});
 				} else {
 					// Track other API errors (network, server errors, etc.)
 					Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
