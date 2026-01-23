@@ -21,7 +21,7 @@ interface Step2FreeCitiesProps {
 export const Step2FreeCities = React.memo(function Step2FreeCities({
 	formData,
 	setFormData,
-	touchedFields: _touchedFields,
+	touchedFields,
 	setTouchedFields,
 	loading,
 	setStep,
@@ -31,8 +31,16 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 	};
 
 	const [showAllCities, setShowAllCities] = useState(false);
+	const [hasAttemptedContinue, setHasAttemptedContinue] = useState(false);
 
 	const displayedCities = showAllCities ? ALL_CITIES : POPULAR_CITIES || [];
+
+	// Reset attempted continue flag when cities are selected
+	React.useEffect(() => {
+		if (formData.cities.length > 0) {
+			setHasAttemptedContinue(false);
+		}
+	}, [formData.cities.length]);
 
 	const handleCityToggle = (city: string) => {
 		if (!city || typeof city !== 'string') return;
@@ -71,6 +79,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 	};
 
 	const isStepValid = formData.cities.length > 0;
+	const citiesTouched = touchedFields.has("cities");
+	const shouldShowCitiesError = !isStepValid && (citiesTouched || hasAttemptedContinue);
 
 	return (
 		<motion.div
@@ -189,8 +199,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					</div>
 				)}
 
-				{/* Error Display */}
-				{!isStepValid && (
+				{/* Error Display - Only show if field was touched or user attempted to continue */}
+				{shouldShowCitiesError && (
 					<FormFieldError
 						error="Please select at least one city to find relevant job opportunities."
 						id="cities-error"
@@ -205,7 +215,14 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			<MobileNavigation
 				currentStep={2}
 				totalSteps={3}
-				onNext={() => setStep(3)}
+				onNext={() => {
+					if (!isStepValid) {
+						setHasAttemptedContinue(true);
+						setTouchedFields((prev) => new Set(prev).add("cities"));
+						return;
+					}
+					setStep(3);
+				}}
 				onBack={() => setStep(1)}
 				nextDisabled={!isStepValid || loading}
 				nextLabel="Continue"
