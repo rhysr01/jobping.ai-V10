@@ -37,12 +37,9 @@ export async function matchUsersHandler(req: NextRequest) {
 	
 	// Parse request body once to avoid double consumption
 	let body;
-	let bodyString: string | null = null;
 	try {
 		// Read from cloned request to preserve original for error handling
 		body = await clonedReq.json();
-		// Store body string for error logging (if needed)
-		bodyString = JSON.stringify(body);
 	} catch (error) {
 		console.error("Failed to parse request body:", error);
 		return NextResponse.json(
