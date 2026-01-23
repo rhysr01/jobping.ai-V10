@@ -32,8 +32,14 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 
 	const [showAllCities, setShowAllCities] = useState(false);
 	const [hasAttemptedContinue, setHasAttemptedContinue] = useState(false);
+	const [isMounted, setIsMounted] = useState(false);
 
 	const displayedCities = showAllCities ? ALL_CITIES : POPULAR_CITIES || [];
+
+	// Mark component as mounted to prevent hydration mismatches
+	React.useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	// Reset attempted continue flag when cities are selected
 	React.useEffect(() => {
@@ -79,8 +85,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 	};
 
 	const isStepValid = formData.cities.length > 0;
-	const citiesTouched = touchedFields.has("cities");
-	const shouldShowCitiesError = !isStepValid && (citiesTouched || hasAttemptedContinue);
+	const citiesTouched = isMounted && touchedFields.has("cities");
+	const shouldShowCitiesError = isMounted && !isStepValid && (citiesTouched || hasAttemptedContinue);
 
 	return (
 		<motion.div
