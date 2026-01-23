@@ -79,6 +79,26 @@ export async function apiCall(
 					"x-csrf-token": "jobping-request",
 				};
 
+				// Log signup requests for debugging
+				if (url.includes("/api/signup/free")) {
+					console.group(`🌐 [API CLIENT] Request attempt ${attempt + 1}/${retries + 1}`);
+					console.log("Request details:", {
+						url,
+						method: fetchOptions.method || "GET",
+						hasBody: !!fetchOptions.body,
+						bodySize: fetchOptions.body ? String(fetchOptions.body).length : 0,
+					});
+					if (fetchOptions.body && typeof fetchOptions.body === "string") {
+						try {
+							const bodyObj = JSON.parse(fetchOptions.body);
+							console.log("Request body:", bodyObj);
+						} catch {
+							console.log("Request body (raw):", fetchOptions.body.substring(0, 200));
+						}
+					}
+					console.groupEnd();
+				}
+
 				const response = await fetch(url, {
 					...fetchOptions,
 					headers,
@@ -86,6 +106,19 @@ export async function apiCall(
 				});
 
 				clearTimeout(timeoutId);
+
+				// Log signup responses for debugging
+				if (url.includes("/api/signup/free")) {
+					const statusEmoji = response.ok ? "✅" : response.status >= 500 ? "🔥" : "⚠️";
+					console.group(`${statusEmoji} [API CLIENT] Response received`);
+					console.log("Response status:", {
+						status: response.status,
+						statusText: response.statusText,
+						ok: response.ok,
+						headers: Object.fromEntries(response.headers.entries()),
+					});
+					console.groupEnd();
+				}
 
 				// Handle common HTTP errors
 				if (response.status === 429) {
@@ -118,6 +151,18 @@ export async function apiCall(
 							errorMessage = data.error;
 						}
 						responseData = data;
+						
+						// Log signup error details
+						if (url.includes("/api/signup/free")) {
+							console.group("❌ [API CLIENT] Error response");
+							console.error("Error details:", {
+								url,
+								status: response.status,
+								errorMessage,
+							});
+							console.error("Full error response:", responseData);
+							console.groupEnd();
+						}
 					} catch {
 						// Ignore JSON parse errors
 					}
@@ -198,5 +243,22 @@ export async function apiCallJson<T = unknown>(
 		},
 	});
 
-	return response.json();
+	const jsonData = await response.json();
+	
+	// Log signup JSON responses for debugging
+	if (url.includes("/api/signup/free")) {
+		console.group("📦 [API CLIENT] JSON response parsed");
+		console.log("Response summary:", {
+			url,
+			hasData: !!jsonData,
+			success: jsonData?.success,
+			matchCount: jsonData?.matchCount,
+			userId: jsonData?.userId,
+			error: jsonData?.error,
+		});
+		console.log("Full JSON response:", jsonData);
+		console.groupEnd();
+	}
+
+	return jsonData;
 }

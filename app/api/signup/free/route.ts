@@ -323,6 +323,13 @@ const freeSignupSchema = z.object({
 export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);
 	
+	console.log("[FREE SIGNUP] Request received", {
+		requestId,
+		timestamp: new Date().toISOString(),
+		url: request.url,
+		method: request.method,
+	});
+	
 	// Set Sentry context for this request
 	Sentry.setContext("request", {
 		requestId,
@@ -358,9 +365,27 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	const body = await request.json();
+	console.log("[FREE SIGNUP] Request body received", {
+		requestId,
+		email: body.email,
+		full_name: body.full_name,
+		cities: body.cities,
+		citiesLength: body.cities?.length,
+		careerPath: body.careerPath,
+		careerPathLength: body.careerPath?.length,
+		visaStatus: body.visaStatus,
+		hasBirthYear: !!body.birth_year,
+		age_verified: body.age_verified,
+		terms_accepted: body.terms_accepted,
+	});
 
 	// Validate input with zod
 	const validationResult = freeSignupSchema.safeParse(body);
+	console.log("[FREE SIGNUP] Validation result", {
+		requestId,
+		success: validationResult.success,
+		errors: validationResult.success ? null : validationResult.error.issues,
+	});
 
 	if (!validationResult.success) {
 		const errors = validationResult.error.issues
@@ -421,6 +446,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
+	console.log("[FREE SIGNUP] Checking for existing user", {
+		requestId,
+		normalizedEmail,
+	});
 
 	// Check if email already used (any tier)
 	// NOTE: exec_sql RPC doesn't exist, using direct query instead
@@ -431,6 +460,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.select("id, subscription_tier")
 			.eq("email", normalizedEmail)
 			.maybeSingle();
+		
+		console.log("[FREE SIGNUP] Existing user check result", {
+			requestId,
+			normalizedEmail,
+			hasError: !!error,
+			error: error ? { code: error.code, message: error.message } : null,
+			existingUser: data ? { id: data.id, tier: data.subscription_tier } : null,
+		});
 		
 		if (error) {
 			apiLogger.warn("Error checking existing user", error as Error, {
@@ -468,6 +505,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	if (existingUser) {
+		console.log("[FREE SIGNUP] User already exists, returning 409", {
+			requestId,
+			normalizedEmail,
+			userId: existingUser.id,
+			tier: existingUser.subscription_tier,
+		});
+		
 		// User already exists - redirect to matches regardless of tier
 		// This prevents duplicate accounts and ensures users can access their matches
 		const response = NextResponse.json(
@@ -544,6 +588,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// WORKAROUND: Insert only essential fields that work, then update others
 	// Generate a UUID for the id since auto-generation doesn't seem to work
 	const userId = randomUUID();
+	console.log("[FREE SIGNUP] Creating user", {
+		requestId,
+		normalizedEmail,
+		userId,
+		full_name,
+		cities,
+		careerPath,
+		visa_status,
+	});
 
 	// First, insert with minimal fields
 	const { data: minimalUserData, error: minimalError } = await supabase
@@ -554,6 +607,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		})
 		.select("id, email")
 		.single();
+	
+	console.log("[FREE SIGNUP] Minimal user insert result", {
+		requestId,
+		normalizedEmail,
+		hasError: !!minimalError,
+		error: minimalError ? { code: minimalError.code, message: minimalError.message } : null,
+		userData: minimalUserData ? { id: minimalUserData.id, email: minimalUserData.email } : null,
+	});
 
 	if (minimalError) {
 		apiLogger.error("Failed to create minimal user", minimalError as Error, {
@@ -573,6 +634,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Now try to update with additional fields (this might fail due to schema cache)
 	let userData: any = minimalUserData;
+	console.log("[FREE SIGNUP] Updating user with additional fields", {
+		requestId,
+		normalizedEmail,
+		userId: minimalUserData.id,
+	});
+	
 	try {
 		const { data: updatedUserData, error: updateError } = await supabase
 			.from("users")
@@ -592,6 +659,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.eq("id", minimalUserData.id)
 			.select()
 			.single();
+		
+		console.log("[FREE SIGNUP] User update result", {
+			requestId,
+			normalizedEmail,
+			hasError: !!updateError,
+			error: updateError ? { code: updateError.code, message: updateError.message } : null,
+			updated: !!updatedUserData,
+		});
 
 		if (!updateError && updatedUserData) {
 			userData = updatedUserData;
@@ -704,6 +779,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	let { data: allJobs, error: jobsError } = await query;
+	console.log("[FREE SIGNUP] Initial job fetch result", {
+		requestId,
+		normalizedEmail,
+		jobCount: allJobs?.length || 0,
+		hasError: !!jobsError,
+		error: jobsError ? { code: jobsError.code, message: jobsError.message } : null,
+	});
 
 	// ENTERPRISE-LEVEL FIX: Improved fallback logic
 	// Since we already use country-level matching, fallback is simpler
@@ -865,6 +947,18 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// REFACTORED: Use consolidated matching service
+	console.log("[FREE SIGNUP] Starting matching", {
+		requestId,
+		normalizedEmail,
+		jobsForMatching: jobsForMatching.length,
+		userPrefs: {
+			email: userPrefs.email,
+			target_cities: userPrefs.target_cities,
+			career_path: userPrefs.career_path,
+			visa_status: userPrefs.visa_status,
+		},
+	});
+	
 	const matchingConfig = SignupMatchingService.getConfig("free");
 	const matchingResult = await SignupMatchingService.runMatching(
 		userPrefs,
@@ -872,6 +966,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	);
 
 	const matchesCount = matchingResult.matchCount;
+	console.log("[FREE SIGNUP] Matching complete", {
+		requestId,
+		normalizedEmail,
+		matchesCount,
+		method: matchingResult.method,
+		hasError: !!matchingResult.error,
+		error: matchingResult.error || null,
+	});
 
 	// Check for matches
 	if (matchesCount === 0) {
@@ -965,6 +1067,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		requestId,
 		email: normalizedEmail,
 		matchCount: matchesCount,
+	});
+
+	console.log("[FREE SIGNUP] Signup successful, returning response", {
+		requestId,
+		normalizedEmail,
+		userId: userData.id,
+		matchCount: matchesCount,
+		hasSessionCookie: true,
 	});
 
 	return response;

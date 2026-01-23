@@ -168,6 +168,20 @@ function SignupFormFree() {
 		setTimeout(() => setSubmissionProgress(10), 100);
 
 		try {
+			console.group("🔵 [FREE SIGNUP CLIENT] Starting submission");
+			console.log("Form data:", {
+				email: formData.email,
+				fullName: formData.fullName,
+				cities: formData.cities,
+				citiesLength: formData.cities?.length,
+				careerPath: formData.careerPath,
+				careerPathLength: formData.careerPath?.length,
+				visaStatus: formData.visaStatus,
+				gdprConsent: formData.gdprConsent,
+				ageVerified: formData.ageVerified,
+			});
+			console.groupEnd();
+
 			// Stage 1: Validation (10% - 30%)
 			setSubmissionProgress(10);
 			await new Promise((resolve) => setTimeout(resolve, 300));
@@ -192,7 +206,8 @@ function SignupFormFree() {
 				age_verified: formData.gdprConsent || formData.ageVerified || false,
 			};
 
-			console.log('Submitting form data:', {
+			console.group("🟢 [FREE SIGNUP CLIENT] Submitting to API");
+			console.log("API payload:", {
 				email: apiData.email,
 				full_name: apiData.full_name,
 				cities: apiData.cities,
@@ -200,16 +215,36 @@ function SignupFormFree() {
 				careerPath: apiData.careerPath,
 				careerPathLength: apiData.careerPath?.length,
 				visaStatus: apiData.visaStatus,
+				terms_accepted: apiData.terms_accepted,
+				age_verified: apiData.age_verified,
+				hasBirthYear: !!apiData.birth_year,
 			});
+			console.log("Full API data:", JSON.stringify(apiData, null, 2));
+			console.groupEnd();
 
 			const response = await apiCallJson<{
 				userId: string;
 				email: string;
 				matchesCount: number;
+				success?: boolean;
+				error?: string;
+				details?: any;
 			}>("/api/signup/free", {
 				method: "POST",
 				body: JSON.stringify(apiData),
 			});
+
+			console.group("✅ [FREE SIGNUP CLIENT] API response received");
+			console.log("Response summary:", {
+				success: !!response,
+				userId: response?.userId,
+				email: response?.email,
+				matchCount: response?.matchesCount,
+				hasError: !!response?.error,
+				error: response?.error,
+			});
+			console.log("Full response:", response);
+			console.groupEnd();
 
 			if (!response) {
 				throw new Error("No response from server");
@@ -229,6 +264,15 @@ function SignupFormFree() {
 			setSubmissionProgress(100);
 			setSubmissionStage("Complete! Redirecting...");
 
+			console.group("🎉 [FREE SIGNUP CLIENT] Signup successful!");
+			console.log("Success details:", {
+				email: response.email,
+				userId: response.userId,
+				matchesCount: response.matchesCount,
+				redirectDelay: TIMING.REDIRECT_DELAY_MS,
+			});
+			console.groupEnd();
+
 			// Save preferences for matches page before clearing form progress
 			// This allows PremiumJobsPreview to access user preferences
 			savePreferencesForMatches(formData as unknown as FormDataType);
@@ -236,11 +280,34 @@ function SignupFormFree() {
 
 			// Store timeout ref for cleanup
 			redirectTimeoutRef.current = setTimeout(() => {
+				console.log("[FREE SIGNUP CLIENT] Redirecting to matches page", {
+					email: response.email,
+					tier: "free",
+				});
 				router.push(
 					`/matches?tier=free&email=${encodeURIComponent(response.email)}`,
 				);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
+			console.group("❌ [FREE SIGNUP CLIENT] Error during submission");
+			console.error("Error summary:", {
+				error: error instanceof Error ? error.message : String(error),
+				errorType: error instanceof ApiError ? "ApiError" : typeof error,
+				status: error instanceof ApiError ? error.status : undefined,
+				retryable: error instanceof ApiError ? error.retryable : undefined,
+			});
+			console.error("Form data at error:", {
+				email: formData.email,
+				fullName: formData.fullName,
+				cities: formData.cities,
+				careerPath: formData.careerPath,
+			});
+			console.error("Full error object:", error);
+			if (error instanceof ApiError && error.response) {
+				console.error("API error response:", error.response);
+			}
+			console.groupEnd();
+
 			setSubmissionProgress(0);
 			setSubmissionStage("");
 
@@ -249,6 +316,11 @@ function SignupFormFree() {
 			let errorDetails = {};
 
 			if (error instanceof ApiError) {
+				console.error("[FREE SIGNUP CLIENT] ApiError details", {
+					status: error.status,
+					message: error.message,
+					response: error.response,
+				});
 				errorMessage = error.message;
 
 				// If it's a validation error, show the details
