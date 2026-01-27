@@ -5,7 +5,6 @@
 
 import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
-import { FORM_TO_DATABASE_MAPPING } from "../matching/categoryMapper";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
 
 export interface FreeUserPreferences {
@@ -77,30 +76,24 @@ export async function runFreeMatching(
 		// Only match jobs that have the exact career path category
 		// Note: Categories are stored as JSON arrays in the database
 		const careerMatch =
-			!userPrefs.career_path || // If no career specified, include all
-			!job.categories ||
-			job.categories.length === 0 || // or if job has no categories, include
-			job.categories.some((cat) => {
-				const catLower = cat.toLowerCase();
-				// Handle both array and string career_path formats
-				if (Array.isArray(userPrefs.career_path)) {
-					return userPrefs.career_path.some((userCareer) => {
-						// Map user career path to database category and check exact match
-						const dbCategory =
-							FORM_TO_DATABASE_MAPPING[userCareer] || userCareer;
-						// Handle array comparison properly (categories is already an array)
-						return catLower === dbCategory.toLowerCase();
-					});
-				} else if (userPrefs.career_path) {
-					// Map user career path to database category and check exact match
-					const dbCategory =
-						FORM_TO_DATABASE_MAPPING[userPrefs.career_path] ||
-						userPrefs.career_path;
-					// Handle array comparison properly
-					return catLower === dbCategory.toLowerCase();
-				}
-				return false; // No career path specified
-			});
+		!userPrefs.career_path || // If no career specified, include all
+		!job.categories ||
+		job.categories.length === 0 || // or if job has no categories, include
+		job.categories.some((cat) => {
+			const catLower = cat.toLowerCase();
+			// Handle both array and string career_path formats
+			// SIMPLIFIED: No mapping needed - form value IS database category now
+			if (Array.isArray(userPrefs.career_path)) {
+				return userPrefs.career_path.some((userCareer) => {
+					// Direct comparison - no mapping needed!
+					return catLower === userCareer.toLowerCase();
+				});
+			} else if (userPrefs.career_path) {
+				// Direct comparison - form value IS database category
+				return catLower === userPrefs.career_path.toLowerCase();
+			}
+			return false; // No career path specified
+		});
 
 			return cityMatch && careerMatch;
 		});

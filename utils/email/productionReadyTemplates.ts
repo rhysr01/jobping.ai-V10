@@ -31,6 +31,18 @@ const CAREER_PATH_LABELS: Record<string, string> = {
 };
 
 const DATABASE_TO_FORM_MAPPING: Record<string, string> = {
+	// SIMPLIFIED: Short form categories used everywhere now
+	// Direct mapping (most are identity mappings)
+	strategy: "strategy",
+	finance: "finance",
+	sales: "sales",
+	marketing: "marketing",
+	data: "data",
+	operations: "operations",
+	product: "product",
+	tech: "tech",
+	sustainability: "sustainability",
+	// Legacy support for old long-form names (backwards compatibility)
 	"strategy-business-design": "strategy",
 	"finance-investment": "finance",
 	"sales-client-success": "sales",

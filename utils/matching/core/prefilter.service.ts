@@ -643,7 +643,8 @@ export class PrefilterService {
 	}
 
 	/**
-	 * Filter jobs by career path - map form values to database categories
+	 * Filter jobs by career path
+	 * SIMPLIFIED: No mapping needed - form values ARE database categories now
 	 */
 	private filterByCareerPath(
 		jobs: (ScrapersJob & { freshnessTier: string })[],
@@ -657,45 +658,19 @@ export class PrefilterService {
 			return jobs;
 		}
 
-		// Map form career path values to database categories
-		const careerPathMapping: Record<string, string[]> = {
-			strategy: ["strategy-business-design"],
-			data: ["data-analytics"],
-			sales: ["sales-client-success"],
-			marketing: ["marketing-growth"],
-			finance: ["finance-investment"],
-			operations: ["operations-supply-chain"],
-			product: ["product-innovation"],
-			tech: ["tech-transformation"],
-			sustainability: ["sustainability-esg"],
-			unsure: ["general", "early-career", "entry-level", "graduate-programme"],
-		};
-
-		// Get database categories that match user's career path selection
+		// Get user career paths (handle both string and array formats)
 		const userCareerPaths = Array.isArray(user.career_path)
 			? user.career_path
 			: [user.career_path];
-		const targetCategories = new Set<string>();
 
-		userCareerPaths.forEach((path) => {
-			const mappedCategories = careerPathMapping[path];
-			if (mappedCategories) {
-				// If there's a mapping, use the mapped categories
-				mappedCategories.forEach((cat) => {
-					targetCategories.add(cat);
-				});
-			} else {
-				// If no mapping found, assume it's already a database category
-				targetCategories.add(path);
-			}
-		});
+		// SIMPLIFIED: Form values ARE database categories now - no mapping needed!
+		const targetCategories = new Set(userCareerPaths);
 
-		// If no valid mappings found, return all jobs
+		// If no valid paths found, return all jobs
 		if (targetCategories.size === 0) {
-			logger.warn("No career path mappings found for user selection", {
+			logger.warn("No career paths provided for filtering", {
 				metadata: {
-					userCareerPaths,
-					availableMappings: Object.keys(careerPathMapping),
+					userEmail: user.email,
 				},
 			});
 			return jobs;
