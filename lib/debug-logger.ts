@@ -40,18 +40,6 @@ const EMOJIS = {
 };
 
 /**
- * Format data for console display
- */
-function formatData(data?: Record<string, any>): string {
-	if (!data || Object.keys(data).length === 0) return "";
-	try {
-		return JSON.stringify(data, null, 2);
-	} catch {
-		return String(data);
-	}
-}
-
-/**
  * Main logging function
  */
 function log(
