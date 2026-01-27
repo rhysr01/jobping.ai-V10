@@ -65,11 +65,10 @@ export async function runFreeMatching(
 	// free users haven't provided skills, industries, company size, etc.
 	const preFiltered = jobs.filter((job) => {
 	const cityMatch = userPrefs.target_cities.some((city) => {
-		// Include jobs with NULL city (they may match user's preferences)
-		if (!job.city) return true;
-		// FIXED: Use includes() to match city variations (e.g., "London" matches "Central London")
-		// This aligns with prefilter.service.ts behavior and improves match rate
-		return job.city.toLowerCase().includes(city.toLowerCase());
+		// All job cities are normalized to form values via migration
+		// Use exact case-insensitive match
+		if (!job.city) return true; // Include jobs with NULL city
+		return job.city.toLowerCase() === city.toLowerCase();
 	});
 
 		// IMPROVED: Strict career path matching for free tier
@@ -111,13 +110,11 @@ export async function runFreeMatching(
 		});
 
 		// Fallback: Try broader search if pre-filter too strict
-		// IMPROVED: Use same city matching logic as main filter (includes()) but skip career filter
-		// This ensures consistent behavior and better UX - give users city-matched jobs
-		// over zero results, even if career doesn't match perfectly
+		// Cities are normalized in database, use exact matching
 		const fallbackFiltered = jobs.filter((job) =>
 			userPrefs.target_cities.some((city) => {
 				if (!job.city) return true; // Include jobs with NULL city
-				return job.city.toLowerCase().includes(city.toLowerCase());
+				return job.city.toLowerCase() === city.toLowerCase();
 			}),
 		);
 
