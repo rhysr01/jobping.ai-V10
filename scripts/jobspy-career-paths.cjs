@@ -186,29 +186,19 @@ const CAREER_PATH_QUERIES = {
 	]
 };
 
-// PRIORITY CITIES for career-focused roles - European cities from signup form
+// TOP PRIORITY CITIES for career-focused roles - Reduced scope to prevent timeout
+// Focused on highest demand markets across Europe: 10 major hubs
 const CAREER_CITIES = [
-	"Dublin", "ireland",
 	"London", "uk",
-	"Paris", "france",
-	"Amsterdam", "netherlands",
-	"Manchester", "uk",
-	"Birmingham", "uk",
-	"Belfast", "uk",
-	"Madrid", "spain",
-	"Barcelona", "spain",
 	"Berlin", "germany",
-	"Hamburg", "germany",
+	"Amsterdam", "netherlands",
+	"Paris", "france",
+	"Madrid", "spain",
+	"Dublin", "ireland",
+	"Barcelona", "spain",
 	"Munich", "germany",
-	"Zurich", "switzerland",
-	"Milan", "italy",
-	"Rome", "italy",
-	"Brussels", "belgium",
 	"Stockholm", "sweden",
-	"Copenhagen", "denmark",
-	"Vienna", "austria",
-	"Prague", "czechia",
-	"Warsaw", "poland"
+	"Zurich", "switzerland"
 ];
 
 async function runCareerPathScraping() {
@@ -230,12 +220,13 @@ async function runCareerPathScraping() {
 
 		console.log(`\n🏙️ Processing ${city}, ${country}...`);
 
-		// Process each career path for this city
+		// Process each career path for this city - LIMITED to top 3 queries per path
 		for (const careerPath of careerPaths) {
 			const queries = CAREER_PATH_QUERIES[careerPath];
 
-			// Take first 8 queries from each career path for comprehensive coverage
-			const selectedQueries = queries.slice(0, 8);
+			// Take ONLY first 3 queries from each career path (was 8)
+			// 10 cities × 10 paths × 3 queries = 300 calls vs 1,760 before
+			const selectedQueries = queries.slice(0, 3);
 
 			for (const query of selectedQueries) {
 				console.log(`🔍 Searching "${query}" in ${city} (${careerPath})`);
@@ -285,7 +276,7 @@ except Exception as e:
 					const result = spawnSync('python3', ['-c', pythonScript], {
 						stdio: ['pipe', 'pipe', 'pipe'],
 						encoding: 'utf8',
-						timeout: 30000 // 30 second timeout
+						timeout: 20000 // 20 second timeout per query (was 30s)
 					});
 
 					if (result.error || result.stderr) {
@@ -337,8 +328,8 @@ except Exception as e:
 					totalJobsProcessed += batchProcessed;
 					totalJobsSaved += batchSaved;
 
-					// Small delay between queries
-					await new Promise(resolve => setTimeout(resolve, 1500));
+					// Small delay between queries (reduced from 1500ms)
+					await new Promise(resolve => setTimeout(resolve, 500));
 
 				} catch (error) {
 					console.log(`❌ Error with query "${query}":`, error.message);

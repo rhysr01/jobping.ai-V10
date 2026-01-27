@@ -292,23 +292,21 @@ curl http://localhost:3000/api/matches/free \
 
 ## 📚 Documentation
 
-### 📖 Technical Documentation
-- **[API Reference](/docs/api.md)** - Complete API documentation
-- **[Architecture Deep Dive](/docs/architecture.md)** - System design and patterns
-- **[Testing Strategy](/docs/testing.md)** - Comprehensive testing guide
-- **[Database Schema](/docs/database.md)** - Schema and migrations
-- **[AI Matching Engine](/docs/ai.md)** - Algorithm implementation details
+### 📖 Primary Documentation (Start Here)
+- **[README.md](README.md)** - Project overview and quick start (you are here)
+- **[TECHREF.md](TECHREF.md)** - Complete technical reference (API, architecture, database, AI, frontend, security, performance)
+- **[TESTING.md](TESTING.md)** - Comprehensive testing strategy and MCP integration
+- **[TESTING_README.md](TESTING_README.md)** - Quick testing reference guide
 
 ### 🛠️ Development Guides
-- **[Job Scraping System](/docs/scraping.md)** - Data collection technical details
-- **[Frontend Architecture](/docs/frontend.md)** - Component design patterns
-- **[Security Implementation](/docs/security.md)** - Authentication and authorization
-- **[Performance Optimization](/docs/performance.md)** - Scaling and optimization
-- **[Troubleshooting](/docs/troubleshooting.md)** - Common issues and solutions
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and contribution workflow
+- **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
+- **[docs/scraping.md](docs/scraping.md)** - Job scraping system technical details
+- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Common issues and solutions
 
-### 🤝 Contributing
-- **[Contributing Guide](/docs/contributing.md)** - Development guidelines
-- **[Changelog](/docs/changelog.md)** - Version history and updates
+### 📋 Additional Resources
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[CHANGES.md](CHANGES.md)** - Version history and updates
 
 ## 📈 Recent Major Improvements (Jan 2026)
 

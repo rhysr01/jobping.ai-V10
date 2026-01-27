@@ -269,8 +269,10 @@ export class PrefilterService {
 			return jobs;
 		}
 
-		// 🔴 CRITICAL: User needs sponsorship - ONLY show visa-friendly jobs
-		const visaFriendlyJobs = jobs.filter((job) => job.visa_friendly === true);
+	// 🔴 CRITICAL: User needs sponsorship - show jobs that can sponsor
+	// Include jobs with visa_friendly = true/null (assume null = can sponsor)
+	// Only exclude jobs explicitly marked as visa_friendly = false
+	const visaFriendlyJobs = jobs.filter((job) => job.visa_friendly !== false);
 
 		logger.info("Visa filtering applied", {
 			metadata: {

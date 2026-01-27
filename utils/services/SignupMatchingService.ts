@@ -33,6 +33,7 @@ export interface MatchingConfig {
 	maxJobsForAI: number;
 	fallbackThreshold: number;
 	includePrefilterScore: boolean;
+	maxJobsToFetch: number; // CRITICAL: Prevent fetching massive job pools
 }
 
 export interface MatchingResult {
@@ -56,6 +57,7 @@ const TIER_CONFIGS: Record<SubscriptionTier, MatchingConfig> = {
 		maxJobsForAI: 20,
 		fallbackThreshold: 3,
 		includePrefilterScore: true,
+		maxJobsToFetch: 5000, // Prevent massive DB scans for free tier
 	},
 	premium_pending: {
 		tier: "premium_pending",
@@ -65,6 +67,7 @@ const TIER_CONFIGS: Record<SubscriptionTier, MatchingConfig> = {
 		maxJobsForAI: 30,
 		fallbackThreshold: 5,
 		includePrefilterScore: true,
+		maxJobsToFetch: 10000, // Premium gets fresher jobs, so larger pool ok
 	},
 };
 
@@ -291,6 +294,7 @@ export class SignupMatchingService {
 
 	/**
 	 * Fetch jobs based on tier-specific freshness requirements
+	 * CRITICAL: Database-level limit prevents massive job pool bloat
 	 */
 	private static async fetchJobsForTier(
 		config: MatchingConfig,
@@ -314,8 +318,8 @@ export class SignupMatchingService {
 			.eq("status", "active")
 			.is("filtered_reason", null)
 			.gte("posted_at", freshnessDate.toISOString())
-			.order("created_at", { ascending: false });
-		// REMOVED LIMIT - let PrefilterService filter by location/career first, then limit if needed
+			.order("created_at", { ascending: false })
+			.limit(config.maxJobsToFetch); // PRODUCTION FIX: Prevent massive DB scans
 
 		return jobs || [];
 	}

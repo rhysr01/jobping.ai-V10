@@ -627,7 +627,7 @@ class RealJobRunner {
 						env: { ...process.env },
 					},
 				),
-				900000, // 15 minutes timeout (career paths take longer)
+				600000, // 10 minutes timeout (reduced from 15 - optimized script now runs faster)
 				"JobSpy Career Paths scraper",
 			);
 

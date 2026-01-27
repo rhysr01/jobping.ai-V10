@@ -103,5 +103,25 @@
     "total": 12,
     "success": 11,
     "errors": 1
+  },
+  "reed__2026-01-23": {
+    "total": 75,
+    "success": 0,
+    "errors": 75
+  },
+  "jooble__2026-01-23": {
+    "total": 13,
+    "success": 13,
+    "errors": 0
+  },
+  "adzuna__2026-01-27": {
+    "total": 160,
+    "success": 160,
+    "errors": 0
+  },
+  "jooble__2026-01-27": {
+    "total": 69,
+    "success": 69,
+    "errors": 0
   }
 }

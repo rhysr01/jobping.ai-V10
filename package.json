@@ -54,6 +54,8 @@
 		"analyze-bundle": "ANALYZE=true npm run build",
 		"generate-secrets": "tsx scripts/generate-secrets.ts",
 		"verify:env": "tsx scripts/verify-env-services.ts",
+		"test:sentry": "tsx scripts/test-sentry-integration.ts",
+		"test:sentry-mcp": "tsx scripts/test-sentry-mcp.ts",
 		"mcp:start": "tsx scripts/start-mcp-server.ts",
 		"mcp:dev": "tsx scripts/start-mcp-server.ts",
 		"mcp:test-env-validation": "tsx scripts/mcps/testing-mcp.ts validate_test_environment",
