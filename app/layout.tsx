@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 
 // TODO: Add Axiom Web Vitals export once URL is properly configured
 // export { reportWebVitals } from 'next-axiom';
-import { headers } from "next/headers";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
