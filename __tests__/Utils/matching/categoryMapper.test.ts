@@ -1,42 +1,41 @@
 import {
-	DATABASE_TO_FORM_MAPPING,
-	FORM_LABEL_TO_DATABASE_MAPPING,
-	FORM_TO_DATABASE_MAPPING,
 	getDatabaseCategoriesForForm,
 	getStudentSatisfactionScore,
 	mapDatabaseToForm,
 	mapFormLabelToDatabase,
 	mapFormToDatabase,
 	WORK_TYPE_CATEGORIES,
+	CAREER_PATH_LABELS,
 } from "../../../utils/matching/categoryMapper";
 
 describe("categoryMapper", () => {
 	describe("mapFormToDatabase", () => {
-		it("should map known form values", () => {
-			expect(mapFormToDatabase("tech")).toBe("tech-transformation");
-			expect(mapFormToDatabase("finance")).toBe("finance-investment");
-			expect(mapFormToDatabase("data")).toBe("data-analytics");
+		it("should return value as-is (no mapping needed - long form everywhere)", () => {
+			// Form values ARE database categories now (long form)
+			expect(mapFormToDatabase("tech-transformation")).toBe(
+				"tech-transformation",
+			);
+			expect(mapFormToDatabase("finance-investment")).toBe(
+				"finance-investment",
+			);
+			expect(mapFormToDatabase("data-analytics")).toBe("data-analytics");
 		});
 
-		it("should return value as-is for unknown values", () => {
-			expect(mapFormToDatabase("unknown")).toBe("unknown");
-		});
-
-		it('should handle special case "unsure"', () => {
-			expect(mapFormToDatabase("unsure")).toBe("all-categories");
+		it("should handle all-categories special case", () => {
+			expect(mapFormToDatabase("all-categories")).toBe("all-categories");
 		});
 	});
 
 	describe("mapFormLabelToDatabase", () => {
-		it("should map known form labels", () => {
-			expect(mapFormLabelToDatabase("Tech & Engineering")).toBe(
+		it("should map known form labels to long form", () => {
+			expect(mapFormLabelToDatabase("Tech & Transformation")).toBe(
 				"tech-transformation",
 			);
 			expect(mapFormLabelToDatabase("Finance & Investment")).toBe(
 				"finance-investment",
 			);
-			expect(mapFormLabelToDatabase("Tech & Transformation")).toBe(
-				"tech-transformation",
+			expect(mapFormLabelToDatabase("Data & Analytics")).toBe(
+				"data-analytics",
 			);
 		});
 
@@ -52,108 +51,120 @@ describe("categoryMapper", () => {
 	});
 
 	describe("mapDatabaseToForm", () => {
-		it("should map known database categories", () => {
-			expect(mapDatabaseToForm("tech-transformation")).toBe("tech");
-			expect(mapDatabaseToForm("finance-investment")).toBe("finance");
-			expect(mapDatabaseToForm("data-analytics")).toBe("data");
-		});
-
-		it("should return category as-is for unmapped categories", () => {
-			expect(mapDatabaseToForm("unknown-category")).toBe("unknown-category");
-		});
-
-		it("should handle categories not in form mapping", () => {
-			expect(mapDatabaseToForm("retail-luxury")).toBe("retail-luxury");
-			expect(mapDatabaseToForm("technology")).toBe("tech"); // Legacy mapping: technology -> tech
+		it("should return value as-is (identity function - no mapping)", () => {
+			// Database categories ARE form values now (long form)
+			expect(mapDatabaseToForm("tech-transformation")).toBe(
+				"tech-transformation",
+			);
+			expect(mapDatabaseToForm("finance-investment")).toBe(
+				"finance-investment",
+			);
+			expect(mapDatabaseToForm("data-analytics")).toBe("data-analytics");
 		});
 	});
 
 	describe("getDatabaseCategoriesForForm", () => {
-		it('should return all categories for "unsure"', () => {
-			const result = getDatabaseCategoriesForForm("unsure");
-			expect(result).toEqual(WORK_TYPE_CATEGORIES);
-			expect(result.length).toBeGreaterThan(0);
+		it("should return array with the form value", () => {
+			expect(getDatabaseCategoriesForForm("finance-investment")).toEqual([
+				"finance-investment",
+			]);
+			expect(getDatabaseCategoriesForForm("data-analytics")).toEqual([
+				"data-analytics",
+			]);
 		});
 
-		it("should map known form values", () => {
-			const result = getDatabaseCategoriesForForm("tech");
-			expect(result).toContain("tech-transformation");
-			expect(result.length).toBeGreaterThan(0);
+		it("should handle all-categories special case (unsure)", () => {
+			expect(getDatabaseCategoriesForForm("all-categories")).toEqual(
+				WORK_TYPE_CATEGORIES,
+			);
+		});
+	});
+
+	describe("CAREER_PATH_LABELS", () => {
+		it("should map all long form categories to display labels", () => {
+			expect(CAREER_PATH_LABELS["strategy-business-design"]).toBe(
+				"Strategy & Business Design",
+			);
+			expect(CAREER_PATH_LABELS["finance-investment"]).toBe(
+				"Finance & Investment",
+			);
+			expect(CAREER_PATH_LABELS["data-analytics"]).toBe("Data & Analytics");
+			expect(CAREER_PATH_LABELS["tech-transformation"]).toBe(
+				"Tech & Transformation",
+			);
+		});
+	});
+
+	describe("WORK_TYPE_CATEGORIES", () => {
+		it("should include all form-selectable categories", () => {
+			expect(WORK_TYPE_CATEGORIES).toContain("strategy-business-design");
+			expect(WORK_TYPE_CATEGORIES).toContain("finance-investment");
+			expect(WORK_TYPE_CATEGORIES).toContain("data-analytics");
+			expect(WORK_TYPE_CATEGORIES).toContain("tech-transformation");
+			expect(WORK_TYPE_CATEGORIES).toContain("sales-client-success");
+			expect(WORK_TYPE_CATEGORIES).toContain("marketing-growth");
+			expect(WORK_TYPE_CATEGORIES).toContain("operations-supply-chain");
+			expect(WORK_TYPE_CATEGORIES).toContain("product-innovation");
+			expect(WORK_TYPE_CATEGORIES).toContain("sustainability-esg");
+			expect(WORK_TYPE_CATEGORIES).toContain("all-categories");
 		});
 
-		it("should return value as-is for unknown values", () => {
-			const result = getDatabaseCategoriesForForm("unknown");
-			expect(result).toEqual(["unknown"]);
+		it("should NOT include invalid legacy categories", () => {
+			// These should not be in WORK_TYPE_CATEGORIES
+			expect(WORK_TYPE_CATEGORIES).not.toContain("retail-luxury");
+			expect(WORK_TYPE_CATEGORIES).not.toContain("entrepreneurship");
+			expect(WORK_TYPE_CATEGORIES).not.toContain("technology");
 		});
 	});
 
 	describe("getStudentSatisfactionScore", () => {
-		it("should return high score for exact match", () => {
-			const score = getStudentSatisfactionScore(
-				["tech-transformation"],
-				["tech"],
-			);
-			expect(score).toBeGreaterThanOrEqual(60);
-		});
+		it("should score jobs that match user career paths", () => {
+			const jobCategories = ["finance-investment", "early-career"];
+			const userFormValues = ["finance-investment"];
 
-		it("should return score for multiple matches", () => {
 			const score = getStudentSatisfactionScore(
-				["tech-transformation", "data-analytics"],
-				["tech", "data"],
+				jobCategories,
+				userFormValues,
 			);
-			expect(score).toBeGreaterThanOrEqual(60);
-		});
 
-		it("should return score for work type categories", () => {
-			const score = getStudentSatisfactionScore(
-				["tech-transformation"],
-				["unknown"],
-			);
-			// Should still get some score for work type match
-			expect(score).toBeGreaterThanOrEqual(0);
-		});
-
-		it("should cap score at 100", () => {
-			const score = getStudentSatisfactionScore(
-				["tech-transformation", "data-analytics", "product-innovation"],
-				["tech", "data", "product"],
-			);
+			expect(score).toBeGreaterThan(0);
 			expect(score).toBeLessThanOrEqual(100);
 		});
 
-		it("should return 1 for empty user preferences", () => {
-			const score = getStudentSatisfactionScore(["tech-transformation"], []);
-			expect(score).toBe(1);
-		});
+		it("should return 0 for jobs with no relevant categories", () => {
+			const jobCategories = ["retail-luxury"]; // Not in user preferences
+			const userFormValues = ["finance-investment"];
 
-		it("should handle null user preferences", () => {
 			const score = getStudentSatisfactionScore(
-				["tech-transformation"],
-				null as any,
+				jobCategories,
+				userFormValues,
 			);
+
+			expect(score).toBe(0);
+		});
+
+		it("should return neutral score for flexible users with no preferences", () => {
+			const jobCategories = ["finance-investment", "early-career"];
+			const userFormValues: string[] = [];
+
+			const score = getStudentSatisfactionScore(
+				jobCategories,
+				userFormValues,
+			);
+
 			expect(score).toBe(1);
 		});
 
-		it("should return neutral score for no matches", () => {
-			const score = getStudentSatisfactionScore(["unknown-category"], ["tech"]);
-			expect(score).toBeGreaterThanOrEqual(0);
-		});
-	});
+		it("should handle multiple career path preferences", () => {
+			const jobCategories = ["finance-investment", "data-analytics"];
+			const userFormValues = ["finance-investment", "data-analytics"];
 
-	describe("mapping constants", () => {
-		it("should have consistent forward and reverse mappings", () => {
-			Object.entries(FORM_TO_DATABASE_MAPPING).forEach(([form, db]) => {
-				// Skip legacy/duplicate entries that don't have reverse mappings
-				if (DATABASE_TO_FORM_MAPPING[db] && form !== db) {
-					expect(DATABASE_TO_FORM_MAPPING[db]).toBe(form);
-				}
-			});
-		});
+			const score = getStudentSatisfactionScore(
+				jobCategories,
+				userFormValues,
+			);
 
-		it("should include all work type categories", () => {
-			expect(WORK_TYPE_CATEGORIES.length).toBeGreaterThan(0);
-			expect(WORK_TYPE_CATEGORIES).toContain("tech-transformation");
-			expect(WORK_TYPE_CATEGORIES).toContain("data-analytics");
+			expect(score).toBeGreaterThan(0);
 		});
 	});
 });

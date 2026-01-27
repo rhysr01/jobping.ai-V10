@@ -97,49 +97,52 @@ describe("City Matching Logic - BUG #2 Validation", () => {
  */
 describe("Career Path Form-to-Database Mapping - BUG #4 Validation", () => {
 	/**
-	 * Form values map correctly to database categories
+	 * Form values use long form everywhere now (finance-investment, data-analytics, etc)
 	 */
-	it("should map all form values to database categories", () => {
-		const FORM_TO_DATABASE_MAPPING: Record<string, string> = {
-			strategy: "strategy-business-design",
-			data: "data-analytics",
-			sales: "sales-client-success",
-			marketing: "marketing-growth",
-			finance: "finance-investment",
-			operations: "operations-supply-chain",
-			product: "product-innovation",
-			tech: "tech-transformation",
-			sustainability: "sustainability-esg",
-			unsure: "all-categories",
-		};
+	it("should use long form categories everywhere", () => {
+		// Form stores long form values
+		const formValues = [
+			"strategy-business-design",
+			"data-analytics",
+			"sales-client-success",
+			"marketing-growth",
+			"finance-investment",
+			"operations-supply-chain",
+			"product-innovation",
+			"tech-transformation",
+			"sustainability-esg",
+			"all-categories",
+		];
 
-		// Every form value should have a mapping
-		for (const [formValue, dbCategory] of Object.entries(
-			FORM_TO_DATABASE_MAPPING,
-		)) {
-			expect(dbCategory).toBeDefined();
-			expect(typeof dbCategory).toBe("string");
-			expect(dbCategory.length).toBeGreaterThan(0);
+		// Every form value should be long form
+		for (const formValue of formValues) {
+			expect(formValue).toBeDefined();
+			expect(typeof formValue).toBe("string");
+			expect(formValue.length).toBeGreaterThan(0);
+			// Long form includes hyphens (except all-categories which is special)
+			const isLongForm =
+				formValue.includes("-") || formValue === "all-categories";
+			expect(isLongForm).toBe(true);
 		}
 	});
 
 	/**
-	 * Handle both string and array career_path
+	 * Handle both string and array career_path (in long form)
 	 */
-	it("should process career_path as string or array", () => {
-		// Test string value
-		const stringCareer = "data";
+	it("should process career_path as string or array (long form)", () => {
+		// Test string value (long form)
+		const stringCareer = "data-analytics";
 		const processedString = Array.isArray(stringCareer)
 			? stringCareer
 			: [stringCareer];
-		expect(processedString).toEqual(["data"]);
+		expect(processedString).toEqual(["data-analytics"]);
 
-		// Test array value
-		const arrayCareer = ["data", "tech"];
+		// Test array value (long form)
+		const arrayCareer = ["data-analytics", "tech-transformation"];
 		const processedArray = Array.isArray(arrayCareer)
 			? arrayCareer
 			: [arrayCareer];
-		expect(processedArray).toEqual(["data", "tech"]);
+		expect(processedArray).toEqual(["data-analytics", "tech-transformation"]);
 
 		// Both should be processable
 		expect(processedString.length).toBe(1);
@@ -186,9 +189,9 @@ describe("Visa Filtering Logic - BUG #3 Validation", () => {
  */
 describe("Career Path Type Safety - BUG #5 Validation", () => {
 	/**
-	 * FreeUserPreferences accepts string | string[] | null
+	 * FreeUserPreferences accepts career_path as string or array (long form)
 	 */
-	it("should accept career_path as string or array", () => {
+	it("should accept career_path as string or array (long form)", () => {
 		interface FreeUserPreferences {
 			email: string;
 			target_cities: string[];
@@ -198,14 +201,14 @@ describe("Career Path Type Safety - BUG #5 Validation", () => {
 		const pref1: FreeUserPreferences = {
 			email: "test@example.com",
 			target_cities: ["london"],
-			career_path: "data",
+			career_path: "data-analytics",
 		};
 		expect(typeof pref1.career_path).toBe("string");
 
 		const pref2: FreeUserPreferences = {
 			email: "test@example.com",
 			target_cities: ["london"],
-			career_path: ["data", "tech"],
+			career_path: ["data-analytics", "tech-transformation"],
 		};
 		expect(Array.isArray(pref2.career_path)).toBe(true);
 
@@ -218,14 +221,16 @@ describe("Career Path Type Safety - BUG #5 Validation", () => {
 	});
 
 	/**
-	 * Defensive array handling
+	 * Defensive array handling (long form)
 	 */
 	it("should handle career_path arrays defensively", () => {
-		const careerPath: string | string[] = "data";
+		const careerPath: string | string[] = "data-analytics";
 
 		// Check if array and handle appropriately
 		if (Array.isArray(careerPath)) {
-			expect(careerPath.some((path) => path === "data")).toBe(false);
+			expect(careerPath.some((path) => path === "data-analytics")).toBe(
+				false,
+			);
 		} else {
 			expect(careerPath === "data").toBe(true);
 		}
