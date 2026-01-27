@@ -187,7 +187,7 @@ export function LiveJobsReview({
 							>
 								<BrandIcons.Target className="w-4 h-4 text-emerald-400" />
 							</motion.div>
-							<h3 className="text-lg font-bold text-white">Live Job Preview</h3>
+							<h3 className="text-lg font-bold text-white">🎯 Finding Your Best Fits...</h3>
 						</div>
 						{jobPreviews.length > 0 && (
 							<motion.div

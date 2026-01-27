@@ -70,19 +70,19 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 			transition={{ duration: 0.4 }}
 			className="space-y-6 sm:space-y-8 md:space-y-10"
 		>
-			<div className="mb-6 sm:mb-8">
-				<h2 className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
-					What type of role are you looking for?
-				</h2>
-				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
-					Select your career path to get personalized matches
-				</p>
-				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-					<span className="text-sm font-medium text-purple-200">
-						🎉 Almost done - your matches are ready!
-					</span>
-				</div>
+		<div className="mb-6 sm:mb-8">
+			<h2 className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent">
+				What Career Moves You?
+			</h2>
+			<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
+				Your career path determines your matches - pick one that excites you
+			</p>
+			<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
+				<span className="text-sm font-medium text-purple-200">
+					🚀 Choose your focus • Get hyper-relevant roles instantly
+				</span>
 			</div>
+		</div>
 
 			<div>
 				<label

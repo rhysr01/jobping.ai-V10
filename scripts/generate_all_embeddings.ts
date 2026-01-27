@@ -54,28 +54,28 @@ async function generateAllEmbeddings() {
 		let totalFailed = 0;
 		let hasMore = true;
 
-		// Get initial queue count with timeout handling
-		let initialCount;
-		try {
-			const result = await supabase
-				.from("embedding_queue")
-				.select("*", { count: "exact", head: true })
-				.is("processed_at", null);
-			initialCount = result.count;
-		} catch (error) {
-			console.error("❌ Failed to get initial queue count:", error.message);
-			console.log("⚠️  Continuing without initial count...");
-			initialCount = 0;
-		}
+	// Get initial queue count with timeout handling
+	let initialCount;
+	try {
+		const result = await supabase
+			.from("embedding_queue")
+			.select("*", { count: "exact", head: true })
+			.eq("status", "pending");
+		initialCount = result.count;
+	} catch (error) {
+		console.error("❌ Failed to get initial queue count:", error.message);
+		console.log("⚠️  Continuing without initial count...");
+		initialCount = 0;
+	}
 
-		console.log(`📊 Found ${initialCount || 0} jobs in queue`);
+	console.log(`📊 Found ${initialCount || 0} jobs in queue`);
 
 		while (hasMore) {
 			// Fetch jobs from queue that need embeddings
 			const { data: queueItems, error: queueError } = await supabase
 				.from("embedding_queue")
-				.select("job_hash, job_id")
-				.is("processed_at", null)
+				.select("id, job_id")
+				.eq("status", "pending")
 				.order("created_at", { ascending: true })
 				.limit(BATCH_SIZE);
 
@@ -92,11 +92,11 @@ async function generateAllEmbeddings() {
 			console.log(`\n🔄 Processing batch of ${queueItems.length} jobs...`);
 
 			// Fetch the actual job data
-			const jobHashes = queueItems.map((item) => item.job_hash);
+			const jobIds = queueItems.map((item) => item.job_id);
 			const { data: jobs, error: jobsError } = await supabase
 				.from("jobs")
 				.select("*")
-				.in("job_hash", jobHashes)
+				.in("id", jobIds)
 				.eq("is_active", true);
 
 			if (jobsError) {
@@ -108,11 +108,11 @@ async function generateAllEmbeddings() {
 				// Mark queue items as processed (jobs may have been deleted)
 				await supabase
 					.from("embedding_queue")
-					.update({ processed_at: new Date().toISOString() })
-					.in("job_hash", jobHashes);
+					.update({ status: "completed" })
+					.in("job_id", jobIds);
 
 				console.log(
-					"⚠️  No active jobs found for queue items, marked as processed",
+					"⚠️  No active jobs found for queue items, marked as completed",
 				);
 				continue;
 			}
@@ -130,29 +130,43 @@ async function generateAllEmbeddings() {
 			await embeddingService.storeJobEmbeddings(embeddings);
 
 			// Mark successfully processed items
-			const processedHashes = Array.from(embeddings.keys());
-			for (const hash of processedHashes) {
-				await supabase.rpc("mark_embedding_processed", {
-					job_hash_param: hash,
-				});
+			const processedJobIds = Array.from(embeddings.keys()).map((hash) => {
+				// Find the job ID for this hash from our queueItems
+				const job = jobs.find((j) => j.job_hash === hash);
+				return job?.id;
+			}).filter((id) => id !== undefined);
+
+			for (const queueItem of queueItems) {
+				if (processedJobIds.includes(queueItem.job_id)) {
+					await supabase
+						.from("embedding_queue")
+						.update({ status: "completed", updated_at: new Date().toISOString() })
+						.eq("id", queueItem.id);
+				}
 			}
 
 			// Mark failed items
-			const failedHashes = jobHashes.filter(
-				(hash) => !processedHashes.includes(hash),
-			);
-			for (const hash of failedHashes) {
-				await supabase.rpc("mark_embedding_failed", {
-					job_hash_param: hash,
-					error_msg: "Failed to generate embedding",
-				});
+			const failedJobIds = queueItems
+				.filter((item) => !processedJobIds.includes(item.job_id))
+				.map((item) => item.job_id);
+
+			for (const queueItem of queueItems.filter((item) =>
+				failedJobIds.includes(item.job_id),
+			)) {
+				await supabase
+					.from("embedding_queue")
+					.update({
+						status: "failed",
+						updated_at: new Date().toISOString(),
+					})
+					.eq("id", queueItem.id);
 			}
 
 			totalProcessed += embeddings.size;
-			totalFailed += failedHashes.length;
+			totalFailed += failedJobIds.length;
 
 			console.log(
-				`   ✅ Processed: ${embeddings.size}, Failed: ${failedHashes.length}`,
+				`   ✅ Processed: ${embeddings.size}, Failed: ${failedJobIds.length}`,
 			);
 			console.log(
 				`   📈 Total so far: ${totalProcessed} processed, ${totalFailed} failed`,
@@ -162,7 +176,7 @@ async function generateAllEmbeddings() {
 			const { count: remainingCount } = await supabase
 				.from("embedding_queue")
 				.select("*", { count: "exact", head: true })
-				.is("processed_at", null);
+				.eq("status", "pending");
 
 			console.log(`   📊 Remaining in queue: ${remainingCount || 0}`);
 

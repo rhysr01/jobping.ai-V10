@@ -86,22 +86,22 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 			aria-labelledby="step1-heading"
 			onKeyDown={handleKeyDown}
 		>
-			<div className="mb-6 sm:mb-8">
-				<h2
-					id="step1-heading"
-					className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
-				>
-					Get your matches
-				</h2>
-				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
-					Enter your email to receive 5 personalized job matches instantly
-				</p>
-				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-					<span className="text-sm font-medium text-emerald-200">
-						⚡ Free • Instant • No commitment
-					</span>
-				</div>
+		<div className="mb-6 sm:mb-8">
+			<h2
+				id="step1-heading"
+				className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+			>
+				Find Your Next Role in 60 Seconds
+			</h2>
+			<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
+				Just your email and name - that's all we need to find 5 perfect matches tailored to you
+			</p>
+			<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+				<span className="text-sm font-medium text-emerald-200">
+					✨ No CV Required • 100% Free • Unsubscribe Anytime
+				</span>
 			</div>
+		</div>
 
 			<div className="space-y-6">
 				<div className="max-w-md mx-auto">

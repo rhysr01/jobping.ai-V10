@@ -523,19 +523,19 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			{ status: 409 },
 		);
 
-		// Set cookie so they can access matches
-		const isProduction = process.env.NODE_ENV === "production";
-		const isHttps =
-			request.headers.get("x-forwarded-proto") === "https" ||
-			request.url.startsWith("https://");
+	// Set cookie so they can access matches
+	const isProduction = process.env.NODE_ENV === "production";
+	const isHttps =
+		request.headers.get("x-forwarded-proto") === "https" ||
+		request.url.startsWith("https://");
 
-		response.cookies.set("free_user_email", normalizedEmail, {
-			httpOnly: true,
-			secure: isProduction && isHttps,
-			sameSite: "lax",
-			maxAge: 60 * 60 * 24 * 30, // 30 days
-			path: "/",
-		});
+	response.cookies.set("user_email", normalizedEmail, {
+		httpOnly: true,
+		secure: isProduction && isHttps,
+		sameSite: "lax",
+		maxAge: 60 * 60 * 24 * 30, // 30 days
+		path: "/",
+	});
 
 		// Check if they have matches
 		const { data: existingMatches } = await supabase

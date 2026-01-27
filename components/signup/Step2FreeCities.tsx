@@ -99,22 +99,22 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			role="region"
 			aria-labelledby="step2-heading"
 		>
-			<div className="mb-6 sm:mb-8">
-				<h2
-					id="step2-heading"
-					className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
-				>
-					Where do you want to work?
-				</h2>
-				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
-					Choose up to 3 cities for instant job matches
-				</p>
-				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-					<span className="text-sm font-medium text-blue-200">
-						🎯 Location matters for visa sponsorship
-					</span>
-				</div>
+		<div className="mb-6 sm:mb-8">
+			<h2
+				id="step2-heading"
+				className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+			>
+				Jobs in Your Preferred Cities
+			</h2>
+			<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
+				Choose where you want to work - we'll find roles with visa support if needed
+			</p>
+			<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
+				<span className="text-sm font-medium text-blue-200">
+					📍 Pick up to 3 cities • Includes relocation opportunities
+				</span>
 			</div>
+		</div>
 
 			<div>
 				<label
