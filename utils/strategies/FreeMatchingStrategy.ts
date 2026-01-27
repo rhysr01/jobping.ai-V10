@@ -280,7 +280,7 @@ async function rankAndReturnMatches(
 				apiLogger.info("[FREE] Successfully saved matches to database", {
 					email: userPrefs.email,
 					count: matchesToSave.length,
-					insertedRows: data?.length || 0,
+					insertedRows: Array.isArray(data) ? data.length : 0,
 				});
 			}
 		} catch (err) {
