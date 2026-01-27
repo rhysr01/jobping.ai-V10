@@ -104,10 +104,6 @@ export default async function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	// Get headers (middleware sets x-nonce for CSP)
-	const headersList = await headers();
-	// nonce is available via headersList.get("x-nonce") if needed for script tags
-
 	return (
 		<html lang="en" className="scroll-smooth" suppressHydrationWarning>
 			<head>
