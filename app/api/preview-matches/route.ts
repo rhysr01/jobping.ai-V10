@@ -84,61 +84,10 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			.is("filtered_reason", null)
 			.gte("created_at", sixtyDaysAgo.toISOString());
 
-		// Build city variations array (handles native names like Wien, Zürich, Milano, Roma)
-		const cityVariations = new Set<string>();
-		if (cities.length > 0) {
-			cities.forEach((city) => {
-				cityVariations.add(city); // Original: "Dublin"
-				cityVariations.add(city.toUpperCase()); // "DUBLIN"
-				cityVariations.add(city.toLowerCase()); // "dublin"
+		// Use exact city names only - cities are normalized to form values via migration
+	const cityVariations = new Set<string>(cities);
 
-				// Add native language variations (based on actual database values)
-				const cityVariants: Record<string, string[]> = {
-					Vienna: ["Wien", "WIEN", "wien"],
-					Zurich: ["Zürich", "ZURICH", "zürich"],
-					Milan: ["Milano", "MILANO", "milano"],
-					Rome: ["Roma", "ROMA", "roma"],
-					Prague: ["Praha", "PRAHA", "praha"],
-					Warsaw: ["Warszawa", "WARSZAWA", "warszawa"],
-					Brussels: [
-						"Bruxelles",
-						"BRUXELLES",
-						"bruxelles",
-						"Brussel",
-						"BRUSSEL",
-					],
-					Munich: ["München", "MÜNCHEN", "münchen"],
-					Copenhagen: ["København", "KØBENHAVN"],
-					Stockholm: ["Stockholms län"],
-					Helsinki: ["Helsingfors"],
-					Dublin: ["Baile Átha Cliath"],
-				};
-
-				if (cityVariants[city]) {
-					cityVariants[city].forEach((v) => {
-						cityVariations.add(v);
-					});
-				}
-
-				// Add London area variations (based on actual database values)
-				if (city.toLowerCase() === "london") {
-					[
-						"Central London",
-						"City Of London",
-						"East London",
-						"North London",
-						"South London",
-						"West London",
-					].forEach((v) => {
-						cityVariations.add(v);
-						cityVariations.add(v.toUpperCase());
-						cityVariations.add(v.toLowerCase());
-					});
-				}
-			});
-		}
-
-		// Apply city filter first
+	// Apply city filter first
 		if (cityVariations.size > 0) {
 			const cityArray = Array.from(cityVariations);
 			query = query.in("city", cityArray);
