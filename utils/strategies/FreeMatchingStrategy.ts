@@ -205,13 +205,25 @@ async function rankAndReturnMatches(
 			jobs as any,
 		);
 
-		const matches = (matchResult?.matches || [])
-			.slice(0, maxMatches) // FREE: Use configurable match count
-			.map((m: any) => ({
-				...m.job,
-				match_score: m.match_score,
-				match_reason: m.match_reason,
-			}));
+	const matches = (matchResult?.matches || [])
+		.slice(0, maxMatches) // FREE: Use configurable match count
+		.map((m: any) => {
+			// Handle both formats: m.job (nested) and m directly (flat)
+			const jobData = m.job || m;
+			if (!jobData) {
+				apiLogger.warn("[FREE] Match missing job data", {
+					email: userPrefs.email,
+					match: m,
+				});
+				return null;
+			}
+			return {
+				...jobData,
+				match_score: m.match_score || 0,
+				match_reason: m.match_reason || "Matched",
+			};
+		})
+		.filter(Boolean); // Remove null entries
 
 		apiLogger.info("[FREE] Ranking complete", {
 			email: userPrefs.email,

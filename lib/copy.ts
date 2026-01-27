@@ -26,7 +26,7 @@ export const TRUST_TEXT_NO_CARD_SETUP = "No credit card • 2-minute setup";
 // Hero section
 export const HERO_TITLE = "JobPing";
 export const HERO_HEADLINE =
-	"Get hand-picked early-career jobs across Europe without wasting hours searching";
+	"Get hand-picked early-career jobs across Europe";
 export const HERO_SUBLINE =
 	"We scan 4,000+ EU companies daily and send you only roles you're qualified for - filtered by location and experience.";
 export const HERO_SUBLINE_MICRO =

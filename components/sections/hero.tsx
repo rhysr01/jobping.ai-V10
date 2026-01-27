@@ -61,10 +61,13 @@ function Hero() {
 				<div className="text-center space-y-8 relative overflow-visible px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
 				{/* IMPACTFUL Headline with Enhanced Typography */}
 				<h1
-					className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-none mb-6 max-w-full overflow-visible tracking-tighter"
+					className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-none mb-6 max-w-full overflow-visible tracking-tighter"
 					style={{ wordSpacing: "0.05em" }}
 				>
-					{HERO_HEADLINE}
+					<span className="block text-white">{HERO_HEADLINE}</span>
+					<span className="block bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+						matched to you
+					</span>
 				</h1>
 
 				{/* Clear, impactful value proposition */}

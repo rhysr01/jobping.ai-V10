@@ -237,13 +237,25 @@ async function rankAndReturnMatches(
 				normalizedJobs as any,
 			);
 
-		const matches = (matchResult?.matches || [])
-			.slice(0, maxMatches) // PREMIUM: Use configurable match count
-			.map((m: any) => ({
-				...m.job,
-				match_score: m.match_score,
-				match_reason: m.match_reason,
-			}));
+	const matches = (matchResult?.matches || [])
+		.slice(0, maxMatches) // PREMIUM: Use configurable match count
+		.map((m: any) => {
+			// Handle both formats: m.job (nested) and m directly (flat)
+			const jobData = m.job || m;
+			if (!jobData) {
+				apiLogger.warn("[PREMIUM] Match missing job data", {
+					email: userPrefs.email,
+					match: m,
+				});
+				return null;
+			}
+			return {
+				...jobData,
+				match_score: m.match_score || 0,
+				match_reason: m.match_reason || "Premium AI Match",
+			};
+		})
+		.filter(Boolean); // Remove null entries
 
 		apiLogger.info("[PREMIUM] Deep AI ranking complete", {
 			email: userPrefs.email,
