@@ -260,37 +260,37 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		let matches: JobPreview[] | undefined;
 
-		// If this is a preview request, fetch actual job matches
-		if (isPreview && jobCount > 0) {
-			const jobsQuery = supabase
-				.from("jobs")
-				.select(`
-					id,
-					title,
-					company,
-					company_name,
-					location,
-					description,
-					job_url,
-					posted_at
-				`)
-				.eq("is_active", true)
-				.eq("status", "active")
-				.is("filtered_reason", null)
-				.gte("created_at", sixtyDaysAgo.toISOString());
+	// If this is a preview request, fetch actual job matches
+	if (isPreview && jobCount > 0) {
+		let jobsQuery = supabase
+			.from("jobs")
+			.select(`
+				id,
+				title,
+				company,
+				company_name,
+				location,
+				description,
+				job_url,
+				posted_at
+			`)
+			.eq("is_active", true)
+			.eq("status", "active")
+			.is("filtered_reason", null)
+			.gte("created_at", sixtyDaysAgo.toISOString());
 
 		// Apply same filters as count query
 		if (cityVariations.size > 0) {
 			const cityArray = Array.from(cityVariations);
-			jobsQuery.in("city", cityArray);
+			jobsQuery = jobsQuery.in("city", cityArray);
 		}
 
 		if (isPremiumPreview) {
-			jobsQuery.or(
+			jobsQuery = jobsQuery.or(
 				"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}",
 			);
 		} else {
-			jobsQuery.or(
+			jobsQuery = jobsQuery.or(
 				"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
 			);
 		}
@@ -299,18 +299,18 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		if (normalizedCareerPath) {
 			const databaseCategory = FORM_TO_DATABASE_MAPPING[normalizedCareerPath];
 			if (databaseCategory) {
-				jobsQuery.contains("categories", [databaseCategory]);
+				jobsQuery = jobsQuery.contains("categories", [databaseCategory]);
 			}
 		}
 
 		if (visaSponsorship === "need-sponsorship") {
-			jobsQuery.eq("visa_friendly", true);
+			jobsQuery = jobsQuery.eq("visa_friendly", true);
 		}
 
-			// Order by most recent and limit results
-			jobsQuery.order("posted_at", { ascending: false }).limit(limit);
+		// Order by most recent and limit results
+		jobsQuery = jobsQuery.order("posted_at", { ascending: false }).limit(limit);
 
-			const { data: jobsData, error: jobsError } = await jobsQuery;
+		const { data: jobsData, error: jobsError } = await jobsQuery;
 
 			if (jobsError) {
 				apiLogger.warn("Failed to fetch job previews", jobsError, {
