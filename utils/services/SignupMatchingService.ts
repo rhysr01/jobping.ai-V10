@@ -296,6 +296,7 @@ export class SignupMatchingService {
 	/**
 	 * Fetch jobs based on tier-specific freshness requirements
 	 * CRITICAL: Database-level limit prevents massive job pool bloat
+	 * FIX: Handle null posted_at values using or() to prevent 500 errors
 	 */
 	private static async fetchJobsForTier(
 		config: MatchingConfig,
@@ -318,7 +319,7 @@ export class SignupMatchingService {
 			.eq("is_active", true)
 			.eq("status", "active")
 			.is("filtered_reason", null)
-			.gte("posted_at", freshnessDate.toISOString())
+			.or(`posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`)
 			.order("created_at", { ascending: false })
 			.limit(config.maxJobsToFetch); // PRODUCTION FIX: Prevent massive DB scans
 
