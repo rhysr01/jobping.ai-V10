@@ -16,7 +16,7 @@ function Hero() {
 	return (
 		<section
 			data-testid="hero-section"
-			className="section-padding-hero pt-32 pb-24 relative isolate overflow-visible h-screen sm:min-h-screen flex items-center bg-transparent"
+			className="section-padding-hero pt-24 pb-20 relative isolate overflow-visible min-h-screen sm:min-h-screen flex items-center bg-transparent"
 		>
 			{/* Layer 1: The Dot Grid (The Foundation) */}
 			<div
@@ -53,15 +53,15 @@ function Hero() {
 			<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none -z-10" />
 
 			{/* Scroll momentum fade */}
-			<div className="absolute left-0 right-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
+			<div className="absolute left-0 right-0 top-0 h-12 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-0" />
 
 			{/* Main container - Centered content */}
 			<div className="container-page relative z-10 mx-auto max-w-7xl overflow-visible">
 				{/* LEFT SIDE - Content */}
-				<div className="text-center space-y-8 relative overflow-visible px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+				<div className="text-center space-y-6 relative overflow-visible px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
 				{/* IMPACTFUL Headline with Enhanced Typography */}
 				<h1
-					className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black leading-none mb-6 max-w-full overflow-visible tracking-tighter"
+					className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight mb-4 max-w-full overflow-visible tracking-tighter"
 					style={{ wordSpacing: "0.05em" }}
 				>
 					<span className="block text-white">{HERO_HEADLINE}</span>
@@ -71,7 +71,7 @@ function Hero() {
 				</h1>
 
 				{/* Clear, impactful value proposition */}
-				<p className="text-lg sm:text-xl md:text-2xl text-zinc-300 leading-tight max-w-4xl mx-auto mb-8">
+				<p className="text-base sm:text-lg md:text-xl text-zinc-300 leading-relaxed max-w-4xl mx-auto mb-6">
 					{HERO_SUBLINE}
 				</p>
 

@@ -166,7 +166,7 @@ export default function Header() {
 					style={{ overflow: "visible" }}
 				>
 					<div
-						className="h-24 md:h-28 flex items-center justify-between py-2 overflow-visible"
+						className="h-16 md:h-20 flex items-center justify-between py-2 overflow-visible"
 						style={{ overflow: "visible" }}
 					>
 						{/* Logo with graduation cap */}
