@@ -13,6 +13,7 @@
 - [🚨 Critical Production Fixes (Jan 15, 2026)](#-critical-production-fixes-jan-15-2026)
 - [🐛 Sentry Error Fixes & Debugging Infrastructure (Jan 23, 2026)](#-sentry-error-fixes--debugging-infrastructure-jan-23-2026)
 - [📋 Free Signup & Matching Infrastructure (Jan 23, 2026)](#-free-signup--matching-infrastructure-jan-23-2026)
+- [🎁 Promo Code & Billing System (Jan 28, 2026)](#-promo-code--billing-system-jan-28-2026)
 - [Detailed API Reference](#detailed-api-reference)
 - [Complete Database Schema](#complete-database-schema)
 - [Job Scraping System Details](#job-scraping-system-details)
@@ -908,6 +909,264 @@ User Input → Validation → Hard Filtering → AI Matching → Fallback → Re
 - See `docs/free-signup-matching-infrastructure.md` for complete details
 - See `docs/sentry-error-tracking-summary.md` for error tracking details
 - See `docs/sentry-errors-fix-plan.md` for fix implementation details
+
+---
+
+## 🎁 Promo Code & Billing System (Jan 28, 2026)
+
+### Overview
+**Status**: ✅ **PROMO CODES = PREMIUM ONLY - SMART & SECURE**
+
+Promo codes are exclusively for premium subscriptions. They are applied post-signup at a dedicated endpoint, NOT during the signup process.
+
+### Critical Rule: PREMIUM ONLY
+- ✅ Premium tier users CAN apply promo codes
+- ❌ Free tier users CANNOT apply promo codes
+- ❌ Promo field NEVER in signup form
+- ⚠️ Attempting to use promo as free user returns 400 error
+
+### Promo Code Strategy
+
+#### Premium Users Only
+- Promo codes apply **ONLY** to premium tier users
+- Free tier users get NO promo option (intentional design)
+- Free users cannot call `/api/apply-promo` endpoint
+- Endpoint returns 400 error if user is free tier
+
+#### Why Promo Codes Are NOT in Signup
+1. **Premium-Only Feature**: Promo codes reward paying customers
+2. **Security**: Prevent code enumeration attacks
+3. **Business Logic**: Promos are special offers, not defaults
+4. **Billing Integration**: Stripe handles validation + charge adjustment
+5. **User Experience**: Keep signup form clean and focused
+
+#### Current Implementation
+- **Signup Flow**: Completely stateless, no promo logic
+- **Billing Flow**: Stripe handles all promo code logic
+- **Post-Signup**: Users can apply promo via `/api/apply-promo` endpoint
+
+### Promo Code Handling
+
+#### Currently Supported Codes
+- `"rhys"` - 1 month free premium (special case only)
+
+#### Application Flow
+```
+1. User completes premium signup (no promo at this stage)
+   └─ User gets premium_pending tier (unverified, not premium YET)
+   
+2. User verifies email
+   └─ User is now premium_pending but subscription_active = false
+   
+3a. PREMIUM USER applies promo (optional, premium users only)
+    └─ POST /api/apply-promo with email & promoCode
+    └─ Endpoint validates: user must be premium tier
+    └─ If free tier: returns 400 error "Promo codes are for premium only"
+    └─ If valid premium: activates immediately (skips Stripe)
+    
+3b. PREMIUM USER proceeds to Stripe billing (if no promo)
+    └─ Stripe checkout displays promo field (built-in)
+    └─ Stripe applies discount if code entered
+    └─ Charge is processed with discount applied
+    
+4. Stripe webhook updates user tier
+    └─ subscription.created event → set tier to "premium"
+    └─ Payment confirmed → activate immediately
+    
+NOTE: FREE TIER USERS cannot access promo functionality
+```
+
+### Promo Code Architecture
+
+#### Endpoint: POST `/api/apply-promo`
+**Purpose**: Apply a special promo code (PREMIUM TIER USERS ONLY)
+
+**Tier Restriction**: ⚠️ **PREMIUM USERS ONLY** - Free tier users get 400 error
+
+**Request**:
+```json
+{
+  "email": "user@example.com",
+  "promoCode": "rhys"
+}
+```
+
+**Response (Success - Premium user)**:
+```json
+{
+  "success": true,
+  "message": "Promo code applied! You now have 1 month of free premium access.",
+  "expiresAt": "2026-02-28T23:59:59Z"
+}
+```
+
+**Response (Error - Free tier user)**:
+```json
+{
+  "error": "Promo codes are for premium subscriptions only. Free users cannot apply promo codes.",
+  "status": 400
+}
+```
+
+**Response (Error - User not found)**:
+```json
+{
+  "error": "User not found. Please sign up for premium first.",
+  "status": 404
+}
+```
+
+**Response (Error - User already premium)**:
+```json
+{
+  "error": "You already have an active premium subscription.",
+  "status": 400
+}
+```
+
+#### Validation Logic
+```typescript
+// CRITICAL: Promo codes are premium-only
+const validationSteps = [
+  // Step 1: Check user exists
+  if (!user) return 404 error "User not found",
+  
+  // Step 2: CHECK TIER - Promo is premium only
+  if (user.subscription_tier === "free") {
+    return 400 error "Promo codes are for premium subscriptions only"
+  }
+  
+  // Step 3: Check not already active premium
+  if (user.subscription_active === true) {
+    return 400 error "Already have active premium"
+  }
+  
+  // Step 4: Validate promo code (whitelist only)
+  if (code !== "rhys") return 400 error "Invalid promo code"
+  
+  // Step 5: Apply promo to premium user
+  update user:
+    subscription_tier: "premium"
+    subscription_active: true
+    promo_code_used: "rhys"
+    promo_expires_at: now + 1 month
+    email_verified: true
+];
+```
+
+### Stripe Integration (Smart Promo Handling)
+
+#### Stripe Has Built-In Promo Field
+- Stripe checkout form includes promo/coupon field
+- User can enter promo code at billing
+- Stripe applies discount automatically
+- No backend coding needed for Stripe promos
+
+#### How It Works
+```
+User at Stripe Checkout:
+  1. Sees promo code field
+  2. Enters code (e.g., "RHYS_SPECIAL")
+  3. Stripe validates against configured coupons
+  4. Discount applies to invoice
+  5. Webhook sends coupon details back to us
+  
+We receive in webhook:
+  {
+    "discount": {
+      "coupon": {
+        "id": "rhys_special",
+        "name": "1 Month Free",
+        "amount_off": 500, // $5 in cents
+        "percent_off": null
+      }
+    }
+  }
+```
+
+#### Creating Promo Codes in Stripe Dashboard
+1. Go to Stripe Dashboard → Products → Coupons
+2. Create coupon:
+   - **Coupon code**: `RHYS_SPECIAL`
+   - **Discount type**: Fixed amount ($5)
+   - **Maximum uses**: Unlimited (or limit by IP/email)
+   - **Expires**: Optional date
+3. Dashboard automatically makes it available at checkout
+
+#### Backend Handling Stripe Promo
+```typescript
+// In webhook handler (/api/webhooks/stripe-billing)
+const paymentIntent = event.data.object;
+
+if (paymentIntent.discount?.coupon?.id) {
+  // Stripe applied a coupon, log it
+  apiLogger.info("Promo code applied via Stripe", {
+    couponId: paymentIntent.discount.coupon.id,
+    discountAmount: paymentIntent.discount.amount_off,
+  });
+  
+  // Update user to note promo was used
+  await supabase
+    .from("users")
+    .update({
+      promo_code_used: paymentIntent.discount.coupon.id,
+    })
+    .eq("stripe_customer_id", paymentIntent.customer);
+}
+```
+
+### Preventing Promo Abuse
+
+#### Security Measures
+1. **Whitelist Only**: Only `["rhys"]` accepted
+2. **Post-Signup Only**: No promo field in signup form
+3. **One Per User**: Check `subscription_active` before applying
+4. **Expiration**: Promos expire after set date
+5. **Rate Limiting**: Same endpoint rate limits apply
+
+#### Smart Validation
+```typescript
+// Prevent common attacks
+const isValidPromo = (code: string): boolean => {
+  // Only exact match, case-insensitive
+  const normalized = code.toLowerCase().trim();
+  
+  // Against whitelist
+  if (!["rhys"].includes(normalized)) {
+    return false;
+  }
+  
+  // Check expiration (could add to DB if needed)
+  const expiresAt = new Date("2026-12-31");
+  if (new Date() > expiresAt) {
+    return false;
+  }
+  
+  return true;
+};
+```
+
+### Why This Design?
+
+#### Problem Avoided
+- ❌ No enumeration attacks (code guessing)
+- ❌ No signup form spam with fake codes
+- ❌ No database bloat (no `promo_pending` table)
+- ❌ No sync issues between code table & Stripe
+
+#### Benefits Gained
+- ✅ Lean, focused signup form
+- ✅ Stripe handles most promo logic
+- ✅ Easy to add codes (just Stripe dashboard)
+- ✅ Audit trail (promo_code_used field)
+- ✅ Zero coupling between signup & promos
+
+#### How It Stays Secure
+1. Codes are hardcoded (not queryable)
+2. Applied after signup (can't bypass verification)
+3. Rate limiting on endpoint
+4. Requires valid user (not anonymous)
+5. Stripe webhook validates amounts
 
 ---
 

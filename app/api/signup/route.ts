@@ -11,16 +11,6 @@ import { sendVerificationEmail } from "../../../utils/email-verification";
 import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
 import { SignupMatchingService } from "../../../utils/services/SignupMatchingService";
 
-// 🔴 BUG FIX #5: Promo code validation moved to reusable function
-const VALID_PROMO_CODES = ["rhys"]; // Add more codes here as needed
-
-function isPromoCodeValid(code: string, expiresAt: string): boolean {
-	return (
-		VALID_PROMO_CODES.includes(code.toLowerCase()) &&
-		new Date(expiresAt) > new Date()
-	);
-}
-
 // Helper function to safely send welcome email and update tracking
 async function sendWelcomeEmailAndTrack(
 	email: string,
@@ -121,13 +111,17 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		.eq("email", normalizedEmail)
 		.single();
 
-	// 🔴 BUG FIX #6: Idempotency check - moved BEFORE user creation
+	// 🔴 BUG FIX #P1 & #P2: Use user_matches table with user_id lookup (not non-existent matches table)
 	// Check if user already has matches before doing expensive operations
-	const { data: existingMatches } = await supabase
-		.from("matches")
-		.select("job_hash")
-		.eq("user_email", normalizedEmail)
-		.limit(1);
+	let existingMatches: any[] = [];
+	if (existingUser?.id) {
+		const { data: userMatches } = await supabase
+			.from("user_matches")
+			.select("job_id")
+			.eq("user_id", existingUser.id)
+			.limit(1);
+		existingMatches = userMatches || [];
+	}
 
 	if (existingUser) {
 		// Check if it's a free user upgrading to premium
@@ -211,14 +205,10 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 	}
 
 	// Check for pending promo code
-	const { data: pendingPromo } = await supabase
-		.from("promo_pending")
-		.select("promo_code, expires_at")
-		.eq("email", normalizedEmail)
-		.single();
-
-	const hasValidPromo =
-		pendingPromo && isPromoCodeValid(pendingPromo.promo_code, pendingPromo.expires_at);
+	// ✅ PROMO HANDLING: Moved to /api/apply-promo endpoint (after signup)
+	// Promo codes are applied at billing, not during signup
+	// See /api/apply-promo for "rhys" code (1 month free premium)
+	const hasValidPromo = false; // Always false at signup - promos applied after
 
 	// This is the premium signup API - free users use /api/signup/free
 	const subscriptionTier: "premium_pending" | "premium" = "premium_pending";
@@ -280,7 +270,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		subscription_tier: finalSubscriptionTier,
 		email_verified: emailVerified,
 		subscription_active: subscriptionActive,
-		promo_code_used: hasValidPromo ? pendingPromo.promo_code : null,
+		promo_code_used: null, // Promo codes currently disabled
 		promo_expires_at: promoExpiresAt,
 		email_phase: "welcome", // Start in welcome phase
 		onboarding_complete: false, // Will be set to true after first email
@@ -433,12 +423,12 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		skipVerification: !!hasValidPromo,
 	});
 
-	// Clean up promo_pending if promo code was used
+	// Clean up promo handling (not applicable at signup)
 	if (hasValidPromo) {
-		await supabase.from("promo_pending").delete().eq("email", normalizedEmail);
-		apiLogger.info("Promo code applied and cleaned up", {
+		// This path is never reached since hasValidPromo is always false at signup
+		// Promo codes are handled by /api/apply-promo endpoint after signup
+		apiLogger.info("Promo code should be applied via /api/apply-promo endpoint", {
 			email: normalizedEmail,
-			promoCode: pendingPromo.promo_code,
 		});
 	}
 
@@ -472,38 +462,44 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			);
 		}
 
-		// Get actual match count
+		// 🔴 BUG FIX #P1 & #P2: Get actual match count using user_matches table with user_id
+		// @ts-ignore existingUser type guard ensures id exists here
+		const userId = existingUser.id as string;
 		const { count: matchCount } = await supabase
-			.from("matches")
+			.from("user_matches")
 			.select("id", { count: "exact", head: true })
-			.eq("user_email", normalizedEmail);
+			.eq("user_id", userId);
 
 		matchesCount = matchCount || 0;
 
 		// Send email with existing matches (idempotent path)
-		if (matchesCount > 0) {
+		// @ts-ignore existingUser type guard ensures id exists here
+		if (matchesCount > 0 && existingUser?.id) {
+			// @ts-ignore existingUser type guard ensures id exists here
+			const userId = existingUser.id as string;
 			// Fetch existing matches to send in email
+			// 🔴 BUG FIX #P1 & #P2: Use user_matches table with user_id and job_id joins
 			const { data: existingMatchData } = await supabase
-				.from("matches")
-				.select("job_hash, match_score, match_reason")
-				.eq("user_email", normalizedEmail)
+				.from("user_matches")
+				.select("job_id, match_score, match_reason")
+				.eq("user_id", userId)
 				.order("match_score", { ascending: false })
 				.limit(10);
 
 			if (existingMatchData && existingMatchData.length > 0) {
-			// Fetch full job data for email
-			const jobHashes = existingMatchData.map((m) => m.job_hash);
-			const { data: existingJobs } = await supabase
-				.from("jobs")
-			.select(
-				"id, title, company, location, description, job_url, job_hash, categories, work_environment, source, language_requirements, posted_at",
-			)
-				.in("job_hash", jobHashes);
+				// Fetch full job data for email
+				const jobIds = existingMatchData.map((m) => m.job_id);
+				const { data: existingJobs } = await supabase
+					.from("jobs")
+					.select(
+						"id, title, company, location, description, job_url, job_hash, categories, work_environment, source, language_requirements, posted_at",
+					)
+					.in("id", jobIds);
 
 				if (existingJobs && existingJobs.length > 0) {
 					const jobsForEmail = existingJobs.map((job) => {
 						const match = existingMatchData.find(
-							(m) => m.job_hash === job.job_hash,
+							(m) => m.job_id === job.id,
 						);
 						return {
 							...job,

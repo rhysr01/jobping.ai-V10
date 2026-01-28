@@ -26,27 +26,35 @@ export async function POST(req: NextRequest) {
 		const normalizedEmail = email.toLowerCase().trim();
 		const normalizedPromoCode = promoCode.toLowerCase().trim();
 
-		// Check if user exists
-		const { data: existingUser, error: userError } = await supabase
-			.from("users")
-			.select("subscription_active, email, subscription_tier")
-			.eq("email", normalizedEmail)
-			.single();
+	// Check if user exists
+	const { data: existingUser, error: userError } = await supabase
+		.from("users")
+		.select("subscription_active, email, subscription_tier")
+		.eq("email", normalizedEmail)
+		.single();
 
-		if (userError || !existingUser) {
-			return NextResponse.json(
-				{ error: "User not found. Please sign up first." },
-				{ status: 404 },
-			);
-		}
+	if (userError || !existingUser) {
+		return NextResponse.json(
+			{ error: "User not found. Please sign up for premium first." },
+			{ status: 404 },
+		);
+	}
 
-		// Check if user already has active premium
-		if (existingUser.subscription_active === true) {
-			return NextResponse.json(
-				{ error: "You already have an active premium subscription." },
-				{ status: 400 },
-			);
-		}
+	// Check if user is free tier (cannot apply promo)
+	if (existingUser.subscription_tier === "free") {
+		return NextResponse.json(
+			{ error: "Promo codes are for premium subscriptions only. Free users cannot apply promo codes." },
+			{ status: 400 },
+		);
+	}
+
+	// Check if user already has active premium
+	if (existingUser.subscription_active === true) {
+		return NextResponse.json(
+			{ error: "You already have an active premium subscription." },
+			{ status: 400 },
+		);
+	}
 
 		// Validate promo code
 		let isValidPromo = false;

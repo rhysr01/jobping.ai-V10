@@ -20,6 +20,7 @@ import { HeroSectionFree } from "./HeroSectionFree";
 import { Step1FreeBasics } from "./Step1FreeBasics";
 import { Step2FreeCities } from "./Step2FreeCities";
 import { Step3FreeCareer } from "./Step3FreeCareer";
+import { LiveJobsReview } from "./LiveJobsReview";
 import { TrustSignals } from "./TrustSignals";
 
 function SignupFormFree() {
@@ -227,7 +228,6 @@ function SignupFormFree() {
 				email: formData.email,
 				cities: formData.cities,
 				careerPath: formData.careerPath,
-				visaStatus: formData.visaStatus,
 			});
 			submitTracker.checkpoint("Form submission started");
 
@@ -243,50 +243,47 @@ function SignupFormFree() {
 			// Stage 2: API Call (30% - 70%)
 			setSubmissionProgress(40);
 
-			// Transform form data to match API expectations
-			// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
-			// If gdprConsent is true, both must be true for validation to pass
-			const apiData = {
-				email: formData.email,
-				full_name: formData.fullName,
-				cities: formData.cities || [],
-				careerPath: formData.careerPath || [],
-				entryLevelPreferences: formData.entryLevelPreferences || [],
-				visaStatus: formData.visaStatus || "",
-				birth_year: formData.birthYear,
-				// Map gdprConsent to terms_accepted (required by API)
-				// API validation requires exactly true, not just truthy
-				terms_accepted: formData.gdprConsent === true,
-				// Set age_verified to true when user accepts terms (accepting terms implies age verification)
-				// API validation requires exactly true, not just truthy
-				age_verified: formData.gdprConsent === true,
-			};
+		// Transform form data to match API expectations
+		// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
+		// If gdprConsent is true, both must be true for validation to pass
+		const apiData = {
+			email: formData.email,
+			full_name: formData.fullName,
+			cities: formData.cities || [],
+			careerPath: formData.careerPath || [],
+			entryLevelPreferences: formData.entryLevelPreferences || [],
+			// Note: visaStatus is optional for free tier - API defaults to "EU citizen"
+			// Visa filtering is a premium feature
+			visaStatus: "", // Will default to "EU citizen" in API
+			// Map gdprConsent to terms_accepted (required by API)
+			// API validation requires exactly true, not just truthy
+			terms_accepted: formData.gdprConsent === true,
+			// Set age_verified to true when user accepts terms (accepting terms implies age verification)
+			// API validation requires exactly true, not just truthy
+			age_verified: formData.gdprConsent === true,
+		};
 
-			debugLogger.debug("SUBMIT_API_DATA", "Prepared API payload", {
-				email: apiData.email,
-				citiesLength: apiData.cities?.length,
-				careerPathLength: apiData.careerPath?.length,
-				visaStatus: apiData.visaStatus,
-				termsAccepted: apiData.terms_accepted,
-				ageVerified: apiData.age_verified,
-			});
+		debugLogger.debug("SUBMIT_API_DATA", "Prepared API payload", {
+			email: apiData.email,
+			citiesLength: apiData.cities?.length,
+			careerPathLength: apiData.careerPath?.length,
+			termsAccepted: apiData.terms_accepted,
+			ageVerified: apiData.age_verified,
+		});
 
-			// Validate critical fields before sending
-			if (!apiData.cities || apiData.cities.length === 0) {
-				throw new Error("Please select at least one city");
-			}
-			if (!apiData.careerPath || apiData.careerPath.length === 0) {
-				throw new Error("Please select at least one career path");
-			}
-			if (!apiData.visaStatus || apiData.visaStatus.trim() === "") {
-				throw new Error("Please select your visa status");
-			}
-			if (!apiData.terms_accepted) {
-				throw new Error("Please accept the Terms of Service and Privacy Policy");
-			}
-			if (!apiData.age_verified) {
-				throw new Error("Age verification is required");
-			}
+		// Validate critical fields before sending
+		if (!apiData.cities || apiData.cities.length === 0) {
+			throw new Error("Please select at least one city");
+		}
+		if (!apiData.careerPath || apiData.careerPath.length === 0) {
+			throw new Error("Please select at least one career path");
+		}
+		if (!apiData.terms_accepted) {
+			throw new Error("Please accept the Terms of Service and Privacy Policy");
+		}
+		if (!apiData.age_verified) {
+			throw new Error("Age verification is required");
+		}
 
 			debugLogger.step("SUBMIT_STAGE", "Stage 2: API Call", {
 				progress: "40%",
@@ -430,18 +427,17 @@ function SignupFormFree() {
 					extra: {
 						errorMessage,
 						validationDetails: errorDetails,
-						formData: {
-							email: formData.email,
-							fullName: formData.fullName,
-							cities: formData.cities,
-							citiesLength: formData.cities?.length,
-							careerPath: formData.careerPath,
-							careerPathLength: formData.careerPath?.length,
-							gdprConsent: formData.gdprConsent,
-							ageVerified: formData.ageVerified,
-							termsAccepted: formData.gdprConsent, // Map to terms_accepted
-							visaStatus: formData.visaStatus,
-						},
+					formData: {
+						email: formData.email,
+						fullName: formData.fullName,
+						cities: formData.cities,
+						citiesLength: formData.cities?.length,
+						careerPath: formData.careerPath,
+						careerPathLength: formData.careerPath?.length,
+						gdprConsent: formData.gdprConsent,
+						ageVerified: formData.ageVerified,
+						termsAccepted: formData.gdprConsent, // Map to terms_accepted
+					},
 						apiResponse: error.response,
 					},
 				});
@@ -718,7 +714,8 @@ function SignupFormFree() {
 								getDisabledMessage={getDisabledMessage}
 							/>
 						)}
-						{step === 2 && (
+					{step === 2 && (
+						<>
 							<Step2FreeCities
 								key="step2"
 								formData={formData}
@@ -728,7 +725,15 @@ function SignupFormFree() {
 								loading={loading}
 								setStep={navigation.navigateToStep}
 							/>
-						)}
+							{/* Live Preview: Show matching jobs while user fills form */}
+							<LiveJobsReview
+								cities={formData.cities}
+								careerPath={formData.careerPath[0] || ""}
+								isVisible={formData.cities.length > 0 && formData.careerPath.length > 0}
+								className="mt-8"
+							/>
+						</>
+					)}
 						{step === 3 && (
 							<Step3FreeCareer
 								key="step3"

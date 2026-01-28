@@ -63,13 +63,13 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get user's matches with job details
 	const { data: matches, error: matchesError } = await supabase
-		.from("matches")
+		.from("user_matches")
 		.select(`
-			job_hash,
+			job_id,
 			match_score,
 			match_reason,
-			matched_at,
-			jobs:job_hash (
+			created_at as matched_at,
+			jobs:job_id (
 				id,
 				job_hash,
 				title,
@@ -92,9 +92,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				visa_sponsorship
 			)
 		`)
-		.eq("user_email", userEmail)
+		.eq("user_id", user.id)
 		.order("match_score", { ascending: false })
-		.order("matched_at", { ascending: false });
+		.order("created_at", { ascending: false });
 
 	if (matchesError) {
 		apiLogger.error(
@@ -118,7 +118,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		const jobData = match.jobs;
 		return {
 			id: jobData?.id,
-			job_hash: match.job_hash,
+			job_hash: jobData?.job_hash,
 			title: jobData?.title,
 			company: jobData?.company,
 			company_name: jobData?.company_name,
@@ -148,15 +148,15 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get target companies for this user (companies that have been hiring recently)
 	const { data: targetCompanies } = await supabase
-		.from("matches")
+		.from("user_matches")
 		.select(`
-			jobs:job_hash (
+			jobs:job_id (
 				company,
 				posted_at
 			)
 		`)
-		.eq("user_email", userEmail)
-		.order("matched_at", { ascending: false });
+		.eq("user_id", user.id)
+		.order("created_at", { ascending: false });
 
 	// Aggregate target companies
 	const companyStats = new Map<

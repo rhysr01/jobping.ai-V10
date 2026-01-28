@@ -301,16 +301,10 @@ const freeSignupSchema = z.object({
 		.array(z.string())
 		.optional()
 		.default(["graduate", "intern", "junior"]),
-	visaStatus: z.string().min(1, "Visa status is required"),
+	// Visa status is optional for free tier - assume EU citizen as default
+	// Premium users get detailed visa filtering as an upgrade feature
+	visaStatus: z.string().optional().default("EU citizen"),
 	// GDPR compliance fields
-	birth_year: z
-		.number()
-		.min(1900, "Invalid birth year")
-		.max(
-			new Date().getFullYear() - 16,
-			"You must be at least 16 years old to use this service",
-		)
-		.optional(),
 	age_verified: z
 		.boolean()
 		.refine((val) => val === true, "Age verification is required"),
@@ -435,7 +429,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		careerPath,
 		entryLevelPreferences,
 		visaStatus,
-		birth_year: _birth_year,
 		age_verified: _age_verified,
 	} = validationResult.data;
 
@@ -539,9 +532,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 		// Check if they have matches
 		const { data: existingMatches } = await supabase
-			.from("matches")
-			.select("job_hash")
-			.eq("user_email", normalizedEmail)
+			.from("user_matches")
+			.select("job_id")
+			.eq("user_id", existingUser.id)
 			.limit(1);
 
 		apiLogger.info("Existing free user tried to sign up again", {
@@ -1022,8 +1015,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// REFACTORED: Service already saved matches, create response
 	const response = NextResponse.json({
 		success: true,
-		matchCount: matchesCount,
+		matchesCount: matchesCount,
 		userId: userData.id,
+		email: userData.email,
 	});
 
 	// Set session cookie for client-side auth

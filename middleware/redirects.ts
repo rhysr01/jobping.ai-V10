@@ -24,7 +24,7 @@ export function handleRedirects(request: NextRequest): NextResponse | null {
 
 	// Redirect /matches without auth to signup
 	if (pathname === "/matches") {
-		const freeUserEmail = request.cookies.get("free_user_email")?.value;
+		const freeUserEmail = request.cookies.get("user_email")?.value;
 		if (!freeUserEmail) {
 			return NextResponse.redirect(new URL("/signup/free", request.url));
 		}
@@ -32,7 +32,7 @@ export function handleRedirects(request: NextRequest): NextResponse | null {
 
 	// Redirect /dashboard to /matches for free users
 	if (pathname === "/dashboard") {
-		const freeUserEmail = request.cookies.get("free_user_email")?.value;
+		const freeUserEmail = request.cookies.get("user_email")?.value;
 		if (freeUserEmail) {
 			return NextResponse.redirect(new URL("/matches", request.url));
 		}
