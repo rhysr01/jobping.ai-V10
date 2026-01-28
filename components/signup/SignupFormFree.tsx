@@ -715,26 +715,18 @@ function SignupFormFree() {
 							/>
 						)}
 					{step === 2 && (
-						<>
-							<Step2FreeCities
-								key="step2"
-								formData={formData}
-								setFormData={setFormData}
-								touchedFields={touchedFields}
-								setTouchedFields={setTouchedFields}
-								loading={loading}
-								setStep={navigation.navigateToStep}
-							/>
-							{/* Live Preview: Show matching jobs while user fills form */}
-							<LiveJobsReview
-								cities={formData.cities}
-								careerPath={formData.careerPath[0] || ""}
-								isVisible={formData.cities.length > 0 && formData.careerPath.length > 0}
-								className="mt-8"
-							/>
-						</>
+						<Step2FreeCities
+							key="step2"
+							formData={formData}
+							setFormData={setFormData}
+							touchedFields={touchedFields}
+							setTouchedFields={setTouchedFields}
+							loading={loading}
+							setStep={navigation.navigateToStep}
+						/>
 					)}
-						{step === 3 && (
+					{step === 3 && (
+						<>
 							<Step3FreeCareer
 								key="step3"
 								formData={formData}
@@ -745,7 +737,15 @@ function SignupFormFree() {
 								setStep={navigation.navigateToStep}
 								handleSubmit={handleSubmit}
 							/>
-						)}
+							{/* Live Preview: Show matching jobs when user selects career path */}
+							<LiveJobsReview
+								cities={formData.cities}
+								careerPath={formData.careerPath[0] || ""}
+								isVisible={formData.cities.length > 0 && formData.careerPath.length > 0}
+								className="mt-8"
+							/>
+						</>
+					)}
 					</div>
 				</div>
 			</div>
