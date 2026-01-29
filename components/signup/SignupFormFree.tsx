@@ -382,8 +382,29 @@ function SignupFormFree() {
 				});
 				errorMessage = error.message;
 
+			// If it's a conflict error (account already exists), show a simple message
+			if (error.status === 409) {
+				errorMessage = "This email is already registered";
+				
+				debugLogger.info('SUBMIT_ACCOUNT_EXISTS', 'Account already exists', {
+					email: formData.email,
+					status: 409,
+				});
+				
+				Sentry.captureMessage("User attempted to signup with existing email", {
+					level: "info",
+					tags: { 
+						endpoint: "signup-free", 
+						error_type: "account_already_exists",
+						status_code: 409 
+					},
+					extra: {
+						email: formData.email,
+					},
+				});
+			}
 			// If it's a validation error, show the details
-			if (error.status === 400 && error.response?.details) {
+			else if (error.status === 400 && error.response?.details) {
 				debugLogger.error('SUBMIT_VALIDATION_ERROR', 'API Validation Error Details:', error.response.details);
 				errorDetails = error.response.details;
 				
