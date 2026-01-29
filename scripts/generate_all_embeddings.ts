@@ -41,9 +41,9 @@ if (missing.length > 0) {
 async function generateAllEmbeddings() {
 	// Dynamically import services AFTER env vars are loaded
 	const { embeddingService } = await import(
-		"../Utils/matching/embedding.service"
+		"../utils/matching/embedding.service"
 	);
-	const { getDatabaseClient } = await import("../Utils/core/database-pool");
+	const { getDatabaseClient } = await import("../utils/core/database-pool");
 	console.log("🚀 Starting embedding generation...");
 	const startTime = Date.now();
 
@@ -126,8 +126,11 @@ async function generateAllEmbeddings() {
 
 			console.log(`   💾 Storing ${embeddings.size} embeddings...`);
 
-			// Store embeddings
-			await embeddingService.storeJobEmbeddings(embeddings);
+			// Store embeddings (pass jobs array for ID mapping)
+			const storedCount = await embeddingService.storeJobEmbeddings(
+				embeddings,
+				jobs as Array<{ id: string; job_hash: string }>,
+			);
 
 			// Mark successfully processed items
 			const processedJobIds = Array.from(embeddings.keys()).map((hash) => {

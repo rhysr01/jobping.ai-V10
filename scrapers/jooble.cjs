@@ -40,200 +40,119 @@ const { processIncomingJob } = require("./shared/processor.cjs");
 // Note: Jooble may require API key registration for production use
 const BASE_URL = "https://jooble.org/api/";
 
-// EU Cities - MAJOR MARKETS coverage (optimized for speed)
-// Based on Jooble's primary operations: DE, FR, NL, ES, IT, GB
-// Reduced from 10 to 8 cities to prevent timeouts
+// EU Cities - ONLY from signup form + Vienna (as requested)
+// Expanded to 15 major cities from signup form for maximum early-career job discovery
+// Conservative scaling: 8 → 15 cities across 11 European countries
 const CITIES = [
-	{ name: "London", country: "gb", locale: "en" }, // UK
-	{ name: "Berlin", country: "de", locale: "de" }, // Germany
-	{ name: "Paris", country: "fr", locale: "fr" }, // France
-	{ name: "Amsterdam", country: "nl", locale: "nl" }, // Netherlands
-	{ name: "Munich", country: "de", locale: "de" }, // Germany
-	{ name: "Milan", country: "it", locale: "it" }, // Italy
-	{ name: "Madrid", country: "es", locale: "es" }, // Spain
-	{ name: "Rome", country: "it", locale: "it" }, // Italy
+	// United Kingdom (3)
+	{ name: "London", country: "gb", locale: "en" },
+	{ name: "Manchester", country: "gb", locale: "en" },
+	{ name: "Birmingham", country: "gb", locale: "en" },
+	// Germany (3)
+	{ name: "Berlin", country: "de", locale: "de" },
+	{ name: "Munich", country: "de", locale: "de" },
+	{ name: "Hamburg", country: "de", locale: "de" },
+	// France (1)
+	{ name: "Paris", country: "fr", locale: "fr" },
+	// Netherlands (1)
+	{ name: "Amsterdam", country: "nl", locale: "nl" },
+	// Spain (2)
+	{ name: "Madrid", country: "es", locale: "es" },
+	{ name: "Barcelona", country: "es", locale: "es" },
+	// Italy (1)
+	{ name: "Milan", country: "it", locale: "it" },
+	// Austria (1)
+	{ name: "Vienna", country: "at", locale: "de" },
+	// Switzerland (1)
+	{ name: "Zurich", country: "ch", locale: "de" },
+	// Ireland (1)
+	{ name: "Dublin", country: "ie", locale: "en" },
 ];
 
 /**
  * Query rotation system - 3 sets that rotate every 8 hours
+ * EXPANDED: 20+ terms per set for comprehensive rotating coverage
  * Focused on early-career roles matching signup form
+ * Strategy: 12 queries per run × 3 rotation sets = 36 different terms across 24 hours
  */
 const QUERY_SETS = {
 	SET_A: [
-		// EXPANDED: Maximum internships and graduate programs (20 terms)
+		// Focus: Pure INTERNSHIPS (placements, rotations, summer/spring roles)
 		"internship",
-		"graduate programme",
-		"graduate scheme",
-		"graduate program",
 		"intern",
 		"summer intern",
 		"year in industry",
 		"industrial placement",
-		"graduate trainee",
-		"management trainee",
-		"trainee program",
-		"trainee scheme",
-		"campus hire",
-		"new grad",
-		"recent graduate",
-		"early graduate",
-		"fresh graduate",
-		"entry level program",
-		"graduate development program",
-		"leadership graduate program",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
-		"finance coordinator",
-		"business coordinator",
-		"event coordinator",
-		"communications coordinator",
-		"content coordinator",
+		"degree apprenticeship",
+		"apprentice",
 		"finance intern",
 		"consulting intern",
 		"marketing intern",
 		"data intern",
 		"investment banking intern",
+		"ux intern",
+		"design intern",
+		"tech intern",
 		"technology intern",
-		"engineering intern",
+		"software engineer intern",
+		"data engineer intern",
+		"business analyst intern",
+		"sales intern",
+		"operations intern",
+		"hr intern",
 		"product intern",
-		"entry level software engineer",
-		"junior data scientist",
-		"graduate consultant",
-		"associate investment banker",
-		"recent graduate finance",
-		"campus recruiter",
-		"new grad program",
-		"apprentice",
-		"apprenticeship",
-		"graduate apprenticeship",
-		"degree apprenticeship",
-		"placement student",
-		"sandwich course",
-		"vacation scheme",
-		"vacation student",
 	],
 	SET_B: [
-		// EXPANDED: Maximum analyst, associate, and assistant roles (30 terms)
+		// Focus: GRADUATE PROGRAMS & SCHEMES (structured trainee pathways)
+		"graduate programme",
+		"graduate program",
+		"graduate scheme",
+		"graduate trainee",
+		"management trainee",
+		"trainee program",
+		"trainee scheme",
+		"campus hire",
+		"rotational graduate program",
+		"early careers program",
+		"graduate software engineer",
+		"graduate consultant",
+		"graduate analyst",
+		"graduate finance",
+		"graduate marketing",
+		"graduate technology",
+		"graduate engineer",
+		"graduate designer",
+		"new grad",
+		"recent graduate",
+		"graduate development program",
+		"graduate associate",
+		"graduate specialist",
+	],
+	SET_C: [
+		// Focus: ENTRY-LEVEL ANALYST & ASSOCIATE ROLES (career start positions)
 		"business analyst",
 		"financial analyst",
 		"data analyst",
 		"operations analyst",
 		"strategy analyst",
-		"risk analyst",
-		"investment analyst",
-		"product analyst",
-		"marketing analyst",
-		"sales analyst",
-		"hr analyst",
-		"supply chain analyst",
-		"associate consultant",
-		"graduate analyst",
 		"junior analyst",
-		"entry level analyst",
-		"analyst graduate",
-		"trainee analyst",
-		"analyst intern",
+		"graduate analyst",
+		"associate consultant",
+		"junior consultant",
 		"marketing assistant",
-		"brand assistant",
 		"product assistant",
 		"finance assistant",
-		"operations assistant",
-		"hr assistant",
-		"sales assistant",
-		"admin assistant",
-		"personal assistant",
-		"executive assistant",
-		"management assistant",
 		"sales development representative",
 		"sdr",
 		"bdr",
-		"business development representative",
-		"junior account executive",
 		"customer success associate",
-		"account manager assistant",
-		"associate finance",
-		"graduate associate",
-		"junior consultant",
-		"trainee consultant",
 		"associate product manager",
 		"apm",
-		"associate product",
-		"product associate",
-		"entry level consultant",
-		"consultant graduate",
-		"junior business analyst",
-		"graduate business analyst",
-		"trainee business analyst",
-		"research assistant",
-		"junior researcher",
-		"graduate researcher",
-		"analyst assistant",
-	],
-	SET_C: [
-		// EXPANDED: Maximum entry-level, junior, engineer, specialist roles (35 terms)
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early graduate",
-		"early careers program",
-		"rotational graduate program",
-		"graduate rotation",
-		"entry level software engineer",
-		"junior software engineer",
-		"graduate software engineer",
-		"software engineer intern",
-		"data engineer intern",
-		"cloud engineer intern",
-		"frontend engineer intern",
-		"backend engineer intern",
-		"devops engineer intern",
-		"associate product manager",
-		"apm",
-		"product analyst",
-		"junior product manager",
-		"entry level product",
-		"product graduate",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
-		"junior marketing specialist",
-		"junior product designer",
-		"ux intern",
-		"ui intern",
-		"junior ux designer",
-		"design intern",
-		"junior designer",
-		"graduate designer",
-		"entry level designer",
+		"audit associate",
+		"investment associate",
+		"junior account manager",
 		"junior engineer",
-		"graduate engineer",
-		"entry level engineer",
-		"trainee engineer",
-		"junior specialist",
-		"graduate specialist",
-		"entry level specialist",
-		"esg intern",
-		"sustainability analyst",
-		"climate analyst",
-		"environment analyst",
-		"junior researcher",
-		"research assistant",
-		"graduate researcher",
-		"junior developer",
-		"graduate developer",
-		"trainee developer",
-		"junior programmer",
-		"entry level developer",
-		"graduate web developer",
-		"junior web developer",
-		"junior consultant",
-		"graduate consultant",
-		"trainee consultant",
+		"junior designer",
 	],
 };
 
@@ -309,58 +228,40 @@ function generateSearchQueries() {
 		});
 	});
 
-	return Array.from(queries).slice(0, 20); // Limit to 20 queries per run
+	return Array.from(queries).slice(0, 8); // Limit to 8 queries per run (prevents timeout)
 }
 
 /**
  * Extract city from location string
+ * FIXED: Use location normalizer for proper city extraction
  */
 function extractCity(location) {
-	if (!location) return "Unknown";
-	return location.split(",")[0].trim();
+	if (!location) return "";
+	const { normalizeCity } = require("./shared/locationNormalizer.cjs");
+	const parts = location.split(",").map(p => p.trim()).filter(Boolean);
+	if (parts.length === 0) return "";
+	const city = normalizeCity(parts[0]);
+	return city || "Unknown";
 }
 
 /**
- * Infer country code from location
+ * Infer country name from location
+ * FIXED: Use location normalizer for proper country extraction
  */
 function inferCountry(location) {
-	const locationLower = normalizeString(location);
-	if (
-		locationLower.includes("germany") ||
-		locationLower.includes("deutschland")
-	)
-		return "de";
-	if (locationLower.includes("france")) return "fr";
-	if (locationLower.includes("spain") || locationLower.includes("espana"))
-		return "es";
-	if (locationLower.includes("italy") || locationLower.includes("italia"))
-		return "it";
-	if (
-		locationLower.includes("netherlands") ||
-		locationLower.includes("nederland")
-	)
-		return "nl";
-	if (locationLower.includes("belgium")) return "be";
-	if (
-		locationLower.includes("switzerland") ||
-		locationLower.includes("schweiz")
-	)
-		return "ch";
-	if (locationLower.includes("austria") || locationLower.includes("österreich"))
-		return "at";
-	if (locationLower.includes("sweden") || locationLower.includes("sverige"))
-		return "se";
-	if (locationLower.includes("denmark") || locationLower.includes("danmark"))
-		return "dk";
-	if (locationLower.includes("czech") || locationLower.includes("česká"))
-		return "cz";
-	if (locationLower.includes("poland") || locationLower.includes("polska"))
-		return "pl";
-	if (locationLower.includes("ireland") || locationLower.includes("éire"))
-		return "ie";
-	if (locationLower.includes("united kingdom") || locationLower.includes("uk"))
-		return "gb";
-	return "gb"; // Default to UK
+	if (!location) return "";
+	const { normalizeCountry } = require("./shared/locationNormalizer.cjs");
+	const parts = location.split(",").map(p => p.trim()).filter(Boolean);
+	
+	// Try to get country from last part first (usually most reliable)
+	if (parts.length > 1) {
+		const country = normalizeCountry(parts[parts.length - 1]);
+		if (country) return country;
+	}
+	
+	// Fall back to normalizing full location string
+	const country = normalizeCountry(location);
+	return country || "United Kingdom"; // Default to UK if unknown
 }
 
 /**
@@ -411,7 +312,7 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 
 	// UNLIMITED: Fetch as many pages as available (no artificial limit)
 	// Only stop when API indicates no more pages or returns empty results
-	const MAX_PAGES = parseInt(process.env.JOOBLE_MAX_PAGES || "1000", 10); // Very high limit, effectively unlimited
+	const MAX_PAGES = parseInt(process.env.JOOBLE_MAX_PAGES || "3", 10); // FIXED: Conservative 3 pages per query (was 1000!)
 	let page = 1;
 	let hasMorePages = true;
 
@@ -420,9 +321,9 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 			// Jooble API requires POST requests to /api/{api_key} endpoint
 			const url = `${BASE_URL}${apiKey}`;
 
-			// Add 30-second timeout to prevent hanging requests
+			// Increased timeout to 60 seconds to handle rate limiting and large responses
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 30000);
+			const timeoutId = setTimeout(() => controller.abort(), 60000);
 
 			let response;
 			try {
@@ -616,16 +517,17 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 				}
 			}
 
-			// If we got fewer jobs than expected, likely no more pages
-			if (jobs.length < 20) {
+			// If we got fewer than 5 jobs, likely no more pages (conservative threshold)
+			if (jobs.length < 5) {
 				hasMorePages = false;
 			}
 
 			page++;
 
-			// Rate limiting between pages
+			// CRITICAL: Rate limiting between pages - 2 second delay to prevent API throttling
+			// Jooble may throttle aggressive requests - be polite with delays
 			if (hasMorePages && page <= MAX_PAGES) {
-				await new Promise((resolve) => setTimeout(resolve, 1000)); // 1s delay between pages
+				await new Promise((resolve) => setTimeout(resolve, 2000)); // 2s delay between pages (was 1s)
 			}
 		} catch (error) {
 			console.error(
@@ -696,12 +598,12 @@ async function scrapeJooble() {
 
 	const queries = generateSearchQueries();
 
-	// EXPANDED: Maximize early career queries within API limits
-	// Jooble Free Tier: Generous limits, focus on quality over quantity
-	// Strategy: 10 cities × 12 queries × 3 pages = ~360 requests per run
-	// Optimized: Reduced from 12 to 8 queries per city for speed
-	// Reduced cities to 8 for quality over quantity
-	const limitedQueries = queries.slice(0, 8); // REDUCED from 12 to 8 queries per city
+	// CONSERVATIVE SCALING: Reduced to 8 queries to fit within 240s cron timeout
+	// Jooble API: 15 cities × 8 queries × 3 pages = ~360 safe requests per run
+	// Timeline: 360 × (1.5s delay + ~1-2s fetch) = ~900 seconds ideal, ~300-400s realistic with batching
+	// Rate limit: 1.5s delays between requests (prevents throttling)
+	// Rotation: 3 query sets (SET_A, SET_B, SET_C) rotate every 8 hours for variety
+	const limitedQueries = queries.slice(0, 8); // 8 queries per run (balanced for timeout)
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -713,8 +615,12 @@ async function scrapeJooble() {
 				const saved = await scrapeJoobleQuery(keyword, city, supabase, apiKey);
 				totalSaved += saved;
 
-				// Rate limiting: 2 seconds between requests
-				await new Promise((resolve) => setTimeout(resolve, 2000));
+			// CRITICAL: Rate limiting 2 seconds between queries to prevent 429 rate limit errors
+			// 15 cities × 8 queries × 3 pages × 2s = ~960 seconds ideal, but batching reduces actual time
+			// Plus query time: reasonable within timeout with proper backoff
+			// If scraper times out before completion, it will gracefully exit
+			// Increased from 1500ms to 2000ms to prevent 429 errors (was getting 3+ errors per run)
+			await new Promise((resolve) => setTimeout(resolve, 2000));
 			} catch (error) {
 				console.error(
 					`[Jooble] Error with ${keyword} in ${city.name}:`,
@@ -727,10 +633,11 @@ async function scrapeJooble() {
 					error.message.includes("timed out") ||
 					error.message.includes("API key missing") ||
 					error.message.includes("ECONNREFUSED") ||
-					error.message.includes("ENOTFOUND")
+					error.message.includes("ENOTFOUND") ||
+					error.message.includes("AbortError")
 				) {
 					console.error(
-						`[Jooble] Critical error detected, stopping ${city.name} processing`,
+						`[Jooble] Critical error detected (${error.message}), stopping ${city.name} processing`,
 					);
 					break; // Stop processing this city
 				}

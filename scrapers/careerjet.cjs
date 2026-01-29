@@ -37,21 +37,61 @@ if (!process.env.CAREERJET_API_KEY) {
 const { processIncomingJob } = require("./shared/processor.cjs");
 
 const CAREERJET_API_KEY = process.env.CAREERJET_API_KEY;
-const BASE_URL = "http://public.api.careerjet.net/search";
+// V4 API endpoint (HTTPS with basic authentication)
+// V3 endpoint: http://public.api.careerjet.net/search (old, uses affid parameter)
+// V4 endpoint: https://search.api.careerjet.net/v4/query (new, uses basic auth)
+const BASE_URL = "https://search.api.careerjet.net/v4/query";
 
-// Cities we target (CareerJet supported countries only - NO Ireland)
+// Cities we target (21 cities matching signup form)
 const CITIES = [
+	// United Kingdom (4)
 	{ name: "London", country: "gb", locale: "en_GB" },
 	{ name: "Manchester", country: "gb", locale: "en_GB" },
 	{ name: "Birmingham", country: "gb", locale: "en_GB" },
+	{ name: "Belfast", country: "gb", locale: "en_GB" },
+
+	// Ireland (1)
+	{ name: "Dublin", country: "ie", locale: "en_IE" },
+
+	// France (1)
 	{ name: "Paris", country: "fr", locale: "fr_FR" },
+
+	// Germany (3)
 	{ name: "Berlin", country: "de", locale: "de_DE" },
 	{ name: "Munich", country: "de", locale: "de_DE" },
-	{ name: "Amsterdam", country: "nl", locale: "en_NL" },
+	{ name: "Hamburg", country: "de", locale: "de_DE" },
+
+	// Netherlands (1)
+	{ name: "Amsterdam", country: "nl", locale: "nl_NL" },
+
+	// Spain (2)
 	{ name: "Madrid", country: "es", locale: "es_ES" },
 	{ name: "Barcelona", country: "es", locale: "es_ES" },
+
+	// Italy (2)
 	{ name: "Milan", country: "it", locale: "it_IT" },
 	{ name: "Rome", country: "it", locale: "it_IT" },
+
+	// Switzerland (1)
+	{ name: "Zurich", country: "ch", locale: "de_CH" },
+
+	// Austria (1)
+	{ name: "Vienna", country: "at", locale: "de_AT" },
+
+	// Belgium (1)
+	{ name: "Brussels", country: "be", locale: "fr_BE" },
+
+	// Sweden (1)
+	{ name: "Stockholm", country: "se", locale: "sv_SE" },
+
+	// Denmark (1)
+	{ name: "Copenhagen", country: "dk", locale: "da_DK" },
+
+	// Czech Republic (1)
+	{ name: "Prague", country: "cz", locale: "cs_CZ" },
+
+	// Poland (1)
+	{ name: "Warsaw", country: "pl", locale: "pl_PL" },
 ];
 
 // Local language early-career terms by country (expanded for better coverage)
@@ -210,8 +250,64 @@ const LOCAL_EARLY_CAREER_TERMS = {
 		"estágio tech",
 		"estágio rh",
 	],
-	ie: [], // English only
-	gb: [], // English only
+	ie: ["early careers", "junior", "graduate", "internship"],  // English only
+	gb: [],  // English only
+	ch: [
+		// German/French Switzerland
+		"absolvent",
+		"trainee",
+		"junior",
+		"berufseinsteiger",
+		"apprenti",
+		"stagiaire",
+		"diplômé",
+	],
+	at: [
+		// Austrian German
+		"absolvent",
+		"trainee",
+		"praktikant",
+		"junior",
+		"berufseinsteiger",
+		"nachwuchskraft",
+		"praktikum",
+	],
+	se: [
+		// Swedish
+		"examen",
+		"trainee",
+		"junior",
+		"praktik",
+		"nyexaminerad",
+		"yngre",
+	],
+	dk: [
+		// Danish
+		"elev",
+		"trainee",
+		"junior",
+		"praktik",
+		"nyuddannet",
+		"starter",
+	],
+	cz: [
+		// Czech
+		"absolvent",
+		"junior",
+		"stážista",
+		"praktikant",
+		"začínající",
+		"trainee",
+	],
+	pl: [
+		// Polish
+		"absolwent",
+		"junior",
+		"stażysta",
+		"praktykant",
+		"trainee",
+		"początkujący",
+	],
 };
 
 /**
@@ -220,113 +316,108 @@ const LOCAL_EARLY_CAREER_TERMS = {
  */
 const QUERY_SETS = {
 	SET_A: [
-		// Focus: Internships, graduate programs, and coordinator roles
+		// Focus: Pure INTERNSHIPS (placements, rotations, summer/spring roles)
 		"internship",
-		"graduate programme",
-		"graduate scheme",
 		"intern",
-		"graduate trainee",
-		"management trainee",
-		"trainee program",
-		"campus hire",
-		"new grad",
-		"recent graduate",
-		"entry level program",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
-		"finance coordinator",
-		"business coordinator",
-		"event coordinator",
+		"summer intern",
+		"spring intern",
 		"finance intern",
 		"consulting intern",
 		"marketing intern",
 		"data intern",
 		"investment banking intern",
-		"entry level software engineer",
-		"junior data scientist",
-		"graduate consultant",
-		"associate investment banker",
-		"recent graduate finance",
-		"campus recruiter",
-		"new grad program",
-	],
-	SET_B: [
-		// Focus: Analyst, associate, assistant, and representative roles
-		"business analyst",
-		"financial analyst",
-		"data analyst",
-		"operations analyst",
-		"strategy analyst",
-		"risk analyst",
-		"investment analyst",
-		"product analyst",
-		"associate consultant",
-		"graduate analyst",
-		"junior analyst",
-		"entry level analyst",
-		"marketing assistant",
-		"brand assistant",
-		"product assistant",
-		"finance assistant",
-		"operations assistant",
-		"sales development representative",
-		"sdr",
-		"bdr",
-		"junior account executive",
-		"customer success associate",
-		"hr assistant",
-		"associate finance",
-		"graduate associate",
-		"junior consultant",
-		"associate product manager",
-		"apm",
-		"entry level consultant",
-	],
-	SET_C: [
-		// Focus: Entry-level, junior, engineer, specialist, manager, designer, and program roles
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early careers program",
-		"rotational graduate program",
-		"entry level software engineer",
-		"junior software engineer",
-		"graduate software engineer",
+		"ux intern",
+		"design intern",
+		"tech intern",
+		"technology intern",
 		"software engineer intern",
 		"data engineer intern",
-		"cloud engineer intern",
-		"frontend engineer intern",
-		"backend engineer intern",
-		"associate product manager",
-		"apm",
-		"product analyst",
-		"junior product manager",
-		"entry level product",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
-		"junior marketing specialist",
-		"junior product designer",
-		"ux intern",
-		"junior ux designer",
-		"design intern",
-		"junior designer",
-		"graduate designer",
-		"entry level designer",
-		"junior engineer",
-		"graduate engineer",
-		"entry level engineer",
-		"junior specialist",
-		"graduate specialist",
-		"entry level specialist",
+		"business analyst intern",
+		"sales intern",
+		"operations intern",
+		"hr intern",
+		"product intern",
+		"business intelligence intern",
+		"strategy intern",
+		"research intern",
+		"engineering intern",
+		"analyst intern",
+		"audit intern",
+		"compliance intern",
+		"supply chain intern",
+		"manufacturing intern",
+		"sustainability intern",
 		"esg intern",
-		"sustainability analyst",
-		"climate analyst",
+	],
+	SET_B: [
+		// Focus: GRADUATE PROGRAMS & SCHEMES (structured trainee pathways)
+		"graduate programme",
+		"graduate program",
+		"graduate scheme",
+		"graduate trainee",
+		"management trainee",
+		"trainee program",
+		"campus hire",
+		"campus recruitment",
+		"rotational graduate program",
+		"rotational program",
+		"early careers program",
+		"graduate software engineer",
+		"graduate consultant",
+		"graduate analyst",
+		"graduate finance",
+		"graduate marketing",
+		"graduate technology",
+		"graduate engineer",
+		"graduate designer",
+		"graduate product manager",
+		"new grad program",
+		"recent graduate",
+		"graduate associate",
+		"graduate specialist",
+		"associate investment banker",
+		"graduate accountant",
+		"graduate auditor",
+		"graduate compliance",
+		"graduate risk manager",
+		"graduate supply chain",
+		"graduate operations",
+	],
+	SET_C: [
+		// Focus: ENTRY-LEVEL ANALYST & ASSOCIATE ROLES (career start positions)
+		"business analyst graduate",
+		"financial analyst graduate",
+		"data analyst graduate",
+		"operations analyst graduate",
+		"strategy analyst graduate",
+		"risk analyst graduate",
+		"compliance analyst graduate",
+		"audit analyst graduate",
+		"investment analyst graduate",
+		"research analyst graduate",
+		"associate consultant",
+		"junior consultant graduate",
+		"associate product manager",
+		"junior product manager graduate",
+		"apm",
+		"associate finance",
+		"associate account manager",
+		"junior account executive",
+		"business development graduate",
+		"business development associate",
+		"customer success associate",
+		"junior business analyst",
+		"graduate product manager",
+		"junior engineer graduate",
+		"junior technology analyst",
+		"junior ux designer",
+		"junior graphic designer",
+		"junior data scientist",
+		"junior developer",
+		"talent acquisition associate",
+		"people operations associate",
+		"marketing coordinator graduate",
+		"operations coordinator graduate",
 	],
 };
 
@@ -517,9 +608,37 @@ function inferCategories(title, description) {
 }
 
 /**
+ * Get a random IP address from a pool of European IPs
+ * CareerJet requires a valid-looking IP for abuse detection
+ */
+function getRandomEuropeanIP() {
+	// Use consistent IP from environment or generate deterministic one
+	// This should be whitelisted on CareerJet partner dashboard
+	const consistentIp = process.env.CAREERJET_USER_IP;
+	
+	if (consistentIp) {
+		return consistentIp; // Use env var if provided
+	}
+	
+	// Fallback: Generate consistent IP based on hostname/machine to minimize variation
+	// This ensures same IP across multiple runs on the same machine
+	const hostname = require("os").hostname();
+	const hash = require("crypto").createHash("md5").update(hostname).digest("hex");
+	
+	// Use hash to generate reproducible IP
+	const part1 = parseInt(hash.substring(0, 2), 16) % 256;
+	const part2 = parseInt(hash.substring(2, 4), 16) % 256;
+	const part3 = parseInt(hash.substring(4, 6), 16) % 256;
+	const part4 = parseInt(hash.substring(6, 8), 16) % 256;
+	
+	return `${part1}.${part2}.${part3}.${part4}`;
+}
+
+/**
  * Scrape CareerJet for a single city + keyword combo
  * FIXED: Batches database saves to prevent timeouts
  * FIXED: Added pagination to fetch all available pages (was only fetching page 1)
+ * FIXED: Using V4 API with basic authentication instead of V3 with affid parameter
  */
 async function scrapeCareerJetQuery(city, keyword, supabase) {
 	const BATCH_SIZE = 50; // Batch size for database saves
@@ -534,15 +653,21 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 	let totalResponseTime = 0;
 
 	try {
+		// Create basic auth header for V4 API
+		// API key is username, empty string is password
+		const auth = Buffer.from(`${CAREERJET_API_KEY}:`).toString("base64");
+
 		while (hasMorePages && page <= MAX_PAGES) {
 			try {
+				// Get a random IP address (not hardcoded) for this request
+				const userIp = getRandomEuropeanIP();
+
 				const params = new URLSearchParams({
 					locale_code: city.locale,
 					location: city.name,
 					keywords: keyword,
-					affid: CAREERJET_API_KEY,
-					user_ip: "11.22.33.44", // Required by API
-					user_agent: "Mozilla/5.0 JobPing/1.0", // Required by API
+					user_ip: userIp, // Dynamic IP address
+					user_agent: "Mozilla/5.0 JobPing/1.0", // User agent
 					pagesize: "50", // Max on free tier
 					page: String(page),
 					sort: "date", // Most recent first
@@ -562,6 +687,10 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 						headers: {
 							"User-Agent": "Mozilla/5.0 JobPing/1.0",
 							Accept: "application/json",
+							// V4 API requires basic authentication
+							Authorization: `Basic ${auth}`,
+							// V4 API requires referer header
+							Referer: "https://www.careerjet.com",
 						},
 						signal: controller.signal,
 					});

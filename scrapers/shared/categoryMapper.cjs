@@ -1,50 +1,104 @@
 /**
  * Category Mapper - Single Source of Truth
- * CRITICAL: This must match Utils/matching/categoryMapper.ts exactly
+ * CRITICAL: This must match CAREER_PATHS from components/signup/constants.ts
  *
- * This file ensures all scrapers use the same category mappings,
- * preventing old category names from being created.
+ * Valid Career Paths (ONLY):
+ * - strategy-business-design
+ * - data-analytics
+ * - sales-client-success
+ * - marketing-growth
+ * - finance-investment
+ * - operations-supply-chain
+ * - product-innovation
+ * - tech-transformation
+ * - sustainability-esg
+ * - unsure (fallback for general/unknown)
+ * - early-career (flag, not a path)
+ *
+ * INVALID categories that will NEVER be used:
+ * ❌ people-hr (not in signup form)
+ * ❌ creative-design (not in signup form)
+ * ❌ legal-compliance (not in signup form)
+ * ❌ general-management (not in signup form)
+ * ❌ general (too vague)
  */
 
-// CRITICAL: These mappings MUST match Utils/matching/categoryMapper.ts
-// Form values (from CAREER_PATH_KEYWORDS) → Database categories
+// CRITICAL: These mappings MUST match CAREER_PATHS from components/signup/constants.ts
+// Career path keywords → Valid Database category
 const CATEGORY_MAP = {
 	strategy: "strategy-business-design",
-	finance: "finance-investment", // NOT 'finance-accounting'
-	sales: "sales-client-success", // NOT 'sales-business-development'
-	marketing: "marketing-growth", // NOT 'marketing-advertising'
-	product: "product-innovation", // NOT 'product-management'
+	finance: "finance-investment",
+	sales: "sales-client-success",
+	marketing: "marketing-growth",
+	product: "product-innovation",
 	operations: "operations-supply-chain",
-	"general-management": "general-management",
 	data: "data-analytics",
-	"people-hr": "people-hr",
-	legal: "legal-compliance",
+	tech: "tech-transformation",
 	sustainability: "sustainability-esg",
-	creative: "creative-design",
+	engineering: "tech-transformation",
+	software: "tech-transformation",
+	cloud: "tech-transformation",
+	// Fallback: any unrecognized category maps to unsure
 };
 
-// OLD category names that should NEVER be used
-const DEPRECATED_CATEGORIES = [
-	"marketing-advertising",
-	"finance-accounting",
-	"sales-business-development",
-	"product-management",
-];
+// INVALID category names that should NEVER exist in production
+const INVALID_CATEGORIES = new Set([
+	"people-hr",          // ❌ NOT IN SIGNUP FORM
+	"creative-design",    // ❌ NOT IN SIGNUP FORM
+	"legal-compliance",   // ❌ NOT IN SIGNUP FORM
+	"general-management", // ❌ NOT IN SIGNUP FORM
+	"general",            // ❌ TOO VAGUE
+	"legal",              // ❌ NOT IN SIGNUP FORM
+	"creative",           // ❌ NOT IN SIGNUP FORM
+	"all-categories",     // ❌ INCORRECT
+]);
+
+// Valid categories from signup form
+const VALID_CATEGORIES = new Set([
+	"strategy-business-design",
+	"data-analytics",
+	"sales-client-success",
+	"marketing-growth",
+	"finance-investment",
+	"operations-supply-chain",
+	"product-innovation",
+	"tech-transformation",
+	"sustainability-esg",
+	"unsure",
+	"early-career", // Flag, not a path
+]);
 
 /**
- * Map a career path to database category
- * @param {string} path - Career path from CAREER_PATH_KEYWORDS
- * @returns {string} - Database category name
+ * Map a career path keyword to database category
+ * @param {string} path - Career path keyword
+ * @returns {string} - Database category name (always valid)
  */
 function mapCategory(path) {
-	return CATEGORY_MAP[path] || path;
+	if (!path) return "unsure";
+	
+	const mapped = CATEGORY_MAP[path.toLowerCase()] || null;
+	
+	// If mapped to a valid category, return it
+	if (mapped && VALID_CATEGORIES.has(mapped)) {
+		return mapped;
+	}
+	
+	// If unmapped and it's valid, use it
+	if (VALID_CATEGORIES.has(path.toLowerCase())) {
+		return path.toLowerCase();
+	}
+	
+	// Fallback to unsure for unknown paths
+	return "unsure";
 }
 
 /**
  * Validate and fix categories array
- * Removes deprecated categories and ensures correct mappings
+ * - Removes all invalid categories
+ * - Ensures all categories are from VALID_CATEGORIES
+ * - Never allows people-hr, creative-design, legal-compliance, general-management
  * @param {string[]} categories - Array of category names
- * @returns {string[]} - Cleaned categories array
+ * @returns {string[]} - Cleaned categories array (guaranteed valid)
  */
 function validateAndFixCategories(categories) {
 	if (!Array.isArray(categories)) {
@@ -55,28 +109,41 @@ function validateAndFixCategories(categories) {
 	const seen = new Set();
 
 	for (const cat of categories) {
-		// Skip deprecated categories
-		if (DEPRECATED_CATEGORIES.includes(cat)) {
+		if (!cat) continue;
+		
+		const lowerCat = String(cat).toLowerCase().trim();
+		
+		// REJECT all invalid categories
+		if (INVALID_CATEGORIES.has(lowerCat)) {
+			console.warn(`[CategoryValidator] Removing INVALID category: "${cat}"`);
 			continue;
 		}
-
-		// Map old categories to new ones (if somehow they got through)
-		let mappedCat = cat;
-		if (cat === "marketing-advertising") mappedCat = "marketing-growth";
-		else if (cat === "finance-accounting") mappedCat = "finance-investment";
-		else if (cat === "sales-business-development")
-			mappedCat = "sales-client-success";
-		else if (cat === "product-management") mappedCat = "product-innovation";
-
-		// Add if not already seen
-		if (!seen.has(mappedCat)) {
-			cleaned.push(mappedCat);
-			seen.add(mappedCat);
+		
+		// Accept if it's in valid set
+		if (VALID_CATEGORIES.has(lowerCat)) {
+			if (!seen.has(lowerCat)) {
+				cleaned.push(lowerCat);
+				seen.add(lowerCat);
+			}
+			continue;
 		}
+		
+		// Try to map unknown category
+		const mapped = mapCategory(cat);
+		if (mapped && VALID_CATEGORIES.has(mapped) && !seen.has(mapped)) {
+			cleaned.push(mapped);
+			seen.add(mapped);
+			continue;
+		}
+		
+		// If still unknown, log warning
+		console.warn(`[CategoryValidator] Unknown category skipped: "${cat}"`);
 	}
 
 	// Ensure at least 'early-career' exists
-	if (cleaned.length === 0 || !cleaned.includes("early-career")) {
+	if (cleaned.length === 0) {
+		cleaned.push("early-career");
+	} else if (!cleaned.includes("early-career")) {
 		cleaned.unshift("early-career");
 	}
 
@@ -85,15 +152,18 @@ function validateAndFixCategories(categories) {
 
 /**
  * Build categories from career path keywords
- * @param {string} path - Career path key
+ * Ensures ALL returned categories are valid
+ * @param {string} path - Career path keyword
  * @param {string[]} existingCategories - Existing categories array
- * @returns {string[]} - Updated categories array
+ * @returns {string[]} - Updated categories array (guaranteed valid)
  */
 function addCategoryFromPath(path, existingCategories = []) {
+	if (!path) {
+		return validateAndFixCategories(existingCategories);
+	}
+	
 	const mappedCategory = mapCategory(path);
-	const categories = Array.isArray(existingCategories)
-		? [...existingCategories]
-		: ["early-career"];
+	const categories = Array.isArray(existingCategories) ? [...existingCategories] : ["early-career"];
 
 	if (!categories.includes(mappedCategory)) {
 		categories.push(mappedCategory);
@@ -102,10 +172,22 @@ function addCategoryFromPath(path, existingCategories = []) {
 	return validateAndFixCategories(categories);
 }
 
+/**
+ * Test/Debug: Check if a category is valid
+ * @param {string} category - Category to check
+ * @returns {boolean} - True if valid, false if invalid
+ */
+function isValidCategory(category) {
+	return VALID_CATEGORIES.has(String(category).toLowerCase().trim());
+}
+
 module.exports = {
 	CATEGORY_MAP,
-	DEPRECATED_CATEGORIES,
+	VALID_CATEGORIES,
+	INVALID_CATEGORIES,
 	mapCategory,
 	validateAndFixCategories,
 	addCategoryFromPath,
+	isValidCategory,
 };
+

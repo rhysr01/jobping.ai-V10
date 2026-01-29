@@ -156,18 +156,19 @@ async function convertToDatabaseFormat(job) {
 
 const REED_API = "https://www.reed.co.uk/api/1.0/search";
 
-// Reed.co.uk supports UK only (NOT Ireland)
-// UK cities: London, Manchester, Birmingham, Belfast (Belfast is in Northern Ireland, part of UK)
-const UK_CITIES = ["London", "Manchester", "Birmingham", "Belfast"];
-const IRELAND_CITIES = ["Dublin", "Cork"];
-const SUPPORTED_CITIES = [...UK_CITIES, ...IRELAND_CITIES]; // UK + Ireland
-const DEFAULT_LOCATIONS = [
+// Reed.co.uk supports UK and Ireland - ONLY from signup form
+// Expanded UK/Ireland cities: 5 → 6 cities from signup form
+// Conservative scaling with most generous API limits
+// Reed API is most generous: 1000 requests/day (Jobseeker API) or 2000/hour (Recruiter API)
+const UK_CITIES = [
 	"London",
 	"Manchester",
 	"Birmingham",
 	"Belfast",
-	"Dublin", // Reed supports Ireland too
-]; // UK + Ireland cities
+];
+const IRELAND_CITIES = ["Dublin"];
+const SUPPORTED_CITIES = [...UK_CITIES, ...IRELAND_CITIES]; // UK + Ireland only from signup form
+const DEFAULT_LOCATIONS = [...UK_CITIES, ...IRELAND_CITIES]; // 5 cities total from signup form
 
 function parseTargetCities() {
 	const raw = process.env.TARGET_CITIES;
@@ -252,39 +253,20 @@ const {
  */
 const QUERY_SETS = {
 	SET_A: [
-		// EXPANDED: Maximum early career internships and graduate programs (35 terms)
-		"graduate programme",
-		"graduate scheme",
-		"graduate program",
-		"graduate training",
+		// Focus: Pure INTERNSHIPS (placements, rotations, summer/spring roles) - UK-focused
 		"internship",
 		"intern",
 		"summer intern",
 		"year in industry",
 		"industrial placement",
-		"graduate trainee",
-		"management trainee",
-		"trainee program",
-		"trainee scheme",
-		"campus hire",
-		"new grad",
-		"recent graduate",
-		"early graduate",
-		"fresh graduate",
-		"entry level program",
-		"graduate development program",
-		"leadership graduate program",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
-		"finance coordinator",
-		"business coordinator",
-		"event coordinator",
-		"communications coordinator",
-		"content coordinator",
+		"placement student",
+		"sandwich course",
+		"vacation scheme",
+		"vacation student",
+		"apprentice",
+		"apprenticeship",
+		"graduate apprenticeship",
+		"degree apprenticeship",
 		"finance intern",
 		"consulting intern",
 		"marketing intern",
@@ -293,24 +275,51 @@ const QUERY_SETS = {
 		"technology intern",
 		"engineering intern",
 		"product intern",
-		"entry level software engineer",
-		"junior data scientist",
-		"graduate consultant",
-		"associate investment banker",
-		"recent graduate finance",
-		"campus recruiter",
-		"new grad program",
-		"apprentice",
-		"apprenticeship",
-		"graduate apprenticeship",
-		"degree apprenticeship",
-		"placement student",
-		"sandwich course",
-		"vacation scheme",
-		"vacation student",
+		"ux intern",
+		"ui intern",
+		"design intern",
+		"research assistant",
+		"business analyst intern",
+		"sales intern",
+		"operations intern",
+		"hr intern",
+		"esg intern",
 	],
 	SET_B: [
-		// EXPANDED: Maximum analyst, associate, and assistant roles (40 terms)
+		// Focus: GRADUATE PROGRAMS & SCHEMES (structured trainee pathways) - UK-focused
+		"graduate programme",
+		"graduate scheme",
+		"graduate program",
+		"graduate training",
+		"graduate trainee",
+		"management trainee",
+		"trainee program",
+		"trainee scheme",
+		"campus hire",
+		"early graduate",
+		"fresh graduate",
+		"entry level program",
+		"graduate development program",
+		"leadership graduate program",
+		"graduate apprenticeship",
+		"rotational graduate program",
+		"graduate rotation",
+		"new grad",
+		"recent graduate",
+		"graduate software engineer",
+		"graduate consultant",
+		"graduate analyst",
+		"graduate researcher",
+		"graduate developer",
+		"graduate web developer",
+		"campus recruiter",
+		"new grad program",
+		"graduate associate",
+		"graduate specialist",
+		"associate investment banker",
+	],
+	SET_C: [
+		// Focus: ENTRY-LEVEL ANALYST & ASSOCIATE ROLES (career start positions) - UK-focused
 		"business analyst",
 		"financial analyst",
 		"data analyst",
@@ -320,113 +329,37 @@ const QUERY_SETS = {
 		"investment analyst",
 		"product analyst",
 		"marketing analyst",
-		"sales analyst",
-		"hr analyst",
 		"supply chain analyst",
-		"associate consultant",
-		"graduate analyst",
 		"junior analyst",
-		"entry level analyst",
-		"analyst graduate",
+		"graduate analyst",
 		"trainee analyst",
-		"analyst intern",
+		"analyst graduate",
+		"associate consultant",
+		"junior consultant",
+		"trainee consultant",
 		"marketing assistant",
-		"brand assistant",
 		"product assistant",
 		"finance assistant",
 		"operations assistant",
 		"hr assistant",
-		"sales assistant",
-		"admin assistant",
-		"personal assistant",
-		"executive assistant",
-		"management assistant",
 		"sales development representative",
 		"sdr",
 		"bdr",
-		"business development representative",
 		"junior account executive",
 		"customer success associate",
 		"account manager assistant",
 		"associate finance",
-		"graduate associate",
-		"junior consultant",
-		"trainee consultant",
 		"associate product manager",
 		"apm",
-		"associate product",
-		"product associate",
-		"entry level consultant",
-		"consultant graduate",
-		"junior business analyst",
-		"graduate business analyst",
-		"trainee business analyst",
-		"research assistant",
 		"junior researcher",
-		"graduate researcher",
-		"analyst assistant",
-	],
-	SET_C: [
-		// EXPANDED: Maximum entry-level, junior, engineer, specialist roles (45 terms)
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early graduate",
-		"early careers program",
-		"rotational graduate program",
-		"graduate rotation",
-		"entry level software engineer",
-		"junior software engineer",
-		"graduate software engineer",
-		"software engineer intern",
-		"data engineer intern",
-		"cloud engineer intern",
-		"frontend engineer intern",
-		"backend engineer intern",
-		"devops engineer intern",
-		"associate product manager",
-		"apm",
-		"product analyst",
+		"junior business analyst",
+		"junior engineer",
+		"junior designer",
 		"junior product manager",
-		"entry level product",
-		"product graduate",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
+		"junior developer",
+		"junior specialist",
 		"junior marketing specialist",
 		"junior product designer",
-		"ux intern",
-		"ui intern",
-		"junior ux designer",
-		"design intern",
-		"junior designer",
-		"graduate designer",
-		"entry level designer",
-		"junior engineer",
-		"graduate engineer",
-		"entry level engineer",
-		"trainee engineer",
-		"junior specialist",
-		"graduate specialist",
-		"entry level specialist",
-		"esg intern",
-		"sustainability analyst",
-		"climate analyst",
-		"environment analyst",
-		"junior researcher",
-		"research assistant",
-		"graduate researcher",
-		"junior developer",
-		"graduate developer",
-		"trainee developer",
-		"junior programmer",
-		"entry level developer",
-		"graduate web developer",
-		"junior web developer",
-		"junior consultant",
-		"graduate consultant",
-		"trainee consultant",
 	],
 };
 
@@ -513,13 +446,13 @@ function generateReedQueries() {
 
 const EARLY_TERMS = generateReedQueries();
 
-// EXPANDED: Maximize early career role discovery within free tier limits
-// Reed Free Tier: 1,000 requests/day, 2 runs/day = 500 requests per run MAX
-// Strategy: 5 cities × 15 queries × 6-7 pages = ~450-525 requests (optimal for limit)
-// Increased from 10 to 15 queries per city, reduced pages to 6-7 to stay within 500 limit
+// EXPANDED: Maximize early career role discovery within Reed API limits
+// Reed Jobseeker API: 1000 requests/day, running 2x/day = 500 requests per run MAX
+// Strategy: 10 cities × 15 queries × 3-4 pages = ~450-600 requests (at upper limit)
+// INCREASED: From 15 to 20 queries per location for broader coverage
 // This maximizes job discovery while respecting API limits
 const MAX_QUERIES_PER_LOCATION = parseInt(
-	process.env.REED_MAX_QUERIES_PER_LOCATION || "15", // EXPANDED: 15 queries per city (up from 10)
+	process.env.REED_MAX_QUERIES_PER_LOCATION || "20", // EXPANDED: 20 queries per city (up from 15)
 	10,
 );
 const INCLUDE_REMOTE =
@@ -532,18 +465,19 @@ const queriesToUse =
 		? EARLY_TERMS.slice(0, MAX_QUERIES_PER_LOCATION)
 		: EARLY_TERMS;
 // Calculate estimated requests based on actual pages per query type
-// Career path queries: 6 pages, role queries: 7 pages (from getMaxPagesForQuery logic)
-const avgPagesPerQuery = 6.5; // Average of 6-7 pages per query
+// Career path queries: 5-6 pages, role queries: 5-6 pages (with reduced pages due to larger result sets)
+// NOTE: API filter removal means MORE results per page, so reduce max pages to stay within 500 limit
+const avgPagesPerQuery = 4.5; // Average of 4-5 pages per query (reduced due to no API filter)
 const estimatedRequests =
-	LOCATIONS.length * queriesToUse.length * avgPagesPerQuery;
+	DEFAULT_LOCATIONS.length * queriesToUse.length * avgPagesPerQuery;
 console.log(
 	`📋 Reed query strategy: Using ${queriesToUse.length} queries per location (from ${EARLY_TERMS.length} total)`,
 );
 console.log(
-	`📊 API Usage: ~${LOCATIONS.length} cities × ${queriesToUse.length} queries × ${avgPagesPerQuery} pages = ~${estimatedRequests} calls per run`,
+	`📊 API Usage: ~${DEFAULT_LOCATIONS.length} cities × ${queriesToUse.length} queries × ${avgPagesPerQuery} pages = ~${estimatedRequests} calls per run`,
 );
 console.log(
-	`⚠️  Free Tier Limit: 1,000 requests/day (2 runs/day = 500 per run). Current: ~${estimatedRequests} (${estimatedRequests <= 500 ? "✅ SAFE" : "⚠️ OVER LIMIT - will be throttled by MAX_QUERIES_PER_LOCATION"})`,
+	`⚠️  Jobseeker API Limit: 1000 requests/day (2 runs/day = 500 per run). Current: ~${estimatedRequests} (${estimatedRequests <= 500 ? "✅ SAFE" : "⚠️ OVER LIMIT"})`,
 );
 
 function parseTargetCareerPaths() {
@@ -569,11 +503,11 @@ if (TARGET_CAREER_PATHS.length) {
 }
 
 /**
- * EXPANDED: Optimized pagination for maximum early career job discovery
- * RESPECTS API LIMITS: Free tier is 1,000 requests/day, 2 runs/day = 500 per run
- * NEW Strategy: 5 cities × 15 queries × 6-7 pages = ~450-525 requests (optimal for limit)
- * Increased queries from 10 to 15, reduced pages to 6-7 to stay within 500 limit
- * This maximizes early career job discovery while respecting API limits
+ * OPTIMIZED: Pagination for maximum early career job discovery
+ * RESPECTS API LIMITS: Jobseeker API is 1000 requests/day (500 per run safe)
+ * CRITICAL FIX: Removed early-career filter from keywords - now getting MORE results per page
+ * Strategy: 10 cities × 20 queries × 4-5 pages = ~400-500 safe requests per run
+ * Reduced pages from 6-7 to 4-5 to compensate for larger result sets without API filter
  */
 function getMaxPagesForQuery(query) {
 	// Career path queries (e.g., "strategy internship", "finance graduate programme")
@@ -581,14 +515,13 @@ function getMaxPagesForQuery(query) {
 		/^(strategy|finance|sales|marketing|data|operations|product|tech|sustainability|people-hr|legal|creative|general-management)\s+(internship|graduate programme|graduate scheme|early career)/i;
 	const isCareerPathQuery = careerPathPattern.test(query.trim());
 
-	// REED FREE TIER LIMIT: 1,000 requests/day, 2 runs/day = 500 per run
-	// NEW Calculation: 5 cities × 15 queries × 6-7 pages = ~450-525 requests
-	// Reduced pages to accommodate more queries while staying within limit
-	// Career path queries get slightly more pages as they're more targeted
+	// REED JOBSEEKER API LIMIT: 1000 requests/day, 2 runs/day = 500 per run safe
+	// NEW Calculation: 10 cities × 20 queries × 4-5 pages = ~400-500 requests
+	// Reduced pages to accommodate more queries + API filter removal = larger result sets
 	if (isCareerPathQuery) {
-		return parseInt(process.env.REED_MAX_PAGES_CAREER_PATH || "7", 10); // 7 pages for career paths
+		return parseInt(process.env.REED_MAX_PAGES_CAREER_PATH || "5", 10); // 5 pages for career paths
 	}
-	return parseInt(process.env.REED_MAX_PAGES || "6", 10); // 6 pages for general queries
+	return parseInt(process.env.REED_MAX_PAGES || "4", 10); // 4 pages for general queries (was 6-7)
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -693,7 +626,7 @@ async function scrapeLocation(location) {
 
 		while (page < queryMaxPages) {
 			const params = {
-				keywords: `${term} (graduate OR intern OR "entry level" OR junior)`,
+				keywords: `${term}`,  // CRITICAL FIX: Removed early-career filter (graduate OR intern OR "entry level" OR junior) to avoid API results being too restrictive
 				locationName: location,
 				resultsToTake: resultsPerPage,
 				resultsToSkip: page * resultsPerPage,

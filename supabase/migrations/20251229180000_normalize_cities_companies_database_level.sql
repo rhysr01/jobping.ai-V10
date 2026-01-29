@@ -68,6 +68,7 @@ SET city = CASE
          OR city ILIKE '%walthamstow%' OR city ILIKE '%watford%' THEN 'London'
     WHEN city ILIKE '%manchester%' OR city ILIKE '%salford%' OR city ILIKE '%stockport%' THEN 'Manchester'
     WHEN city ILIKE '%birmingham%' OR city ILIKE '%solihull%' OR city ILIKE '%coventry%' THEN 'Birmingham'
+    WHEN city ILIKE '%belfast%' THEN 'Belfast'
     
     ELSE city -- Keep original if no match
 END
@@ -179,6 +180,7 @@ BEGIN
              OR city_text LIKE '%walthamstow%' OR city_text LIKE '%watford%' THEN RETURN 'London';
         WHEN city_text LIKE '%manchester%' OR city_text LIKE '%salford%' OR city_text LIKE '%stockport%' THEN RETURN 'Manchester';
         WHEN city_text LIKE '%birmingham%' OR city_text LIKE '%solihull%' OR city_text LIKE '%coventry%' THEN RETURN 'Birmingham';
+        WHEN city_text LIKE '%belfast%' THEN RETURN 'Belfast';
         
         ELSE
             -- Return capitalized version

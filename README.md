@@ -295,17 +295,15 @@ curl http://localhost:3000/api/matches/free \
 ### 📖 Primary Documentation (Start Here)
 - **[README.md](README.md)** - Project overview and quick start (you are here)
 - **[TECHREF.md](TECHREF.md)** - Complete technical reference (API, architecture, database, AI, frontend, security, performance)
-- **[TESTING.md](TESTING.md)** - Comprehensive testing strategy and MCP integration
-- **[TESTING_README.md](TESTING_README.md)** - Quick testing reference guide
+- **[TESTING.md](TESTING.md)** - Comprehensive testing strategy and guide (test commands, scenarios, debugging)
+- **[DATA_SCRAPER.md](DATA_SCRAPER.md)** - Scraper system configuration and data quality (16 sources, 28k jobs, three-flag classification)
 
 ### 🛠️ Development Guides
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Development guidelines and contribution workflow
 - **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
-- **[docs/scraping.md](docs/scraping.md)** - Job scraping system technical details
-- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Common issues and solutions
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 
 ### 📋 Additional Resources
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 - **[CHANGES.md](CHANGES.md)** - Version history and updates
 
 ## 📈 Recent Major Improvements (Jan 2026)

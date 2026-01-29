@@ -4,6 +4,7 @@
  */
 
 import OpenAI from "openai";
+import { createClient } from "@supabase/supabase-js";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -38,10 +39,19 @@ export class EmbeddingService {
 					continue;
 				}
 
+				// Truncate to prevent token limit errors (8192 token limit for text-embedding-3-small)
+				// Conservative estimate: 1 token ≈ 4 characters, so 8000 tokens ≈ 32,000 characters
+				// Keep some buffer to ensure we stay under limit
+				const MAX_CHARS = 30000; // Conservative: ~7500 tokens (well under 8192 limit)
+				const truncatedText =
+					jobText.length > MAX_CHARS
+						? jobText.substring(0, MAX_CHARS - 100) + "..."
+						: jobText;
+
 				// Generate embedding using OpenAI
 				const response = await openai.embeddings.create({
 					model: "text-embedding-3-small",
-					input: jobText,
+					input: truncatedText,
 					encoding_format: "float",
 				});
 
@@ -65,19 +75,74 @@ export class EmbeddingService {
 
 	/**
 	 * Store job embeddings in the database
+	 * @param embeddings Map of job_hash to embedding vector
+	 * @param jobs Array of job objects with id and job_hash
 	 */
 	static async storeJobEmbeddings(
 		embeddings: Map<string, number[]>,
-	): Promise<void> {
-		// This would typically store embeddings in a vector database
-		// For now, we'll just log that embeddings were generated
-		console.log(`📊 Generated ${embeddings.size} embeddings`);
+		jobs: Array<{ id: string; job_hash: string }>,
+	): Promise<number> {
+		if (embeddings.size === 0) {
+			console.log("📊 No embeddings to store");
+			return 0;
+		}
 
-		// In a full implementation, this would store to a vector database like:
-		// - Pinecone
-		// - Weaviate
-		// - Supabase with pgvector
-		// - etc.
+		const supabase = createClient(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.SUPABASE_SERVICE_ROLE_KEY!,
+		);
+
+		let successCount = 0;
+		const errors: string[] = [];
+
+		// Create a map of job_hash to job_id for quick lookup
+		const hashToId = new Map<string, string>();
+		for (const job of jobs) {
+			if (job.job_hash) {
+				hashToId.set(job.job_hash, job.id);
+			}
+		}
+
+		// Store each embedding
+		for (const [jobHash, embedding] of embeddings.entries()) {
+			const jobId = hashToId.get(jobHash);
+			if (!jobId) {
+				console.warn(`⚠️  No job ID found for hash ${jobHash}`);
+				continue;
+			}
+
+			try {
+				const { error: updateError } = await supabase
+					.from("jobs")
+					.update({
+						embedding: embedding,
+						updated_at: new Date().toISOString(),
+					})
+					.eq("id", jobId);
+
+				if (updateError) {
+					errors.push(`Job ${jobId}: ${updateError.message}`);
+					console.error(
+						`❌ Error storing embedding for job ${jobId}:`,
+						updateError,
+					);
+				} else {
+					successCount++;
+				}
+			} catch (error: any) {
+				errors.push(`Job ${jobId}: ${error.message}`);
+				console.error(`❌ Error storing embedding for job ${jobId}:`, error);
+			}
+		}
+
+		console.log(
+			`📊 Stored ${successCount}/${embeddings.size} embeddings successfully`,
+		);
+		if (errors.length > 0) {
+			console.warn(`⚠️  ${errors.length} errors occurred during storage`);
+		}
+
+		return successCount;
 	}
 
 	/**
@@ -88,12 +153,32 @@ export class EmbeddingService {
 		withEmbeddings: number;
 		total: number;
 	}> {
-		// For now, return dummy data since we don't have actual embedding storage
-		// In a real implementation, this would query the vector database
+		const supabase = createClient(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.SUPABASE_SERVICE_ROLE_KEY!,
+		);
+
+		const { count: total } = await supabase
+			.from("jobs")
+			.select("*", { count: "exact", head: true })
+			.eq("is_active", true)
+			.eq("status", "active");
+
+		const { count: withEmbeddings } = await supabase
+			.from("jobs")
+			.select("*", { count: "exact", head: true })
+			.eq("is_active", true)
+			.eq("status", "active")
+			.not("embedding", "is", null);
+
+		const totalCount = total || 0;
+		const withEmbeddingsCount = withEmbeddings || 0;
+		const coverage = totalCount > 0 ? withEmbeddingsCount / totalCount : 0;
+
 		return {
-			coverage: 0.85, // 85% coverage
-			withEmbeddings: 850,
-			total: 1000,
+			coverage,
+			withEmbeddings: withEmbeddingsCount,
+			total: totalCount,
 		};
 	}
 }

@@ -14,68 +14,141 @@ export interface IngestJob {
 }
 
 /**
- * Classify if a job is early-career based on title and description
- * Implements the "save-first" philosophy: if it's early-career and in Europe, save it
+ * Normalize a string for classification (lowercase, trim)
  */
-export function classifyEarlyCareer(job: IngestJob): boolean {
-	const { title, description } = job;
-	const text = `${title} ${description}`;
-	const titleLower = title.toLowerCase();
+function normalizeString(str: string | undefined): string {
+	return (str || "").toLowerCase().trim();
+}
 
-	// EXCLUDE: Roles that are NOT early-career even if they contain certain keywords
-	// Virtual Assistant, Executive Assistant, Personal Assistant - these are often freelance/contract
-	if (
-		/virtual\s+assistant|executive\s+assistant|personal\s+assistant|administrative\s+assistant/i.test(
-			titleLower,
-		)
-	) {
-		return false;
+/**
+ * Classify job into one of three early-career categories
+ * Returns object with three mutually-exclusive flags
+ * PRODUCTION-READY: Fixed false positives (analyst, assistant), weak senior detection, and boilerplate pollution
+ */
+export function classifyEarlyCareer(job: IngestJob): {
+	is_internship: boolean;
+	is_graduate: boolean;
+	is_early_career: boolean;
+} {
+	const title = normalizeString(job?.title);
+	const description = normalizeString(job?.description);
+
+	if (!title.trim()) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
 	}
 
-	// EXCLUDE: Manager roles unless they're specifically graduate/trainee managers
-	if (
-		/\bmanager\b/i.test(titleLower) &&
-		!/(graduate|trainee|junior|entry.?level|associate)\s+manager/i.test(text)
-	) {
-		return false;
+	// ===== CHECK FOR INTERNSHIPS FIRST =====
+	// Internship/placement patterns (highest priority)
+	const internshipPatterns =
+		/\b(intern|internship|placement|spring\s+intern|summer\s+intern|work\s+experience|industrial\s+placement|sandwich\s+placement)\b/i;
+	if (internshipPatterns.test(title) || internshipPatterns.test(description.slice(0, 500))) {
+		// But NOT if PhD required
+		const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+		if (!phdRequired.test(title) && !phdRequired.test(description.slice(0, 500))) {
+			return { is_internship: true, is_graduate: false, is_early_career: false };
+		}
 	}
 
-	// EXCLUDE: Director, VP, Head of, Chief roles
-	if (
-		/\b(director|vp|vice.?president|head\s+of|chief|executive|president)\b/i.test(
-			titleLower,
-		)
-	) {
-		return false;
+	// ===== CHECK FOR GRADUATE SCHEMES =====
+	// Graduate/trainee program patterns
+	const graduatePatterns =
+		/\b(graduate\s+(?:scheme|program|programme|trainee|development|role)|management\s+trainee|trainee\s+programme|trainee\s+program|rotational\s+program|apprentice|apprenticeship|new\s+grad|recent\s+graduate)\b/i;
+	if (graduatePatterns.test(title) || graduatePatterns.test(description.slice(0, 500))) {
+		// But NOT if PhD required
+		const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+		if (!phdRequired.test(title) && !phdRequired.test(description.slice(0, 500))) {
+			return { is_internship: false, is_graduate: true, is_early_career: false };
+		}
 	}
 
-	// EXCLUDE: Compliance Manager, Tax Manager, etc. - these require expertise
-	if (
-		/\b(compliance|tax|legal|regulatory|risk|audit|accounting)\s+manager\b/i.test(
-			titleLower,
-		)
-	) {
-		return false;
+	// ===== HARD REJECTIONS =====
+	// Senior/Leadership titles - IMMEDIATE REJECT
+	const seniorTitles =
+		/\b(senior|principal|lead|head\s+of|director|manager|chief|vp|vice\s+president|executive|architect|staff\s+engineer|distinguished)\b/i;
+	if (seniorTitles.test(title)) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
 	}
 
-	//  COMPREHENSIVE: Multilingual early career detection based on user research
-	// REMOVED "assistant" from the regex - too broad, catches Virtual Assistant, Executive Assistant, etc.
-	const graduateRegex =
-		/(graduate|new.?grad|recent.?graduate|campus.?hire|graduate.?scheme|graduate.?program|rotational.?program|university.?hire|college.?hire|entry.?level|junior|trainee|intern|internship|placement|analyst|fellowship|apprenticeship|apprentice|stagiaire|alternant|alternance|d[ée]butant|formation|dipl[oô]m[eé]|apprenti|poste.?d.?entr[ée]e|niveau.?d[ée]butant|praktikum|praktikant|traineeprogramm|berufseinstieg|absolvent|absolventenprogramm|ausbildung|auszubildende|werkstudent|einsteiger|becario|pr[a]cticas|programa.?de.?graduados|reci[eé]n.?titulado|aprendiz|nivel.?inicial|puesto.?de.?entrada|j[u]nior|formaci[oó]n.?dual|tirocinio|stagista|apprendista|apprendistato|neolaureato|formazione|inserimento.?lavorativo|stage|stagiair|starterfunctie|traineeship|afgestudeerde|leerwerkplek|instapfunctie|fresher|nyuddannet|nyutdannet|nyexaminerad|neo.?laureato|nuovo.?laureato|recién.?graduado|nuevo.?graduado|joven.?profesional|nieuwe.?medewerker)/i;
+	// PhD/Doctorate is HARD REJECT
+	const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+	if (phdRequired.test(title) || phdRequired.test(description.slice(0, 500))) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
+	}
 
-	// Exclude clearly senior signals only; allow consultant/management trainee variants
-	const seniorRegex =
-		/(senior|lead|principal|director|head.?of|vp|chief|executive\s+level|executive\s+director|5\+.?years|7\+.?years|10\+.?years|experienced\s+professional|architect\b|team.?lead|tech.?lead|staff\b|distinguished)/i;
+	// Professional qualifications (non-PhD) required - REJECT
+	const otherQualificationRequired =
+		/(cpa|cfa|chartered|qualified|licen[cs]ed|mba\s+(?:required|preferred)|master['']?s\s+(?:required|preferred))/i;
+	if (
+		otherQualificationRequired.test(title) ||
+		otherQualificationRequired.test(description.slice(0, 500))
+	) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
+	}
 
-	//  FIXED: Only exclude roles requiring significant experience (3+ years), not 1-2 years
-	const experienceRegex =
-		/(proven.?track.?record|extensive.?experience|minimum.?3.?years|minimum.?5.?years|minimum.?7.?years|prior.?experience|relevant.?experience|3\+.?years|5\+.?years|7\+.?years|10\+.?years)/i;
+	// Experience requirements - REJECT
+	const experienceRequired =
+		/\b(minimum|min\.?|at\s+least|plus|\+)\s*(2|3|4|5|6|7|8|9|10)\+?\s*(years?|yrs?|ans|años|jahre|anni|年|年以上)\b/i;
+	const firstPartDescription = description.slice(0, 500);
+	if (experienceRequired.test(title) || experienceRequired.test(firstPartDescription)) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
+	}
 
-	return (
-		graduateRegex.test(text) &&
-		!seniorRegex.test(text) &&
-		!experienceRegex.test(text)
-	);
+	// Proven track record / extensive experience - REJECT
+	const seniorPhrases =
+		/\b(proven\s+track\s+record|extensive\s+experience|significant\s+experience|seasoned\s+professional|expert\s+in)\b/i;
+	if (seniorPhrases.test(firstPartDescription)) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
+	}
+
+	// Explicitly says NOT for beginners/graduates
+	const notForJuniors =
+		/\b(not\s+(?:suitable\s+)?for|not\s+an?|no\s+entry.?level|will\s+not\s+(?:consider|accept)|cannot\s+(?:hire|accept))\s+(?:\w+\s+)?(beginners|graduates?|entry|junior|inexperienced|candidates?)/i;
+	if (notForJuniors.test(description.slice(0, 500))) {
+		return { is_internship: false, is_graduate: false, is_early_career: false };
+	}
+
+	// ===== CHECK FOR JUNIOR/ENTRY-LEVEL =====
+	const earlyCareerKeywords =
+		/\b(junior|entry\s+level|entry-level|new\s+grad|recent\s+graduate|campus\s+hire|rotational\s+program|fellowship|d[ée]butant|absolvent|reci[eé]n\s+titulado|joven\s+profesional|nivel\s+inicial|puesto\s+de\s+entrada)\b/i;
+	if (earlyCareerKeywords.test(title)) {
+		return { is_internship: false, is_graduate: false, is_early_career: true };
+	}
+
+	// ===== CONTEXTUAL ANALYST/ASSISTANT ROLES =====
+	const ambiguousTitles = /\b(analyst|assistant|associate|coordinator)\b/i;
+	if (ambiguousTitles.test(title)) {
+		const earlyContext = description.slice(0, 300);
+		const hasEarlyCareerContext =
+			/(graduate|entry\s+level|no\s+experience|0-2\s+years|training\s+provided|learn\s+on\s+the\s+job|perfect\s+for\s+graduates)/i;
+
+		if (hasEarlyCareerContext.test(earlyContext)) {
+			return { is_internship: false, is_graduate: false, is_early_career: true };
+		}
+
+		if (experienceRequired.test(earlyContext)) {
+			return { is_internship: false, is_graduate: false, is_early_career: false };
+		}
+
+		// Default for ambiguous: accept as early career
+		return { is_internship: false, is_graduate: false, is_early_career: true };
+	}
+
+	// ===== DESCRIPTION CHECK (LAST RESORT) =====
+	const descStart = description.slice(0, 300);
+	if (internshipPatterns.test(descStart)) {
+		return { is_internship: true, is_graduate: false, is_early_career: false };
+	}
+
+	if (graduatePatterns.test(descStart)) {
+		return { is_internship: false, is_graduate: true, is_early_career: false };
+	}
+
+	if (earlyCareerKeywords.test(descStart)) {
+		return { is_internship: false, is_graduate: false, is_early_career: true };
+	}
+
+	// Default: not early career
+	return { is_internship: false, is_graduate: false, is_early_career: false };
 }
 
 /**
@@ -386,12 +459,15 @@ export function validateJob(job: IngestJob): {
  */
 export function convertToDatabaseFormat(job: IngestJob) {
 	const { city, country, isRemote, isEU } = parseLocation(job.location);
-	const isEarlyCareer = classifyEarlyCareer(job);
+	const classification = classifyEarlyCareer(job);
 	const jobHash = makeJobHash(job);
 
-	//  Log early career classification for debugging
+	// Determine if any early-career flag is set
+	const isEarlyCareerJob = classification.is_internship || classification.is_graduate || classification.is_early_career;
+
+	//  Log classification for debugging
 	console.log(
-		` Early Career: "${job.title}" - ${isEarlyCareer ? "YES" : "NO"}`,
+		` Classification: "${job.title}" - internship: ${classification.is_internship}, graduate: ${classification.is_graduate}, early_career: ${classification.is_early_career}`,
 	);
 
 	// CRITICAL: Always set company_name from company
@@ -407,9 +483,12 @@ export function convertToDatabaseFormat(job: IngestJob) {
 		job_url: job.url.trim(),
 		source: job.source.trim(),
 		posted_at: job.posted_at || new Date().toISOString(),
-		categories: [isEarlyCareer ? "early-career" : "experienced"],
+		categories: [isEarlyCareerJob ? "early-career" : "experienced"],
 		work_environment: isRemote ? "remote" : "on-site",
-		experience_required: isEarlyCareer ? "entry-level" : "experienced",
+		experience_required: isEarlyCareerJob ? "entry-level" : "experienced",
+		is_internship: classification.is_internship,
+		is_graduate: classification.is_graduate,
+		is_early_career: classification.is_early_career,
 		company_profile_url: "",
 		language_requirements: [],
 		scrape_timestamp: new Date().toISOString(),
@@ -423,7 +502,7 @@ export function convertToDatabaseFormat(job: IngestJob) {
 			country,
 			isRemote,
 			isEU,
-			isEarlyCareer,
+			isEarlyCareer: isEarlyCareerJob,
 			parsedAt: new Date().toISOString(),
 		},
 	};
@@ -435,10 +514,19 @@ export function convertToDatabaseFormat(job: IngestJob) {
  */
 export function shouldSaveJob(job: IngestJob): boolean {
 	const { isEU } = parseLocation(job.location);
-	const isEarlyCareer = classifyEarlyCareer(job);
+	const classification = classifyEarlyCareer(job);
 
-	// North-star rule: save if early-career and in Europe
+	// North-star rule: save if early-career (any flag) and in Europe
+	const isEarlyCareer = classification.is_internship || classification.is_graduate || classification.is_early_career;
 	return isEarlyCareer && isEU;
+}
+
+/**
+ * Helper function for tests: Check if a job is any type of early-career
+ */
+export function isEarlyCareerJob(job: IngestJob): boolean {
+	const classification = classifyEarlyCareer(job);
+	return classification.is_internship || classification.is_graduate || classification.is_early_career;
 }
 
 /**
@@ -450,11 +538,11 @@ export function logJobProcessing(
 	details?: any,
 ) {
 	const { isEU } = parseLocation(job.location);
-	const isEarlyCareer = classifyEarlyCareer(job);
+	const classification = classifyEarlyCareer(job);
 
 	console.log(`[${action}] ${job.company} - ${job.title}`);
 	console.log(`  Location: ${job.location} (EU: ${isEU})`);
-	console.log(`  Early Career: ${isEarlyCareer}`);
+	console.log(`  Classification: internship: ${classification.is_internship}, graduate: ${classification.is_graduate}, early_career: ${classification.is_early_career}`);
 	console.log(`  Should Save: ${shouldSaveJob(job)}`);
 
 	if (details) {

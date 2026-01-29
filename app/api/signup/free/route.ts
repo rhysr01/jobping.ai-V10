@@ -764,6 +764,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		.gte("created_at", sixtyDaysAgo.toISOString()) // Only recent jobs
 		.order("id", { ascending: false }); // Pseudo-random for variety
 
+	// CRITICAL: Filter for ALL three early-career categories for free users
+	// Free users should see: internships OR graduate schemes OR entry-level roles
+	// They don't have the ability to choose categories like premium users do
+	query = query.or(
+		"is_internship.eq.true,is_graduate.eq.true,is_early_career.eq.true",
+	);
+
 	// 🔴 CRITICAL: Add country-level filtering at DB query level
 	// This prevents fetching 28k US jobs when user selects Berlin
 	if (targetCountries.size > 0) {

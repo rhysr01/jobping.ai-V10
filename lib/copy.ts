@@ -125,6 +125,7 @@ export const FREE_PLAN_SUBTITLE = "5 instant matches";
 export const FREE_PLAN_FEATURES = [
 	`Get 5 instant matches`,
 	"View matches on website",
+	"Jobs posted within last 30 days",
 	"No credit card required",
 	"Takes under 2 minutes",
 	"One-time preview",
@@ -147,8 +148,8 @@ export const PREMIUM_PLAN_GUARANTEE = "💸 If you don't apply to 3+ jobs in 30 
 export const PREMIUM_SOCIAL_PROOF_PERCENT = "89";
 export const PREMIUM_PLAN_FEATURES = [
 	`✨ 15 fresh matches every week (Mon/Wed/Fri)`,
-	`🎯 AI-powered visa sponsorship scoring`,
 	`⚡ Jobs posted within 7 days (fresher roles)`,
+	`🎯 AI-powered visa sponsorship scoring`,
 	`🔄 AI learns from your feedback instantly`,
 	`📧 Delivered to your inbox automatically`,
 	`🚫 No scrolling, no dashboards, no BS`,

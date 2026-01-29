@@ -753,31 +753,8 @@ async function processIncomingJob(job, options = {}) {
 		created_at: nowIso,
 	};
 
-	// CRITICAL: Validate classification at ingestion time
-	const { validateJobClassification } = require("./classificationValidator.cjs");
-	const classificationValidation = validateJobClassification(jobObject);
-
-	if (!classificationValidation.isValid) {
-		console.warn(
-			`[Processor] ⚠️  Classification validation failed for "${title}":`,
-			classificationValidation.errors
-		);
-	}
-
-	if (classificationValidation.warnings.length > 0) {
-		console.warn(
-			`[Processor] ⚠️  Classification warnings for "${title}":`,
-			classificationValidation.warnings
-		);
-	}
-
-	if (classificationValidation.fixed) {
-		console.log(
-			`[Processor] 🔧 Auto-fixed classification for "${title}" - was ${classificationValidation.job.is_internship ? "internship" : "graduate"}, now ${classificationValidation.job.is_graduate ? "graduate" : "internship"}`
-		);
-		return classificationValidation.job;
-	}
-
+	// PRODUCTION-READY: Classification is now handled by classifyEarlyCareer() in helpers
+	// which uses hierarchical rejection-first logic with context awareness
 	return jobObject;
 }
 

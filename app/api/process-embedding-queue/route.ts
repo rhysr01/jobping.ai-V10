@@ -64,8 +64,13 @@ export async function POST(request: NextRequest) {
 		// Step 2: Prepare text for embedding (title + description)
 		const textsToEmbed = jobsWithoutEmbeddings.map((job) => {
 			const text = `${job.title || ""} ${job.description || ""}`.trim();
-			// Truncate to 8191 tokens (~32k characters max, but be conservative)
-			return text.substring(0, 8000);
+			// Truncate to prevent token limit errors (8192 token limit for text-embedding-3-small)
+			// Conservative estimate: 1 token ≈ 4 characters, so 8000 tokens ≈ 32,000 characters
+			// Keep some buffer to ensure we stay under limit
+			const MAX_CHARS = 30000; // Conservative: ~7500 tokens (well under 8192 limit)
+			return text.length > MAX_CHARS
+				? text.substring(0, MAX_CHARS - 100) + "..."
+				: text;
 		});
 
 		// Step 3: Generate embeddings using OpenAI

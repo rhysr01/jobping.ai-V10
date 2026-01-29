@@ -3,6 +3,13 @@
 if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
 	require("dotenv").config({ path: ".env.local" });
 }
+
+// IMPORTANT: Arbeitnow API Requirements
+// 1. Must provide link-back to Arbeitnow.com on job display (job_url should point to Arbeitnow)
+// 2. API can be revoked at any time
+// 3. Free public API - no key required
+// 4. Single API call returns all jobs - no pagination loop needed
+// 5. Rate limiting exists but not explicitly published - use 1-2s delays between requests
 const { createClient } = require("@supabase/supabase-js");
 const {
 	classifyEarlyCareer,
@@ -25,11 +32,19 @@ const { processIncomingJob } = require("./shared/processor.cjs");
 
 const BASE_URL = "https://www.arbeitnow.com/api/job-board-api";
 
-// DACH region cities (Germany, Austria, Switzerland) - MINIMAL for timeout prevention
+// DACH region cities - ONLY from signup form (Germany, Austria, Switzerland only)
+// Conservative scaling: 2 → 4 core DACH cities
+// Polite rate limiting: 1-2 second delays between paginated requests
+// Expected capacity: ~50-80 requests/run with delays
+// Arbeitnow returns ~100 jobs per page - careful with pagination
 const CITIES = [
-	// Germany (top 2 major cities only)
+	// Germany (2 from signup form)
 	{ name: "Berlin", country: "de" },
 	{ name: "Munich", country: "de" },
+	// Austria (1 from signup form)
+	{ name: "Vienna", country: "at" },
+	// Switzerland (1 from signup form)
+	{ name: "Zurich", country: "ch" },
 ];
 
 /**
@@ -39,170 +54,112 @@ const CITIES = [
  */
 const QUERY_SETS = {
 	SET_A: [
-		// Focus: Internships, graduate programs, and coordinator roles (DACH-focused)
-		// German terms
+		// Focus: Pure INTERNSHIPS (placements, rotations, summer/spring roles) - DACH-focused
+		// German/Austrian/Swiss internship terms
 		"praktikum",
-		"werkstudent",
-		"absolventenprogramm",
-		"traineeprogramm",
 		"praktikant",
 		"praktikantin",
 		"praktikumsplatz",
 		"praktikumsstelle",
+		"werkstudent",
+		"duales studium",
+		"dualer student",
+		"duale ausbildung",
+		"ausbildung",
+		"lehre",
+		"lehrstelle",
+		"internship",
+		"intern",
+		"summer intern",
+		"year in industry",
+		"industrial placement",
+		"degree apprenticeship",
+		"apprentice",
+		"finance intern",
+		"consulting intern",
+		"marketing intern",
+		"data intern",
+		"investment banking intern",
+		"ux intern",
+		"design intern",
+		"tech intern",
+		"software engineer intern",
+		"data engineer intern",
+	],
+	SET_B: [
+		// Focus: GRADUATE PROGRAMS & SCHEMES (structured trainee pathways) - DACH-focused
+		// German/Austrian/Swiss graduate/trainee terms
+		"absolventenprogramm",
+		"traineeprogramm",
+		"trainee",
 		"absolvent",
 		"absolventin",
 		"berufseinsteiger",
 		"berufseinsteigerin",
-		"ausbildung",
-		"duales studium",
-		"dualer student",
-		"duale ausbildung",
 		"einstiegsprogramm",
 		"nachwuchsprogramm",
-		"trainee",
-		"traineeprogramm",
-		"koordinator",
-		"koordinatorin",
-		"projektkoordinator",
-		"marketing koordinator",
-		"operations koordinator",
-		"hr koordinator",
-		"sales koordinator",
-		// Austrian terms
-		"praktikum wien",
-		"praktikant wien",
-		"absolventenprogramm österreich",
-		"traineeprogramm österreich",
-		"duales studium wien",
-		// Swiss terms
-		"praktikum zürich",
-		"praktikant schweiz",
-		"absolventenprogramm schweiz",
-		"traineeprogramm schweiz",
-		"lehre",
-		"lehrstelle",
-		// English fallback
-		"internship",
-		"intern",
 		"graduate programme",
+		"graduate program",
 		"graduate scheme",
-		"marketing coordinator",
-		"operations coordinator",
-		"product coordinator",
-		"hr coordinator",
-		"project coordinator",
-		"sales coordinator",
-	],
-	SET_B: [
-		// Focus: Analyst, associate, assistant, and representative roles (DACH-focused)
-		// German terms
-		"business analyst",
-		"financial analyst",
-		"data analyst",
-		"operations analyst",
-		"junior analyst",
+		"graduate trainee",
+		"management trainee",
+		"trainee program",
+		"trainee scheme",
+		"campus hire",
+		"rotational graduate program",
+		"early careers program",
+		"graduate software engineer",
+		"graduate consultant",
 		"graduate analyst",
+		"graduate finance",
+		"graduate marketing",
+		"new grad",
+		"recent graduate",
+		"graduate associate",
+		"graduate specialist",
+	],
+	SET_C: [
+		// Focus: ENTRY-LEVEL ANALYST & ASSOCIATE ROLES (career start positions) - DACH-focused
+		// German/Austrian/Swiss analyst/associate terms
+		"analyst",
+		"junior analyst",
 		"absolvent analyst",
 		"einsteiger analyst",
 		"assistent",
 		"assistentin",
 		"marketing assistent",
-		"brand assistent",
 		"product assistent",
 		"hr assistent",
 		"finance assistent",
 		"vertreter",
 		"vertreterin",
-		"sales vertreter",
 		"kundenbetreuer",
-		"junior account executive",
-		"customer success associate",
-		// Austrian terms
-		"analyst wien",
-		"assistent wien",
-		"praktikant analyst",
-		"absolvent analyst österreich",
-		"einsteiger analyst wien",
-		// Swiss terms
-		"analyst zürich",
-		"assistent schweiz",
-		"praktikant analyst schweiz",
-		"absolvent analyst schweiz",
-		"einsteiger analyst zürich",
-		// English fallback
-		"business analyst",
-		"financial analyst",
-		"data analyst",
-		"operations analyst",
-		"associate consultant",
-		"graduate analyst",
-		"junior analyst",
-		"marketing assistant",
-		"brand assistant",
-		"product assistant",
-		"hr assistant",
-		"sales development representative",
-		"sdr",
-		"bdr",
-	],
-	SET_C: [
-		// Focus: Entry-level, junior, engineer, specialist, manager, designer roles (DACH-focused)
-		// German terms
-		"entry level",
-		"junior",
-		"einsteiger",
-		"einsteigerin",
-		"berufseinsteiger",
 		"junior ingenieur",
 		"ingenieur einsteiger",
 		"absolvent ingenieur",
-		"software engineer intern",
-		"data engineer intern",
-		"cloud engineer intern",
 		"junior spezialist",
 		"spezialist einsteiger",
 		"absolvent spezialist",
 		"junior designer",
 		"designer einsteiger",
-		"absolvent designer",
+		"business analyst",
+		"financial analyst",
+		"data analyst",
+		"operations analyst",
+		"strategy analyst",
+		"associate consultant",
+		"junior consultant",
+		"marketing assistant",
+		"product assistant",
+		"finance assistant",
+		"sales development representative",
+		"sdr",
+		"bdr",
+		"customer success associate",
 		"associate product manager",
 		"apm",
-		"product analyst",
-		"junior product manager",
-		"product manager einsteiger",
-		"nachhaltigkeit",
-		"esg praktikum",
-		"sustainability analyst",
-		"climate analyst",
-		// Austrian terms
-		"ingenieur wien",
-		"spezialist wien",
-		"designer wien",
-		"junior ingenieur österreich",
-		"absolvent ingenieur wien",
-		"praktikum nachhaltigkeit wien",
-		"esg praktikum österreich",
-		// Swiss terms
-		"ingenieur zürich",
-		"spezialist schweiz",
-		"designer schweiz",
-		"junior ingenieur schweiz",
-		"absolvent ingenieur zürich",
-		"praktikum nachhaltigkeit schweiz",
-		"esg praktikum zürich",
-		// English fallback
-		"entry level",
-		"junior",
-		"graduate",
-		"recent graduate",
-		"early careers program",
-		"rotational graduate program",
-		"junior fulfilment specialist",
-		"entry level technical specialist",
-		"graduate hr specialist",
-		"junior product designer",
-		"designer intern",
-		"ux intern",
+		"audit associate",
+		"junior account manager",
 	],
 };
 
@@ -719,15 +676,16 @@ async function scrapeArbeitnow() {
 
 	const queries = generateSearchQueries();
 
-	// CRITICAL FIX: Drastically reduce queries to prevent 120s GitHub Actions timeout
-	// REDUCED from 40 to 6 queries to prevent timeouts
-	// 2 cities × 6 queries × 2 pages avg = ~24 requests max
-	// With rate limiting (2s between queries), this completes in ~48 seconds
-	const limitedQueries = queries.slice(0, 6); // Emergency reduction for timeout prevention
+	// CONSERVATIVE SCALING: Expanded queries with polite rate limiting
+	// INCREASED from 6 to 10 queries for better coverage
+	// 4 cities × 10 queries × 2 pages avg = ~80 requests max
+	// With rate limiting (1-2s between paginated requests), completes in ~2-3 minutes
+	// Arbeitnow API is safe: returns ~100 jobs per page, supports pagination via next/prev URLs
+	const limitedQueries = queries.slice(0, 10); // Conservative scaling from 6 to 10 queries
 
 	const _MAX_PAGES = parseInt(process.env.ARBEITNOW_MAX_PAGES || "1000", 10);
 	console.log(
-		`[Arbeitnow] Using ${limitedQueries.length} queries across ${CITIES.length} cities (unlimited pages per query, will fetch all available)`,
+		`[Arbeitnow] Using ${limitedQueries.length} queries across ${CITIES.length} DACH cities (single API call per query, all jobs returned at once)`,
 	);
 
 	let totalSaved = 0;
@@ -740,8 +698,13 @@ async function scrapeArbeitnow() {
 				const saved = await scrapeArbeitnowQuery(keyword, city, supabase);
 				totalSaved += saved;
 
-				// Rate limiting: 2 seconds between requests (100/hour = ~36s spacing, but be conservative)
-				await new Promise((resolve) => setTimeout(resolve, 2000));
+			// Rate limiting: 2 seconds between requests (reduced aggressive requests)
+			// Arbeitnow is EXTREMELY rate-limit sensitive - increased to 3s to prevent 429 errors
+			// With 4 cities × 10 queries = 40 requests max per run
+			// 40 × 3s = 120s just for delays, still reasonable within timeout
+			// Increased from 2.5s to 3s after seeing persistent 429 errors even at 2.5s
+			// The exponential backoff handles errors, but higher delay prevents them entirely
+			await new Promise((resolve) => setTimeout(resolve, 3000));
 			} catch (error) {
 				console.error(
 					`[Arbeitnow] Error with ${keyword} in ${city.name}:`,

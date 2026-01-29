@@ -101,6 +101,15 @@ function validateJob(job) {
 		warnings.push("Auto-fixed: Used fallback company_name");
 	}
 
+	// CRITICAL: Description quality check (minimum 50 characters required for AI matching)
+	// This prevents jobs with empty/inadequate descriptions from being saved
+	const description = (job.description || "").trim();
+	if (description.length < 50) {
+		errors.push(
+			`Description too short (${description.length}/<50 chars) - filtered for quality`
+		);
+	}
+
 	// WARNING: Job board detection (don't reject - let duplicate detection handle it)
 	const companyLower = (job.company || "").toLowerCase();
 	const companyNameLower = (job.company_name || "").toLowerCase();

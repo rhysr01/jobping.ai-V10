@@ -295,14 +295,17 @@ export class PrefilterService {
 		user: UserPreferences,
 	): (ScrapersJob & { freshnessTier: string })[] {
 		return jobs.filter((job) => {
-			// Basic quality checks
+			// Basic quality checks - REQUIRED fields
 			if (!job.title || !job.company || !job.description) {
 				return false;
 			}
 
 			// Filter out very old jobs (older than 30 days for free users)
+			// FIX: Use scrape_timestamp if posted_at is missing (don't default to NOW)
 			if (user.subscription_tier === "free") {
-				const jobDate = job.posted_at ? new Date(job.posted_at) : new Date();
+				const jobDate = job.posted_at 
+					? new Date(job.posted_at) 
+					: (job.scrape_timestamp ? new Date(job.scrape_timestamp) : new Date());
 				const daysOld =
 					(Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
 				if (daysOld > 30) {

@@ -22,6 +22,8 @@
 		"test:comprehensive": "npm run test:all && npm run test:production-engine && npm run test:failure-analysis",
 		"test:quality-gate": "npm run test:comprehensive && npm run type-check && npm run lint:biome",
 		"test:e2e:complete": "playwright test tests/e2e/complete-free-signup.spec.ts tests/e2e/complete-premium-signup.spec.ts",
+		"test:e2e:production": "playwright test tests/e2e/production-deployment-validation.spec.ts",
+		"test:e2e:pre-deploy": "npm run test:e2e:complete && npm run test:e2e:production",
 		"test:e2e:api-validation": "playwright test tests/e2e/api-endpoint-validation.spec.ts",
 		"test:e2e:performance": "playwright test tests/e2e/performance-validation.spec.ts",
 		"test:e2e:visual": "playwright test tests/e2e/visual-regression.spec.ts",
