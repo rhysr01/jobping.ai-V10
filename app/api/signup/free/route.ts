@@ -766,12 +766,28 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// 🔴 CRITICAL: Add country-level filtering at DB query level
 	// This prevents fetching 28k US jobs when user selects Berlin
-	if (targetCountries.size > 0) {
-		const countriesArray = Array.from(targetCountries);
+	if (targetCountryVariations.size > 0) {
+		const countriesArray = Array.from(targetCountryVariations);
 		query = query.in("country", countriesArray);
 		apiLogger.info("Free signup - country filter applied at DB level", {
 			requestId,
 			countries: countriesArray,
+		});
+
+		// Capture in Sentry for monitoring country mapping effectiveness
+		Sentry.captureMessage("Free signup - country filter applied", {
+			level: "info",
+			tags: {
+				service: "signup-free",
+				operation: "country_filtering",
+			},
+			extra: {
+				requestId,
+				targetCities,
+				targetCountries: Array.from(targetCountries),
+				targetCountryVariations: Array.from(targetCountryVariations),
+				countriesUsedInQuery: countriesArray,
+			},
 		});
 	}
 	// CRITICAL: Add limit to prevent querying massive job pools
