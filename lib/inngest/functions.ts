@@ -129,6 +129,32 @@ export const performAIMatching = inngest.createFunction(
 			}
 
 			const supabase = getDatabaseClient();
+			
+			// First, get user_id from email
+			const { data: user } = await supabase
+				.from("users")
+				.select("id")
+				.eq("email", userPrefs.email)
+				.single();
+
+			if (!user) {
+				throw new Error(`User not found for email: ${userPrefs.email}`);
+			}
+
+			// Then get job_ids from job_hashes
+			const jobHashes = matchResult.matches.map(match => String(match.job_hash));
+			const { data: jobs } = await supabase
+				.from("jobs")
+				.select("id, job_hash")
+				.in("job_hash", jobHashes);
+
+			if (!jobs || jobs.length === 0) {
+				throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
+			}
+
+			// Create lookup map for job_hash -> job_id
+			const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
+
 			const matchEntries = matchResult.matches.map((match) => {
 				// Normalize match_score to 0-1 range
 				let normalizedScore = 0.75; // Default fallback
@@ -140,20 +166,24 @@ export const performAIMatching = inngest.createFunction(
 					}
 				}
 
+				const jobId = jobHashToId.get(String(match.job_hash));
+				if (!jobId) {
+					throw new Error(`Job ID not found for hash: ${match.job_hash}`);
+				}
+
 				return {
-					user_email: userPrefs.email,
-					job_hash: String(match.job_hash),
+					user_id: user.id,
+					job_id: jobId,
 					match_score: normalizedScore,
 					match_reason: match.match_reason || "AI matched",
-					matched_at: new Date().toISOString(),
 					created_at: new Date().toISOString(),
 				};
 			});
 
 			const { data, error } = await supabase
-				.from("matches")
+				.from("user_matches")
 				.upsert(matchEntries, {
-					onConflict: "user_email,job_hash",
+					onConflict: "user_id,job_id",
 				})
 				.select();
 

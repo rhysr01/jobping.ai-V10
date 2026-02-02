@@ -531,31 +531,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		return response;
 	}
 
-	// Clean up any promo_pending entries - promo codes are for premium only, not free
-	// NOTE: exec_sql RPC doesn't exist, using direct query instead
-	try {
-		const { error: deleteError } = await supabase
-			.from("promo_pending")
-			.delete()
-			.eq("email", normalizedEmail);
-
-		if (deleteError) {
-			// Log but don't fail - this is cleanup, not critical
-			apiLogger.warn("Failed to clean up promo_pending", deleteError as Error, {
-				requestId,
-				email: normalizedEmail,
-				errorCode: deleteError.code,
-			});
-		}
-	} catch (e) {
-		// Log but don't fail - this is cleanup, not critical
-		const errorMessage = e instanceof Error ? e.message : String(e);
-		apiLogger.warn("Unexpected error cleaning up promo_pending", {
-			requestId,
-			email: normalizedEmail,
-			error: errorMessage,
-		});
-	}
+	// Note: Promo codes are stored in users table (promo_code_used, promo_expires_at)
+	// No separate promo_pending table cleanup needed
 
 	// Create free user record
 	const freeExpiresAt = new Date();

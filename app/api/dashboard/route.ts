@@ -23,7 +23,7 @@ async function getDatabaseMetrics(): Promise<DatabaseMetrics> {
 		const [usersResult, jobsResult, matchesResult] = await Promise.allSettled([
 			supabase.from("users").select("id", { count: "exact", head: true }),
 			supabase.from("jobs").select("id", { count: "exact", head: true }),
-			supabase.from("matches").select("id", { count: "exact", head: true }),
+			supabase.from("user_matches").select("id", { count: "exact", head: true }),
 		]);
 
 		return {

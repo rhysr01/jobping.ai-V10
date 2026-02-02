@@ -265,7 +265,7 @@ async function rankAndReturnMatches(
 		if (matchesToSave.length > 0) {
 			try {
 				const supabase = getDatabaseClient();
-				const { error } = await supabase.from("matches").insert(matchesToSave);
+				const { error } = await supabase.from("user_matches").insert(matchesToSave);
 
 				if (error) {
 					apiLogger.error(

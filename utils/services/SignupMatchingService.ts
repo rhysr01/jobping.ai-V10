@@ -317,19 +317,30 @@ export class SignupMatchingService {
 		try {
 			const supabase = getDatabaseClient();
 
+			// First get the user_id from email
+			const { data: user } = await supabase
+				.from("users")
+				.select("id")
+				.eq("email", email)
+				.single();
+
+			if (!user) {
+				return null; // User doesn't exist, no matches possible
+			}
+
 			// Check if matches already exist
 			const { data: existingMatches } = await supabase
-				.from("matches")
-				.select("job_hash")
-				.eq("user_email", email)
+				.from("user_matches")
+				.select("job_id")
+				.eq("user_id", user.id)
 				.limit(1);
 
 			if (existingMatches && existingMatches.length > 0) {
 				// Get actual count
 				const { count: matchCount } = await supabase
-					.from("matches")
+					.from("user_matches")
 					.select("id", { count: "exact", head: true })
-					.eq("user_email", email);
+					.eq("user_id", user.id);
 
 				return { matchCount: matchCount || 0 };
 			}
