@@ -3,6 +3,7 @@
 // Free users provide: email, name, cities, career only
 // Result: 5 matches
 
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
@@ -130,6 +131,27 @@ export async function runFreeMatching(
 		apiLogger.error("[FREE] Matching error", error as Error, {
 			email: userPrefs.email,
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+			tags: {
+				service: "FreeMatchingStrategy",
+				method: "runFreeMatching",
+				tier: "free",
+			},
+			extra: {
+				email: userPrefs.email,
+				jobsCount: jobs.length,
+				maxMatches,
+				userPreferences: {
+					target_cities: userPrefs.target_cities,
+					career_path: userPrefs.career_path,
+				},
+			},
+			user: { email: userPrefs.email },
+			level: "error",
+		});
+
 		throw error;
 	}
 }
@@ -266,6 +288,22 @@ async function rankAndReturnMatches(
 					email: userPrefs.email,
 					matchCount: matchesToSave.length,
 				});
+
+				// Capture in Sentry
+				Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+					tags: {
+						service: "FreeMatchingStrategy",
+						method: "saveMatches",
+						tier: "free",
+					},
+					extra: {
+						email: userPrefs.email,
+						matchCount: matchesToSave.length,
+						operation: "database_save",
+					},
+					user: { email: userPrefs.email },
+					level: "error",
+				});
 			}
 		}
 
@@ -279,6 +317,24 @@ async function rankAndReturnMatches(
 		apiLogger.error("[FREE] Ranking error", error as Error, {
 			email: userPrefs.email,
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+			tags: {
+				service: "FreeMatchingStrategy",
+				method: "rankJobsWithAI",
+				tier: "free",
+			},
+			extra: {
+				email: userPrefs.email,
+				jobsCount: jobs.length,
+				maxMatches,
+				operation: "ai_ranking",
+			},
+			user: { email: userPrefs.email },
+			level: "error",
+		});
+
 		throw error;
 	}
 }

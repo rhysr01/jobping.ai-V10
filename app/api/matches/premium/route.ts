@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { asyncHandler } from "../../../../lib/errors";
 import { apiLogger } from "../../../../lib/api-logger";
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
 
 export const GET = asyncHandler(async (request: NextRequest) => {
+	// Set Sentry context for this request
+	Sentry.setContext("request", {
+		url: request.url,
+		method: request.method,
+		headers: {
+			userAgent: request.headers.get("user-agent"),
+			referer: request.headers.get("referer"),
+		},
+	});
+
 	// Rate limiting - prevent abuse
 	const rateLimitResult = await getProductionRateLimiter().middleware(
 		request,

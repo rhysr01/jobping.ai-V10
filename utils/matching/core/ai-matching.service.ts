@@ -4,6 +4,7 @@
  */
 
 import OpenAI from "openai";
+import * as Sentry from "@sentry/nextjs";
 import type { Job } from "@/scrapers/types";
 import { apiLogger } from "../../../lib/api-logger";
 import { aiMatchingCache } from "../../../lib/cache";
@@ -209,6 +210,23 @@ export class AIMatchingService {
 				jobsCount: jobs.length,
 			});
 
+			// Capture in Sentry
+			Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+				tags: {
+					service: "AIMatchingService",
+					method: "getMatches",
+					provider: "openai",
+				},
+				extra: {
+					userEmail: user.email,
+					jobsCount: jobs.length,
+					subscription_tier: user.subscription_tier,
+					operation: "ai_api_call",
+				},
+				user: { email: user.email },
+				level: "error",
+			});
+
 			// Return empty results on failure
 			return [];
 		}
@@ -351,6 +369,23 @@ export class AIMatchingService {
 				responsePreview: content.substring(0, 500),
 				errorMessage: (error as Error).message,
 			});
+
+			// Capture in Sentry
+			Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+				tags: {
+					service: "AIMatchingService",
+					method: "parseResponse",
+					error_type: "response_parsing_failed",
+				},
+				extra: {
+					responsePreview: content.substring(0, 500),
+					responseLength: content.length,
+					jobsCount: jobs.length,
+					operation: "response_parsing",
+				},
+				level: "error",
+			});
+
 			return [];
 		}
 	}

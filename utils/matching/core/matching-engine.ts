@@ -4,6 +4,7 @@
  */
 
 import type { Job } from "@/scrapers/types";
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../lib/api-logger";
 import { UserChoiceRespector } from "../business-logic/user-choice-respector";
 import {
@@ -120,6 +121,23 @@ export class SimplifiedMatchingEngine {
 							userEmail: user.email,
 						},
 					);
+
+					// Capture in Sentry
+					Sentry.captureException(aiError instanceof Error ? aiError : new Error(String(aiError)), {
+						tags: {
+							service: "MatchingEngine",
+							method: "aiMatching",
+							tier: user.subscription_tier,
+							fallback_triggered: "true",
+						},
+						extra: {
+							userEmail: user.email,
+							jobsCount: allJobs.length,
+							operation: "ai_matching_fallback",
+						},
+						user: { email: user.email },
+						level: "warning",
+					});
 				}
 			}
 
@@ -184,6 +202,28 @@ export class SimplifiedMatchingEngine {
 			apiLogger.error("Matching engine failed", error as Error, {
 				userEmail: user.email,
 				totalJobs: allJobs.length,
+			});
+
+			// Capture in Sentry
+			Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+				tags: {
+					service: "MatchingEngine",
+					method: "simplifiedMatchingEngine",
+					tier: user.subscription_tier,
+				},
+				extra: {
+					userEmail: user.email,
+					totalJobs: allJobs.length,
+					maxMatches: opts.maxMatches,
+					userPreferences: {
+						target_cities: user.target_cities,
+						career_path: user.career_path,
+						subscription_tier: user.subscription_tier,
+					},
+					operation: "matching_orchestration",
+				},
+				user: { email: user.email },
+				level: "error",
 			});
 
 			// Emergency fallback - return basic matches

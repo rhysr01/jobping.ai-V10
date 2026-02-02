@@ -1,157 +1,167 @@
 {
-	"adzuna__2026-01-09": {
-		"total": 100,
-		"success": 100,
-		"errors": 0
-	},
-	"reed__2026-01-09": {
-		"total": 44,
-		"success": 44,
-		"errors": 0
-	},
-	"jooble__2026-01-09": {
-		"total": 4,
-		"success": 4,
-		"errors": 0
-	},
-	"reed__2026-01-10": {
-		"total": 116,
-		"success": 116,
-		"errors": 0
-	},
-	"jooble__2026-01-10": {
-		"total": 191,
-		"success": 191,
-		"errors": 0
-	},
-	"reed__2026-01-12": {
-		"total": 58,
-		"success": 58,
-		"errors": 0
-	},
-	"arbeitnow__2026-01-12": {
-		"total": 90,
-		"success": 71,
-		"errors": 19
-	},
-	"reed__2026-01-13": {
-		"total": 1110,
-		"success": 1110,
-		"errors": 0
-	},
-	"jooble__2026-01-13": {
-		"total": 1598,
-		"success": 1598,
-		"errors": 0
-	},
-	"adzuna__2026-01-13": {
-		"total": 918,
-		"success": 918,
-		"errors": 0
-	},
-	"adzuna__2026-01-15": {
-		"total": 1215,
-		"success": 1215,
-		"errors": 0
-	},
-	"jooble__2026-01-15": {
-		"total": 893,
-		"success": 893,
-		"errors": 0
-	},
-	"adzuna__2026-01-17": {
-		"total": 18,
-		"success": 18,
-		"errors": 0
-	},
-	"adzuna__2026-01-18": {
-		"total": 392,
-		"success": 392,
-		"errors": 0
-	},
-	"reed__2026-01-18": {
-		"total": 276,
-		"success": 276,
-		"errors": 0
-	},
-	"jooble__2026-01-18": {
-		"total": 212,
-		"success": 212,
-		"errors": 0
-	},
-	"adzuna__2026-01-20": {
-		"total": 834,
-		"success": 834,
-		"errors": 0
-	},
-	"jooble__2026-01-20": {
-		"total": 98,
-		"success": 98,
-		"errors": 0
-	},
-	"reed__2026-01-20": {
-		"total": 171,
-		"success": 171,
-		"errors": 0
-	},
-	"arbeitnow__2026-01-20": {
-		"total": 38,
-		"success": 37,
-		"errors": 1
-	},
-	"arbeitnow__2026-01-21": {
-		"total": 12,
-		"success": 11,
-		"errors": 1
-	},
-	"reed__2026-01-23": {
-		"total": 75,
-		"success": 0,
-		"errors": 75
-	},
-	"jooble__2026-01-23": {
-		"total": 13,
-		"success": 13,
-		"errors": 0
-	},
-	"adzuna__2026-01-27": {
-		"total": 272,
-		"success": 272,
-		"errors": 0
-	},
-	"jooble__2026-01-27": {
-		"total": 133,
-		"success": 133,
-		"errors": 0
-	},
-	"adzuna__2026-01-28": {
-		"total": 342,
-		"success": 342,
-		"errors": 0
-	},
-	"jooble__2026-01-28": {
-		"total": 522,
-		"success": 522,
-		"errors": 0
-	},
-	"jooble__2026-01-29": {
-		"total": 147,
-		"success": 147,
-		"errors": 0
-	},
-	"adzuna__2026-01-29": {
-		"total": 79,
-		"success": 79,
-		"errors": 0
-	},
-	"adzuna__2026-01-30": {
-		"total": 171,
-		"success": 171,
-		"errors": 0
-	},
-	"jooble__2026-01-30": {
-		"total": 103,
-		"success": 103,
-		"errors": 0
-	}
+  "adzuna__2026-01-09": {
+    "total": 100,
+    "success": 100,
+    "errors": 0
+  },
+  "reed__2026-01-09": {
+    "total": 44,
+    "success": 44,
+    "errors": 0
+  },
+  "jooble__2026-01-09": {
+    "total": 4,
+    "success": 4,
+    "errors": 0
+  },
+  "reed__2026-01-10": {
+    "total": 116,
+    "success": 116,
+    "errors": 0
+  },
+  "jooble__2026-01-10": {
+    "total": 191,
+    "success": 191,
+    "errors": 0
+  },
+  "reed__2026-01-12": {
+    "total": 58,
+    "success": 58,
+    "errors": 0
+  },
+  "arbeitnow__2026-01-12": {
+    "total": 90,
+    "success": 71,
+    "errors": 19
+  },
+  "reed__2026-01-13": {
+    "total": 1110,
+    "success": 1110,
+    "errors": 0
+  },
+  "jooble__2026-01-13": {
+    "total": 1598,
+    "success": 1598,
+    "errors": 0
+  },
+  "adzuna__2026-01-13": {
+    "total": 918,
+    "success": 918,
+    "errors": 0
+  },
+  "adzuna__2026-01-15": {
+    "total": 1215,
+    "success": 1215,
+    "errors": 0
+  },
+  "jooble__2026-01-15": {
+    "total": 893,
+    "success": 893,
+    "errors": 0
+  },
+  "adzuna__2026-01-17": {
+    "total": 18,
+    "success": 18,
+    "errors": 0
+  },
+  "adzuna__2026-01-18": {
+    "total": 392,
+    "success": 392,
+    "errors": 0
+  },
+  "reed__2026-01-18": {
+    "total": 276,
+    "success": 276,
+    "errors": 0
+  },
+  "jooble__2026-01-18": {
+    "total": 212,
+    "success": 212,
+    "errors": 0
+  },
+  "adzuna__2026-01-20": {
+    "total": 834,
+    "success": 834,
+    "errors": 0
+  },
+  "jooble__2026-01-20": {
+    "total": 98,
+    "success": 98,
+    "errors": 0
+  },
+  "reed__2026-01-20": {
+    "total": 171,
+    "success": 171,
+    "errors": 0
+  },
+  "arbeitnow__2026-01-20": {
+    "total": 38,
+    "success": 37,
+    "errors": 1
+  },
+  "arbeitnow__2026-01-21": {
+    "total": 12,
+    "success": 11,
+    "errors": 1
+  },
+  "reed__2026-01-23": {
+    "total": 75,
+    "success": 0,
+    "errors": 75
+  },
+  "jooble__2026-01-23": {
+    "total": 13,
+    "success": 13,
+    "errors": 0
+  },
+  "adzuna__2026-01-27": {
+    "total": 272,
+    "success": 272,
+    "errors": 0
+  },
+  "jooble__2026-01-27": {
+    "total": 133,
+    "success": 133,
+    "errors": 0
+  },
+  "adzuna__2026-01-28": {
+    "total": 342,
+    "success": 342,
+    "errors": 0
+  },
+  "jooble__2026-01-28": {
+    "total": 522,
+    "success": 522,
+    "errors": 0
+  },
+  "jooble__2026-01-29": {
+    "total": 147,
+    "success": 147,
+    "errors": 0
+  },
+  "adzuna__2026-01-29": {
+    "total": 79,
+    "success": 79,
+    "errors": 0
+  },
+  "adzuna__2026-01-30": {
+    "total": 171,
+    "success": 171,
+    "errors": 0
+  },
+  "jooble__2026-01-30": {
+    "total": 103,
+    "success": 103,
+    "errors": 0
+  },
+  "adzuna__2026-02-02": {
+    "total": 98,
+    "success": 98,
+    "errors": 0
+  },
+  "jooble__2026-02-02": {
+    "total": 99,
+    "success": 99,
+    "errors": 0
+  }
 }

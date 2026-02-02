@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../lib/api-logger";
 import { asyncHandler } from "../../../lib/errors";
 import { getDatabaseClient } from "../../../utils/core/database-pool";
@@ -88,6 +89,7 @@ async function sendWelcomeEmailAndTrack(
 			emailError instanceof Error ? emailError.message : String(emailError);
 		const errorStack =
 			emailError instanceof Error ? emailError.stack : undefined;
+		
 		apiLogger.error(`Welcome email (${context}) failed`, emailError as Error, {
 			email,
 			errorMessage,
@@ -95,6 +97,23 @@ async function sendWelcomeEmailAndTrack(
 			errorType: emailError?.constructor?.name,
 			rawError: String(emailError),
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(emailError instanceof Error ? emailError : new Error(errorMessage), {
+			tags: {
+				service: "premium-signup",
+				error_type: "email_delivery_failed",
+				context,
+			},
+			extra: {
+				email,
+				errorMessage,
+				errorType: emailError?.constructor?.name,
+			},
+			user: { email },
+			level: "error",
+		});
+
 		return false;
 	}
 }
@@ -355,6 +374,23 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			apiLogger.warn("Duplicate email detected during insert", {
 				email: normalizedEmail,
 			});
+
+			// Capture in Sentry - this indicates a race condition or logic issue
+			Sentry.captureMessage("Duplicate email detected during premium signup insert", {
+				level: "warning",
+				tags: {
+					service: "premium-signup",
+					error_type: "duplicate_email_race_condition",
+					errorCode: userError.code,
+				},
+				extra: {
+					email: normalizedEmail,
+					errorCode: userError.code,
+					errorMessage: userError.message,
+				},
+				user: { email: normalizedEmail },
+			});
+
 			return NextResponse.json(
 				{
 					error: "account_already_exists",
@@ -368,6 +404,24 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		// Handle RLS policy violation (42501) - indicates service role key issue
 		if (userError.code === "42501") {
+			// Capture in Sentry - this is a critical configuration issue
+			Sentry.captureException(new Error(`RLS Policy Violation: ${userError.message}`), {
+				tags: {
+					service: "premium-signup",
+					error_type: "rls_policy_violation",
+					errorCode: userError.code,
+					critical: "true",
+				},
+				extra: {
+					email: data.email,
+					errorCode: userError.code,
+					errorMessage: userError.message,
+					hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+					hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+				},
+				user: { email: data.email },
+				level: "error",
+			});
 			const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 			const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 			const hasServiceRoleKey = !!serviceRoleKey;
@@ -434,6 +488,24 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			errorCode: userError.code,
 			errorMessage: userError.message,
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(new Error(`Failed to create user: ${userError.message}`), {
+			tags: {
+				service: "premium-signup",
+				error_type: "user_creation_failed",
+				errorCode: userError.code,
+			},
+			extra: {
+				email: data.email,
+				errorCode: userError.code,
+				errorMessage: userError.message,
+				userData: { ...userData, email: "[REDACTED]" }, // Redact email for privacy
+			},
+			user: { email: data.email },
+			level: "error",
+		});
+
 		return NextResponse.json(
 			{ error: "Failed to create user" },
 			{ status: 500 },

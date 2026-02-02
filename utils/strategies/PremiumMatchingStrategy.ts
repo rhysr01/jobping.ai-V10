@@ -3,6 +3,7 @@
 // Premium users provide: cities, career, work env, visa, languages, etc.
 // Result: 15 matches
 
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
@@ -196,6 +197,30 @@ export async function runPremiumMatching(
 		apiLogger.error("[PREMIUM] Matching error", error as Error, {
 			email: userPrefs.email,
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+			tags: {
+				service: "PremiumMatchingStrategy",
+				method: "runPremiumMatching",
+				tier: "premium",
+			},
+			extra: {
+				email: userPrefs.email,
+				jobsCount: jobs.length,
+				maxMatches,
+				userPreferences: {
+					target_cities: userPrefs.target_cities,
+					career_path: userPrefs.career_path,
+					languages_spoken: userPrefs.languages_spoken,
+					work_environment: userPrefs.work_environment,
+					visa_status: userPrefs.visa_status,
+				},
+			},
+			user: { email: userPrefs.email },
+			level: "error",
+		});
+
 		throw error;
 	}
 }
@@ -281,6 +306,24 @@ async function rankAndReturnMatches(
 		apiLogger.error("[PREMIUM] Deep AI ranking error", error as Error, {
 			email: userPrefs.email,
 		});
+
+		// Capture in Sentry
+		Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+			tags: {
+				service: "PremiumMatchingStrategy",
+				method: "deepAIRanking",
+				tier: "premium",
+			},
+			extra: {
+				email: userPrefs.email,
+				jobsCount: jobs.length,
+				maxMatches,
+				operation: "ai_ranking",
+			},
+			user: { email: userPrefs.email },
+			level: "error",
+		});
+
 		throw error;
 	}
 }

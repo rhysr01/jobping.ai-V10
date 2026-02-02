@@ -1,10 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { asyncHandler } from "../../../../lib/errors";
 import { apiLogger } from "../../../../lib/api-logger";
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
 
 export const GET = asyncHandler(async (request: NextRequest) => {
+	// Set Sentry context for this request
+	Sentry.setContext("request", {
+		url: request.url,
+		method: request.method,
+		headers: {
+			userAgent: request.headers.get("user-agent"),
+			referer: request.headers.get("referer"),
+		},
+	});
+
 	// Rate limiting - prevent abuse
 	const rateLimitResult = await getProductionRateLimiter().middleware(
 		request,
@@ -52,6 +63,22 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		apiLogger.warn("Free matches - user not found", {
 			email: userEmail,
 		});
+
+		// Capture in Sentry - this could indicate a data integrity issue
+		Sentry.captureMessage("Free matches - user not found", {
+			level: "warning",
+			tags: {
+				service: "matches-free",
+				error_type: "user_not_found",
+				tier: "free",
+			},
+			extra: {
+				email: userEmail,
+				operation: "user_lookup",
+			},
+			user: { email: userEmail },
+		});
+
 		return NextResponse.json(
 			{
 				error: "user_not_found",
@@ -89,7 +116,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				experience_required,
 				salary_min,
 				salary_max,
-				visa_sponsorship
+				visa_sponsored
 			)
 		`)
 		.eq("user_id", user.id)
@@ -104,6 +131,25 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				email: userEmail,
 			},
 		);
+
+		// Capture in Sentry
+		Sentry.captureException(new Error(`Failed to fetch free user matches: ${matchesError.message}`), {
+			tags: {
+				service: "matches-free",
+				error_type: "database_query_failed",
+				tier: "free",
+			},
+			extra: {
+				email: userEmail,
+				userId: user?.id,
+				errorCode: matchesError.code,
+				errorMessage: matchesError.message,
+				operation: "fetch_user_matches",
+			},
+			user: { email: userEmail },
+			level: "error",
+		});
+
 		return NextResponse.json(
 			{
 				error: "database_error",
