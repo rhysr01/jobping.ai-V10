@@ -91,11 +91,11 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	// Get user's matches with job details
 	const { data: matches, error: matchesError } = await supabase
 		.from("user_matches")
-		.select(`
-			job_id,
+		.select(
+			`job_id,
 			match_score,
 			match_reason,
-			created_at as matched_at,
+			created_at,
 			jobs:job_id (
 				id,
 				job_hash,
@@ -117,8 +117,8 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				salary_min,
 				salary_max,
 				visa_sponsored
-			)
-		`)
+			)`
+		)
 		.eq("user_id", user.id)
 		.order("match_score", { ascending: false })
 		.order("created_at", { ascending: false });

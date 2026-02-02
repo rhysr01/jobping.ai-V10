@@ -91,13 +91,13 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get user's matches with job details (premium gets more comprehensive data)
 	const { data: matches, error: matchesError } = await supabase
-		.from("matches")
+		.from("user_matches")
 		.select(`
-			job_hash,
+			job_id,
 			match_score,
 			match_reason,
-			matched_at,
-			jobs:job_hash (
+			created_at,
+			jobs:job_id (
 				id,
 				job_hash,
 				title,
@@ -130,9 +130,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 				language_requirements
 			)
 		`)
-		.eq("user_email", userEmail)
+		.eq("user_id", user.id)
 		.order("match_score", { ascending: false })
-		.order("matched_at", { ascending: false });
+		.order("created_at", { ascending: false });
 
 	if (matchesError) {
 		apiLogger.error(
@@ -197,17 +197,16 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get target companies for this premium user (more detailed for premium)
 	const { data: targetCompanies } = await supabase
-		.from("matches")
+		.from("user_matches")
 		.select(`
-			jobs:job_hash (
+			jobs:job_id (
 				company,
 				posted_at,
-				career_path,
-				primary_category
+				categories
 			)
 		`)
-		.eq("user_email", userEmail)
-		.order("matched_at", { ascending: false });
+		.eq("user_id", user.id)
+		.order("created_at", { ascending: false });
 
 	// Aggregate target companies with premium-level detail
 	const companyStats = new Map<
