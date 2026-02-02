@@ -764,29 +764,37 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		"is_internship.eq.true,is_graduate.eq.true,is_early_career.eq.true",
 	);
 
-	// 🔴 CRITICAL: Add country-level filtering at DB query level
-	// This prevents fetching 28k US jobs when user selects Berlin
-	if (targetCountryVariations.size > 0) {
-		const countriesArray = Array.from(targetCountryVariations);
-		query = query.in("country", countriesArray);
-		apiLogger.info("Free signup - country filter applied at DB level", {
+	// 🔴 CRITICAL: Add city-level filtering at DB query level
+	// This prevents fetching irrelevant jobs and improves performance
+	if (targetCities.length > 0) {
+		// Create city variations (handle case differences)
+		const cityVariations = new Set<string>();
+		targetCities.forEach(city => {
+			cityVariations.add(city); // Original case
+			cityVariations.add(city.toLowerCase()); // Lowercase
+			cityVariations.add(city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()); // Capitalized
+		});
+		
+		const citiesArray = Array.from(cityVariations);
+		query = query.in("city", citiesArray);
+		
+		apiLogger.info("Free signup - city filter applied at DB level", {
 			requestId,
-			countries: countriesArray,
+			targetCities,
+			citiesArray,
 		});
 
-		// Capture in Sentry for monitoring country mapping effectiveness
-		Sentry.captureMessage("Free signup - country filter applied", {
+		// Capture in Sentry for monitoring city mapping effectiveness
+		Sentry.captureMessage("Free signup - city filter applied", {
 			level: "info",
 			tags: {
 				service: "signup-free",
-				operation: "country_filtering",
+				operation: "city_filtering",
 			},
 			extra: {
 				requestId,
 				targetCities,
-				targetCountries: Array.from(targetCountries),
-				targetCountryVariations: Array.from(targetCountryVariations),
-				countriesUsedInQuery: countriesArray,
+				citiesArray,
 			},
 		});
 	}
