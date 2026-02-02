@@ -12,6 +12,7 @@
  */
 
 import { randomUUID } from "crypto";
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../lib/api-logger";
 import { getDatabaseClient } from "../core/database-pool";
 import type { JobMatch, UserPreferences } from "../matching/types";
@@ -132,7 +133,49 @@ export class SignupMatchingService {
 			}
 
 			// STEP 2: FETCH JOBS - Tier-aware job selection
-			const jobs = await SignupMatchingService.fetchJobsForTier(config);
+			let jobs: any[];
+			try {
+				jobs = await SignupMatchingService.fetchJobsForTier(config);
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error);
+				apiLogger.error(
+					`[${config.tier.toUpperCase()}] Failed to fetch jobs for matching`,
+					error instanceof Error ? error : new Error(errorMessage),
+					{
+						email,
+						requestId: requestIdStr,
+						tier: config.tier,
+					},
+				);
+
+				// Capture in Sentry with user context
+				Sentry.captureException(error instanceof Error ? error : new Error(errorMessage), {
+					tags: {
+						service: "SignupMatchingService",
+						method: "runMatching",
+						tier: config.tier,
+						step: "fetch_jobs",
+					},
+					extra: {
+						email,
+						requestId: requestIdStr,
+						tier: config.tier,
+						jobFreshnessDays: config.jobFreshnessDays,
+					},
+					user: { email },
+					level: "error",
+				});
+
+				return {
+					success: false,
+					matchCount: 0,
+					matches: [],
+					processingTime: Date.now() - startTime,
+					method: "ai",
+					error: "DATABASE_ERROR",
+				};
+			}
+
 			if (jobs.length === 0) {
 				apiLogger.warn(
 					`[${config.tier.toUpperCase()}] No jobs available for matching`,
@@ -308,6 +351,7 @@ export class SignupMatchingService {
 	 * Fetch jobs based on tier-specific freshness requirements
 	 * CRITICAL: Database-level limit prevents massive job pool bloat
 	 * FIX: Handle null posted_at values using or() to prevent 500 errors
+	 * FIX: Add proper error handling for Supabase query failures
 	 */
 	private static async fetchJobsForTier(
 		config: MatchingConfig,
@@ -316,23 +360,76 @@ export class SignupMatchingService {
 		const freshnessDate = new Date();
 		freshnessDate.setDate(freshnessDate.getDate() - config.jobFreshnessDays);
 
-		const { data: jobs } = await supabase
-			.from("jobs")
-			.select(`
-			id, job_hash, title, company, location, city, country, job_url, description,
-			experience_required, work_environment, source, categories, company_profile_url,
-			language_requirements, scrape_timestamp, original_posted_date, posted_at,
-			last_seen_at, is_active, scraper_run_id, created_at, is_internship, is_graduate,
-			visa_friendly, visa_sponsored, status, filtered_reason
-		`)
-			.eq("is_active", true)
-			.eq("status", "active")
-			.is("filtered_reason", null)
-			.or(`posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`)
-			.order("created_at", { ascending: false })
-			.limit(config.maxJobsToFetch); // PRODUCTION FIX: Prevent massive DB scans
+		try {
+			const { data: jobs, error } = await supabase
+				.from("jobs")
+				.select(`
+				id, job_hash, title, company, location, city, country, job_url, description,
+				experience_required, work_environment, source, categories, company_profile_url,
+				language_requirements, scrape_timestamp, original_posted_date, posted_at,
+				last_seen_at, is_active, scraper_run_id, created_at, is_internship, is_graduate,
+				visa_friendly, visa_sponsored, status, filtered_reason
+			`)
+				.eq("is_active", true)
+				.eq("status", "active")
+				.is("filtered_reason", null)
+				.or(`posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`)
+				.order("created_at", { ascending: false })
+				.limit(config.maxJobsToFetch); // PRODUCTION FIX: Prevent massive DB scans
 
-		return jobs || [];
+			if (error) {
+				const errorDetails = {
+					tier: config.tier,
+					error: error.message,
+					errorCode: error.code,
+					freshnessDate: freshnessDate.toISOString(),
+					jobFreshnessDays: config.jobFreshnessDays,
+					query: `posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`,
+				};
+
+				apiLogger.error("Database error fetching jobs for tier", new Error(error.message), errorDetails);
+				
+				// Capture in Sentry with detailed context
+				Sentry.captureException(new Error(`Database query failed: ${error.message}`), {
+					tags: {
+						service: "SignupMatchingService",
+						method: "fetchJobsForTier",
+						tier: config.tier,
+						errorCode: error.code,
+					},
+					extra: errorDetails,
+					level: "error",
+				});
+
+				throw new Error(`Database query failed: ${error.message}`);
+			}
+
+			return jobs || [];
+		} catch (error) {
+			const errorDetails = {
+				tier: config.tier,
+				error: error instanceof Error ? error.message : String(error),
+				freshnessDate: freshnessDate.toISOString(),
+				jobFreshnessDays: config.jobFreshnessDays,
+			};
+
+			apiLogger.error("Failed to fetch jobs for tier", error instanceof Error ? error : new Error(String(error)), errorDetails);
+			
+			// Capture in Sentry if not already captured
+			if (!(error instanceof Error && error.message.includes("Database query failed"))) {
+				Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+					tags: {
+						service: "SignupMatchingService",
+						method: "fetchJobsForTier",
+						tier: config.tier,
+					},
+					extra: errorDetails,
+					level: "error",
+				});
+			}
+
+			throw error;
+		}
 	}
 }
 

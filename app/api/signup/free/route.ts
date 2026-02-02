@@ -987,6 +987,44 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	if (matchesCount === 0) {
 		const matchingReason =
 			matchingResult.error || "No jobs matched user criteria after filtering";
+		
+		// Handle database errors differently from no-match scenarios
+		if (matchingResult.error === "DATABASE_ERROR") {
+			apiLogger.error("Free signup - database error during job fetching", new Error("Database error during job fetching"), {
+				requestId,
+				email: normalizedEmail,
+				method: matchingResult.method,
+				userCriteria: {
+					cities: targetCities,
+					careerPath: userData.career_path,
+					visaStatus: userData.visa_status,
+				},
+			});
+			
+			Sentry.captureMessage("Free signup - database error during job fetching", {
+				level: "error",
+				tags: { endpoint: "signup-free", error_type: "database_error" },
+				extra: {
+					requestId,
+					email: normalizedEmail,
+					method: matchingResult.method,
+					cities: targetCities,
+					careerPath: userData.career_path,
+				},
+				user: { email: normalizedEmail },
+			});
+			
+			return NextResponse.json(
+				{
+					error: "database_error",
+					message: "We're experiencing technical difficulties. Please try again in a few minutes.",
+					requestId,
+				},
+				{ status: 500 },
+			);
+		}
+
+		// Regular no-matches scenario
 		apiLogger.info("Free signup - no matches found for user criteria", {
 			requestId,
 			email: normalizedEmail,
