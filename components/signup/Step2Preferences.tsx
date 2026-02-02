@@ -152,17 +152,7 @@ export const Step2Preferences = React.memo(function Step2Preferences({
 								setTouchedFields((prev) => new Set(prev).add("visaStatus"))
 							}
 						>
-							{[
-								"EU citizen",
-								"EEA citizen (Iceland, Liechtenstein, Norway)",
-								"Swiss citizen",
-								"UK citizen",
-								"Dual EU & UK citizenship",
-								"Student Visa (EU)",
-								"Student Visa (Non-EU)",
-								"Non-EU (require sponsorship)",
-								"Non-UK (require sponsorship)",
-							].map((visa) => (
+							{["Yes, definitely", "Maybe", "No"].map((visa) => (
 								<motion.button
 									key={visa}
 									type="button"
@@ -204,7 +194,7 @@ export const Step2Preferences = React.memo(function Step2Preferences({
 						</label>
 						<p className="text-sm text-zinc-200 mb-4">
 							Select the experience levels you're interested in (internships,
-							graduate roles, junior positions)
+							graduate programmes, or entry-level roles)
 						</p>
 						<div
 							id="entry-level-field"

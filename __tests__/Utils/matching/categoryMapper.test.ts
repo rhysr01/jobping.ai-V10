@@ -34,9 +34,7 @@ describe("categoryMapper", () => {
 			expect(mapFormLabelToDatabase("Finance & Investment")).toBe(
 				"finance-investment",
 			);
-			expect(mapFormLabelToDatabase("Data & Analytics")).toBe(
-				"data-analytics",
-			);
+			expect(mapFormLabelToDatabase("Data & Analytics")).toBe("data-analytics");
 		});
 
 		it('should handle "Not Sure Yet / General"', () => {
@@ -122,10 +120,7 @@ describe("categoryMapper", () => {
 			const jobCategories = ["finance-investment", "early-career"];
 			const userFormValues = ["finance-investment"];
 
-			const score = getStudentSatisfactionScore(
-				jobCategories,
-				userFormValues,
-			);
+			const score = getStudentSatisfactionScore(jobCategories, userFormValues);
 
 			expect(score).toBeGreaterThan(0);
 			expect(score).toBeLessThanOrEqual(100);
@@ -135,10 +130,7 @@ describe("categoryMapper", () => {
 			const jobCategories = ["retail-luxury"]; // Not in user preferences
 			const userFormValues = ["finance-investment"];
 
-			const score = getStudentSatisfactionScore(
-				jobCategories,
-				userFormValues,
-			);
+			const score = getStudentSatisfactionScore(jobCategories, userFormValues);
 
 			expect(score).toBe(0);
 		});
@@ -147,10 +139,7 @@ describe("categoryMapper", () => {
 			const jobCategories = ["finance-investment", "early-career"];
 			const userFormValues: string[] = [];
 
-			const score = getStudentSatisfactionScore(
-				jobCategories,
-				userFormValues,
-			);
+			const score = getStudentSatisfactionScore(jobCategories, userFormValues);
 
 			expect(score).toBe(1);
 		});
@@ -159,10 +148,7 @@ describe("categoryMapper", () => {
 			const jobCategories = ["finance-investment", "data-analytics"];
 			const userFormValues = ["finance-investment", "data-analytics"];
 
-			const score = getStudentSatisfactionScore(
-				jobCategories,
-				userFormValues,
-			);
+			const score = getStudentSatisfactionScore(jobCategories, userFormValues);
 
 			expect(score).toBeGreaterThan(0);
 		});

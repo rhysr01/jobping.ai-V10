@@ -1,69 +1,69 @@
 {
-  "timestamp": "2026-01-20T16:19:54.791Z",
-  "totalTests": 412,
-  "passedTests": 395,
-  "failedTests": 17,
-  "skippedTests": 0,
-  "duration": 145,
-  "testCategories": {
-    "visual": {
-      "passed": 82,
-      "failed": 2,
-      "duration": 180
-    },
-    "chaos": {
-      "passed": 40,
-      "failed": 2,
-      "duration": 420
-    },
-    "component": {
-      "passed": 34,
-      "failed": 2,
-      "duration": 120
-    },
-    "e2e": {
-      "passed": 147,
-      "failed": 7,
-      "duration": 720
-    },
-    "unit": {
-      "passed": 45,
-      "failed": 3,
-      "duration": 30
-    },
-    "api": {
-      "passed": 47,
-      "failed": 1,
-      "duration": 180
-    }
-  },
-  "performance": {
-    "averageResponseTime": 2.3,
-    "slowestTest": {
-      "name": "Complete Premium User Journey",
-      "duration": 45
-    },
-    "fastestTest": {
-      "name": "Button Component Variants",
-      "duration": 0.8
-    }
-  },
-  "reliability": {
-    "passRate": 96.1,
-    "flakyTests": [
-      "Database Connection Recovery",
-      "AI Service Timeout Handling",
-      "Mobile Responsive Layout"
-    ],
-    "environmentalFailures": [
-      "Rate limiting during peak hours",
-      "Network timeouts in CI environment"
-    ]
-  },
-  "coverage": {
-    "lines": 87.3,
-    "functions": 89.1,
-    "branches": 82.4,
-    "statements": 87.8
-  }
+	"timestamp": "2026-01-20T16:19:54.791Z",
+	"totalTests": 412,
+	"passedTests": 395,
+	"failedTests": 17,
+	"skippedTests": 0,
+	"duration": 145,
+	"testCategories": {
+		"visual": {
+			"passed": 82,
+			"failed": 2,
+			"duration": 180
+		},
+		"chaos": {
+			"passed": 40,
+			"failed": 2,
+			"duration": 420
+		},
+		"component": {
+			"passed": 34,
+			"failed": 2,
+			"duration": 120
+		},
+		"e2e": {
+			"passed": 147,
+			"failed": 7,
+			"duration": 720
+		},
+		"unit": {
+			"passed": 45,
+			"failed": 3,
+			"duration": 30
+		},
+		"api": {
+			"passed": 47,
+			"failed": 1,
+			"duration": 180
+		}
+	},
+	"performance": {
+		"averageResponseTime": 2.3,
+		"slowestTest": {
+			"name": "Complete Premium User Journey",
+			"duration": 45
+		},
+		"fastestTest": {
+			"name": "Button Component Variants",
+			"duration": 0.8
+		}
+	},
+	"reliability": {
+		"passRate": 96.1,
+		"flakyTests": [
+			"Database Connection Recovery",
+			"AI Service Timeout Handling",
+			"Mobile Responsive Layout"
+		],
+		"environmentalFailures": [
+			"Rate limiting during peak hours",
+			"Network timeouts in CI environment"
+		]
+	},
+	"coverage": {
+		"lines": 87.3,
+		"functions": 89.1,
+		"branches": 82.4,
+		"statements": 87.8
+	}
 }

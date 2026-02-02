@@ -79,8 +79,7 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 	// 🟢 FIXED BUG #14: Only redirect to billing if premium AND subscription not already active
 	// This prevents showing billing page to users with active subscriptions or promo codes
 	const shouldShowBilling =
-		user?.subscription_tier === "premium" &&
-		!user?.subscription_active;
+		user?.subscription_tier === "premium" && !user?.subscription_active;
 
 	const redirectUrl = shouldShowBilling
 		? `${baseUrl}/billing?verified=true&email=${encodeURIComponent(email)}`

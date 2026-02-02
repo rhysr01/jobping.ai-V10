@@ -16,6 +16,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
 const { processIncomingJob } = require("../scrapers/shared/processor.cjs");
+const { mapCategory } = require("../scrapers/shared/categoryMapper.cjs");
 
 function getSupabase() {
 	const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -89,31 +90,50 @@ const TECH_SEARCH_TERMS = [
 // TECH-HUB CITIES (prioritize locations with high tech concentration)
 // Using full country names as required by JobSpy
 const TECH_HUBS = [
-	"San Francisco", "usa",
-	"Seattle", "usa",
-	"Austin", "usa",
-	"New York", "usa",
-	"Boston", "usa",
-	"London", "uk",
-	"Berlin", "germany",
-	"Amsterdam", "netherlands",
-	"Paris", "france",
-	"Stockholm", "sweden",
-	"Zurich", "switzerland",
-	"Tel Aviv", "israel",
-	"Bangalore", "india",
-	"Singapore", "singapore",
-	"Sydney", "australia",
-	"Toronto", "canada",
-	"Vancouver", "canada"
+	"San Francisco",
+	"usa",
+	"Seattle",
+	"usa",
+	"Austin",
+	"usa",
+	"New York",
+	"usa",
+	"Boston",
+	"usa",
+	"London",
+	"uk",
+	"Berlin",
+	"germany",
+	"Amsterdam",
+	"netherlands",
+	"Paris",
+	"france",
+	"Stockholm",
+	"sweden",
+	"Zurich",
+	"switzerland",
+	"Tel Aviv",
+	"israel",
+	"Bangalore",
+	"india",
+	"Singapore",
+	"singapore",
+	"Sydney",
+	"australia",
+	"Toronto",
+	"canada",
+	"Vancouver",
+	"canada",
 ];
 
 async function runTechFocusedScraping() {
-	console.log('🚀 STARTING TECH-FOCUSED JOB SCRAPING');
-	console.log('======================================');
-	console.log(`🎯 Target: ${TECH_SEARCH_TERMS.length} tech-specific search terms`);
-	console.log(`🏙️ Cities: ${TECH_HUBS.length/2} global tech hubs`);
-	console.log('');
+	console.log("🚀 STARTING TECH-FOCUSED JOB SCRAPING");
+	console.log("======================================");
+	console.log(
+		`🎯 Target: ${TECH_SEARCH_TERMS.length} tech-specific search terms`,
+	);
+	console.log(`🏙️ Cities: ${TECH_HUBS.length / 2} global tech hubs`);
+	console.log("");
 
 	const supabase = getSupabase();
 	let totalJobsProcessed = 0;
@@ -166,28 +186,34 @@ except Exception as e:
     sys.exit(1)
 `;
 
-				const result = spawnSync('python3', ['-c', pythonScript], {
-					stdio: ['pipe', 'pipe', 'pipe'],
-					encoding: 'utf8',
-					timeout: 45000 // 45 second timeout
+				const result = spawnSync("python3", ["-c", pythonScript], {
+					stdio: ["pipe", "pipe", "pipe"],
+					encoding: "utf8",
+					timeout: 45000, // 45 second timeout
 				});
 
 				if (result.error || result.stderr) {
-					console.log(`❌ Python error for "${searchTerm}":`, result.stderr || result.error.message);
+					console.log(
+						`❌ Python error for "${searchTerm}":`,
+						result.stderr || result.error.message,
+					);
 					continue;
 				}
 
 				let jobs = [];
 				try {
 					const output = result.stdout.trim();
-					if (output.startsWith('ERROR:')) {
+					if (output.startsWith("ERROR:")) {
 						console.log(`❌ JobSpy error for "${searchTerm}":`, output);
 						continue;
 					}
 					jobs = JSON.parse(output);
 				} catch (parseError) {
-					console.log(`❌ JSON parse error for "${searchTerm}":`, parseError.message);
-					console.log('Raw output:', result.stdout.substring(0, 200));
+					console.log(
+						`❌ JSON parse error for "${searchTerm}":`,
+						parseError.message,
+					);
+					console.log("Raw output:", result.stdout.substring(0, 200));
 					continue;
 				}
 
@@ -200,13 +226,14 @@ except Exception as e:
 				for (const jobData of jobs) {
 					try {
 						const processed = await processIncomingJob(jobData, {
-							source: 'jobspy-tech'
+							source: "jobspy-tech",
+							categories: [mapCategory("tech")], // Map tech to tech-transformation
 						});
 
 						if (processed) {
 							const { error } = await supabase
-								.from('jobs')
-								.upsert(processed, { onConflict: 'job_hash' });
+								.from("jobs")
+								.upsert(processed, { onConflict: "job_hash" });
 
 							if (!error) {
 								batchSaved++;
@@ -218,26 +245,32 @@ except Exception as e:
 					}
 				}
 
-				console.log(`✅ Batch complete: ${batchProcessed} processed, ${batchSaved} saved`);
+				console.log(
+					`✅ Batch complete: ${batchProcessed} processed, ${batchSaved} saved`,
+				);
 				totalJobsProcessed += batchProcessed;
 				totalJobsSaved += batchSaved;
 
 				// Small delay between batches
-				await new Promise(resolve => setTimeout(resolve, 2000));
-
+				await new Promise((resolve) => setTimeout(resolve, 2000));
 			} catch (error) {
-				console.log(`❌ Error with search term "${searchTerm}":`, error.message);
+				console.log(
+					`❌ Error with search term "${searchTerm}":`,
+					error.message,
+				);
 			}
 		}
 
 		console.log(`🏙️ Completed ${city}: ${totalJobsSaved} jobs saved so far`);
 	}
 
-	console.log('\n🎉 TECH-FOCUSED SCRAPING COMPLETE');
-	console.log('==================================');
+	console.log("\n🎉 TECH-FOCUSED SCRAPING COMPLETE");
+	console.log("==================================");
 	console.log(`📊 Total Jobs Processed: ${totalJobsProcessed}`);
 	console.log(`💾 Total Jobs Saved: ${totalJobsSaved}`);
-	console.log(`📈 Success Rate: ${totalJobsProcessed > 0 ? ((totalJobsSaved/totalJobsProcessed)*100).toFixed(1) : 0}%`);
+	console.log(
+		`📈 Success Rate: ${totalJobsProcessed > 0 ? ((totalJobsSaved / totalJobsProcessed) * 100).toFixed(1) : 0}%`,
+	);
 }
 
 // Run the tech-focused scraping

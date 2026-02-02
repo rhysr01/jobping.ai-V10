@@ -59,6 +59,10 @@
 		{
 			"path": "/api/cron/run-filtering",
 			"schedule": "0 */6 * * *"
+		},
+		{
+			"path": "/api/cron/cleanup-job-categories",
+			"schedule": "0 4 * * *"
 		}
 	],
 	"headers": [

@@ -48,70 +48,94 @@ ${jobList}`;
 	}
 
 	/**
-	 * System prompt - premium career counselor (4-step form depth)
+	 * System prompt - premium career counselor (Step 2 preferences)
 	 */
 	private static get systemPrompt(): string {
 		return `You are JobPing's premium career strategist for €5/month subscribers.
-You provide detailed career guidance based on comprehensive student profiles from our 4-step assessment.
+You provide strategic job recommendations based on user preferences collected in our Step 2 career form.
 
-STUDENT PERSPECTIVE: "I've completed JobPing's detailed career assessment. Now I need strategic advice on my next 15 career moves."
-YOUR ROLE: Act as their personal career counselor, providing strategic recommendations that align with their long-term professional trajectory.
+USER PERSPECTIVE: "I've told JobPing my career goals and preferences. Now I need 15 strategic opportunities that match what I'm actually looking for."
+YOUR ROLE: Act as their personal career counselor, providing strategic recommendations that align with their stated preferences and career path.
 
-Focus on TRUST: Show you understand their detailed profile and career goals by recommending positions they would confidently pursue.`;
+Focus on ACCURACY: Show you understand their preferences by recommending positions that match their languages, work environment, visa needs, and entry level requirements.`;
 	}
 
 	/**
 	 * Build comprehensive user profile for premium tier
+	 * PREMIUM TIER COLLECTS (Step 2): target_cities, career_path, languages_spoken, work_environment, visa_status, entry_level_preference
 	 */
 	private static buildUserProfile(user: UserPreferences): string {
-		const skills = Array.isArray(user.skills)
-			? user.skills.join(", ")
-			: user.skills || "Open";
-		const industries = Array.isArray(user.industries)
-			? user.industries.join(", ")
-			: user.industries || "Flexible";
 		const cities = Array.isArray(user.target_cities)
 			? user.target_cities.join(", ")
 			: user.target_cities || "Flexible";
-		const roles = Array.isArray(user.roles_selected)
-			? user.roles_selected.join(", ")
-			: user.roles_selected || "Open";
 		const careerPaths = Array.isArray(user.career_path)
 			? user.career_path.join(" or ")
 			: user.career_path || "Open";
+		const languages = Array.isArray(user.languages_spoken)
+			? user.languages_spoken.join(", ")
+			: "English";
+		const workEnv = Array.isArray(user.work_environment)
+			? user.work_environment.join(", ")
+			: user.work_environment || "Flexible";
+		const entryLevel = Array.isArray(user.entry_level_preference)
+			? user.entry_level_preference.join(", ")
+			: "Entry-level";
+		const visa = user.visa_status || "EU citizen";
 
-		return `STUDENT REQUEST: "${careerPaths} roles in ${cities}"
+		return `USER REQUEST: "${careerPaths} roles in ${cities}"
 
-COMPREHENSIVE STUDENT PROFILE (4-Step Career Assessment Completed):
-- Career paths: ${careerPaths} (can explore up to 2 career directions)
-- Detailed career assessment: ${user.career_keywords || "Career growth focused"}
-- Technical & soft skills: ${skills}
-- Preferred industries: ${industries}
-- Target roles: ${roles}
-- Geographic preferences: ${cities}
-- Experience level: ${user.entry_level_preference || "Progressive"}
-- Company size preference: ${user.company_size_preference || "Open"}
-- Work environment: ${user.work_environment || "Flexible"}
-- Visa considerations: ${user.visa_status || "EU citizen"}
-- Professional expertise: ${user.professional_expertise || "Business foundation"}
+COMPREHENSIVE USER PROFILE (Step 2 Career Preferences):
+- Career paths: ${careerPaths} (1-2 selected MBA paths - multi-career exploration)
+- Target locations: ${cities}
+- Languages spoken: ${languages}
+- Work environment preference: ${workEnv}
+- Role type preference: ${entryLevel}
+- Visa sponsorship needed: ${visa}
 
-NOTE: This premium student can explore up to 2 career paths. Show you understand their multi-path career exploration by recommending positions across their chosen career directions.`;
+IMPORTANT JOB FILTERS:
+- ONLY jobs posted within LAST 7 DAYS
+- Premium users deserve the freshest opportunities
+- Fresher jobs = better career timing
+
+MATCHING PRIORITIES:
+- Language requirements MUST align with ${languages}
+- Work environment: ${workEnv}
+- Entry level requirement: ${entryLevel}
+- Visa sponsorship: ${visa}
+
+MULTI-PATH STRATEGY: This premium user can explore 1-2 career paths. Show you understand their multi-direction career interests by recommending positions that intelligently span their chosen career directions.
+
+NOTE: This premium user has completed Step 2 career preferences. Provide strategic career recommendations based on their actual collected preferences.`;
 	}
 
 	/**
-	 * Task instruction for premium tier - career counselor with 4-step depth
+	 * Task instruction for premium tier - career counselor with Step 2 preferences
 	 */
 	private static taskInstruction(_user: UserPreferences): string {
 		return `CRITICAL: You MUST respond with VALID JSON only. No text, no explanations, no markdown formatting.
 
-As this student's premium career counselor, analyze the job list and return EXACTLY 15 high-quality matches in the specified JSON format.
+As this user's premium career counselor, analyze the job list and return EXACTLY 15 high-quality matches in the specified JSON format.
 
 MATCHING CRITERIA:
-- Match scores: 85-100 (premium quality only)
-- Career alignment: 90%+ match with user's career paths
-- Skills fit: 90%+ match with user's technical skills
+- Career alignment: Must match user's 1-2 selected career paths
 - Geographic fit: Perfect city match required
+- Language fit: Jobs must match user's language requirements
+- Work environment: Must align with user's work environment preference
+- Visa sponsorship: Must match user's visa status needs
+- Experience level: Must match user's entry level preference
+- Job freshness: ONLY jobs posted within LAST 7 DAYS (premium benefit)
 - Company quality: Prioritize established companies
+
+SCORING WEIGHTS (Premium Tier):
+- Career path alignment: 35% (multi-path support)
+- Geographic match: 25% (exact city required)
+- Job freshness: 20% (7-day guarantee premium benefit)
+- Language compatibility: 10% (international opportunities)
+- Work environment fit: 5% (remote/hybrid preference)
+- Entry-level appropriateness: 5% (role type match)
+
+Match scores must be 85-100 (premium quality threshold)
+Confidence scores must be 90-100 (high certainty required)
 
 OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, no markdown. Just the JSON object.`;
 	}
@@ -126,7 +150,7 @@ OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, n
       "jobIndex": 0,
       "matchScore": 95,
       "confidenceScore": 98,
-      "matchReason": "Exceptional strategic career move: Senior Product Manager at industry-leading SaaS unicorn matches your digital transformation expertise perfectly, offers direct path to C-level leadership, company culture of innovation and work-life balance aligns with your preferences, Munich location provides ideal European hub positioning",
+      "matchReason": "Exceptional strategic career move: Senior Product Manager at industry-leading SaaS unicorn matches your [career path] expertise perfectly, offers direct path to C-level leadership, company culture of innovation and work-life balance aligns with your preferences, [selected city] location provides ideal positioning",
       "scoreBreakdown": {
         "skills": 98,
         "experience": 95,
@@ -140,7 +164,7 @@ OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, n
       "jobIndex": 1,
       "matchScore": 92,
       "confidenceScore": 95,
-      "matchReason": "Premium career advancement opportunity: Tech Lead role at established fintech leader leverages your full-stack development background, provides technical leadership track, company known for exceptional engineering culture and Munich's vibrant tech ecosystem"
+      "matchReason": "Premium career advancement opportunity: Tech Lead role at established fintech leader leverages your technical background, provides leadership track, company known for exceptional engineering culture, [selected city] offers vibrant professional ecosystem"
     }
   ]
 }

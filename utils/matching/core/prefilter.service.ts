@@ -269,10 +269,10 @@ export class PrefilterService {
 			return jobs;
 		}
 
-	// 🔴 CRITICAL: User needs sponsorship - show jobs that can sponsor
-	// Include jobs with visa_friendly = true/null (assume null = can sponsor)
-	// Only exclude jobs explicitly marked as visa_friendly = false
-	const visaFriendlyJobs = jobs.filter((job) => job.visa_friendly !== false);
+		// 🔴 CRITICAL: User needs sponsorship - show jobs that can sponsor
+		// Include jobs with visa_friendly = true/null (assume null = can sponsor)
+		// Only exclude jobs explicitly marked as visa_friendly = false
+		const visaFriendlyJobs = jobs.filter((job) => job.visa_friendly !== false);
 
 		logger.info("Visa filtering applied", {
 			metadata: {
@@ -303,9 +303,11 @@ export class PrefilterService {
 			// Filter out very old jobs (older than 30 days for free users)
 			// FIX: Use scrape_timestamp if posted_at is missing (don't default to NOW)
 			if (user.subscription_tier === "free") {
-				const jobDate = job.posted_at 
-					? new Date(job.posted_at) 
-					: (job.scrape_timestamp ? new Date(job.scrape_timestamp) : new Date());
+				const jobDate = job.posted_at
+					? new Date(job.posted_at)
+					: job.scrape_timestamp
+						? new Date(job.scrape_timestamp)
+						: new Date();
 				const daysOld =
 					(Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
 				if (daysOld > 30) {

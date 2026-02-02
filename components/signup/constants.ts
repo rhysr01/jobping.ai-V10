@@ -90,24 +90,41 @@ export const LANGUAGES = [
 	"Russian",
 ];
 
+// Industries aligned with 9 career paths
+// Maps: strategy-business-design → Consulting, Professional Services
+//       data-analytics → Technology, Finance, SaaS, Banking
+//       sales-client-success → Retail, E-commerce, SaaS, Fashion, Travel, Food & Beverage
+//       marketing-growth → Media, Advertising, E-commerce, Retail, Fashion
+//       finance-investment → Finance, Banking, Insurance
+//       operations-supply-chain → Manufacturing, Transportation, Automotive, Real Estate, Energy, Consumer Goods, Logistics
+//       product-innovation → Technology, SaaS, Software
+//       tech-transformation → Technology, SaaS, Software, Telecommunications
+//       sustainability-esg → Energy, Non-profit
 export const INDUSTRIES = [
 	"Technology",
+	"SaaS",
+	"Software",
 	"Finance",
+	"Banking",
+	"Insurance",
 	"Consulting",
-	"Healthcare",
+	"Professional Services",
 	"Retail",
+	"E-commerce",
 	"Manufacturing",
+	"Consumer Goods",
 	"Energy",
 	"Media",
-	"Education",
-	"Government",
+	"Advertising",
 	"Non-profit",
 	"Real Estate",
 	"Transportation",
+	"Logistics",
 	"Automotive",
 	"Fashion",
 	"Food & Beverage",
 	"Travel",
+	"Telecommunications",
 	"Other",
 ];
 

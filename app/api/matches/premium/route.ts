@@ -21,10 +21,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 
 	// Get user email from unified cookie (set by signup API for all tiers)
 	const cookies = request.cookies;
-	const userEmail = cookies
-		.get("user_email")
-		?.value?.toLowerCase()
-		.trim();
+	const userEmail = cookies.get("user_email")?.value?.toLowerCase().trim();
 
 	if (!userEmail) {
 		apiLogger.warn("Premium matches accessed without cookie", {

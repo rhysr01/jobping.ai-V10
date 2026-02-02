@@ -98,7 +98,7 @@ export function useFormPersistence(
 	useEffect(() => {
 		// SSR safety: Only run in browser
 		if (typeof window === "undefined") return;
-		
+
 		const shouldSave =
 			tier === "premium"
 				? currentStep && currentStep >= minStepForSave
@@ -145,10 +145,10 @@ export function useFormPersistence(
 	// Restore progress on mount (only once)
 	useEffect(() => {
 		if (hasRestoredRef.current) return;
-		
+
 		// SSR safety: Only run in browser
 		if (typeof window === "undefined") return;
-		
+
 		hasRestoredRef.current = true;
 
 		try {
@@ -225,7 +225,7 @@ export function useFormPersistence(
 	const getStoredUserPreferences = useCallback(() => {
 		// SSR safety: Only run in browser
 		if (typeof window === "undefined") return null;
-		
+
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY);
 			if (!stored) return null;
@@ -242,12 +242,18 @@ export function useFormPersistence(
 			// Return user preferences for matches page
 			const data = parsed.formData;
 			return {
-				cities: tier === 'free' ? (data as FreeFormData).cities : (data as PremiumFormData).cities || [],
-				careerPath: tier === 'free' ? [(data as FreeFormData).careerPath] : (data as PremiumFormData).careerPath || [],
+				cities:
+					tier === "free"
+						? (data as FreeFormData).cities
+						: (data as PremiumFormData).cities || [],
+				careerPath:
+					tier === "free"
+						? [(data as FreeFormData).careerPath]
+						: (data as PremiumFormData).careerPath || [],
 				tier: tier,
 			};
 		} catch (error) {
-			console.warn('Failed to retrieve stored user preferences:', error);
+			console.warn("Failed to retrieve stored user preferences:", error);
 			return null;
 		}
 	}, [tier]);
@@ -256,40 +262,49 @@ export function useFormPersistence(
 	 * Save user preferences for matches page (separate from form progress)
 	 * This persists even after clearProgress() is called
 	 */
-	const savePreferencesForMatches = useCallback((formData: FormDataType) => {
-		// SSR safety: Only run in browser
-		if (typeof window === "undefined") return;
-		
-		try {
-			const PREFERENCES_KEY = `jobping_${tier}_preferences_v${STORAGE_VERSION}`;
-			let preferencesToSave: { cities: string[]; careerPath: string[]; tier: 'free' | 'premium' };
-			
-			if (tier === "free") {
-				const freeData = formData as FreeFormData;
-				preferencesToSave = {
-					cities: freeData.cities || [],
-					careerPath: freeData.careerPath ? [freeData.careerPath] : [],
-					tier: 'free' as const,
+	const savePreferencesForMatches = useCallback(
+		(formData: FormDataType) => {
+			// SSR safety: Only run in browser
+			if (typeof window === "undefined") return;
+
+			try {
+				const PREFERENCES_KEY = `jobping_${tier}_preferences_v${STORAGE_VERSION}`;
+				let preferencesToSave: {
+					cities: string[];
+					careerPath: string[];
+					tier: "free" | "premium";
 				};
-			} else {
-				const premiumData = formData as PremiumFormData;
-				preferencesToSave = {
-					cities: premiumData.cities || [],
-					careerPath: Array.isArray(premiumData.careerPath) ? premiumData.careerPath : [],
-					tier: 'premium' as const,
+
+				if (tier === "free") {
+					const freeData = formData as FreeFormData;
+					preferencesToSave = {
+						cities: freeData.cities || [],
+						careerPath: freeData.careerPath ? [freeData.careerPath] : [],
+						tier: "free" as const,
+					};
+				} else {
+					const premiumData = formData as PremiumFormData;
+					preferencesToSave = {
+						cities: premiumData.cities || [],
+						careerPath: Array.isArray(premiumData.careerPath)
+							? premiumData.careerPath
+							: [],
+						tier: "premium" as const,
+					};
+				}
+
+				const state = {
+					...preferencesToSave,
+					timestamp: Date.now(),
 				};
+
+				localStorage.setItem(PREFERENCES_KEY, JSON.stringify(state));
+			} catch (error) {
+				console.warn("Failed to save preferences for matches:", error);
 			}
-
-			const state = {
-				...preferencesToSave,
-				timestamp: Date.now(),
-			};
-
-			localStorage.setItem(PREFERENCES_KEY, JSON.stringify(state));
-		} catch (error) {
-			console.warn("Failed to save preferences for matches:", error);
-		}
-	}, [tier]);
+		},
+		[tier],
+	);
 
 	return {
 		clearProgress: () => {
@@ -313,11 +328,11 @@ export function useFormPersistence(
 export function getStoredUserPreferencesForMatches(): {
 	cities: string[];
 	careerPath: string[];
-	tier: 'free' | 'premium';
+	tier: "free" | "premium";
 } | null {
 	// SSR safety: Only run in browser
 	if (typeof window === "undefined") return null;
-	
+
 	const STORAGE_VERSION = 1;
 	const EXPIRATION_MS = TIMING.FORM_PREFERENCES_EXPIRATION_MS;
 
@@ -332,12 +347,12 @@ export function getStoredUserPreferencesForMatches(): {
 				return {
 					cities: parsed.cities || [],
 					careerPath: parsed.careerPath || [],
-					tier: 'free' as const,
+					tier: "free" as const,
 				};
 			}
 		}
 	} catch (error) {
-		console.warn('Failed to retrieve free preferences:', error);
+		console.warn("Failed to retrieve free preferences:", error);
 	}
 
 	// Try premium preferences
@@ -351,12 +366,12 @@ export function getStoredUserPreferencesForMatches(): {
 				return {
 					cities: parsed.cities || [],
 					careerPath: parsed.careerPath || [],
-					tier: 'premium' as const,
+					tier: "premium" as const,
 				};
 			}
 		}
 	} catch (error) {
-		console.warn('Failed to retrieve premium preferences:', error);
+		console.warn("Failed to retrieve premium preferences:", error);
 	}
 
 	// Fallback: Try form progress keys (for backward compatibility)
@@ -371,12 +386,12 @@ export function getStoredUserPreferencesForMatches(): {
 				return {
 					cities: data.cities || [],
 					careerPath: data.careerPath ? [data.careerPath] : [],
-					tier: 'free' as const,
+					tier: "free" as const,
 				};
 			}
 		}
 	} catch (error) {
-		console.warn('Failed to retrieve free tier preferences:', error);
+		console.warn("Failed to retrieve free tier preferences:", error);
 	}
 
 	// Try premium tier form progress
@@ -391,12 +406,12 @@ export function getStoredUserPreferencesForMatches(): {
 				return {
 					cities: data.cities || [],
 					careerPath: Array.isArray(data.careerPath) ? data.careerPath : [],
-					tier: 'premium' as const,
+					tier: "premium" as const,
 				};
 			}
 		}
 	} catch (error) {
-		console.warn('Failed to retrieve premium tier preferences:', error);
+		console.warn("Failed to retrieve premium tier preferences:", error);
 	}
 
 	return null;

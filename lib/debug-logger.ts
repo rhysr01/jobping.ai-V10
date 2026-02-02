@@ -76,11 +76,7 @@ function log(
 	const prefix = `${emoji} [${timestamp}] [${stage}]`;
 	const suffix = duration ? ` (${duration}ms)` : "";
 
-	console.log(
-		`%c${prefix}%c ${message}${suffix}`,
-		color,
-		COLORS.reset,
-	);
+	console.log(`%c${prefix}%c ${message}${suffix}`, color, COLORS.reset);
 
 	if (data && Object.keys(data).length > 0) {
 		console.table(data);
@@ -102,20 +98,32 @@ class StageTracker {
 
 	complete(message: string = "Complete", data?: Record<string, any>) {
 		const duration = Math.round(performance.now() - this.startTime);
-		debugLogger.success(this.stage, message, { ...data, duration_ms: duration }, duration);
+		debugLogger.success(
+			this.stage,
+			message,
+			{ ...data, duration_ms: duration },
+			duration,
+		);
 	}
 
 	error(message: string, error?: Error | Record<string, any>) {
 		const duration = Math.round(performance.now() - this.startTime);
-		const errorData = error instanceof Error
-			? { message: error.message, stack: error.stack }
-			: error;
-		debugLogger.error(this.stage, message, { ...errorData, duration_ms: duration });
+		const errorData =
+			error instanceof Error
+				? { message: error.message, stack: error.stack }
+				: error;
+		debugLogger.error(this.stage, message, {
+			...errorData,
+			duration_ms: duration,
+		});
 	}
 
 	checkpoint(checkpointName: string, data?: Record<string, any>) {
 		const duration = Math.round(performance.now() - this.startTime);
-		debugLogger.debug(this.stage, `Checkpoint: ${checkpointName}`, { ...data, elapsed_ms: duration });
+		debugLogger.debug(this.stage, `Checkpoint: ${checkpointName}`, {
+			...data,
+			elapsed_ms: duration,
+		});
 	}
 }
 
@@ -278,9 +286,12 @@ if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
 		"color: inherit;",
 	);
 	console.log("  • window.debugLogger.getHistory() - View all logs");
-	console.log("  • window.debugLogger.getStageHistory('STAGE_NAME') - Filter by stage");
-	console.log("  • window.debugLogger.getLevelHistory('error') - Filter by level");
+	console.log(
+		"  • window.debugLogger.getStageHistory('STAGE_NAME') - Filter by stage",
+	);
+	console.log(
+		"  • window.debugLogger.getLevelHistory('error') - Filter by level",
+	);
 	console.log("  • window.debugLogger.exportHistory() - Export as JSON");
 	console.log("  • window.debugLogger.clearHistory() - Clear logs");
 }
-

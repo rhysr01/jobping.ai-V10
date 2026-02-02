@@ -47,37 +47,6 @@ const ENTRY_LEVEL_OPTIONS: EntryLevelOption[] = [
 		description: "First full-time role",
 		color: "from-green-500 to-emerald-500",
 	},
-	{
-		value: "Working Student",
-		label: "Working Student",
-		icon: ({ className }) => (
-			<svg
-				className={className}
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				strokeWidth="2"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			>
-				<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-				<circle cx="9" cy="7" r="4" />
-				<path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-				<path d="M16 3.13a4 4 0 0 1 0 7.75" />
-				<rect x="16" y="11" width="6" height="8" rx="1" />
-				<path d="M19 11v6" />
-			</svg>
-		),
-		description: "Part-time while studying",
-		color: "from-orange-500 to-red-500",
-	},
-	{
-		value: "Not sure yet",
-		label: "Not sure yet",
-		icon: BrandIcons.Sparkles,
-		description: "Open to all",
-		color: "from-indigo-500 to-purple-500",
-	},
 ];
 
 interface EntryLevelSelectorProps {

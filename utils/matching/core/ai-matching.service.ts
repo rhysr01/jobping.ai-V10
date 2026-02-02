@@ -7,6 +7,7 @@ import OpenAI from "openai";
 import type { Job } from "@/scrapers/types";
 import { apiLogger } from "../../../lib/api-logger";
 import { aiMatchingCache } from "../../../lib/cache";
+import { ENV } from "@/lib/env";
 import {
 	generateScoreExplanation,
 	ScoreComponents,
@@ -36,8 +37,8 @@ export class AIMatchingService {
 	constructor(openaiApiKey?: string) {
 		if (openaiApiKey) {
 			this.openai = new OpenAI({ apiKey: openaiApiKey });
-		} else if (process.env.OPENAI_API_KEY) {
-			this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+		} else if (ENV.OPENAI_API_KEY) {
+			this.openai = new OpenAI({ apiKey: ENV.OPENAI_API_KEY });
 		}
 	}
 
@@ -235,13 +236,13 @@ export class AIMatchingService {
 			let cleanContent = content.trim();
 
 			// Remove any text before JSON starts
-			const jsonStartIndex = cleanContent.indexOf('{');
+			const jsonStartIndex = cleanContent.indexOf("{");
 			if (jsonStartIndex > 0) {
 				cleanContent = cleanContent.substring(jsonStartIndex);
 			}
 
 			// Remove any text after JSON ends
-			const jsonEndIndex = cleanContent.lastIndexOf('}');
+			const jsonEndIndex = cleanContent.lastIndexOf("}");
 			if (jsonEndIndex > 0 && jsonEndIndex < cleanContent.length - 1) {
 				cleanContent = cleanContent.substring(0, jsonEndIndex + 1);
 			}
@@ -270,7 +271,7 @@ export class AIMatchingService {
 			// Validate that we have an array
 			if (!Array.isArray(matches)) {
 				apiLogger.warn("AI response does not contain matches array", {
-					responsePreview: cleanContent.substring(0, 200)
+					responsePreview: cleanContent.substring(0, 200),
 				});
 				return [];
 			}
@@ -283,7 +284,7 @@ export class AIMatchingService {
 					if (!job || jobIndex === undefined || jobIndex === null) {
 						apiLogger.warn("Invalid jobIndex in AI response", {
 							jobIndex,
-							availableJobs: jobs.length
+							availableJobs: jobs.length,
 						});
 						return null;
 					}
@@ -291,14 +292,17 @@ export class AIMatchingService {
 					// Extract scores from response (handle different possible field names)
 					const overallScore = Math.max(
 						0,
-						Math.min(100, match.matchScore || match.match_score || match.score || 0),
+						Math.min(
+							100,
+							match.matchScore || match.match_score || match.score || 0,
+						),
 					);
 
 					// Skip matches with very low scores
 					if (overallScore < 30) {
 						apiLogger.info("Skipping low-score match from AI", {
 							jobIndex,
-							score: overallScore
+							score: overallScore,
 						});
 						return null;
 					}
@@ -315,7 +319,13 @@ export class AIMatchingService {
 					const unifiedScore: UnifiedScore = {
 						overall: overallScore,
 						components,
-						confidence: Math.max(0, Math.min(100, match.confidenceScore || match.confidence_score || 85)),
+						confidence: Math.max(
+							0,
+							Math.min(
+								100,
+								match.confidenceScore || match.confidence_score || 85,
+							),
+						),
 						method: "ai",
 					};
 
@@ -328,14 +338,18 @@ export class AIMatchingService {
 					return {
 						job,
 						unifiedScore,
-						matchReason: match.matchReason || match.match_reason || match.reason || "AI analyzed match",
+						matchReason:
+							match.matchReason ||
+							match.match_reason ||
+							match.reason ||
+							"AI analyzed match",
 					};
 				})
 				.filter(Boolean) as AIMatchResult[];
 		} catch (error) {
 			apiLogger.error("Failed to parse OpenAI response", error as Error, {
 				responsePreview: content.substring(0, 500),
-				errorMessage: (error as Error).message
+				errorMessage: (error as Error).message,
 			});
 			return [];
 		}

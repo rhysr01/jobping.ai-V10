@@ -2,6 +2,7 @@ import { Inngest } from "inngest";
 import { logger } from "../monitoring";
 import { simplifiedMatchingEngine } from "../../utils/matching/core/matching-engine";
 import { getDatabaseClient } from "../../utils/core/database-pool";
+import { ENV } from "../env";
 import type { Job, UserPreferences } from "../../utils/matching/types";
 
 // Create a client to send and receive events
@@ -57,7 +58,7 @@ export const performAIMatching = inngest.createFunction(
 
 		// Initialize matching engine directly (cannot serialize class instances in step.run)
 		// Get OpenAI API key (same validation as embedding service)
-		const openaiKey = process.env.OPENAI_API_KEY;
+		const openaiKey = ENV.OPENAI_API_KEY;
 		const hasOpenAIKey = openaiKey && openaiKey.startsWith("sk-");
 
 		if (!hasOpenAIKey) {

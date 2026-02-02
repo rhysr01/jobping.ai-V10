@@ -60,11 +60,15 @@ function SignupFormFree() {
 	// Guard against undefined functions during SSR or initialization
 	// This prevents "setFormData is not defined" and "updateFormData is not defined" errors
 	if (typeof window !== "undefined" && (!setFormData || !updateFormData)) {
-		debugLogger.error("INIT", "Critical: setFormData or updateFormData is undefined", {
-			hasSetFormData: !!setFormData,
-			hasUpdateFormData: !!updateFormData,
-			signupStateKeys: Object.keys(signupState),
-		});
+		debugLogger.error(
+			"INIT",
+			"Critical: setFormData or updateFormData is undefined",
+			{
+				hasSetFormData: !!setFormData,
+				hasUpdateFormData: !!updateFormData,
+				signupStateKeys: Object.keys(signupState),
+			},
+		);
 		// Don't throw - let component render and hook will initialize
 	}
 
@@ -84,7 +88,9 @@ function SignupFormFree() {
 	// SignupFormData is compatible with FormDataType since it contains all required fields
 	const { clearProgress, savePreferencesForMatches } = useFormPersistence(
 		formData as unknown as FormDataType,
-		updateFormData as unknown as React.Dispatch<React.SetStateAction<FormDataType>>,
+		updateFormData as unknown as React.Dispatch<
+			React.SetStateAction<FormDataType>
+		>,
 		{ tier: "free", hasStep: true, minStepForSave: 1 },
 		setStep,
 		step,
@@ -190,7 +196,8 @@ function SignupFormFree() {
 		} else if (!emailValidation.isValid && !emailLooksValid) {
 			// Allow email if either debounced validation passed OR basic regex passes
 			// This prevents UX issues with 500ms debounce delay
-			errors.email = emailValidation.error || "Please enter a valid email address";
+			errors.email =
+				emailValidation.error || "Please enter a valid email address";
 		}
 		if (!formData.cities?.length) {
 			errors.cities = "Please select at least one city";
@@ -199,14 +206,19 @@ function SignupFormFree() {
 			errors.careerPath = "Please select at least one career path";
 		}
 		if (!formData.gdprConsent) {
-			errors.gdprConsent = "Please accept the Terms of Service and Privacy Policy";
+			errors.gdprConsent =
+				"Please accept the Terms of Service and Privacy Policy";
 		}
 
 		setValidationErrors(errors);
 
 		if (Object.keys(errors).length > 0) {
-			debugLogger.error("VALIDATION", "Client-side validation failed", { errors });
-			submitTracker.error("Validation failed", { errorCount: Object.keys(errors).length });
+			debugLogger.error("VALIDATION", "Client-side validation failed", {
+				errors,
+			});
+			submitTracker.error("Validation failed", {
+				errorCount: Object.keys(errors).length,
+			});
 			return;
 		}
 
@@ -243,47 +255,49 @@ function SignupFormFree() {
 			// Stage 2: API Call (30% - 70%)
 			setSubmissionProgress(40);
 
-		// Transform form data to match API expectations
-		// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
-		// If gdprConsent is true, both must be true for validation to pass
-		const apiData = {
-			email: formData.email,
-			full_name: formData.fullName,
-			cities: formData.cities || [],
-			careerPath: formData.careerPath || [],
-			entryLevelPreferences: formData.entryLevelPreferences || [],
-			// Note: visaStatus is optional for free tier - API defaults to "EU citizen"
-			// Visa filtering is a premium feature
-			visaStatus: "", // Will default to "EU citizen" in API
-			// Map gdprConsent to terms_accepted (required by API)
-			// API validation requires exactly true, not just truthy
-			terms_accepted: formData.gdprConsent === true,
-			// Set age_verified to true when user accepts terms (accepting terms implies age verification)
-			// API validation requires exactly true, not just truthy
-			age_verified: formData.gdprConsent === true,
-		};
+			// Transform form data to match API expectations
+			// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
+			// If gdprConsent is true, both must be true for validation to pass
+			const apiData = {
+				email: formData.email,
+				full_name: formData.fullName,
+				cities: formData.cities || [],
+				careerPath: formData.careerPath || [],
+				entryLevelPreferences: formData.entryLevelPreferences || [],
+				// Note: visaStatus is optional for free tier - API defaults to "EU citizen"
+				// Visa filtering is a premium feature
+				visaStatus: "", // Will default to "EU citizen" in API
+				// Map gdprConsent to terms_accepted (required by API)
+				// API validation requires exactly true, not just truthy
+				terms_accepted: formData.gdprConsent === true,
+				// Set age_verified to true when user accepts terms (accepting terms implies age verification)
+				// API validation requires exactly true, not just truthy
+				age_verified: formData.gdprConsent === true,
+			};
 
-		debugLogger.debug("SUBMIT_API_DATA", "Prepared API payload", {
-			email: apiData.email,
-			citiesLength: apiData.cities?.length,
-			careerPathLength: apiData.careerPath?.length,
-			termsAccepted: apiData.terms_accepted,
-			ageVerified: apiData.age_verified,
-		});
+			debugLogger.debug("SUBMIT_API_DATA", "Prepared API payload", {
+				email: apiData.email,
+				citiesLength: apiData.cities?.length,
+				careerPathLength: apiData.careerPath?.length,
+				termsAccepted: apiData.terms_accepted,
+				ageVerified: apiData.age_verified,
+			});
 
-		// Validate critical fields before sending
-		if (!apiData.cities || apiData.cities.length === 0) {
-			throw new Error("Please select at least one city");
-		}
-		if (!apiData.careerPath || apiData.careerPath.length === 0) {
-			throw new Error("Please select at least one career path");
-		}
-		if (!apiData.terms_accepted) {
-			throw new Error("Please accept the Terms of Service and Privacy Policy");
-		}
-		if (!apiData.age_verified) {
-			throw new Error("Age verification is required");
-		}
+			// Validate critical fields before sending
+			if (!apiData.cities || apiData.cities.length === 0) {
+				throw new Error("Please select at least one city");
+			}
+			if (!apiData.careerPath || apiData.careerPath.length === 0) {
+				throw new Error("Please select at least one career path");
+			}
+			if (!apiData.terms_accepted) {
+				throw new Error(
+					"Please accept the Terms of Service and Privacy Policy",
+				);
+			}
+			if (!apiData.age_verified) {
+				throw new Error("Age verification is required");
+			}
 
 			debugLogger.step("SUBMIT_STAGE", "Stage 2: API Call", {
 				progress: "40%",
@@ -371,7 +385,8 @@ function SignupFormFree() {
 			setSubmissionStage("");
 
 			// Enhanced error handling for debugging
-			let errorMessage = "Unable to connect. Please check your internet connection and try again.";
+			let errorMessage =
+				"Unable to connect. Please check your internet connection and try again.";
 			let errorDetails = {};
 
 			if (error instanceof ApiError) {
@@ -382,97 +397,88 @@ function SignupFormFree() {
 				});
 				errorMessage = error.message;
 
-			// If it's a conflict error (account already exists), show a simple message
-			if (error.status === 409) {
-				errorMessage = "This email is already registered";
-				
-				debugLogger.info('SUBMIT_ACCOUNT_EXISTS', 'Account already exists', {
-					email: formData.email,
-					status: 409,
-				});
-				
-				Sentry.captureMessage("User attempted to signup with existing email", {
-					level: "info",
-					tags: { 
-						endpoint: "signup-free", 
-						error_type: "account_already_exists",
-						status_code: 409 
-					},
-					extra: {
+				// If it's a conflict error (account already exists), show a simple message
+				if (error.status === 409) {
+					errorMessage = "This email is already registered";
+
+					debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account already exists", {
 						email: formData.email,
-					},
-				});
-			}
-			// If it's a validation error, show the details
-			else if (error.status === 400 && error.response?.details) {
-				debugLogger.error('SUBMIT_VALIDATION_ERROR', 'API Validation Error Details:', error.response.details);
-				errorDetails = error.response.details;
-				
-				// Parse zod validation errors into user-friendly messages
-				if (Array.isArray(error.response.details)) {
-					const fieldErrors: Record<string, string> = {};
-					error.response.details.forEach((detail: any) => {
-						if (detail.path && detail.path.length > 0) {
-							const fieldName = detail.path[0];
-							fieldErrors[fieldName] = detail.message || "Invalid value";
-						}
+						status: 409,
 					});
-					
-					// Map API field names to form field names
-					const mappedErrors: Record<string, string> = {};
-					if (fieldErrors.full_name) mappedErrors.fullName = fieldErrors.full_name;
-					if (fieldErrors.careerPath) mappedErrors.careerPath = fieldErrors.careerPath;
-					if (fieldErrors.terms_accepted) mappedErrors.gdprConsent = fieldErrors.terms_accepted;
-					if (fieldErrors.age_verified) mappedErrors.ageVerified = fieldErrors.age_verified;
-					if (fieldErrors.visaStatus) mappedErrors.visaStatus = fieldErrors.visaStatus;
-					if (fieldErrors.cities) mappedErrors.cities = fieldErrors.cities;
-					
-					setValidationErrors(mappedErrors);
-					debugLogger.debug("SUBMIT_MAPPED_ERRORS", "Mapped error fields", mappedErrors);
-					
-					// Update error message to be more helpful
-					const errorMessages = Object.values(mappedErrors);
-					if (errorMessages.length > 0) {
-						errorMessage = errorMessages[0];
-					}
+
+					Sentry.captureMessage(
+						"User attempted to signup with existing email",
+						{
+							level: "info",
+							tags: {
+								endpoint: "signup-free",
+								error_type: "account_already_exists",
+								status_code: 409,
+							},
+							extra: {
+								email: formData.email,
+							},
+						},
+					);
 				}
-				
-				// Track validation errors in Sentry for monitoring
-				Sentry.captureMessage("Free signup API validation error", {
-					level: "warning",
-					tags: { 
-						endpoint: "signup-free", 
-						error_type: "api_validation",
-						status_code: error.status 
-					},
-					extra: {
-						errorMessage,
-						validationDetails: errorDetails,
-					formData: {
-						email: formData.email,
-						fullName: formData.fullName,
-						cities: formData.cities,
-						citiesLength: formData.cities?.length,
-						careerPath: formData.careerPath,
-						careerPathLength: formData.careerPath?.length,
-						gdprConsent: formData.gdprConsent,
-						ageVerified: formData.ageVerified,
-						termsAccepted: formData.gdprConsent, // Map to terms_accepted
-					},
-						apiResponse: error.response,
-					},
-				});
-				} else {
-					// Track other API errors (network, server errors, etc.)
-					Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
-						tags: { 
-							endpoint: "signup-free", 
-							error_type: "api_error",
-							status_code: error.status 
+				// If it's a validation error, show the details
+				else if (error.status === 400 && error.response?.details) {
+					debugLogger.error(
+						"SUBMIT_VALIDATION_ERROR",
+						"API Validation Error Details:",
+						error.response.details,
+					);
+					errorDetails = error.response.details;
+
+					// Parse zod validation errors into user-friendly messages
+					if (Array.isArray(error.response.details)) {
+						const fieldErrors: Record<string, string> = {};
+						error.response.details.forEach((detail: any) => {
+							if (detail.path && detail.path.length > 0) {
+								const fieldName = detail.path[0];
+								fieldErrors[fieldName] = detail.message || "Invalid value";
+							}
+						});
+
+						// Map API field names to form field names
+						const mappedErrors: Record<string, string> = {};
+						if (fieldErrors.full_name)
+							mappedErrors.fullName = fieldErrors.full_name;
+						if (fieldErrors.careerPath)
+							mappedErrors.careerPath = fieldErrors.careerPath;
+						if (fieldErrors.terms_accepted)
+							mappedErrors.gdprConsent = fieldErrors.terms_accepted;
+						if (fieldErrors.age_verified)
+							mappedErrors.ageVerified = fieldErrors.age_verified;
+						if (fieldErrors.visaStatus)
+							mappedErrors.visaStatus = fieldErrors.visaStatus;
+						if (fieldErrors.cities) mappedErrors.cities = fieldErrors.cities;
+
+						setValidationErrors(mappedErrors);
+						debugLogger.debug(
+							"SUBMIT_MAPPED_ERRORS",
+							"Mapped error fields",
+							mappedErrors,
+						);
+
+						// Update error message to be more helpful
+						const errorMessages = Object.values(mappedErrors);
+						if (errorMessages.length > 0) {
+							errorMessage = errorMessages[0];
+						}
+					}
+
+					// Track validation errors in Sentry for monitoring
+					Sentry.captureMessage("Free signup API validation error", {
+						level: "warning",
+						tags: {
+							endpoint: "signup-free",
+							error_type: "api_validation",
+							status_code: error.status,
 						},
 						extra: {
 							errorMessage,
-							status: error.status,
+							validationDetails: errorDetails,
 							formData: {
 								email: formData.email,
 								fullName: formData.fullName,
@@ -480,31 +486,62 @@ function SignupFormFree() {
 								citiesLength: formData.cities?.length,
 								careerPath: formData.careerPath,
 								careerPathLength: formData.careerPath?.length,
+								gdprConsent: formData.gdprConsent,
+								ageVerified: formData.ageVerified,
+								termsAccepted: formData.gdprConsent, // Map to terms_accepted
 							},
 							apiResponse: error.response,
 						},
 					});
+				} else {
+					// Track other API errors (network, server errors, etc.)
+					Sentry.captureException(
+						error instanceof Error ? error : new Error(String(error)),
+						{
+							tags: {
+								endpoint: "signup-free",
+								error_type: "api_error",
+								status_code: error.status,
+							},
+							extra: {
+								errorMessage,
+								status: error.status,
+								formData: {
+									email: formData.email,
+									fullName: formData.fullName,
+									cities: formData.cities,
+									citiesLength: formData.cities?.length,
+									careerPath: formData.careerPath,
+									careerPathLength: formData.careerPath?.length,
+								},
+								apiResponse: error.response,
+							},
+						},
+					);
 				}
 			} else {
 				// Track unexpected errors (not ApiError instances)
-				Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
-					tags: { 
-						endpoint: "signup-free", 
-						error_type: "unexpected_error" 
-					},
-					extra: {
-						errorMessage: String(error),
-						formData: {
-							email: formData.email,
-							fullName: formData.fullName,
-							cities: formData.cities,
-							careerPath: formData.careerPath,
+				Sentry.captureException(
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						tags: {
+							endpoint: "signup-free",
+							error_type: "unexpected_error",
+						},
+						extra: {
+							errorMessage: String(error),
+							formData: {
+								email: formData.email,
+								fullName: formData.fullName,
+								cities: formData.cities,
+								careerPath: formData.careerPath,
+							},
 						},
 					},
-				});
+				);
 			}
 
-			debugLogger.error('SUBMIT_FINAL_ERROR', 'Signup submission error:', {
+			debugLogger.error("SUBMIT_FINAL_ERROR", "Signup submission error:", {
 				error: error instanceof ApiError ? error.message : String(error),
 				status: error instanceof ApiError ? error.status : undefined,
 				details: errorDetails,
@@ -513,49 +550,59 @@ function SignupFormFree() {
 					fullName: formData.fullName,
 					cities: formData.cities,
 					careerPath: formData.careerPath,
-					gdprConsent: formData.gdprConsent
-				}
+					gdprConsent: formData.gdprConsent,
+				},
 			});
 
 			setError(errorMessage);
-			
+
 			// Convert zod validation errors array to a proper string map
 			// Ensure all values are strings to prevent React rendering errors
-			const validationErrorsMap: Record<string, string> = { general: errorMessage };
+			const validationErrorsMap: Record<string, string> = {
+				general: errorMessage,
+			};
 			if (errorDetails && Array.isArray(errorDetails)) {
 				errorDetails.forEach((detail: any) => {
-					if (detail && typeof detail === 'object') {
+					if (detail && typeof detail === "object") {
 						if (detail.path && Array.isArray(detail.path)) {
-							const field = detail.path.join('.');
-							const message = typeof detail.message === 'string' 
-								? detail.message 
-								: 'Invalid value';
+							const field = detail.path.join(".");
+							const message =
+								typeof detail.message === "string"
+									? detail.message
+									: "Invalid value";
 							validationErrorsMap[field] = message;
-						} else if (typeof detail.message === 'string') {
+						} else if (typeof detail.message === "string") {
 							// Handle case where detail is a simple object with message
-							validationErrorsMap[detail.path || 'unknown'] = detail.message;
+							validationErrorsMap[detail.path || "unknown"] = detail.message;
 						}
 					}
 				});
-			} else if (errorDetails && typeof errorDetails === 'object' && !Array.isArray(errorDetails)) {
+			} else if (
+				errorDetails &&
+				typeof errorDetails === "object" &&
+				!Array.isArray(errorDetails)
+			) {
 				// If errorDetails is already an object, merge it properly but ensure all values are strings
 				Object.entries(errorDetails).forEach(([key, value]) => {
-					if (typeof value === 'string') {
+					if (typeof value === "string") {
 						validationErrorsMap[key] = value;
-					} else if (value && typeof value === 'object' && 'message' in value) {
-						validationErrorsMap[key] = String((value as any).message || 'Invalid value');
+					} else if (value && typeof value === "object" && "message" in value) {
+						validationErrorsMap[key] = String(
+							(value as any).message || "Invalid value",
+						);
 					} else {
-						validationErrorsMap[key] = String(value || 'Invalid value');
+						validationErrorsMap[key] = String(value || "Invalid value");
 					}
 				});
 			}
-			
+
 			// Final safety check: ensure all values are strings
 			const safeValidationErrors: Record<string, string> = {};
 			Object.entries(validationErrorsMap).forEach(([key, value]) => {
-				safeValidationErrors[key] = typeof value === 'string' ? value : String(value || '');
+				safeValidationErrors[key] =
+					typeof value === "string" ? value : String(value || "");
 			});
-			
+
 			setValidationErrors(safeValidationErrors);
 			showToast.error(errorMessage);
 		} finally {
@@ -684,37 +731,41 @@ function SignupFormFree() {
 
 					{/* Form Validation Errors */}
 					{/* Only show errors if mounted, not currently submitting, and errors are relevant to current step */}
-					{isMounted && Object.keys(validationErrors).length > 0 && !isSubmitting && (
-						<motion.div
-							initial={{ opacity: 0, y: -10 }}
-							animate={{ opacity: 1, y: 0 }}
-							className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
-						>
-							<div className="flex items-start gap-3">
-								<div className="w-5 h-5 bg-red-500/20 rounded-full flex items-center justify-center mt-0.5">
-									<span className="text-red-400 text-sm">⚠️</span>
+					{isMounted &&
+						Object.keys(validationErrors).length > 0 &&
+						!isSubmitting && (
+							<motion.div
+								initial={{ opacity: 0, y: -10 }}
+								animate={{ opacity: 1, y: 0 }}
+								className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
+							>
+								<div className="flex items-start gap-3">
+									<div className="w-5 h-5 bg-red-500/20 rounded-full flex items-center justify-center mt-0.5">
+										<span className="text-red-400 text-sm">⚠️</span>
+									</div>
+									<div>
+										<h4 className="text-red-400 font-medium mb-2">
+											Please check your information:
+										</h4>
+										<ul className="space-y-1">
+											{Object.entries(validationErrors)
+												.filter(
+													([_, error]) => error && typeof error === "string",
+												)
+												.map(([field, error]) => (
+													<li
+														key={field}
+														className="text-red-300 text-sm flex items-center gap-2"
+													>
+														<span className="w-1 h-1 bg-red-400 rounded-full"></span>
+														{error as string}
+													</li>
+												))}
+										</ul>
+									</div>
 								</div>
-								<div>
-									<h4 className="text-red-400 font-medium mb-2">
-										Please check your information:
-									</h4>
-									<ul className="space-y-1">
-										{Object.entries(validationErrors)
-											.filter(([_, error]) => error && typeof error === 'string')
-											.map(([field, error]) => (
-												<li
-													key={field}
-													className="text-red-300 text-sm flex items-center gap-2"
-												>
-													<span className="w-1 h-1 bg-red-400 rounded-full"></span>
-													{error as string}
-												</li>
-											))}
-									</ul>
-								</div>
-							</div>
-						</motion.div>
-					)}
+							</motion.div>
+						)}
 
 					{/* Step content */}
 					<div className="text-white text-center">
@@ -735,38 +786,40 @@ function SignupFormFree() {
 								getDisabledMessage={getDisabledMessage}
 							/>
 						)}
-					{step === 2 && (
-						<Step2FreeCities
-							key="step2"
-							formData={formData}
-							setFormData={setFormData}
-							touchedFields={touchedFields}
-							setTouchedFields={setTouchedFields}
-							loading={loading}
-							setStep={navigation.navigateToStep}
-						/>
-					)}
-					{step === 3 && (
-						<>
-							<Step3FreeCareer
-								key="step3"
+						{step === 2 && (
+							<Step2FreeCities
+								key="step2"
 								formData={formData}
 								setFormData={setFormData}
-								touchedFields={new Set()}
-								setTouchedFields={() => {}}
+								touchedFields={touchedFields}
+								setTouchedFields={setTouchedFields}
 								loading={loading}
 								setStep={navigation.navigateToStep}
-								handleSubmit={handleSubmit}
 							/>
-							{/* Live Preview: Show matching jobs when user selects career path */}
-							<LiveJobsReview
-								cities={formData.cities}
-								careerPath={formData.careerPath[0] || ""}
-								isVisible={formData.cities.length > 0 && formData.careerPath.length > 0}
-								className="mt-8"
-							/>
-						</>
-					)}
+						)}
+						{step === 3 && (
+							<>
+								<Step3FreeCareer
+									key="step3"
+									formData={formData}
+									setFormData={setFormData}
+									touchedFields={new Set()}
+									setTouchedFields={() => {}}
+									loading={loading}
+									setStep={navigation.navigateToStep}
+									handleSubmit={handleSubmit}
+								/>
+								{/* Live Preview: Show matching jobs when user selects career path */}
+								<LiveJobsReview
+									cities={formData.cities}
+									careerPath={formData.careerPath[0] || ""}
+									isVisible={
+										formData.cities.length > 0 && formData.careerPath.length > 0
+									}
+									className="mt-8"
+								/>
+							</>
+						)}
 					</div>
 				</div>
 			</div>

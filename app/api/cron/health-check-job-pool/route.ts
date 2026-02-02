@@ -2,7 +2,7 @@
  * Monitoring Endpoint: Job Pool Health Check
  * Purpose: Track job availability & identify bottlenecks
  * Schedule: Every 6 hours
- * 
+ *
  * KISS Principles:
  * - Simple metrics: Just count jobs by city
  * - Clear thresholds: Alert if city has too few jobs

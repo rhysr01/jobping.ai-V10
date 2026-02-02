@@ -64,12 +64,7 @@ describe("City Matching Logic - BUG #2 Validation", () => {
 	 */
 	it("main and fallback filters use same city logic", () => {
 		const userCities = ["london"];
-		const jobCities = [
-			"London",
-			"Central London",
-			"East London",
-			"london, uk",
-		];
+		const jobCities = ["London", "Central London", "East London", "london, uk"];
 
 		// Simulate main filter
 		const mainFilterResults = jobCities.map((jobCity) =>
@@ -228,9 +223,7 @@ describe("Career Path Type Safety - BUG #5 Validation", () => {
 
 		// Check if array and handle appropriately
 		if (Array.isArray(careerPath)) {
-			expect(careerPath.some((path) => path === "data-analytics")).toBe(
-				false,
-			);
+			expect(careerPath.some((path) => path === "data-analytics")).toBe(false);
 		} else {
 			expect(careerPath === "data").toBe(true);
 		}
@@ -434,4 +427,3 @@ describe("Type Safety", () => {
 		expect(validPrefs.subscription_tier).toBe("free");
 	});
 });
-

@@ -20,6 +20,8 @@ function parseJson(value) {
 const { recordScraperRun } = require("../shared/telemetry.cjs");
 const { classifyEarlyCareer, makeJobHash } = require("../shared/helpers.cjs");
 const { processIncomingJob } = require("../shared/processor.cjs");
+const { validateAndFixCategories } = require("../shared/categoryMapper.cjs");
+const { getInferredCategories } = require("../shared/careerPathInference.cjs");
 
 // Helper functions moved to top level
 const localParseLocation = (location) => {
@@ -96,6 +98,10 @@ async function main() {
 			// Process through standardization pipe
 			const processed = await processIncomingJob(job, {
 				source: "adzuna",
+				categories: getInferredCategories(
+					job.title || "",
+					job.description || "",
+				), // Infer career path
 			});
 
 			// CRITICAL: Check if processing returned null or invalid result

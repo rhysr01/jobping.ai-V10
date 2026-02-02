@@ -303,8 +303,14 @@ curl http://localhost:3000/api/matches/free \
 - **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 
-### 📋 Additional Resources
+### 📋 Operations & Maintenance
+- **[docs/maintenance/checklist.md](docs/maintenance/checklist.md)** - Daily, weekly, monthly quality checks
+- **[docs/maintenance/standards.md](docs/maintenance/standards.md)** - Database quality standards and metrics
+- **[docs/maintenance/framework.md](docs/maintenance/framework.md)** - Complete maintenance framework guide
+
+### 📦 Additional Resources
 - **[CHANGES.md](CHANGES.md)** - Version history and updates
+- **[docs/INDEX.md](docs/INDEX.md)** - Complete documentation index and archive
 
 ## 📈 Recent Major Improvements (Jan 2026)
 

@@ -1,6 +1,6 @@
 // File: /utils/strategies/PremiumMatchingStrategy.ts
-// Purpose: Complex matching strategy for premium tier users (4-step form)
-// Premium users provide: cities, career, skills, industries, company size, work env, visa, etc.
+// Purpose: Complex matching strategy for premium tier users (simplified form)
+// Premium users provide: cities, career, work env, visa, languages, etc.
 // Result: 15 matches
 
 import { apiLogger } from "../../lib/api-logger";
@@ -9,19 +9,21 @@ import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
 import { jobMatchesUserCategories } from "../matching/categoryMapper";
 
 export interface PremiumUserPreferences {
+	// From form Step 1: Personal Info
 	email: string;
+	user_id?: string; // Required for proper FK to users table
+
+	// From form Step 2: Geographic & Career
 	target_cities: string[];
 	career_path: string[];
+
+	// From form Step 3: Preferences (only supported fields + visa_status)
 	languages_spoken: string[];
-	roles_selected: string[];
-	entry_level_preference?: string;
 	work_environment?: "remote" | "hybrid" | "on-site" | "unclear";
+	entry_level_preference?: string;
 	visa_status?: string;
-	// Premium fields
-	skills: string[];
-	industries: string[];
-	company_size_preference?: string;
-	career_keywords?: string;
+
+	// Set by API (not from form)
 	subscription_tier: "premium_pending";
 }
 
@@ -37,7 +39,7 @@ export interface MatchingResult {
  *
  * Complex matching for premium tier:
  * - Uses: All 17+ fields provided by comprehensive 4-step form
- * - Filtering: Cities + career + skills + industries + company size + work env + visa
+ * - Filtering: Cities + career + industries + work env + visa + languages
  * - AI Processing: Deep analysis (30 jobs max)
  * - Result: 15 matches with sophisticated ranking
  * - Logic: Thorough pre-filtering + deep AI ranking
@@ -54,8 +56,6 @@ export async function runPremiumMatching(
 			email: userPrefs.email,
 			cities: userPrefs.target_cities,
 			careerPaths: userPrefs.career_path,
-			skills: userPrefs.skills?.length || 0,
-			industries: userPrefs.industries?.length || 0,
 			jobsAvailable: jobs.length,
 		});
 
@@ -72,55 +72,44 @@ export async function runPremiumMatching(
 			};
 		}
 
-	// STAGE 1: Comprehensive pre-filtering (premium users provide rich data)
-	// This is the KEY difference from free - we filter THOROUGHLY because
-	// premium users have provided skills, industries, company size, work environment, etc.
-	const preFiltered = jobs.filter((job) => {
-		// City matching (required) - use flexible matching for variations like "London" vs "Central London"
-		const cityMatch = userPrefs.target_cities.some((userCity) => {
-			const normalizedUserCity = userCity.toLowerCase().trim();
-			const normalizedJobCity = job.city?.toLowerCase().trim() || "";
-			// Allow partial matches for city names (e.g., "London" matches "Central London")
-			return (
-				normalizedJobCity === normalizedUserCity ||
-				normalizedJobCity.includes(normalizedUserCity) ||
-				normalizedUserCity.includes(normalizedJobCity)
+		// STAGE 1: Comprehensive pre-filtering (premium users provide rich data)
+		// This is the KEY difference from free - we filter THOROUGHLY because
+		// Premium users provide: cities, career, work environment, visa status, languages, etc.
+		const preFiltered = jobs.filter((job) => {
+			// City matching (required) - use flexible matching for variations like "London" vs "Central London"
+			const cityMatch = userPrefs.target_cities.some((userCity) => {
+				const normalizedUserCity = userCity.toLowerCase().trim();
+				const normalizedJobCity = job.city?.toLowerCase().trim() || "";
+				// Allow partial matches for city names (e.g., "London" matches "Central London")
+				return (
+					normalizedJobCity === normalizedUserCity ||
+					normalizedJobCity.includes(normalizedUserCity) ||
+					normalizedUserCity.includes(normalizedJobCity)
+				);
+			});
+			if (!cityMatch) return false;
+
+			// Career path matching - uses proper database category mapping, not string matching
+			const careerMatch = jobMatchesUserCategories(
+				job.categories || [],
+				userPrefs.career_path || [],
 			);
+			if (!careerMatch) return false;
+
+			// Work environment matching
+			const workEnvMatch =
+				!userPrefs.work_environment ||
+				userPrefs.work_environment === "unclear" ||
+				job.work_environment === userPrefs.work_environment;
+			if (!workEnvMatch) return false;
+
+			// Visa status matching (if specified)
+			const visaMatch =
+				!userPrefs.visa_status || job.visa_sponsorship || job.visa_friendly;
+			if (!visaMatch) return false;
+
+			return true;
 		});
-		if (!cityMatch) return false;
-
-		// Career path matching - uses proper database category mapping, not string matching
-		const careerMatch = jobMatchesUserCategories(
-			job.categories || [],
-			userPrefs.career_path || [],
-		);
-		if (!careerMatch) return false;
-
-		// Industries matching (premium feature)
-		// Note: Skills filtering removed from pre-filter - moved to ranking for better UX
-		const industryMatch =
-			!userPrefs.industries?.length ||
-			userPrefs.industries.some(
-				(industry) =>
-					job.company?.toLowerCase().includes(industry.toLowerCase()) ||
-					job.description?.toLowerCase().includes(industry.toLowerCase()),
-			);
-		if (!industryMatch) return false;
-
-		// Work environment matching
-		const workEnvMatch =
-			!userPrefs.work_environment ||
-			userPrefs.work_environment === "unclear" ||
-			job.work_environment === userPrefs.work_environment;
-		if (!workEnvMatch) return false;
-
-		// Visa status matching (if specified)
-		const visaMatch =
-			!userPrefs.visa_status || job.visa_sponsorship || job.visa_friendly;
-		if (!visaMatch) return false;
-
-		return true;
-	});
 
 		apiLogger.info("[PREMIUM] Pre-filtered jobs", {
 			email: userPrefs.email,
@@ -129,8 +118,6 @@ export async function runPremiumMatching(
 			filtersApplied: {
 				cities: userPrefs.target_cities.length,
 				careers: userPrefs.career_path?.length || 0,
-				skills: userPrefs.skills?.length || 0,
-				industries: userPrefs.industries?.length || 0,
 				workEnvironment: !!userPrefs.work_environment,
 				visaStatus: !!userPrefs.visa_status,
 			},
@@ -143,34 +130,34 @@ export async function runPremiumMatching(
 					"Filters too restrictive - premium users have specific requirements",
 			});
 
-		// Fallback: Relax some constraints but keep core requirements
-		const fallbackFiltered = jobs.filter((job) => {
-			// Keep city and career as mandatory
-			const cityMatch = userPrefs.target_cities.some((userCity) => {
-				const normalizedUserCity = userCity.toLowerCase().trim();
-				const normalizedJobCity = job.city?.toLowerCase().trim() || "";
-				return (
-					normalizedJobCity === normalizedUserCity ||
-					normalizedJobCity.includes(normalizedUserCity) ||
-					normalizedUserCity.includes(normalizedJobCity)
+			// Fallback: Relax some constraints but keep core requirements
+			const fallbackFiltered = jobs.filter((job) => {
+				// Keep city and career as mandatory
+				const cityMatch = userPrefs.target_cities.some((userCity) => {
+					const normalizedUserCity = userCity.toLowerCase().trim();
+					const normalizedJobCity = job.city?.toLowerCase().trim() || "";
+					return (
+						normalizedJobCity === normalizedUserCity ||
+						normalizedJobCity.includes(normalizedUserCity) ||
+						normalizedUserCity.includes(normalizedJobCity)
+					);
+				});
+				const careerMatch = jobMatchesUserCategories(
+					job.categories || [],
+					userPrefs.career_path || [],
 				);
+
+				// Use relaxed work environment matching for recovery
+				const workEnvMatch =
+					!userPrefs.work_environment ||
+					userPrefs.work_environment === "unclear" ||
+					job.work_environment === userPrefs.work_environment;
+
+				return cityMatch && careerMatch && workEnvMatch;
 			});
-			const careerMatch = jobMatchesUserCategories(
-				job.categories || [],
-				userPrefs.career_path || [],
-			);
-
-			// Relax skills/industries but keep work env and visa
-			const workEnvMatch =
-				!userPrefs.work_environment ||
-				userPrefs.work_environment === "unclear" ||
-				job.work_environment === userPrefs.work_environment;
-
-			return cityMatch && careerMatch && workEnvMatch;
-		});
 
 			if (fallbackFiltered.length > 0) {
-				apiLogger.info("[PREMIUM] Using fallback (relaxed skills/industries)", {
+				apiLogger.info("[PREMIUM] Using fallback (relaxed industries)", {
 					email: userPrefs.email,
 					jobsInFallback: fallbackFiltered.length,
 				});
@@ -237,25 +224,25 @@ async function rankAndReturnMatches(
 				normalizedJobs as any,
 			);
 
-	const matches = (matchResult?.matches || [])
-		.slice(0, maxMatches) // PREMIUM: Use configurable match count
-		.map((m: any) => {
-			// Handle both formats: m.job (nested) and m directly (flat)
-			const jobData = m.job || m;
-			if (!jobData) {
-				apiLogger.warn("[PREMIUM] Match missing job data", {
-					email: userPrefs.email,
-					match: m,
-				});
-				return null;
-			}
-			return {
-				...jobData,
-				match_score: m.match_score || 0,
-				match_reason: m.match_reason || "Premium AI Match",
-			};
-		})
-		.filter(Boolean); // Remove null entries
+		const matches = (matchResult?.matches || [])
+			.slice(0, maxMatches) // PREMIUM: Use configurable match count
+			.map((m: any) => {
+				// Handle both formats: m.job (nested) and m directly (flat)
+				const jobData = m.job || m;
+				if (!jobData) {
+					apiLogger.warn("[PREMIUM] Match missing job data", {
+						email: userPrefs.email,
+						match: m,
+					});
+					return null;
+				}
+				return {
+					...jobData,
+					match_score: m.match_score || 0,
+					match_reason: m.match_reason || "Premium AI Match",
+				};
+			})
+			.filter(Boolean); // Remove null entries
 
 		apiLogger.info("[PREMIUM] Deep AI ranking complete", {
 			email: userPrefs.email,
@@ -267,23 +254,22 @@ async function rankAndReturnMatches(
 
 		// Save premium matches to database
 		const matchesToSave = matches.map((m: any) => ({
-			user_email: userPrefs.email,
-			job_hash: String(m.job_hash),
+			user_id: userPrefs.user_id, // ✅ FIXED #P6: Use user_id instead of user_email for proper FK
+			job_id: m.id, // Link to jobs table via proper FK
 			match_score: Number((m.match_score || 0) / 100),
 			match_reason: String(m.match_reason || "Premium AI Match"),
-			matched_at: new Date().toISOString(),
 			created_at: new Date().toISOString(),
 			match_algorithm: method,
 		}));
 
-	if (matchesToSave.length > 0) {
-		// Note: This uses user_matches table via views/aliases in the actual implementation
-		// For now, we log the matches to be saved (actual storage is handled by matching engine)
-		apiLogger.info("[PREMIUM] Premium matches ready for storage", {
-			email: userPrefs.email,
-			count: matchesToSave.length,
-		});
-	}
+		if (matchesToSave.length > 0) {
+			// Note: This uses user_matches table via views/aliases in the actual implementation
+			// For now, we log the matches to be saved (actual storage is handled by matching engine)
+			apiLogger.info("[PREMIUM] Premium matches ready for storage", {
+				email: userPrefs.email,
+				count: matchesToSave.length,
+			});
+		}
 
 		return {
 			matches,

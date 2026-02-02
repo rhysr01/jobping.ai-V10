@@ -56,7 +56,8 @@ function logInfo(message: string) {
 async function checkSentryConfiguration() {
 	logSection("Sentry Configuration Check");
 
-	const sentryDsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+	const sentryDsn =
+		process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
 	const sentryOrg = process.env.SENTRY_ORG;
 	const sentryProject = process.env.SENTRY_PROJECT;
 	const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
@@ -78,7 +79,10 @@ async function checkSentryConfiguration() {
 	// Validate DSN format
 	try {
 		const url = new URL(sentryDsn);
-		if (!url.hostname.includes("sentry.io") && !url.hostname.includes("ingest.sentry.io")) {
+		if (
+			!url.hostname.includes("sentry.io") &&
+			!url.hostname.includes("ingest.sentry.io")
+		) {
 			logWarning(`Sentry DSN hostname looks unusual: ${url.hostname}`);
 		} else {
 			logSuccess(`Sentry DSN hostname is valid: ${url.hostname}`);
@@ -90,7 +94,9 @@ async function checkSentryConfiguration() {
 
 	// Check Sentry project config (for source maps)
 	if (!sentryOrg || !sentryProject) {
-		logWarning("SENTRY_ORG or SENTRY_PROJECT not set (source maps may not upload)");
+		logWarning(
+			"SENTRY_ORG or SENTRY_PROJECT not set (source maps may not upload)",
+		);
 	} else {
 		logSuccess(`Sentry project: ${sentryOrg}/${sentryProject}`);
 	}
@@ -110,14 +116,15 @@ async function testSentryCapture() {
 	try {
 		// Initialize Sentry manually for testing
 		const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
-		
+
 		if (!dsn) {
 			logError("Cannot test Sentry - DSN not configured");
 			return false;
 		}
 
 		// Determine environment
-		const environment = process.env.VERCEL_ENV || process.env.NODE_ENV || "development";
+		const environment =
+			process.env.VERCEL_ENV || process.env.NODE_ENV || "development";
 
 		// Initialize Sentry with debug enabled
 		Sentry.init({
@@ -142,7 +149,9 @@ async function testSentryCapture() {
 
 		// Test 1: Capture a test exception
 		logInfo("\nTest 1: Capturing test exception...");
-		const testError = new Error("Sentry Integration Test - This is a test error");
+		const testError = new Error(
+			"Sentry Integration Test - This is a test error",
+		);
 		Sentry.captureException(testError, {
 			tags: {
 				test: true,
@@ -179,7 +188,9 @@ async function testSentryCapture() {
 
 		return true;
 	} catch (error) {
-		logError(`Sentry test failed: ${error instanceof Error ? error.message : String(error)}`);
+		logError(
+			`Sentry test failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		if (error instanceof Error && error.stack) {
 			console.error(error.stack);
 		}
@@ -194,7 +205,9 @@ async function checkSentryDashboard() {
 	console.log("\n1. Go to your Sentry project dashboard");
 	console.log("2. Check the 'Issues' tab");
 	console.log("3. Look for events with tag 'test: true'");
-	console.log("4. Check the environment filter matches your current environment");
+	console.log(
+		"4. Check the environment filter matches your current environment",
+	);
 	console.log("5. Verify date filters aren't excluding recent events");
 	console.log("\nCommon issues:");
 	console.log("  • Environment filter mismatch (check VERCEL_ENV or NODE_ENV)");
@@ -211,7 +224,9 @@ async function main() {
 	const configOk = await checkSentryConfiguration();
 
 	if (!configOk) {
-		logError("\nSentry is not properly configured. Please set SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN");
+		logError(
+			"\nSentry is not properly configured. Please set SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN",
+		);
 		logInfo("See .env.example for required environment variables");
 		process.exit(1);
 	}

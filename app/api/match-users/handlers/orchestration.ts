@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { apiLogger } from "../../../../lib/api-logger";
+import { ENV } from "../../../../lib/env";
 import type { Job as ScrapersJob } from "@/scrapers/types";
 import type { UserPreferences } from "../../../../utils/matching/types";
 import type { MatchResult, User } from "./types";
@@ -92,7 +93,7 @@ export async function fetchUsersAndJobs(
 		users,
 		jobs: jobs as ScrapersJob[],
 		transformedUsers,
-		isSemanticAvailable: !!process.env.OPENAI_API_KEY,
+		isSemanticAvailable: !!ENV.OPENAI_API_KEY,
 	};
 }
 

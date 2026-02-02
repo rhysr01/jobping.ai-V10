@@ -35,6 +35,8 @@ if (!process.env.CAREERJET_API_KEY) {
 	process.exit(1);
 }
 const { processIncomingJob } = require("./shared/processor.cjs");
+const { validateAndFixCategories } = require("./shared/categoryMapper.cjs");
+const { getInferredCategories } = require("./shared/careerPathInference.cjs");
 
 const CAREERJET_API_KEY = process.env.CAREERJET_API_KEY;
 // V4 API endpoint (HTTPS with basic authentication)
@@ -250,8 +252,8 @@ const LOCAL_EARLY_CAREER_TERMS = {
 		"estágio tech",
 		"estágio rh",
 	],
-	ie: ["early careers", "junior", "graduate", "internship"],  // English only
-	gb: [],  // English only
+	ie: ["early careers", "junior", "graduate", "internship"], // English only
+	gb: [], // English only
 	ch: [
 		// German/French Switzerland
 		"absolvent",
@@ -615,22 +617,25 @@ function getRandomEuropeanIP() {
 	// Use consistent IP from environment or generate deterministic one
 	// This should be whitelisted on CareerJet partner dashboard
 	const consistentIp = process.env.CAREERJET_USER_IP;
-	
+
 	if (consistentIp) {
 		return consistentIp; // Use env var if provided
 	}
-	
+
 	// Fallback: Generate consistent IP based on hostname/machine to minimize variation
 	// This ensures same IP across multiple runs on the same machine
 	const hostname = require("os").hostname();
-	const hash = require("crypto").createHash("md5").update(hostname).digest("hex");
-	
+	const hash = require("crypto")
+		.createHash("md5")
+		.update(hostname)
+		.digest("hex");
+
 	// Use hash to generate reproducible IP
 	const part1 = parseInt(hash.substring(0, 2), 16) % 256;
 	const part2 = parseInt(hash.substring(2, 4), 16) % 256;
 	const part3 = parseInt(hash.substring(4, 6), 16) % 256;
 	const part4 = parseInt(hash.substring(6, 8), 16) % 256;
-	
+
 	return `${part1}.${part2}.${part3}.${part4}`;
 }
 
@@ -814,6 +819,10 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 								source: "careerjet",
 								defaultCity: city.name,
 								defaultCountry: city.country,
+								categories: getInferredCategories(
+									job.title,
+									enrichedDescription,
+								), // Infer career path from title/description
 							},
 						);
 

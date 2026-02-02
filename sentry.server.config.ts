@@ -25,14 +25,19 @@ Sentry.init({
 	tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
 	// Enable debug mode in development or when SENTRY_DEBUG is set
-	debug: process.env.SENTRY_DEBUG === "true" || process.env.NODE_ENV === "development",
+	debug:
+		process.env.SENTRY_DEBUG === "true" ||
+		process.env.NODE_ENV === "development",
 
 	// Only initialize if DSN is available (Vercel integration will provide this)
 	enabled: isEnabled,
 
 	// Add beforeSend hook to log when events are sent (useful for debugging)
 	beforeSend(event) {
-		if (process.env.SENTRY_DEBUG === "true" || process.env.NODE_ENV === "development") {
+		if (
+			process.env.SENTRY_DEBUG === "true" ||
+			process.env.NODE_ENV === "development"
+		) {
 			console.log("[Sentry Server] Event captured:", {
 				message: event.message,
 				exception: event.exception,
@@ -45,7 +50,9 @@ Sentry.init({
 });
 
 if (isEnabled) {
-	console.log(`[Sentry Server] Initialized for environment: ${getEnvironment()}`);
+	console.log(
+		`[Sentry Server] Initialized for environment: ${getEnvironment()}`,
+	);
 } else {
 	console.warn("[Sentry Server] DSN not found - Sentry is disabled");
 }

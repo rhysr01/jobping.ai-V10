@@ -25,7 +25,10 @@ interface PremiumJobsPreviewProps {
 	className?: string;
 }
 
-export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJobsPreviewProps) {
+export function PremiumJobsPreview({
+	userPreferences,
+	className = "",
+}: PremiumJobsPreviewProps) {
 	const [premiumJobs, setPremiumJobs] = useState<Job[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(false);
@@ -68,7 +71,11 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 
 	// Lazy load: Only fetch when component becomes visible
 	useEffect(() => {
-		if (userPreferences.tier !== 'premium' && !hasLoaded && previewRef.current) {
+		if (
+			userPreferences.tier !== "premium" &&
+			!hasLoaded &&
+			previewRef.current
+		) {
 			// Use Intersection Observer for lazy loading
 			const observer = new IntersectionObserver(
 				(entries) => {
@@ -77,7 +84,7 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 						observer.disconnect();
 					}
 				},
-				{ threshold: 0.1 } // Trigger when 10% visible
+				{ threshold: 0.1 }, // Trigger when 10% visible
 			);
 
 			const element = previewRef.current;
@@ -91,7 +98,7 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 	}, [userPreferences, hasLoaded]);
 
 	// Don't show for premium users
-	if (userPreferences.tier === 'premium') {
+	if (userPreferences.tier === "premium") {
 		return null;
 	}
 
@@ -111,7 +118,10 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 				</div>
 				<div className="grid gap-4 md:gap-6">
 					{[1, 2, 3].map((i) => (
-						<div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6">
+						<div
+							key={i}
+							className="bg-white/5 border border-white/10 rounded-xl p-6"
+						>
 							<div className="animate-pulse space-y-3">
 								<div className="flex justify-between">
 									<div className="space-y-2">
@@ -140,9 +150,9 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 	// Main component render
 
 	const handleUpgradeClick = () => {
-		trackEvent('premium_preview_clicked', { 
-			location: 'matches_page',
-			job_count: premiumJobs.length
+		trackEvent("premium_preview_clicked", {
+			location: "matches_page",
+			job_count: premiumJobs.length,
 		});
 	};
 
@@ -168,7 +178,9 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 					Unlock Premium Matches Like These
 				</h3>
 				<p className="text-zinc-400 text-lg">
-					Premium users get <strong className="text-emerald-400">15 matches/week</strong> instead of 5
+					Premium users get{" "}
+					<strong className="text-emerald-400">15 matches/week</strong> instead
+					of 5
 				</p>
 				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20">
 					<BrandIcons.Star className="w-4 h-4 text-amber-400" />
@@ -189,7 +201,7 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 						className="relative group"
 					>
 						{/* Blur overlay */}
-						<motion.div 
+						<motion.div
 							className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-xl z-10 flex items-center justify-center"
 							whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.7)" }}
 						>
@@ -220,14 +232,14 @@ export function PremiumJobsPreview({ userPreferences, className = "" }: PremiumJ
 									<h4 className="text-lg font-bold text-white mb-1 line-clamp-1">
 										{job.title}
 									</h4>
-									<p className="text-zinc-300 font-medium mb-1">{job.company}</p>
+									<p className="text-zinc-300 font-medium mb-1">
+										{job.company}
+									</p>
 									<p className="text-zinc-400 text-sm">{job.location}</p>
 								</div>
 								<div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full">
 									<span className="text-sm font-bold">{job.match_score}%</span>
-									{job.match_score >= 90 && (
-										<span className="text-xs">🔥</span>
-									)}
+									{job.match_score >= 90 && <span className="text-xs">🔥</span>}
 								</div>
 							</div>
 

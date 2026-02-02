@@ -50,7 +50,9 @@ const mockSupabase = {
 				maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
 				single: jest.fn().mockResolvedValue({ data: null, error: null }),
 				limit: jest.fn().mockResolvedValue({ data: null, error: null }),
-				order: jest.fn(function() { return this; }),
+				order: jest.fn(function () {
+					return this;
+				}),
 			})),
 		})),
 		insert: jest.fn(() => ({
@@ -391,10 +393,10 @@ describe("Free Signup Route - Bug Fixes Verification", () => {
 	test("Bug #1 Fix: Uses user_matches table with user_id (not email)", () => {
 		// The API now queries user_matches with user_id
 		const userId = "test-user-id";
-		
+
 		// Verify user_matches is the correct table
 		expect(mockSupabase.from).toBeDefined();
-		
+
 		// When querying matches, should use user_matches table
 		// This is verified in the production code at lines 542-545
 		// .from("user_matches")

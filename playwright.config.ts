@@ -6,6 +6,18 @@ import { defineConfig, devices } from "@playwright/test";
  * Comprehensive configuration for testing JobPing across multiple browsers
  * with focus on accessibility, performance, and cross-browser compatibility.
  */
+
+// Set Supabase environment variables for E2E tests
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+	process.env.NEXT_PUBLIC_SUPABASE_URL =
+		"https://kpecjbjtdjzgkzywylhn.supabase.co";
+}
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+	process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY =
+		"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwZWNqYmp0ZGp6Z2t6eXd5bGhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MDA1NDMsImV4cCI6MjA2OTM3NjU0M30.farRPmTjuGef1muZrnCc43APluEIFbnhdJ5fxsrZi2g";
+}
+
 export default defineConfig({
 	// Test directory
 	testDir: "./tests",

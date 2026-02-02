@@ -297,32 +297,24 @@ const freeSignupSchema = z.object({
 		.min(1, "Select at least one city")
 		.max(3, "Maximum 3 cities allowed"),
 	careerPath: z.array(z.string()).min(1, "Select at least one career path"),
-	entryLevelPreferences: z
-		.array(z.string())
-		.optional()
-		.default(["graduate", "intern", "junior"]),
-	// Visa status is optional for free tier - assume EU citizen as default
-	// Premium users get detailed visa filtering as an upgrade feature
-	visaStatus: z.string().optional().default("EU citizen"),
-	// GDPR compliance fields
-	age_verified: z
-		.boolean()
-		.refine((val) => val === true, "Age verification is required"),
-	terms_accepted: z
-		.boolean()
-		.refine((val) => val === true, "Terms of service must be accepted"),
+	// NOTE: FREE tier does NOT collect these fields (they're PREMIUM-only per signupformfreevpremium.md)
+	// Removed:
+	// - entryLevelPreferences (PREMIUM feature)
+	// - visaStatus (PREMIUM feature)
+	// - age_verified (PREMIUM legal requirement)
+	// - terms_accepted (PREMIUM legal requirement)
 });
 
 export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);
-	
+
 	console.log("[FREE SIGNUP] Request received", {
 		requestId,
 		timestamp: new Date().toISOString(),
 		url: request.url,
 		method: request.method,
 	});
-	
+
 	// Set Sentry context for this request
 	Sentry.setContext("request", {
 		requestId,
@@ -385,7 +377,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.map((e: any) => `${e.path.join(".")}: ${e.message}`)
 			.join(", ");
 		const validationError = new Error(errors);
-		
+
 		apiLogger.warn("Free signup validation failed", validationError, {
 			requestId,
 			email: body.email,
@@ -397,7 +389,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			visaStatus: body.visaStatus,
 			requestBody: body,
 		});
-		
+
 		Sentry.captureMessage("Free signup validation failed", {
 			level: "warning",
 			tags: { endpoint: "signup-free", error_type: "validation" },
@@ -409,7 +401,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				careerPath: body.careerPath,
 			},
 		});
-		
+
 		return NextResponse.json(
 			{
 				error: "invalid_input",
@@ -422,19 +414,11 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		);
 	}
 
-	const {
-		email,
-		full_name,
-		cities,
-		careerPath,
-		entryLevelPreferences,
-		visaStatus,
-		age_verified: _age_verified,
-	} = validationResult.data;
+	const { email, full_name, cities, careerPath } = validationResult.data;
 
-	// Map visaStatus to visa_status format (for consistency with existing data)
-	const visa_status =
-		visaStatus === "yes" ? "Non-EU (require sponsorship)" : "EU citizen";
+	// NOTE: FREE tier does NOT use visaStatus, entryLevelPreferences, or age verification
+	// These are PREMIUM-only features per signupformfreevpremium.md
+	const visa_status = "EU citizen"; // Default for free tier users
 
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
@@ -452,7 +436,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.select("id, subscription_tier")
 			.eq("email", normalizedEmail)
 			.maybeSingle();
-		
+
 		console.log("[FREE SIGNUP] Existing user check result", {
 			requestId,
 			normalizedEmail,
@@ -460,7 +444,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			error: error ? { code: error.code, message: error.message } : null,
 			existingUser: data ? { id: data.id, tier: data.subscription_tier } : null,
 		});
-		
+
 		if (error) {
 			apiLogger.warn("Error checking existing user", error as Error, {
 				requestId,
@@ -503,7 +487,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			userId: existingUser.id,
 			tier: existingUser.subscription_tier,
 		});
-		
+
 		// User already exists - redirect to matches regardless of tier
 		// This prevents duplicate accounts and ensures users can access their matches
 		const response = NextResponse.json(
@@ -516,19 +500,19 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			{ status: 409 },
 		);
 
-	// Set cookie so they can access matches
-	const isProduction = process.env.NODE_ENV === "production";
-	const isHttps =
-		request.headers.get("x-forwarded-proto") === "https" ||
-		request.url.startsWith("https://");
+		// Set cookie so they can access matches
+		const isProduction = process.env.NODE_ENV === "production";
+		const isHttps =
+			request.headers.get("x-forwarded-proto") === "https" ||
+			request.url.startsWith("https://");
 
-	response.cookies.set("user_email", normalizedEmail, {
-		httpOnly: true,
-		secure: isProduction && isHttps,
-		sameSite: "lax",
-		maxAge: 60 * 60 * 24 * 30, // 30 days
-		path: "/",
-	});
+		response.cookies.set("user_email", normalizedEmail, {
+			httpOnly: true,
+			secure: isProduction && isHttps,
+			sameSite: "lax",
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			path: "/",
+		});
 
 		// Check if they have matches
 		const { data: existingMatches } = await supabase
@@ -554,7 +538,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.from("promo_pending")
 			.delete()
 			.eq("email", normalizedEmail);
-		
+
 		if (deleteError) {
 			// Log but don't fail - this is cleanup, not critical
 			apiLogger.warn("Failed to clean up promo_pending", deleteError as Error, {
@@ -598,13 +582,17 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		})
 		.select("id, email")
 		.single();
-	
+
 	console.log("[FREE SIGNUP] Minimal user insert result", {
 		requestId,
 		normalizedEmail,
 		hasError: !!minimalError,
-		error: minimalError ? { code: minimalError.code, message: minimalError.message } : null,
-		userData: minimalUserData ? { id: minimalUserData.id, email: minimalUserData.email } : null,
+		error: minimalError
+			? { code: minimalError.code, message: minimalError.message }
+			: null,
+		userData: minimalUserData
+			? { id: minimalUserData.id, email: minimalUserData.email }
+			: null,
 	});
 
 	if (minimalError) {
@@ -630,7 +618,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		normalizedEmail,
 		userId: minimalUserData.id,
 	});
-	
+
 	try {
 		// Form now sends long form directly (data-analytics, finance-investment, etc)
 		// No conversion needed - store as-is
@@ -643,8 +631,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				free_expires_at: freeExpiresAt.toISOString(),
 				target_cities: cities,
 				career_path: careerPath[0] || null,
-				entry_level_preference:
-					entryLevelPreferences?.join(", ") || "graduate, intern, junior",
+				// NOTE: FREE tier does NOT set entry_level_preference
+				// This is a PREMIUM-only matching feature
 				visa_status: visa_status,
 				email_verified: true,
 				subscription_active: false,
@@ -652,12 +640,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.eq("id", minimalUserData.id)
 			.select()
 			.single();
-		
+
 		console.log("[FREE SIGNUP] User update result", {
 			requestId,
 			normalizedEmail,
 			hasError: !!updateError,
-			error: updateError ? { code: updateError.code, message: updateError.message } : null,
+			error: updateError
+				? { code: updateError.code, message: updateError.message }
+				: null,
 			updated: !!updatedUserData,
 		});
 
@@ -666,21 +656,28 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		}
 		// If update fails, continue with minimal user data
 	} catch (updateError) {
-		const errorMessage = updateError instanceof Error ? updateError.message : String(updateError);
-		apiLogger.warn("Failed to update user with additional fields, continuing with minimal data", {
-			requestId,
-			email: normalizedEmail,
-			error: errorMessage,
-		});
-		Sentry.captureException(updateError instanceof Error ? updateError : new Error(errorMessage), {
-			tags: { endpoint: "signup-free", error_type: "user_update" },
-			level: "warning",
-			extra: {
+		const errorMessage =
+			updateError instanceof Error ? updateError.message : String(updateError);
+		apiLogger.warn(
+			"Failed to update user with additional fields, continuing with minimal data",
+			{
 				requestId,
 				email: normalizedEmail,
-				stage: "user_field_update",
+				error: errorMessage,
 			},
-		});
+		);
+		Sentry.captureException(
+			updateError instanceof Error ? updateError : new Error(errorMessage),
+			{
+				tags: { endpoint: "signup-free", error_type: "user_update" },
+				level: "warning",
+				extra: {
+					requestId,
+					email: normalizedEmail,
+					stage: "user_field_update",
+				},
+			},
+		);
 	}
 
 	// CRITICAL FIX: Ensure target_cities is always an array
@@ -701,11 +698,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Fallback to cities if target_cities is empty (shouldn't happen, but safety check)
-	if (
-		targetCities.length === 0 &&
-		cities &&
-		cities.length > 0
-	) {
+	if (targetCities.length === 0 && cities && cities.length > 0) {
 		targetCities = cities;
 	}
 
@@ -781,7 +774,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			countries: countriesArray,
 		});
 	}
-	// REMOVED LIMIT - let PrefilterService filter by location/career first
+	// CRITICAL: Add limit to prevent querying massive job pools
+	// Free tier only needs enough jobs for AI to pick top 5
+	// PrefilterService + AI will filter further
+	query = query.limit(1500);
 
 	apiLogger.info("Free signup - job query configured", {
 		requestId,
@@ -796,7 +792,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		normalizedEmail,
 		jobCount: allJobs?.length || 0,
 		hasError: !!jobsError,
-		error: jobsError ? { code: jobsError.code, message: jobsError.message } : null,
+		error: jobsError
+			? { code: jobsError.code, message: jobsError.message }
+			: null,
 	});
 
 	// ENTERPRISE-LEVEL FIX: Improved fallback logic
@@ -861,12 +859,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Final check: if still no jobs, return error
 	if (jobsError || !allJobs || allJobs.length === 0) {
-		const reason = targetCities.length === 0
-			? "No cities selected"
-			: jobsError
-				? `Database error: ${jobsError.message}`
-				: "No jobs match your criteria after all fallback attempts";
-		
+		const reason =
+			targetCities.length === 0
+				? "No cities selected"
+				: jobsError
+					? `Database error: ${jobsError.message}`
+					: "No jobs match your criteria after all fallback attempts";
+
 		apiLogger.warn("Free signup - no jobs found after all fallbacks", {
 			requestId,
 			email: normalizedEmail,
@@ -876,7 +875,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			jobsCount: allJobs?.length || 0,
 			reason,
 		});
-		
+
 		Sentry.captureMessage("Free signup - no jobs found after all fallbacks", {
 			level: "warning",
 			tags: { endpoint: "signup-free", error_type: "no_jobs_found" },
@@ -889,7 +888,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				jobsError: jobsError?.message,
 			},
 		});
-		
+
 		return NextResponse.json(
 			{
 				error: "no_jobs_found",
@@ -913,18 +912,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		note: "Matching engine handles hard gates, pre-ranking, and AI matching",
 	});
 
+	// REFACTORED: Only use fields that FREE tier form actually collects
+	// Form fields: email, fullName, cities, careerPath (that's it!)
+	// NO visa, NO entry_level, NO skills, NO industries (premium-only)
 	const userPrefs = {
 		email: userData.email,
 		target_cities: targetCities,
 		career_path: userData.career_path ? [userData.career_path] : [],
-		entry_level_preference: userData.entry_level_preference,
-		work_environment: undefined, // Free users don't have work environment preferences
-		languages_spoken: userData.languages_spoken || [],
-		roles_selected: userData.roles_selected || [],
-		company_types: userData.company_types || [],
-		visa_status: userData.visa_status,
-		professional_expertise: userData.career_path || "",
-		subscription_tier: "free" as const, // TIER-AWARE: Mark as free tier
+		subscription_tier: "free" as const,
 	};
 
 	// Pass all jobs to matching engine - it handles hard gates and pre-ranking
@@ -950,7 +945,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		return NextResponse.json(
 			{
 				error: "no_jobs_for_matching",
-				message: "No jobs available for matching. Try different cities or career paths.",
+				message:
+					"No jobs available for matching. Try different cities or career paths.",
 				details: { cities: targetCities, careerPath: userData.career_path },
 				requestId,
 			},
@@ -967,10 +963,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			email: userPrefs.email,
 			target_cities: userPrefs.target_cities,
 			career_path: userPrefs.career_path,
-			visa_status: userPrefs.visa_status,
+			// FREE form does NOT collect: visa_status, entry_level, skills, etc
 		},
 	});
-	
+
 	const matchingConfig = SignupMatchingService.getConfig("free");
 	const matchingResult = await SignupMatchingService.runMatching(
 		userPrefs,
@@ -989,7 +985,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Check for matches
 	if (matchesCount === 0) {
-		const matchingReason = matchingResult.error || "No jobs matched user criteria after filtering";
+		const matchingReason =
+			matchingResult.error || "No jobs matched user criteria after filtering";
 		apiLogger.info("Free signup - no matches found for user criteria", {
 			requestId,
 			email: normalizedEmail,

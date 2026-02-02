@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
 import { apiLogger } from "../../../lib/api-logger";
 import { createSuccessResponse } from "../../../lib/api-response";
 import { AppError, asyncHandler } from "../../../lib/errors";
@@ -54,22 +54,25 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			throw new AppError("Cities array is required", 400, "VALIDATION_ERROR");
 		}
 
-	// Career path is optional for all queries - only used for filtering when provided
-	// Normalize to canonical format (strategy, data-analytics, etc)
-	const rawCareerPath = Array.isArray(careerPath) ? careerPath[0] : careerPath;
-	const normalized = normalizeCareerPath(rawCareerPath);
-	const normalizedCareerPath = normalized && normalized[0] !== "unsure" ? normalized[0] : null;
+		// Career path is optional for all queries - only used for filtering when provided
+		// Normalize to canonical format (strategy, data-analytics, etc)
+		const rawCareerPath = Array.isArray(careerPath)
+			? careerPath[0]
+			: careerPath;
+		const normalized = normalizeCareerPath(rawCareerPath);
+		const normalizedCareerPath =
+			normalized && normalized[0] !== "unsure" ? normalized[0] : null;
 
-	apiLogger.info("Preview matches request", {
-		cities,
-		careerPath: normalizedCareerPath || "not filtered",
-		visaSponsorship,
-		limit,
-		isPreview,
-		isPremiumPreview,
-		requestId,
-		note: "Career path filtered by database query using category mapping",
-	});
+		apiLogger.info("Preview matches request", {
+			cities,
+			careerPath: normalizedCareerPath || "not filtered",
+			visaSponsorship,
+			limit,
+			isPreview,
+			isPremiumPreview,
+			requestId,
+			note: "Career path filtered by database query using category mapping",
+		});
 
 		const supabase = getDatabaseClient();
 
@@ -86,38 +89,40 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			.gte("created_at", sixtyDaysAgo.toISOString());
 
 		// Use exact city names only - cities are normalized to form values via migration
-	const cityVariations = new Set<string>(cities);
+		const cityVariations = new Set<string>(cities);
 
-	// Apply city filter first
+		// Apply city filter first
 		if (cityVariations.size > 0) {
 			const cityArray = Array.from(cityVariations);
 			query = query.in("city", cityArray);
 		}
 
-	// Build early-career filter that includes career path
-	// Using long form categories throughout (finance-investment, data-analytics, etc)
-	let earlyCareerFilter = "";
-	if (normalizedCareerPath) {
-		// Include both early-career and the specific career path
-		if (isPremiumPreview) {
-			earlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+		// Build career path filter that includes internships, graduates, and early-career
+		// Using long form categories throughout (finance-investment, data-analytics, etc)
+		let careerPathFilter = "";
+		if (normalizedCareerPath) {
+			// Include internships, graduates, early-career, and the specific career path
+			if (isPremiumPreview) {
+				careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+			} else {
+				careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+			}
+			apiLogger.info("Applied career path filter in OR clause", {
+				careerPath: normalizedCareerPath,
+				requestId,
+			});
 		} else {
-			earlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+			// No career path specified - use standard early-career + internship filter
+			if (isPremiumPreview) {
+				careerPathFilter =
+					"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
+			} else {
+				careerPathFilter =
+					"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
+			}
 		}
-		apiLogger.info("Applied career path filter in OR clause", {
-			careerPath: normalizedCareerPath,
-			requestId,
-		});
-	} else {
-		// No career path specified - use standard early-career filter
-		if (isPremiumPreview) {
-			earlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
-		} else {
-			earlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
-		}
-	}
-	
-	query = query.or(earlyCareerFilter);
+
+		query = query.or(careerPathFilter);
 
 		// Filter by visa sponsorship if specified
 		if (visaSponsorship) {
@@ -163,7 +168,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		if (jobCount === 0 && cities.length > 0) {
 			apiLogger.info("No jobs found with city filter, trying fallback", {
 				cities,
-				requestId
+				requestId,
 			});
 
 			let fallbackQuery = supabase
@@ -174,24 +179,26 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 				.is("filtered_reason", null)
 				.gte("created_at", sixtyDaysAgo.toISOString());
 
-			// Apply same role filtering with career path if specified
+			// Apply same career path filtering if specified, including internships/graduates
 			// Using long form categories (finance-investment, data-analytics, etc)
-			let fallbackEarlyCareerFilter = "";
+			let fallbackCareerPathFilter = "";
 			if (normalizedCareerPath) {
 				if (isPremiumPreview) {
-					fallbackEarlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+					fallbackCareerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
 				} else {
-					fallbackEarlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+					fallbackCareerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
 				}
 			} else {
 				if (isPremiumPreview) {
-					fallbackEarlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
+					fallbackCareerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
 				} else {
-					fallbackEarlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
+					fallbackCareerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
 				}
 			}
-			
-			fallbackQuery = fallbackQuery.or(fallbackEarlyCareerFilter);
+
+			fallbackQuery = fallbackQuery.or(fallbackCareerPathFilter);
 
 			const { count: fallbackCount } = await fallbackQuery;
 			jobCount = Math.min(fallbackCount || 0, 500); // Cap at 500 to avoid overwhelming numbers
@@ -199,7 +206,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			if (jobCount > 0) {
 				apiLogger.info("Fallback query found jobs", {
 					fallbackCount: jobCount,
-					requestId
+					requestId,
 				});
 			}
 		}
@@ -220,11 +227,11 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		let matches: JobPreview[] | undefined;
 
-	// If this is a preview request, fetch actual job matches
-	if (isPreview && jobCount > 0) {
-		let jobsQuery = supabase
-			.from("jobs")
-			.select(`
+		// If this is a preview request, fetch actual job matches
+		if (isPreview && jobCount > 0) {
+			let jobsQuery = supabase
+				.from("jobs")
+				.select(`
 				id,
 				title,
 				company,
@@ -234,44 +241,48 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 				job_url,
 				posted_at
 			`)
-			.eq("is_active", true)
-			.eq("status", "active")
-			.is("filtered_reason", null)
-			.gte("created_at", sixtyDaysAgo.toISOString());
+				.eq("is_active", true)
+				.eq("status", "active")
+				.is("filtered_reason", null)
+				.gte("created_at", sixtyDaysAgo.toISOString());
 
-		// Apply same filters as count query
-		if (cityVariations.size > 0) {
-			const cityArray = Array.from(cityVariations);
-			jobsQuery = jobsQuery.in("city", cityArray);
-		}
-
-		// Build same early-career filter with career path included
-		// Using long form categories (finance-investment, data-analytics, etc)
-		let jobsEarlyCareerFilter = "";
-		if (normalizedCareerPath) {
-			if (isPremiumPreview) {
-				jobsEarlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
-			} else {
-				jobsEarlyCareerFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+			// Apply same filters as count query
+			if (cityVariations.size > 0) {
+				const cityArray = Array.from(cityVariations);
+				jobsQuery = jobsQuery.in("city", cityArray);
 			}
-		} else {
-			if (isPremiumPreview) {
-				jobsEarlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
+
+			// Build same career path filter with internships/graduates/early-career included
+			// Using long form categories (finance-investment, data-analytics, etc)
+			let jobsCareerPathFilter = "";
+			if (normalizedCareerPath) {
+				if (isPremiumPreview) {
+					jobsCareerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+				} else {
+					jobsCareerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+				}
 			} else {
-				jobsEarlyCareerFilter = "is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
+				if (isPremiumPreview) {
+					jobsCareerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
+				} else {
+					jobsCareerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
+				}
 			}
-		}
-		
-		jobsQuery = jobsQuery.or(jobsEarlyCareerFilter);
 
-		if (visaSponsorship === "need-sponsorship") {
-			jobsQuery = jobsQuery.eq("visa_friendly", true);
-		}
+			jobsQuery = jobsQuery.or(jobsCareerPathFilter);
 
-		// Order by most recent and limit results
-		jobsQuery = jobsQuery.order("posted_at", { ascending: false }).limit(limit);
+			if (visaSponsorship === "need-sponsorship") {
+				jobsQuery = jobsQuery.eq("visa_friendly", true);
+			}
 
-		const { data: jobsData, error: jobsError } = await jobsQuery;
+			// Order by most recent and limit results
+			jobsQuery = jobsQuery
+				.order("posted_at", { ascending: false })
+				.limit(limit);
+
+			const { data: jobsData, error: jobsError } = await jobsQuery;
 
 			if (jobsError) {
 				apiLogger.warn("Failed to fetch job previews", jobsError, {
@@ -291,10 +302,10 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 					job_url: job.job_url,
 					posted_at: job.posted_at,
 					// Premium previews get higher match scores to show value
-					match_score: isPremiumPreview 
+					match_score: isPremiumPreview
 						? Math.floor(Math.random() * 20) + 80 // 80-99% for premium
 						: Math.floor(Math.random() * 30) + 70, // 70-99% for regular
-					match_reason: isPremiumPreview 
+					match_reason: isPremiumPreview
 						? "Premium match - location, career, and company fit"
 						: "Location and career match",
 				}));
@@ -315,13 +326,12 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			requestId,
 		});
 
-		const successResponse = createSuccessResponse(
+		const nextResponse = createSuccessResponse(
 			response,
 			undefined,
 			undefined,
 			200,
 		);
-		const nextResponse = NextResponse.json(successResponse, { status: 200 });
 		nextResponse.headers.set("x-request-id", requestId);
 
 		return nextResponse;

@@ -7,7 +7,10 @@ interface JobCardSkeletonProps {
 	className?: string;
 }
 
-export function JobCardSkeleton({ count = 1, className = "" }: JobCardSkeletonProps) {
+export function JobCardSkeleton({
+	count = 1,
+	className = "",
+}: JobCardSkeletonProps) {
 	const skeletons = Array.from({ length: count }, (_, i) => i);
 
 	return (
@@ -60,4 +63,3 @@ export function JobCardSkeleton({ count = 1, className = "" }: JobCardSkeletonPr
 }
 
 export default JobCardSkeleton;
-

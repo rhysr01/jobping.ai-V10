@@ -619,14 +619,11 @@ class RealJobRunner {
 			}
 
 			const { stdout, stderr } = await this.withTimeout(
-				execAsync(
-					"NODE_ENV=production node scripts/jobspy-career-paths.cjs",
-					{
-						cwd: process.cwd(),
-						// Remove timeout from execAsync, let withTimeout handle it
-						env: { ...process.env },
-					},
-				),
+				execAsync("NODE_ENV=production node scripts/jobspy-career-paths.cjs", {
+					cwd: process.cwd(),
+					// Remove timeout from execAsync, let withTimeout handle it
+					env: { ...process.env },
+				}),
 				600000, // 10 minutes timeout (reduced from 15 - optimized script now runs faster)
 				"JobSpy Career Paths scraper",
 			);
@@ -641,9 +638,7 @@ class RealJobRunner {
 
 			// Parse job count from the result
 			let jobsSaved = 0;
-			const savedMatch = stdout.match(
-				/💾 Total Jobs Saved: (\d+)/,
-			);
+			const savedMatch = stdout.match(/💾 Total Jobs Saved: (\d+)/);
 			if (savedMatch) {
 				jobsSaved = parseInt(savedMatch[1]);
 			} else {
@@ -1447,13 +1442,17 @@ class RealJobRunner {
 			let careerPathsJobs = 0;
 
 			try {
-				const [jobspyResult, internshipsResult, careerPathResult, careerPathsResult] =
-					await Promise.allSettled([
-						this.runJobSpyScraper(),
-						this.runJobSpyInternshipsScraper(),
-						this.runJobSpyCareerPathRolesScraper(signupTargets),
-						this.runJobSpyCareerPathsScraper(),
-					]);
+				const [
+					jobspyResult,
+					internshipsResult,
+					careerPathResult,
+					careerPathsResult,
+				] = await Promise.allSettled([
+					this.runJobSpyScraper(),
+					this.runJobSpyInternshipsScraper(),
+					this.runJobSpyCareerPathRolesScraper(signupTargets),
+					this.runJobSpyCareerPathsScraper(),
+				]);
 
 				jobspyJobs =
 					jobspyResult.status === "fulfilled" ? jobspyResult.value : 0;
@@ -1464,7 +1463,9 @@ class RealJobRunner {
 				careerPathRolesJobs =
 					careerPathResult.status === "fulfilled" ? careerPathResult.value : 0;
 				careerPathsJobs =
-					careerPathsResult.status === "fulfilled" ? careerPathsResult.value : 0;
+					careerPathsResult.status === "fulfilled"
+						? careerPathsResult.value
+						: 0;
 
 				if (jobspyResult.status === "rejected") {
 					console.error(

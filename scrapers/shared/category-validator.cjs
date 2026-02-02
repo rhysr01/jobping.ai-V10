@@ -1,7 +1,7 @@
 /**
  * Category Validator
  * Ensures job categories match exactly with signup form CAREER_PATHS
- * 
+ *
  * Valid categories (from components/signup/constants.ts):
  * - strategy-business-design
  * - data-analytics
@@ -14,7 +14,7 @@
  * - sustainability-esg
  * - unsure (fallback for general/unknown roles)
  * - early-career (flag, not a career path)
- * 
+ *
  * INVALID categories (must be removed):
  * - people-hr ❌ NOT a signup form option
  * - creative-design ❌ NOT a signup form option
@@ -68,18 +68,18 @@ function validateCategories(categories) {
 	// Remove invalid categories
 	const cleaned = categories.filter((cat) => {
 		const lowerCat = String(cat).toLowerCase().trim();
-		
+
 		// Remove if in invalid set
 		if (INVALID_CATEGORIES.has(lowerCat)) {
 			console.warn(`[CategoryValidator] Removing invalid category: ${cat}`);
 			return false;
 		}
-		
+
 		// Keep if in valid set
 		if (VALID_CATEGORIES.has(lowerCat)) {
 			return true;
 		}
-		
+
 		// Remove unknown categories
 		console.warn(`[CategoryValidator] Unknown category removed: ${cat}`);
 		return false;
@@ -107,7 +107,11 @@ function mapTitleToCategory(title, description = "") {
 	}
 
 	// Sales & Client Success
-	if (/\b(sales|sdr|bdr|business development|customer success|account)\b/.test(text)) {
+	if (
+		/\b(sales|sdr|bdr|business development|customer success|account)\b/.test(
+			text,
+		)
+	) {
 		return "sales-client-success";
 	}
 
@@ -117,12 +121,18 @@ function mapTitleToCategory(title, description = "") {
 	}
 
 	// Finance & Investment
-	if (/\b(finance|financial|investment|banking|audit|accountant|treasury)\b/.test(text)) {
+	if (
+		/\b(finance|financial|investment|banking|audit|accountant|treasury)\b/.test(
+			text,
+		)
+	) {
 		return "finance-investment";
 	}
 
 	// Operations & Supply Chain
-	if (/\b(operations|supply chain|logistics|procurement|inventory)\b/.test(text)) {
+	if (
+		/\b(operations|supply chain|logistics|procurement|inventory)\b/.test(text)
+	) {
 		return "operations-supply-chain";
 	}
 
@@ -132,7 +142,9 @@ function mapTitleToCategory(title, description = "") {
 	}
 
 	// Tech & Transformation
-	if (/\b(software|engineer|developer|tech|it|cloud|devops|database)\b/.test(text)) {
+	if (
+		/\b(software|engineer|developer|tech|it|cloud|devops|database)\b/.test(text)
+	) {
 		return "tech-transformation";
 	}
 
@@ -200,4 +212,3 @@ module.exports = {
 	fixHRCategories,
 	validateJobCategories,
 };
-

@@ -2,7 +2,7 @@
 
 /**
  * VERIFICATION SCRIPT: Ensure only form categories exist in database
- * 
+ *
  * This script verifies that jobs in the database only have categories
  * that correspond to form options.
  */
@@ -46,7 +46,9 @@ console.log("\n━".repeat(80));
 console.log("\n🔍 ANALYSIS:");
 console.log(`   Valid categories: ${VALID_DB_CATEGORIES.length}`);
 console.log(`   Invalid categories: ${INVALID_DB_CATEGORIES.length}`);
-console.log(`   Total in WORK_TYPE_CATEGORIES: ${VALID_DB_CATEGORIES.length + INVALID_DB_CATEGORIES.length}`);
+console.log(
+	`   Total in WORK_TYPE_CATEGORIES: ${VALID_DB_CATEGORIES.length + INVALID_DB_CATEGORIES.length}`,
+);
 
 console.log("\n⚠️  REQUIRED ACTION:");
 console.log("   Remove these categories from jobs table (via migration):");
@@ -65,4 +67,3 @@ console.log("   3. Replace with 'all-categories' (unsure fallback)");
 console.log("   4. Update WORK_TYPE_CATEGORIES constant in categoryMapper.ts");
 
 console.log("\n━".repeat(80) + "\n");
-

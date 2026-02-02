@@ -56,7 +56,7 @@ export function formatDate(dateString: string | null | undefined): string {
  */
 export function isFreshJob(
 	dateString: string | null | undefined,
-	daysThreshold = 3
+	daysThreshold = 3,
 ): boolean {
 	if (!dateString) return false;
 
@@ -69,4 +69,3 @@ export function isFreshJob(
 		return false;
 	}
 }
-

@@ -25,8 +25,7 @@ export const TRUST_TEXT_NO_CARD_SETUP = "No credit card • 2-minute setup";
 
 // Hero section
 export const HERO_TITLE = "JobPing";
-export const HERO_HEADLINE =
-	"Get hand-picked early-career jobs across Europe";
+export const HERO_HEADLINE = "Get hand-picked early-career jobs across Europe";
 export const HERO_SUBLINE =
 	"We scan 4,000+ EU companies daily and send you only roles you're qualified for - filtered by location and experience.";
 export const HERO_SUBLINE_MICRO =
@@ -34,7 +33,8 @@ export const HERO_SUBLINE_MICRO =
 export const HERO_CTA = "Get my first 5 matches";
 export const HERO_PRIMARY_CTA = "Start Free - See Your First 5 Matches";
 export const HERO_SECONDARY_CTA = "View Instant Matches";
-export const HERO_PILL = "For EU students & recent grads";
+export const HERO_PILL =
+	"For EU students & recent grads - visa sponsorship available for internationals";
 export const HERO_SOCIAL_PROOF = "Trusted by students in 7 countries";
 
 // How it works
@@ -108,9 +108,11 @@ export const BUILT_FOR_STUDENTS_FEATURES = [
 
 // Pricing
 export const PRICING_TITLE = "Choose Your Plan";
-export const PRICING_SUBTITLE = "Save 40+ hours per month. Stop scrolling LinkedIn.";
+export const PRICING_SUBTITLE =
+	"Save 40+ hours per month. Stop scrolling LinkedIn.";
 export const PRICING_BADGE = "Simple pricing • Cancel anytime";
-export const PRICING_BETA_WARNING = "🔥 Beta pricing—after Feb 28, premium will be €9/month";
+export const PRICING_BETA_WARNING =
+	"🔥 Beta pricing—after Feb 28, premium will be €9/month";
 export const PRICING_BETA_END_DATE = "2026-02-28";
 
 // Value comparison
@@ -144,7 +146,8 @@ export const PREMIUM_PLAN_PRICE = "€5";
 export const PREMIUM_PLAN_PRICE_UNIT = "/mo";
 export const PREMIUM_PLAN_ANNUAL = "€20 for 3 months (save €1)";
 export const PREMIUM_PLAN_DESCRIPTION = `5 fresh matches 3× per week (Mon/Wed/Fri) from companies actively hiring.`;
-export const PREMIUM_PLAN_GUARANTEE = "💸 If you don't apply to 3+ jobs in 30 days, we'll refund you.";
+export const PREMIUM_PLAN_GUARANTEE =
+	"💸 If you don't apply to 3+ jobs in 30 days, we'll refund you.";
 export const PREMIUM_SOCIAL_PROOF_PERCENT = "89";
 export const PREMIUM_PLAN_FEATURES = [
 	`✨ 15 fresh matches every week (Mon/Wed/Fri)`,

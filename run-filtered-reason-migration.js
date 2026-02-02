@@ -33,35 +33,47 @@ async function applyMigration() {
 		try {
 			// First check if column exists
 			const { error: checkError } = await supabase
-				.from('jobs')
-				.select('filtered_reason')
+				.from("jobs")
+				.select("filtered_reason")
 				.limit(1);
 
-			if (checkError && checkError.message.includes('column') && checkError.message.includes('does not exist')) {
+			if (
+				checkError &&
+				checkError.message.includes("column") &&
+				checkError.message.includes("does not exist")
+			) {
 				console.log("Column doesn't exist, need to add it");
 
 				// Try using a simple approach - insert a dummy row and see if we can update it
 				// This might trigger column creation if the migration ran elsewhere
-				console.log("Checking if migration was applied through Supabase dashboard...");
+				console.log(
+					"Checking if migration was applied through Supabase dashboard...",
+				);
 
 				// Try the verification again after a moment
-				await new Promise(resolve => setTimeout(resolve, 2000));
+				await new Promise((resolve) => setTimeout(resolve, 2000));
 
 				const { error: recheckError } = await supabase
-					.from('jobs')
-					.select('filtered_reason')
+					.from("jobs")
+					.select("filtered_reason")
 					.limit(1);
 
-				if (recheckError && recheckError.message.includes('does not exist')) {
-					console.log("❌ Column still doesn't exist. Please run this migration manually in Supabase:");
+				if (recheckError && recheckError.message.includes("does not exist")) {
+					console.log(
+						"❌ Column still doesn't exist. Please run this migration manually in Supabase:",
+					);
 					console.log("   1. Go to your Supabase project dashboard");
 					console.log("   2. Navigate to SQL Editor");
-					console.log("   3. Run the migration file: supabase/migrations/20260120000000_add_filtered_reason_column.sql");
+					console.log(
+						"   3. Run the migration file: supabase/migrations/20260120000000_add_filtered_reason_column.sql",
+					);
 					console.log("   4. Or run this SQL directly:");
 					console.log(migrationSQL);
 					process.exit(1);
 				} else {
-					console.log("✅ Column exists! Migration may have been applied elsewhere.");
+					console.log(
+						"✅ Column exists! Migration may have been applied elsewhere.",
+					);
 				}
 			} else if (!checkError) {
 				console.log("✅ Column already exists!");
@@ -75,17 +87,18 @@ async function applyMigration() {
 		// Verify the migration worked
 		console.log("🔍 Verifying migration...");
 		const { data, error: verifyError } = await supabase
-			.from('jobs')
-			.select('id, filtered_reason')
+			.from("jobs")
+			.select("id, filtered_reason")
 			.limit(1);
 
 		if (verifyError) {
 			console.error("❌ Migration verification failed:", verifyError.message);
 		} else {
 			console.log("✅ Migration applied successfully!");
-			console.log("🎯 filtered_reason column is now available for job filtering");
+			console.log(
+				"🎯 filtered_reason column is now available for job filtering",
+			);
 		}
-
 	} catch (error) {
 		console.error("❌ Error applying migration:", error);
 		process.exit(1);

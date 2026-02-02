@@ -1,0 +1,12 @@
+cursor-extension/
+__mocks__/
+__tests__/
+.cursor/
+.git/
+logs/
+cache/
+coverage/
+playwright-report/
+test-results/
+*.log
+

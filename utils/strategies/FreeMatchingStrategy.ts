@@ -8,12 +8,15 @@ import type { JobWithMetadata } from "../../lib/types/job";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
 import { getDatabaseClient } from "../core/database-pool";
 
+/**
+ * FREE Tier User Preferences - ONLY fields collected from form
+ * Form collects: email, fullName, cities (1-3), careerPath (exactly 1)
+ * NO visa, NO entry_level, NO skills, NO industries (premium-only features)
+ */
 export interface FreeUserPreferences {
 	email: string;
 	target_cities: string[];
 	career_path: string | string[] | null;
-	visa_status?: string;
-	entry_level_preference?: string;
 	subscription_tier: "free";
 }
 
@@ -25,13 +28,18 @@ export interface MatchingResult {
 }
 
 /**
- * Free Matching Strategy
+ * Free Matching Strategy - LIGHTWEIGHT
  *
- * Simple matching for free tier:
- * - Uses: cities + career path only
- * - Ignores: skills, industries, company size, etc (not provided by free users)
- * - Result: 5 matches
- * - Logic: Light AI ranking on filtered results
+ * Ultra-simple matching for free tier:
+ * - Step 1: Filter by cities AND careerPath only (boolean logic, fast)
+ * - Step 2: Pass filtered results to AI for ranking
+ * - Step 3: Return top 5
+ *
+ * Why lightweight:
+ * - Free users only provide: cities, careerPath
+ * - No skills, industries, visa, entry level data
+ * - No PrefilterService complexity (that's for premium)
+ * - Just: filter → AI rank → return 5
  */
 export async function runFreeMatching(
 	userPrefs: FreeUserPreferences,
@@ -41,7 +49,7 @@ export async function runFreeMatching(
 	const startTime = Date.now();
 
 	try {
-		apiLogger.info("[FREE] Starting free tier matching", {
+		apiLogger.info("[FREE] Starting lightweight free tier matching", {
 			email: userPrefs.email,
 			cities: userPrefs.target_cities,
 			careerPath: userPrefs.career_path,
@@ -61,100 +69,63 @@ export async function runFreeMatching(
 			};
 		}
 
-	// STAGE 1: Pre-filter by cities and career (simple)
-	// This is the KEY difference from premium - we filter AGGRESSIVELY because
-	// free users haven't provided skills, industries, company size, etc.
-	const preFiltered = jobs.filter((job) => {
-	const cityMatch = userPrefs.target_cities.some((city) => {
-		// All job cities are normalized to form values via migration
-		// Use exact case-insensitive match
-		if (!job.city) return true; // Include jobs with NULL city
-		return job.city.toLowerCase() === city.toLowerCase();
-	});
+		// STAGE 1: Fast boolean filtering - cities AND careerPath ONLY
+		// This is the entire prefilter for free tier - simple and fast!
+		const careerPath = userPrefs.career_path; // Extract and check once
 
-		// IMPROVED: Strict career path matching for free tier
-		// Only match jobs that have the exact career path category
-		// Note: Categories are stored as JSON arrays in the database
-		const careerMatch =
-		!userPrefs.career_path || // If no career specified, include all
-		!job.categories ||
-		job.categories.length === 0 || // or if job has no categories, include
-		job.categories.some((cat) => {
-			const catLower = cat.toLowerCase();
-			// Handle both array and string career_path formats
-			// Long form categories are used everywhere now (e.g., "finance-investment")
-			if (Array.isArray(userPrefs.career_path)) {
-				return userPrefs.career_path.some((userCareer) => {
-					// Direct comparison - userCareer IS database category
-					return catLower === userCareer.toLowerCase();
-				});
-			} else if (userPrefs.career_path) {
-				// Direct comparison - form value IS database category
-				return catLower === userPrefs.career_path.toLowerCase();
-			}
-			return false; // No career path specified
-		});
-
-			return cityMatch && careerMatch;
-		});
-
-		apiLogger.info("[FREE] Pre-filtered jobs", {
-			email: userPrefs.email,
-			original: jobs.length,
-			afterPreFilter: preFiltered.length,
-		});
-
-	if (preFiltered.length === 0) {
-		apiLogger.warn("[FREE] No jobs after pre-filtering", {
-			email: userPrefs.email,
-			reason: "No jobs match cities and career",
-		});
-
-		// Fallback: Try broader search if pre-filter too strict
-		// Cities are normalized in database, use exact matching
-		const fallbackFiltered = jobs.filter((job) =>
-			userPrefs.target_cities.some((city) => {
-				if (!job.city) return true; // Include jobs with NULL city
+		const filtered = jobs.filter((job) => {
+			// Match city: user selected city must match job city
+			const cityMatch = userPrefs.target_cities.some((city) => {
+				if (!job.city) return false; // Require city match for free tier
 				return job.city.toLowerCase() === city.toLowerCase();
-			}),
-		);
-
-		if (fallbackFiltered.length > 0) {
-			apiLogger.info("[FREE] Using fallback (city-only filter)", {
-				email: userPrefs.email,
-				jobsInFallback: fallbackFiltered.length,
-				reason: "Career filter too strict, falling back to location-based matching",
 			});
 
-			return await rankAndReturnMatches(
-				userPrefs,
-				fallbackFiltered,
-				"free_fallback",
-				startTime,
-				maxMatches,
-			);
+			if (!cityMatch) return false; // City is required for free
+
+			// Match career: job must have user's selected career path
+			if (!careerPath) return false; // Career path required for free
+			if (!job.categories || job.categories.length === 0) return false; // Job must have categories
+
+			return job.categories.some((cat) => {
+				const catLower = cat.toLowerCase();
+				if (Array.isArray(careerPath)) {
+					return careerPath.some(
+						(userCareer) => catLower === userCareer.toLowerCase(),
+					);
+				}
+				return catLower === (careerPath as string).toLowerCase();
+			});
+		});
+
+		apiLogger.info("[FREE] Simple filter complete", {
+			email: userPrefs.email,
+			original: jobs.length,
+			afterFilter: filtered.length,
+			duration: Date.now() - startTime,
+		});
+
+		if (filtered.length === 0) {
+			apiLogger.warn("[FREE] No jobs matched cities + careerPath", {
+				email: userPrefs.email,
+				cities: userPrefs.target_cities,
+				careerPath: userPrefs.career_path,
+			});
+			return {
+				matches: [],
+				matchCount: 0,
+				method: "no_matching_jobs",
+				duration: Date.now() - startTime,
+			};
 		}
 
-		return {
-			matches: [],
-			matchCount: 0,
-			method: "no_jobs_after_filter",
-			duration: Date.now() - startTime,
-		};
-	}
-
-		// STAGE 2: Light AI ranking (use simplified matching engine)
-		// For free tier, we use lighter AI because:
-		// 1. User hasn't provided much data (just cities + career)
-		// 2. We want fast results (no heavy processing)
-		// 3. 5 matches is small, doesn't need complex ranking
-				return await rankAndReturnMatches(
-					userPrefs,
-					preFiltered,
-					"free_ai_ranked",
-					startTime,
-					maxMatches,
-				);
+		// STAGE 2: AI ranking on filtered results (lightweight - only on relevant jobs)
+		return await rankAndReturnMatches(
+			userPrefs,
+			filtered,
+			"free_ai_ranked",
+			startTime,
+			maxMatches,
+		);
 	} catch (error) {
 		apiLogger.error("[FREE] Matching error", error as Error, {
 			email: userPrefs.email,
@@ -165,6 +136,7 @@ export async function runFreeMatching(
 
 /**
  * Rank jobs using AI and return top 5 matches
+ * Only uses: email, target_cities, career_path (what FREE form provides)
  */
 async function rankAndReturnMatches(
 	userPrefs: FreeUserPreferences,
@@ -175,15 +147,17 @@ async function rankAndReturnMatches(
 ): Promise<MatchingResult> {
 	try {
 		// Use simplified matching engine with free tier configuration
+		// Only pass required fields - no visa, entry_level, skills, industries
 		const matchResult = await simplifiedMatchingEngine.findMatchesForFreeUser(
 			{
 				email: userPrefs.email,
 				target_cities: userPrefs.target_cities,
 				career_path: userPrefs.career_path || [],
-				entry_level_preference:
-					userPrefs.entry_level_preference || "graduate, intern, junior",
-				visa_status: userPrefs.visa_status,
-				// Free users don't provide these:
+				// FREE tier does NOT provide these (premium-only features):
+				entry_level_preference: undefined, // Not collected by FREE form
+				visa_status: undefined, // Not collected by FREE form
+				subscription_tier: "free" as const,
+				// Below are required by interface but not used by FREE tier AI matching:
 				languages_spoken: [],
 				roles_selected: [],
 				work_environment: undefined,
@@ -191,44 +165,47 @@ async function rankAndReturnMatches(
 				industries: [],
 				company_size_preference: "any",
 				career_keywords: null,
-				subscription_tier: "free" as const,
 			} as any,
 			jobs as any,
 		);
 
-	const matches = (matchResult?.matches || [])
-		.slice(0, maxMatches) // FREE: Use configurable match count
-		.map((m: any) => {
-			// Handle both formats: m.job (nested) and m directly (flat)
-			const jobData = m.job || m;
-			if (!jobData) {
-				apiLogger.warn("[FREE] Match missing job data", {
-					email: userPrefs.email,
-					match: m,
-				});
-				return null;
-			}
-			return {
-				...jobData,
-				match_score: m.match_score || 0,
-				match_reason: m.match_reason || "Matched",
-			};
-		})
-		.filter(Boolean); // Remove null entries
+		const matches = (matchResult?.matches || [])
+			.slice(0, maxMatches) // FREE: Use configurable match count
+			.map((m: any) => {
+				// Handle both formats: m.job (nested) and m directly (flat)
+				const jobData = m.job || m;
+				if (!jobData) {
+					apiLogger.warn("[FREE] Match missing job data", {
+						email: userPrefs.email,
+						match: m,
+					});
+					return null;
+				}
+				return {
+					...jobData,
+					match_score: m.match_score || 0,
+					match_reason: m.match_reason || "Matched",
+				};
+			})
+			.filter(Boolean); // Remove null entries
 
 		// If no matches found, try fallback with just city filter (more lenient)
 		if (matches.length === 0 && jobs.length > 0) {
-			apiLogger.warn("[FREE] No matches from AI, using raw job list as fallback", {
-				email: userPrefs.email,
-				availableJobs: jobs.length,
-				method: method,
-			});
+			apiLogger.warn(
+				"[FREE] No matches from AI, using raw job list as fallback",
+				{
+					email: userPrefs.email,
+					availableJobs: jobs.length,
+					method: method,
+				},
+			);
 
 			// Take first 5 jobs as fallback
 			const fallbackMatches = jobs.slice(0, maxMatches).map((job: any) => ({
 				...job,
 				match_score: 0.5,
-				match_reason: "Matching temporarily unavailable - showing available opportunities",
+				match_reason:
+					"Matching temporarily unavailable - showing available opportunities",
 			}));
 
 			apiLogger.info("[FREE] Using fallback job list", {
@@ -252,43 +229,45 @@ async function rankAndReturnMatches(
 			duration: Date.now() - startTime,
 		});
 
-	// Save matches to database
-	const matchesToSave = matches.map((m: any) => ({
-		user_email: userPrefs.email,
-		job_hash: String(m.job_hash),
-		match_score: Number((m.match_score || 0) / 100),
-		match_reason: String(m.match_reason || "Matched"),
-		matched_at: new Date().toISOString(),
-		created_at: new Date().toISOString(),
-		match_algorithm: method,
-	}));
+		// Save matches to database
+		const matchesToSave = matches.map((m: any) => ({
+			user_email: userPrefs.email,
+			job_hash: String(m.job_hash),
+			match_score: Number((m.match_score || 0) / 100),
+			match_reason: String(m.match_reason || "Matched"),
+			matched_at: new Date().toISOString(),
+			created_at: new Date().toISOString(),
+			match_algorithm: method,
+		}));
 
-	if (matchesToSave.length > 0) {
-		try {
-			const supabase = getDatabaseClient();
-			const { error } = await supabase
-				.from("matches")
-				.insert(matchesToSave);
+		if (matchesToSave.length > 0) {
+			try {
+				const supabase = getDatabaseClient();
+				const { error } = await supabase.from("matches").insert(matchesToSave);
 
-			if (error) {
-				apiLogger.error("[FREE] Failed to save matches to database", error as Error, {
+				if (error) {
+					apiLogger.error(
+						"[FREE] Failed to save matches to database",
+						error as Error,
+						{
+							email: userPrefs.email,
+							matchCount: matchesToSave.length,
+							errorCode: error.code,
+						},
+					);
+				} else {
+					apiLogger.info("[FREE] Successfully saved matches to database", {
+						email: userPrefs.email,
+						count: matchesToSave.length,
+					});
+				}
+			} catch (err) {
+				apiLogger.error("[FREE] Error saving matches", err as Error, {
 					email: userPrefs.email,
 					matchCount: matchesToSave.length,
-					errorCode: error.code,
-				});
-			} else {
-				apiLogger.info("[FREE] Successfully saved matches to database", {
-					email: userPrefs.email,
-					count: matchesToSave.length,
 				});
 			}
-		} catch (err) {
-			apiLogger.error("[FREE] Error saving matches", err as Error, {
-				email: userPrefs.email,
-				matchCount: matchesToSave.length,
-			});
 		}
-	}
 
 		return {
 			matches,

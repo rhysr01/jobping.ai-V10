@@ -19,6 +19,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
 const { processIncomingJob } = require("../scrapers/shared/processor.cjs");
+const { mapCategory } = require("../scrapers/shared/categoryMapper.cjs");
 
 function getSupabase() {
 	const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -910,6 +911,7 @@ async function saveJobs(jobs, source) {
 				},
 				{
 					source,
+					categories: ["unsure"], // General JobSpy scrape, use unsure fallback
 				},
 			);
 

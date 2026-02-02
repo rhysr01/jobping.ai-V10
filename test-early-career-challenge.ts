@@ -28,7 +28,8 @@ const challengeCases: ChallengeCase[] = [
 		},
 		expectedResult: true,
 		difficulty: "hard",
-		explanation: "'Graduate Trainee' in title is strong signal - company name is ignored",
+		explanation:
+			"'Graduate Trainee' in title is strong signal - company name is ignored",
 	},
 	{
 		name: "Marketing Graduate BUT description says 'experienced marketer'",
@@ -59,7 +60,8 @@ const challengeCases: ChallengeCase[] = [
 		},
 		expectedResult: false,
 		difficulty: "hard",
-		explanation: "'CPA required' and '10+ years' in description override 'junior' in title",
+		explanation:
+			"'CPA required' and '10+ years' in description override 'junior' in title",
 	},
 
 	// ===== HARD: Misleading marketing language =====
@@ -76,7 +78,8 @@ const challengeCases: ChallengeCase[] = [
 		},
 		expectedResult: false,
 		difficulty: "hard",
-		explanation: "'Minimum 3 years' in first 500 chars takes precedence over 'entry-level'",
+		explanation:
+			"'Minimum 3 years' in first 500 chars takes precedence over 'entry-level'",
 	},
 	{
 		name: "Internship but for PhD candidates only",
@@ -157,7 +160,8 @@ const challengeCases: ChallengeCase[] = [
 		},
 		expectedResult: false,
 		difficulty: "hard",
-		explanation: "'7+ years' and 'PhD preferred' override boilerplate about founder interns",
+		explanation:
+			"'7+ years' and 'PhD preferred' override boilerplate about founder interns",
 	},
 	{
 		name: "Graduate scheme mention in company description not job description",
@@ -206,7 +210,8 @@ const challengeCases: ChallengeCase[] = [
 		},
 		expectedResult: true,
 		difficulty: "medium",
-		explanation: "'Associate' is ambiguous but 'graduate scheme' in description means ACCEPT",
+		explanation:
+			"'Associate' is ambiguous but 'graduate scheme' in description means ACCEPT",
 	},
 
 	// ===== MEDIUM: Context boundary testing =====
@@ -284,10 +289,10 @@ function runChallengeTests() {
 				const isPass = result === testCase.expectedResult;
 
 				const status = isPass ? "✅" : "❌";
-				console.log(`\n[${difficulty[0].toUpperCase()}.${index + 1}] ${status} ${testCase.name}`);
 				console.log(
-					`    Expected: ${testCase.expectedResult}, Got: ${result}`,
+					`\n[${difficulty[0].toUpperCase()}.${index + 1}] ${status} ${testCase.name}`,
 				);
+				console.log(`    Expected: ${testCase.expectedResult}, Got: ${result}`);
 				console.log(`    Difficulty: ${difficulty}`);
 				console.log(`    Title: "${testCase.job.title}"`);
 				console.log(`    Explanation: ${testCase.explanation}`);
@@ -333,4 +338,3 @@ function runChallengeTests() {
 
 // Run tests
 runChallengeTests();
-

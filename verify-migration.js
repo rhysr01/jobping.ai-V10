@@ -20,15 +20,22 @@ async function verifyMigration() {
 	try {
 		// Check if column exists
 		const { data, error } = await supabase
-			.from('jobs')
-			.select('id, filtered_reason')
+			.from("jobs")
+			.select("id, filtered_reason")
 			.limit(3);
 
 		if (error) {
-			if (error.message.includes('column') && error.message.includes('does not exist')) {
-				console.log("❌ MIGRATION NOT APPLIED: filtered_reason column does not exist");
+			if (
+				error.message.includes("column") &&
+				error.message.includes("does not exist")
+			) {
+				console.log(
+					"❌ MIGRATION NOT APPLIED: filtered_reason column does not exist",
+				);
 				console.log("\n📋 To apply the migration:");
-				console.log("   1. Go to https://supabase.com/dashboard/project/kpecjbjtdjzgkzywylhn");
+				console.log(
+					"   1. Go to https://supabase.com/dashboard/project/kpecjbjtdjzgkzywylhn",
+				);
 				console.log("   2. Click 'SQL Editor' in the left sidebar");
 				console.log("   3. Copy and paste this SQL:");
 				console.log(`
@@ -58,7 +65,6 @@ COMMENT ON COLUMN public.jobs.filtered_reason IS 'Reason why this job was filter
 		// Now test that the production engine works
 		console.log("\n🚀 Testing production engine with real data...");
 		process.exit(0);
-
 	} catch (error) {
 		console.error("❌ Verification failed:", error);
 		process.exit(1);

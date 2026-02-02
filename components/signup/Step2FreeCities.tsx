@@ -49,7 +49,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 	}, [formData.cities.length]);
 
 	const handleCityToggle = (city: string) => {
-		if (!city || typeof city !== 'string') return;
+		if (!city || typeof city !== "string") return;
 
 		if ("vibrate" in navigator) {
 			navigator.vibrate(10);
@@ -86,7 +86,8 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 
 	const isStepValid = formData.cities.length > 0;
 	const citiesTouched = isMounted && touchedFields.has("cities");
-	const shouldShowCitiesError = isMounted && !isStepValid && (citiesTouched || hasAttemptedContinue);
+	const shouldShowCitiesError =
+		isMounted && !isStepValid && (citiesTouched || hasAttemptedContinue);
 
 	return (
 		<motion.div
@@ -99,22 +100,23 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			role="region"
 			aria-labelledby="step2-heading"
 		>
-		<div className="mb-6 sm:mb-8">
-			<h2
-				id="step2-heading"
-				className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
-			>
-				Jobs in Your Preferred Cities
-			</h2>
-			<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
-				Choose where you want to work - we'll find roles with visa support if needed
-			</p>
-			<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-				<span className="text-sm font-medium text-blue-200">
-					📍 Pick up to 3 cities • Includes relocation opportunities
-				</span>
+			<div className="mb-6 sm:mb-8">
+				<h2
+					id="step2-heading"
+					className="text-display-md font-black text-white mb-2 sm:mb-3 bg-gradient-to-r from-white to-zinc-200 bg-clip-text text-transparent"
+				>
+					Jobs in Your Preferred Cities
+				</h2>
+				<p className="text-base sm:text-lg font-medium text-zinc-100 leading-relaxed">
+					Choose where you want to work - we'll find roles with visa support if
+					needed
+				</p>
+				<div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
+					<span className="text-sm font-medium text-blue-200">
+						📍 Pick up to 3 cities • Includes relocation opportunities
+					</span>
+				</div>
 			</div>
-		</div>
 
 			<div>
 				<label
@@ -144,7 +146,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					onBlur={handleCitiesBlur}
 				>
 					{displayedCities?.map((city) => {
-						if (!city || typeof city !== 'string') return null;
+						if (!city || typeof city !== "string") return null;
 						const isSelected = formData.cities.includes(city);
 						const isDisabled = !isSelected && formData.cities.length >= 3;
 						return (
@@ -171,7 +173,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 					<div className="mt-4 text-center">
 						<button
 							onClick={() => {
-								console.log('Step2FreeCities: Show more cities clicked');
+								console.log("Step2FreeCities: Show more cities clicked");
 								setShowAllCities(true);
 							}}
 							className="text-sm text-brand-400 hover:text-brand-300 transition-colors underline underline-offset-2"

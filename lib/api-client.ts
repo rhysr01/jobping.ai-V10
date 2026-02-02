@@ -81,22 +81,34 @@ export async function apiCall(
 
 				// Log signup requests for debugging
 				if (url.includes("/api/signup/free")) {
-					const useGroup = typeof window !== "undefined" && process.env.NODE_ENV === "development";
+					const useGroup =
+						typeof window !== "undefined" &&
+						process.env.NODE_ENV === "development";
 					if (useGroup) {
-						console.group(`🌐 [API CLIENT] Request attempt ${attempt + 1}/${retries + 1}`);
+						console.group(
+							`🌐 [API CLIENT] Request attempt ${attempt + 1}/${retries + 1}`,
+						);
 					}
-					console.log(`🌐 [API CLIENT] Request attempt ${attempt + 1}/${retries + 1} - Details:`, {
-						url,
-						method: fetchOptions.method || "GET",
-						hasBody: !!fetchOptions.body,
-						bodySize: fetchOptions.body ? String(fetchOptions.body).length : 0,
-					});
+					console.log(
+						`🌐 [API CLIENT] Request attempt ${attempt + 1}/${retries + 1} - Details:`,
+						{
+							url,
+							method: fetchOptions.method || "GET",
+							hasBody: !!fetchOptions.body,
+							bodySize: fetchOptions.body
+								? String(fetchOptions.body).length
+								: 0,
+						},
+					);
 					if (fetchOptions.body && typeof fetchOptions.body === "string") {
 						try {
 							const bodyObj = JSON.parse(fetchOptions.body);
 							console.log("Request body:", bodyObj);
 						} catch {
-							console.log("Request body (raw):", fetchOptions.body.substring(0, 200));
+							console.log(
+								"Request body (raw):",
+								fetchOptions.body.substring(0, 200),
+							);
 						}
 					}
 					if (useGroup) {
@@ -114,17 +126,26 @@ export async function apiCall(
 
 				// Log signup responses for debugging
 				if (url.includes("/api/signup/free")) {
-					const statusEmoji = response.ok ? "✅" : response.status >= 500 ? "🔥" : "⚠️";
-					const useGroup = typeof window !== "undefined" && process.env.NODE_ENV === "development";
+					const statusEmoji = response.ok
+						? "✅"
+						: response.status >= 500
+							? "🔥"
+							: "⚠️";
+					const useGroup =
+						typeof window !== "undefined" &&
+						process.env.NODE_ENV === "development";
 					if (useGroup) {
 						console.group(`${statusEmoji} [API CLIENT] Response received`);
 					}
-					console.log(`${statusEmoji} [API CLIENT] Response received - Status:`, {
-						status: response.status,
-						statusText: response.statusText,
-						ok: response.ok,
-						headers: Object.fromEntries(response.headers.entries()),
-					});
+					console.log(
+						`${statusEmoji} [API CLIENT] Response received - Status:`,
+						{
+							status: response.status,
+							statusText: response.statusText,
+							ok: response.ok,
+							headers: Object.fromEntries(response.headers.entries()),
+						},
+					);
 					if (useGroup) {
 						console.groupEnd();
 					}
@@ -161,10 +182,12 @@ export async function apiCall(
 							errorMessage = data.error;
 						}
 						responseData = data;
-						
+
 						// Log signup error details
 						if (url.includes("/api/signup/free")) {
-							const useGroup = typeof window !== "undefined" && process.env.NODE_ENV === "development";
+							const useGroup =
+								typeof window !== "undefined" &&
+								process.env.NODE_ENV === "development";
 							if (useGroup) {
 								console.group("❌ [API CLIENT] Error response");
 							}
@@ -181,7 +204,12 @@ export async function apiCall(
 					} catch {
 						// Ignore JSON parse errors
 					}
-					throw new ApiError(errorMessage, response.status, false, responseData);
+					throw new ApiError(
+						errorMessage,
+						response.status,
+						false,
+						responseData,
+					);
 				}
 
 				return response;
@@ -259,10 +287,11 @@ export async function apiCallJson<T = unknown>(
 	});
 
 	const jsonData = await response.json();
-	
+
 	// Log signup JSON responses for debugging
 	if (url.includes("/api/signup/free")) {
-		const useGroup = typeof window !== "undefined" && process.env.NODE_ENV === "development";
+		const useGroup =
+			typeof window !== "undefined" && process.env.NODE_ENV === "development";
 		if (useGroup) {
 			console.group("📦 [API CLIENT] JSON response parsed");
 		}

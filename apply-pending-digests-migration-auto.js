@@ -45,16 +45,18 @@ async function applyMigration() {
 
 		// Use pg client for direct SQL execution
 		const { Client } = require("pg");
-		
+
 		// Extract project ref from URL
-		const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+		const projectRef = supabaseUrl.match(
+			/https:\/\/([^.]+)\.supabase\.co/,
+		)?.[1];
 		if (!projectRef) {
 			throw new Error("Could not extract project ref from Supabase URL");
 		}
 
 		// Build connection string for direct database access
 		const dbUrl = `postgresql://postgres.${projectRef}:${supabaseKey}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-		
+
 		const client = new Client({
 			connectionString: dbUrl,
 			ssl: { rejectUnauthorized: false },
@@ -65,7 +67,7 @@ async function applyMigration() {
 
 		// Execute migration SQL
 		await client.query(migrationSQL);
-		
+
 		await client.end();
 		console.log("✅ Migration applied successfully!");
 		console.log("🎯 pending_digests table is now available");
@@ -77,15 +79,21 @@ async function applyMigration() {
 			.limit(1);
 
 		if (verifyError) {
-			console.warn("⚠️  Verification query failed, but migration may have succeeded");
+			console.warn(
+				"⚠️  Verification query failed, but migration may have succeeded",
+			);
 		} else {
 			console.log("✅ Verification: Table exists and is accessible");
 		}
 	} catch (error) {
 		console.error("❌ Error applying migration:", error.message);
 		console.error("\n💡 Alternative: Apply via Supabase Dashboard SQL Editor");
-		console.error("   1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql");
-		console.error("   2. Copy contents of: supabase/migrations/20260121_create_pending_digests_table.sql");
+		console.error(
+			"   1. Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/sql",
+		);
+		console.error(
+			"   2. Copy contents of: supabase/migrations/20260121_create_pending_digests_table.sql",
+		);
 		console.error("   3. Paste and Run");
 		process.exit(1);
 	}

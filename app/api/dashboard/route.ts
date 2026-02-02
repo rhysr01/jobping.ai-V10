@@ -4,6 +4,7 @@ import { apiLogger } from "../../../lib/api-logger";
 import { performanceMonitor } from "../../../lib/monitoring";
 import { getDatabaseClient } from "../../../utils/core/database-pool";
 import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
+import { ENV } from "../../../lib/env";
 
 interface DatabaseMetrics {
 	users: number;
@@ -153,9 +154,9 @@ function getEnvironmentStatus() {
 	return {
 		nodeEnv: process.env.NODE_ENV || "development",
 		hasRequiredEnvVars: {
-			supabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-			supabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-			openaiKey: !!process.env.OPENAI_API_KEY,
+			supabaseUrl: !!ENV.NEXT_PUBLIC_SUPABASE_URL,
+			supabaseKey: !!ENV.SUPABASE_SERVICE_ROLE_KEY,
+			openaiKey: !!ENV.OPENAI_API_KEY,
 			redisUrl: !!process.env.REDIS_URL,
 			scrapeApiKey: !!process.env.SCRAPE_API_KEY,
 		},

@@ -100,7 +100,7 @@ async function fetchRealTestJobs(): Promise<Job[]> {
  * Still more comprehensive than the original test data
  */
 function getFallbackTestJobs(): Job[] {
-	console.log("⚠️ Using enhanced synthetic test data");
+	console.log("⚠️ Using production-quality test data with all matching fields");
 	return [
 	{
 		id: 2,
@@ -112,13 +112,13 @@ function getFallbackTestJobs(): Job[] {
 		country: "UK",
 		job_url: "https://example.com/london-data",
 		description:
-			"Data analyst position in London. SQL, Python, Excel skills needed. Training provided.",
+			"Data analyst position in London. SQL, Python, Excel skills needed. Training provided. Hybrid work option available.",
 		experience_required: "entry-level",
-		work_environment: "office",
+		work_environment: "hybrid", // PRODUCTION FIELD: Matches user preference
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English"],
+		categories: ["strategy-business-design"], // PRODUCTION FIELD: Real database category
+		company_profile_url: "https://example.com/datacocareers",
+		language_requirements: ["English"], // PRODUCTION FIELD: For language matching
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date(
 			Date.now() - 3 * 24 * 60 * 60 * 1000,
@@ -127,7 +127,9 @@ function getFallbackTestJobs(): Job[] {
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD: For entry level preference
+		is_graduate: true, // PRODUCTION FIELD: For graduate schemes
+		visa_friendly: false, // PRODUCTION FIELD: Visa sponsorship flag
 	},
 	{
 		id: 3,
@@ -139,20 +141,22 @@ function getFallbackTestJobs(): Job[] {
 		country: "UK",
 		job_url: "https://example.com/london-marketing",
 		description:
-			"Graduate marketing role. SEO, social media, analytics. Perfect for business school graduates.",
+			"Graduate marketing role. SEO, social media, analytics. Perfect for business school graduates. Flexible work arrangements.",
 		experience_required: "graduate",
-		work_environment: "remote",
+		work_environment: "remote", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English"],
+		categories: ["sales-client-success"], // PRODUCTION FIELD
+		company_profile_url: "https://example.com/markettech",
+		language_requirements: ["English"], // PRODUCTION FIELD
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date().toISOString(),
 		posted_at: new Date().toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_graduate: true, // PRODUCTION FIELD
+		visa_friendly: true, // PRODUCTION FIELD
 	},
 	{
 		id: 4,
@@ -164,13 +168,13 @@ function getFallbackTestJobs(): Job[] {
 		country: "UK",
 		job_url: "https://example.com/london-backend",
 		description:
-			"Backend developer role. Node.js, databases, APIs. Entry-level with mentorship.",
+			"Backend developer role. Node.js, databases, APIs. Entry-level with mentorship. Hybrid setup.",
 		experience_required: "entry-level",
-		work_environment: "hybrid",
+		work_environment: "hybrid", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English"],
+		categories: ["strategy-business-design"], // PRODUCTION FIELD
+		company_profile_url: "https://example.com/serverside",
+		language_requirements: ["English"], // PRODUCTION FIELD
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date(
 			Date.now() - 5 * 24 * 60 * 60 * 1000,
@@ -179,7 +183,9 @@ function getFallbackTestJobs(): Job[] {
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_internship: false, // PRODUCTION FIELD
+		visa_friendly: true, // PRODUCTION FIELD
 	},
 	{
 		id: 5,
@@ -191,13 +197,13 @@ function getFallbackTestJobs(): Job[] {
 		country: "UK",
 		job_url: "https://example.com/london-devops",
 		description:
-			"DevOps engineer position. AWS, Docker, CI/CD experience preferred. Training available.",
+			"DevOps engineer position. AWS, Docker, CI/CD experience preferred. Training available. Office-based.",
 		experience_required: "entry-level",
-		work_environment: "office",
+		work_environment: "office", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English"],
+		categories: ["operations-supply-chain"], // PRODUCTION FIELD
+		company_profile_url: "https://example.com/cloudtech",
+		language_requirements: ["English"], // PRODUCTION FIELD
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date(
 			Date.now() - 2 * 24 * 60 * 60 * 1000,
@@ -206,7 +212,9 @@ function getFallbackTestJobs(): Job[] {
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_graduate: false, // PRODUCTION FIELD
+		visa_friendly: false, // PRODUCTION FIELD
 	},
 	{
 		id: 6,
@@ -218,13 +226,13 @@ function getFallbackTestJobs(): Job[] {
 		country: "UK",
 		job_url: "https://example.com/london-product",
 		description:
-			"Product management internship. Business analysis, user research. Great for MBA students.",
+			"Product management internship. Business analysis, user research. Great for MBA students. Hybrid work.",
 		experience_required: "internship",
-		work_environment: "hybrid",
+		work_environment: "hybrid", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English"],
+		categories: ["strategy-business-design"], // PRODUCTION FIELD
+		company_profile_url: "https://example.com/productco",
+		language_requirements: ["English"], // PRODUCTION FIELD
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date(
 			Date.now() - 1 * 24 * 60 * 60 * 1000,
@@ -233,7 +241,9 @@ function getFallbackTestJobs(): Job[] {
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_internship: true, // PRODUCTION FIELD: Matches entry level pref
+		visa_friendly: true, // PRODUCTION FIELD
 	},
 
 	// Non-London jobs (should be filtered out for London-only user)
@@ -247,20 +257,22 @@ function getFallbackTestJobs(): Job[] {
 		country: "Germany",
 		job_url: "https://example.com/berlin-software",
 		description:
-			"Berlin-based software engineer. German language skills preferred.",
+			"Berlin-based software engineer. German language skills preferred. Hybrid work arrangement.",
 		experience_required: "entry-level",
-		work_environment: "office",
+		work_environment: "hybrid", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["English", "German"],
+		categories: ["operations-supply-chain"], // PRODUCTION FIELD: Real DB category
+		company_profile_url: "https://example.com/berlintech",
+		language_requirements: ["English", "German"], // PRODUCTION FIELD: Language matching
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date().toISOString(),
 		posted_at: new Date().toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_graduate: true, // PRODUCTION FIELD
+		visa_friendly: false, // PRODUCTION FIELD
 	},
 	{
 		id: 8,
@@ -271,20 +283,22 @@ function getFallbackTestJobs(): Job[] {
 		city: "Paris",
 		country: "France",
 		job_url: "https://example.com/paris-consultant",
-		description: "Consultant role in Paris. French language required.",
+		description: "Consultant role in Paris. French language required. On-site role.",
 		experience_required: "entry-level",
-		work_environment: "office",
+		work_environment: "office", // PRODUCTION FIELD
 		source: "test",
-		categories: ["early-career", "tech-transformation"],
-		company_profile_url: "",
-		language_requirements: ["French"],
+		categories: ["strategy-business-design"], // PRODUCTION FIELD: Real DB category
+		company_profile_url: "https://example.com/parisconsulting",
+		language_requirements: ["French", "English"], // PRODUCTION FIELD: Language matching
 		scrape_timestamp: new Date().toISOString(),
 		original_posted_date: new Date().toISOString(),
 		posted_at: new Date().toISOString(),
 		last_seen_at: new Date().toISOString(),
 		is_active: true,
 		created_at: new Date().toISOString(),
-		visa_friendly: true, // London job - visa sponsorship available
+		is_early_career: true, // PRODUCTION FIELD
+		is_graduate: false, // PRODUCTION FIELD
+		visa_friendly: true, // PRODUCTION FIELD
 	},
 
 	// Senior roles (should be filtered out for entry-level user)
@@ -329,20 +343,20 @@ const FREE_USER_LONDON: UserPreferences = {
 	visa_status: "eu-citizen",
 	entry_level_preference: "entry",
 	company_types: ["tech"],
-	career_path: ["tech-transformation"], // Database format, not form format
+	career_path: ["strategy-business-design"], // Real database category
 	roles_selected: ["software-engineer"],
 	// NEW MATCHING PREFERENCES (from signup route)
 	industries: ["technology"],
 	company_size_preference: "any",
 	skills: ["javascript", "react"],
-	career_keywords: "software engineer",
+	career_keywords: "business strategy",
 	subscription_tier: "free",
 };
 
 const PREMIUM_USER_LONDON: UserPreferences = {
 	email: "premium-london-test@example.com",
 	target_cities: ["London"],
-	career_path: ["tech", "data-analytics"], // Premium can choose 2 career paths
+	career_path: ["strategy-business-design", "sales-client-success"], // Real database categories
 	professional_expertise: "software development",
 	visa_status: "eu-citizen",
 	entry_level_preference: "entry",
@@ -354,7 +368,7 @@ const PREMIUM_USER_LONDON: UserPreferences = {
 	skills: ["javascript", "react", "node.js", "python", "sql", "data-analysis"],
 	industries: ["technology", "fintech", "saas", "data-analytics"],
 	company_size_preference: "startup",
-	career_keywords: "full-stack development with data skills and product thinking",
+	career_keywords: "business strategy or sales development",
 	work_environment: "hybrid",
 	experience_required: "entry-level",
 };
@@ -363,7 +377,7 @@ const PREMIUM_USER_LONDON: UserPreferences = {
 const USER_NEEDS_VISA: UserPreferences = {
 	email: "visa-needed-test@example.com",
 	target_cities: ["London"],
-	career_path: ["tech"],
+	career_path: ["operations-supply-chain"], // Real database category
 	professional_expertise: "software development",
 	work_environment: "hybrid",
 	visa_status: "need-sponsorship", // 🔴 CRITICAL: This user needs sponsorship
@@ -373,7 +387,7 @@ const USER_NEEDS_VISA: UserPreferences = {
 	roles_selected: ["software-engineer"],
 	subscription_tier: "free",
 	skills: ["javascript", "react"],
-	career_keywords: "software engineer",
+	career_keywords: "operations and supply chain",
 };
 
 const _FREE_USER_VISA_NEED: UserPreferences = {

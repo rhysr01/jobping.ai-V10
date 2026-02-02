@@ -13,14 +13,12 @@
  * - tech-transformation
  * - sustainability-esg
  * - unsure (fallback for general/unknown)
- * - early-career (flag, not a path)
  *
- * INVALID categories that will NEVER be used:
- * ❌ people-hr (not in signup form)
- * ❌ creative-design (not in signup form)
- * ❌ legal-compliance (not in signup form)
- * ❌ general-management (not in signup form)
- * ❌ general (too vague)
+ * SEPARATE FLAGS (NOT categories):
+ * - is_early_career: boolean (entry-level role?)
+ * - is_internship: boolean (internship placement?)
+ * - is_graduate: boolean (graduate program?)
+ *
  */
 
 // CRITICAL: These mappings MUST match CAREER_PATHS from components/signup/constants.ts
@@ -43,17 +41,22 @@ const CATEGORY_MAP = {
 
 // INVALID category names that should NEVER exist in production
 const INVALID_CATEGORIES = new Set([
-	"people-hr",          // ❌ NOT IN SIGNUP FORM
-	"creative-design",    // ❌ NOT IN SIGNUP FORM
-	"legal-compliance",   // ❌ NOT IN SIGNUP FORM
+	"people-hr", // ❌ NOT IN SIGNUP FORM
+	"creative-design", // ❌ NOT IN SIGNUP FORM
+	"legal-compliance", // ❌ NOT IN SIGNUP FORM
 	"general-management", // ❌ NOT IN SIGNUP FORM
-	"general",            // ❌ TOO VAGUE
-	"legal",              // ❌ NOT IN SIGNUP FORM
-	"creative",           // ❌ NOT IN SIGNUP FORM
-	"all-categories",     // ❌ INCORRECT
+	"general", // ❌ TOO VAGUE
+	"legal", // ❌ NOT IN SIGNUP FORM
+	"creative", // ❌ NOT IN SIGNUP FORM
+	"all-categories", // ❌ INCORRECT
+	"early-career", // ❌ USE is_early_career FLAG INSTEAD
+	"internship", // ❌ USE is_internship FLAG INSTEAD
+	"graduate", // ❌ USE is_graduate FLAG INSTEAD
 ]);
 
 // Valid categories from signup form
+// NOTE: early-career, internship, graduate are NOT categories!
+// They are separate boolean flags (is_early_career, is_internship, is_graduate)
 const VALID_CATEGORIES = new Set([
 	"strategy-business-design",
 	"data-analytics",
@@ -65,7 +68,6 @@ const VALID_CATEGORIES = new Set([
 	"tech-transformation",
 	"sustainability-esg",
 	"unsure",
-	"early-career", // Flag, not a path
 ]);
 
 /**
@@ -75,26 +77,26 @@ const VALID_CATEGORIES = new Set([
  */
 function mapCategory(path) {
 	if (!path) return "unsure";
-	
+
 	const mapped = CATEGORY_MAP[path.toLowerCase()] || null;
-	
+
 	// If mapped to a valid category, return it
 	if (mapped && VALID_CATEGORIES.has(mapped)) {
 		return mapped;
 	}
-	
+
 	// If unmapped and it's valid, use it
 	if (VALID_CATEGORIES.has(path.toLowerCase())) {
 		return path.toLowerCase();
 	}
-	
+
 	// Fallback to unsure for unknown paths
 	return "unsure";
 }
 
 /**
  * Validate and fix categories array
- * - Removes all invalid categories
+ * - Removes all invalid categories (including early-career, internship, graduate)
  * - Ensures all categories are from VALID_CATEGORIES
  * - Never allows people-hr, creative-design, legal-compliance, general-management
  * @param {string[]} categories - Array of category names
@@ -102,7 +104,7 @@ function mapCategory(path) {
  */
 function validateAndFixCategories(categories) {
 	if (!Array.isArray(categories)) {
-		return ["early-career"];
+		return ["unsure"];
 	}
 
 	const cleaned = [];
@@ -110,15 +112,15 @@ function validateAndFixCategories(categories) {
 
 	for (const cat of categories) {
 		if (!cat) continue;
-		
+
 		const lowerCat = String(cat).toLowerCase().trim();
-		
+
 		// REJECT all invalid categories
 		if (INVALID_CATEGORIES.has(lowerCat)) {
 			console.warn(`[CategoryValidator] Removing INVALID category: "${cat}"`);
 			continue;
 		}
-		
+
 		// Accept if it's in valid set
 		if (VALID_CATEGORIES.has(lowerCat)) {
 			if (!seen.has(lowerCat)) {
@@ -127,7 +129,7 @@ function validateAndFixCategories(categories) {
 			}
 			continue;
 		}
-		
+
 		// Try to map unknown category
 		const mapped = mapCategory(cat);
 		if (mapped && VALID_CATEGORIES.has(mapped) && !seen.has(mapped)) {
@@ -135,16 +137,14 @@ function validateAndFixCategories(categories) {
 			seen.add(mapped);
 			continue;
 		}
-		
+
 		// If still unknown, log warning
 		console.warn(`[CategoryValidator] Unknown category skipped: "${cat}"`);
 	}
 
-	// Ensure at least 'early-career' exists
+	// Ensure at least one valid category exists
 	if (cleaned.length === 0) {
-		cleaned.push("early-career");
-	} else if (!cleaned.includes("early-career")) {
-		cleaned.unshift("early-career");
+		cleaned.push("unsure");
 	}
 
 	return cleaned;
@@ -161,9 +161,11 @@ function addCategoryFromPath(path, existingCategories = []) {
 	if (!path) {
 		return validateAndFixCategories(existingCategories);
 	}
-	
+
 	const mappedCategory = mapCategory(path);
-	const categories = Array.isArray(existingCategories) ? [...existingCategories] : ["early-career"];
+	const categories = Array.isArray(existingCategories)
+		? [...existingCategories]
+		: ["early-career"];
 
 	if (!categories.includes(mappedCategory)) {
 		categories.push(mappedCategory);
@@ -190,4 +192,3 @@ module.exports = {
 	addCategoryFromPath,
 	isValidCategory,
 };
-

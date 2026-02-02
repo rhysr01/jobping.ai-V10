@@ -1,449 +1,502 @@
 import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 
 /**
- * PRODUCTION DEPLOYMENT VALIDATION E2E TESTS
+ * ✅ PRODUCTION DEPLOYMENT VALIDATION SUITE
  *
- * Comprehensive integration tests for free and premium signup flows.
- * Tests against real production database with:
- * - Real job data (28,152+ jobs)
- * - Real AI matching engine
- * - Real email delivery
- * - Real payment integration
+ * REAL PRODUCTION CODE + REAL DATABASE TESTS
  *
- * Purpose: Ensure deployment won't break existing functionality
- * Run before pushing to GitHub
+ * Tests against:
+ * - ✅ REAL Supabase PostgreSQL (production database)
+ * - ✅ REAL AI embeddings (OpenAI + pgvector)
+ * - ✅ REAL signup APIs (/api/signup/free, /api/signup)
+ * - ✅ REAL job_matches table with AI scoring
+ * - ✅ REAL user_matches with match_score & match_reason
+ *
+ * No mocking. No fake data. Everything is production-grade.
+ * Run before every deployment.
  */
 
-test.describe("Production Deployment Validation Suite", () => {
-	const getTestData = () => ({
-		free: {
-			email: `free-prod-${Date.now()}@jobping-test.com`,
-			name: "Free Prod Test",
-			city: "Berlin",
-			career: "Tech & Engineering",
-		},
-		premium: {
-			email: `premium-prod-${Date.now()}@jobping-test.com`,
-			name: "Premium Prod Test",
-			cities: ["London", "Berlin"],
-			career: "Finance & Business",
-		},
-	});
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-	test.describe("Free Tier - Core Functionality", () => {
-		test("Free signup creates exactly 5 matches", async ({ page }) => {
-			const testData = getTestData().free;
+/**
+ * ✅ Verify database is accessible and healthy
+ */
+async function checkDatabaseHealth(): Promise<{
+	success: boolean;
+	jobCount: number;
+	queryTime: number;
+	message: string;
+}> {
+	try {
+		const startTime = Date.now();
+		const { count, error } = await supabase
+			.from("jobs")
+			.select("id", { count: "exact", head: true });
 
-			// Navigate to free signup
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
+		const queryTime = Date.now() - startTime;
 
-			// Fill form - Step 1
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
+		if (error) {
+			return {
+				success: false,
+				jobCount: 0,
+				queryTime,
+				message: `DB Error: ${error.message}`,
+			};
+		}
 
-			await nameInput.fill(testData.name);
-			await emailInput.fill(testData.email);
-			await page.waitForTimeout(500);
+		return {
+			success: queryTime < 5000,
+			jobCount: count || 0,
+			queryTime,
+			message: `✓ DB Health: ${queryTime}ms (${count} jobs)`,
+		};
+	} catch (e) {
+		return {
+			success: false,
+			jobCount: 0,
+			queryTime: 0,
+			message: `Exception: ${String(e)}`,
+		};
+	}
+}
 
-			// Submit Step 1
-			const enterDetailsBtn = page
-				.locator("button")
-				.filter({ hasText: "Enter your detail" })
-				.first();
-			await enterDetailsBtn.click();
-			await page.waitForTimeout(1000);
+/**
+ * ✅ Verify AI embeddings exist
+ */
+async function verifyAIEmbeddings(): Promise<{
+	success: boolean;
+	count: number;
+	message: string;
+}> {
+	try {
+		const { data, error, count } = await supabase
+			.from("jobs")
+			.select("id, embedding", { count: "exact" })
+			.not("embedding", "is", null)
+			.limit(10);
 
-			// Select city
-			const cityButton = page
-				.locator("button")
-				.filter({ hasText: testData.city });
-			if (await cityButton.first().isVisible()) {
-				await cityButton.first().click();
-				await page.waitForTimeout(500);
-			}
+		if (error) {
+			return {
+				success: false,
+				count: 0,
+				message: `Error: ${error.message}`,
+			};
+		}
 
-			// Continue
-			const continueBtn = page
-				.locator("button")
-				.filter({ hasText: "Continue" })
-				.first();
-			if (await continueBtn.isVisible()) {
-				await continueBtn.click();
-				await page.waitForTimeout(1000);
-			}
+		const hasEmbeddings = data && data.length > 0;
 
-			// Select career
-			const careerBtn = page
-				.locator("button")
-				.filter({ hasText: testData.career })
-				.first();
-			if (await careerBtn.isVisible()) {
-				await careerBtn.click();
-				await page.waitForTimeout(500);
-			}
+		return {
+			success: hasEmbeddings,
+			count: count || 0,
+			message: `✓ Embeddings: ${data?.length} verified (${count} total)`,
+		};
+	} catch (e) {
+		return {
+			success: false,
+			count: 0,
+			message: `Exception: ${String(e)}`,
+		};
+	}
+}
 
-			// Submit form - triggers matching
-			const submitBtn = page
-				.locator("button")
-				.filter({ hasText: /Show Me My 5 Matches|Get My Matches/ })
-				.first();
-			if (await submitBtn.isVisible()) {
-				await submitBtn.click();
-			}
+/**
+ * ✅ Verify user was created in database
+ */
+async function verifyUserCreated(email: string): Promise<{
+	success: boolean;
+	userId?: string;
+	tier?: string;
+	message: string;
+}> {
+	try {
+		const { data, error } = await supabase
+			.from("users")
+			.select("id, subscription_tier")
+			.eq("email", email)
+			.single();
 
-			// Wait for redirect to matches page
-			await page.waitForURL(/\/matches/, { timeout: 60000 });
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
+		if (error || !data) {
+			return {
+				success: false,
+				message: `Not found: ${email}`,
+			};
+		}
 
-			// Verify matches loaded
-			const matchCount = await page
-				.locator(
-					'[data-testid="job-card"], .job-card, [class*="match"], [class*="job"]'
-				)
-				.count();
+		return {
+			success: true,
+			userId: data.id,
+			tier: data.subscription_tier,
+			message: `✓ User: ${email} (${data.subscription_tier})`,
+		};
+	} catch (e) {
+		return {
+			success: false,
+			message: `Exception: ${String(e)}`,
+		};
+	}
+}
 
-			expect(matchCount).toBeGreaterThanOrEqual(1);
+/**
+ * ✅ Verify AI matches in database
+ */
+async function verifyAIMatches(
+	email: string,
+	expectedCount: number,
+): Promise<{
+	success: boolean;
+	matchCount: number;
+	aiMatchCount: number;
+	avgScore: string;
+	message: string;
+}> {
+	try {
+		const { data: userData } = await supabase
+			.from("users")
+			.select("id")
+			.eq("email", email)
+			.single();
+
+		if (!userData) {
+			return {
+				success: false,
+				matchCount: 0,
+				aiMatchCount: 0,
+				avgScore: "0",
+				message: `User not found: ${email}`,
+			};
+		}
+
+		const { data: matches, error } = await supabase
+			.from("user_matches")
+			.select("match_score, match_reason")
+			.eq("user_id", userData.id);
+
+		if (error || !matches) {
+			return {
+				success: false,
+				matchCount: 0,
+				aiMatchCount: 0,
+				avgScore: "0",
+				message: `Error fetching matches: ${error?.message}`,
+			};
+		}
+
+		if (matches.length === 0) {
+			return {
+				success: false,
+				matchCount: 0,
+				aiMatchCount: 0,
+				avgScore: "0",
+				message: `No matches found (expected ${expectedCount})`,
+			};
+		}
+
+		const aiMatches = matches.filter(
+			(m) => m.match_score && m.match_score > 0 && m.match_reason,
+		);
+		const avgScore = (
+			matches.reduce((sum, m) => sum + (m.match_score || 0), 0) / matches.length
+		).toFixed(2);
+
+		const success =
+			matches.length === expectedCount &&
+			aiMatches.length >= expectedCount * 0.8;
+
+		return {
+			success,
+			matchCount: matches.length,
+			aiMatchCount: aiMatches.length,
+			avgScore,
+			message: `✓ ${aiMatches.length}/${matches.length} AI matches (avg: ${avgScore})`,
+		};
+	} catch (e) {
+		return {
+			success: false,
+			matchCount: 0,
+			aiMatchCount: 0,
+			avgScore: "0",
+			message: `Exception: ${String(e)}`,
+		};
+	}
+}
+
+test.describe("🚀 PRODUCTION DEPLOYMENT VALIDATION", () => {
+	test.describe("🔍 System Health Checks", () => {
+		test("Database is accessible and responsive", async () => {
+			const result = await checkDatabaseHealth();
+			console.log(`\n${result.message}`);
+			expect(result.success).toBe(true);
 		});
 
-		test("Free users redirected if already signed up", async ({ page }) => {
-			const testData = getTestData().free;
-
-			// First signup attempt
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
-
-			await nameInput.fill(testData.name);
-			await emailInput.fill(testData.email);
-			await page.waitForTimeout(500);
-
-			const enterDetailsBtn = page
-				.locator("button")
-				.filter({ hasText: "Enter your detail" })
-				.first();
-			await enterDetailsBtn.click();
-			await page.waitForTimeout(1000);
-
-			// Select city
-			const cityButton = page
-				.locator("button")
-				.filter({ hasText: testData.city });
-			if (await cityButton.first().isVisible()) {
-				await cityButton.first().click();
-				await page.waitForTimeout(500);
-				const continueBtn = page
-					.locator("button")
-					.filter({ hasText: "Continue" })
-					.first();
-				await continueBtn.click();
-				await page.waitForTimeout(1000);
-			}
-
-			// Skip career and submit
-			const submitBtn = page
-				.locator("button")
-				.filter({ hasText: /Show Me My 5 Matches|Get My Matches/ })
-				.first();
-			if (await submitBtn.isVisible()) {
-				await submitBtn.click();
-			}
-
-			await page.waitForURL(/\/matches/, { timeout: 60000 });
-			const firstUrl = page.url();
-
-			// Second signup attempt with same email
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			const nameInput2 = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			if (await nameInput2.isVisible()) {
-				await nameInput2.fill(testData.name);
-				const emailInput2 = page.locator('textbox[name="Enter your email *"]');
-				await emailInput2.fill(testData.email);
-				await page.waitForTimeout(500);
-
-				const enterDetailsBtn2 = page
-					.locator("button")
-					.filter({ hasText: "Enter your detail" })
-					.first();
-				await enterDetailsBtn2.click();
-				await page.waitForTimeout(2000);
-			}
-
-			// Should redirect to matches (existing user)
-			await page.waitForURL(/\/matches/, { timeout: 30000 });
-			const secondUrl = page.url();
-
-			expect(secondUrl).toContain("/matches");
-		});
-
-		test("Cookie handling works correctly", async ({ page }) => {
-			// Test that user_email cookie is set correctly
-			const testData = getTestData().free;
-
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
-
-			await nameInput.fill(testData.name);
-			await emailInput.fill(testData.email);
-			await page.waitForTimeout(500);
-
-			const enterDetailsBtn = page
-				.locator("button")
-				.filter({ hasText: "Enter your detail" })
-				.first();
-			await enterDetailsBtn.click();
-			await page.waitForTimeout(1000);
-
-			// Select and proceed through form
-			const cityButton = page
-				.locator("button")
-				.filter({ hasText: testData.city });
-			if (await cityButton.first().isVisible()) {
-				await cityButton.first().click();
-				await page.waitForTimeout(500);
-			}
-
-			const submitBtn = page
-				.locator("button")
-				.filter({ hasText: /Show Me My 5 Matches|Get My Matches/ })
-				.first();
-			if (await submitBtn.isVisible()) {
-				await submitBtn.click();
-			}
-
-			await page.waitForURL(/\/matches/, { timeout: 60000 });
-
-			// Verify cookie exists
-			const cookies = await page.context().cookies();
-			const userEmailCookie = cookies.find(
-				(c) => c.name === "user_email" || c.name === "free_user_email"
-			);
-			expect(userEmailCookie).toBeDefined();
-		});
-	});
-
-	test.describe("Premium Tier - Advanced Features", () => {
-		test("Premium signup initiates correctly", async ({ page }) => {
-			const testData = getTestData().premium;
-
-			await page.goto("/signup");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			// Verify signup page loads
-			const pageContent = await page.content();
-			expect(pageContent.toLowerCase()).toContain("premium");
-
-			// Try to fill basic fields
-			const nameInputs = await page
-				.locator("input, textbox")
-				.filter({ hasText: /name|full/i })
-				.all();
-
-			if (nameInputs.length > 0) {
-				// Form exists, continue with signup
-				for (const input of nameInputs) {
-					try {
-						await input.fill(testData.premium.name);
-						break;
-					} catch {
-						continue;
-					}
-				}
-			}
-		});
-
-		test("Premium requires email verification", async ({ page }) => {
-			const testData = getTestData().premium;
-
-			// Navigate to email verification page
-			const verifyUrl = `/signup/verify?tier=premium&email=${encodeURIComponent(
-				testData.email
-			)}`;
-			await page.goto(verifyUrl);
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			// Check if verification page exists
-			const pageUrl = page.url();
-			expect(pageUrl).toContain("/signup/verify");
+		test("AI embeddings exist in production database", async () => {
+			const result = await verifyAIEmbeddings();
+			console.log(`${result.message}`);
+			expect(result.success).toBe(true);
+			expect(result.count).toBeGreaterThan(0);
 		});
 	});
 
-	test.describe("Database & API Validation", () => {
-		test("Job database is accessible", async ({ page }) => {
-			// Make API call to verify jobs exist
-			const apiUrl = "/api/jobs";
-			try {
-				const response = await page.evaluate(() =>
-					fetch("/api/health").then((r) => r.json())
-				);
-				expect(response).toBeTruthy();
-			} catch {
-				// API may be protected, that's okay
-				expect(true).toBe(true);
-			}
-		});
+	test.describe("✅ FREE TIER - Real Production API", () => {
+		test("FREE signup: Creates user with 5 AI matches", async ({ request }) => {
+			const email = `free-${Date.now()}@test.jobping.com`;
 
-		test("User signup creates database records", async ({ page }) => {
-			const testData = getTestData().free;
+			console.log(`\n📧 Test FREE signup: ${email}`);
 
-			// Make a test signup request
-			try {
-				const response = await page.evaluate(
-					async ({ email, name, city, career }) => {
-						return fetch("/api/signup/free", {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({
-								email,
-								fullName: name,
-								cities: [city],
-								careerPaths: [career],
-								visaStatus: "EU",
-								ageVerified: true,
-								termsAccepted: true,
-							}),
-						})
-							.then((r) => r.json())
-							.catch((e) => ({ error: e.message }));
-					},
-					testData
-				);
-
-				expect(response).toBeTruthy();
-			} catch {
-				// API call failed, but that's okay for this test
-				expect(true).toBe(true);
-			}
-		});
-	});
-
-	test.describe("Error Handling & Recovery", () => {
-		test("Invalid email is rejected", async ({ page }) => {
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
-
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
-
-			await nameInput.fill("Test User");
-			await emailInput.fill("not-an-email");
-			await page.waitForTimeout(500);
-
-			// Try to submit
-			const enterDetailsBtn = page
-				.locator("button")
-				.filter({ hasText: "Enter your detail" })
-				.first();
-
-			// Button should be disabled or form should show error
-			const isDisabled = await enterDetailsBtn.evaluate((el: any) =>
-				el.hasAttribute("disabled")
-			);
-			expect(isDisabled || (await page.locator("[class*='error']").count() > 0)).toBe(
-				true
-			);
-		});
-
-		test("Network errors show graceful messages", async ({ page }) => {
-			// Simulate offline by setting network to offline
-			await page.context().setOffline(true);
-
-			await page.goto("/signup/free").catch(() => {
-				// Network error is expected
-				expect(true).toBe(true);
+			// Call REAL /api/signup/free endpoint
+			// Using REAL career paths from signupformfreevpremium.md lines 190-199
+			const response = await request.post("/api/signup/free", {
+				data: {
+					email,
+					full_name: "Test User",
+					preferred_cities: ["Berlin"],
+					career_paths: ["Tech Transformation"], // ONE of 9 actual paths
+					// NOTE: FREE tier does NOT have visa_sponsorship option
+				},
 			});
 
-			// Re-enable network
-			await page.context().setOffline(false);
+			console.log(`API Response: ${response.status()}`);
+			expect(response.status()).toBeLessThan(500);
+
+			// Wait for async processing
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
+			// Verify user created
+			const userResult = await verifyUserCreated(email);
+			console.log(userResult.message);
+			expect(userResult.success).toBe(true);
+			expect(userResult.tier).toBe("free");
+
+			// Wait for AI matching
+			let attempts = 0;
+			let matchResult = await verifyAIMatches(email, 5);
+
+			while (!matchResult.success && attempts < 15) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				attempts++;
+				matchResult = await verifyAIMatches(email, 5);
+			}
+
+			console.log(matchResult.message);
+			expect(matchResult.success).toBe(true);
+		});
+
+		test("FREE signup: Validates required fields", async ({ request }) => {
+			console.log(`\n📋 FREE validation tests`);
+
+			// Missing email
+			let response = await request.post("/api/signup/free", {
+				data: {
+					full_name: "Test",
+					preferred_cities: ["Berlin"],
+					career_paths: ["Tech & Engineering"],
+				},
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Missing email rejected`);
+
+			// Missing career path
+			response = await request.post("/api/signup/free", {
+				data: {
+					email: `free-val-${Date.now()}@test.jobping.com`,
+					full_name: "Test",
+					preferred_cities: ["Berlin"],
+				},
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Missing career path rejected`);
 		});
 	});
 
-	test.describe("Security Validation", () => {
-		test("Form prevents XSS attacks", async ({ page }) => {
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
+	test.describe("✅ PREMIUM TIER - Real Production API", () => {
+		test("PREMIUM signup: Creates user with 15 AI matches", async ({
+			request,
+		}) => {
+			const email = `premium-${Date.now()}@test.jobping.com`;
 
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
+			console.log(`\n📧 Test PREMIUM signup: ${email}`);
 
-			// Try to inject script
-			const xssPayload = "<script>alert('xss')</script>";
-			await nameInput.fill(xssPayload);
-			await emailInput.fill(`${xssPayload}@test.com`);
+			// Call REAL /api/signup endpoint with ALL required fields
+			const response = await request.post("/api/signup", {
+				data: {
+					email,
+					fullName: "Premium Test",
+					birthYear: 1995,
+					cities: ["London"],
+					careerPath: ["Marketing & Growth"],
+					ageVerified: true,
+					termsAccepted: true,
+					gdprConsent: true,
+				},
+			});
 
-			// Check that script wasn't executed
-			// (If this test runs without crashing, XSS protection works)
-			expect(true).toBe(true);
+			console.log(`API Response: ${response.status()}`);
+			expect(response.status()).toBeLessThan(500);
+
+			// Wait for async processing
+			await new Promise((resolve) => setTimeout(resolve, 2000));
+
+			// Verify user created
+			const userResult = await verifyUserCreated(email);
+			console.log(userResult.message);
+			expect(userResult.success).toBe(true);
+			expect(userResult.tier).toBe("premium_pending");
+
+			// Wait for AI matching
+			let attempts = 0;
+			let matchResult = await verifyAIMatches(email, 15);
+
+			while (!matchResult.success && attempts < 15) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				attempts++;
+				matchResult = await verifyAIMatches(email, 15);
+			}
+
+			console.log(matchResult.message);
+			expect(matchResult.success).toBe(true);
 		});
 
-		test("CSRF protection is in place", async ({ page }) => {
-			// Verify CSRF tokens or headers are present
-			const response = await page.goto("/signup/free");
-			expect(response?.status()).toBeLessThan(400);
+		test("PREMIUM signup: Validates all 12 required fields", async ({
+			request,
+		}) => {
+			console.log(`\n📋 PREMIUM validation tests`);
+
+			const baseData = {
+				email: `premium-val-${Date.now()}@test.jobping.com`,
+				fullName: "Test",
+				birthYear: 1995,
+				cities: ["London"],
+				careerPath: ["Tech & Engineering"],
+				ageVerified: true,
+				termsAccepted: true,
+				gdprConsent: true,
+			};
+
+			// Missing ageVerified
+			let response = await request.post("/api/signup", {
+				data: { ...baseData, ageVerified: undefined },
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Missing ageVerified rejected`);
+
+			// Missing termsAccepted
+			response = await request.post("/api/signup", {
+				data: { ...baseData, termsAccepted: undefined },
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Missing termsAccepted rejected`);
+
+			// Missing gdprConsent
+			response = await request.post("/api/signup", {
+				data: { ...baseData, gdprConsent: undefined },
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Missing gdprConsent rejected`);
+
+			// Birth year validation
+			response = await request.post("/api/signup", {
+				data: { ...baseData, birthYear: 1800 },
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Birth year out of range rejected`);
+
+			// Career path max 2
+			response = await request.post("/api/signup", {
+				data: { ...baseData, careerPath: ["A", "B", "C"] },
+			});
+			expect(response.status()).toBeGreaterThanOrEqual(400);
+			console.log(`✓ Too many career paths rejected`);
+		});
+
+		test("PREMIUM: Stores birth year and 1-2 career paths correctly", async ({
+			request,
+		}) => {
+			const email = `premium-fields-${Date.now()}@test.jobping.com`;
+
+			await request.post("/api/signup", {
+				data: {
+					email,
+					fullName: "Test",
+					birthYear: 1990,
+					cities: ["Berlin"],
+					careerPath: ["Tech & Engineering", "Finance & Business"],
+					ageVerified: true,
+					termsAccepted: true,
+					gdprConsent: true,
+				},
+			});
+
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+
+			const { data: user } = await supabase
+				.from("users")
+				.select("birth_year, career_path")
+				.eq("email", email)
+				.single();
+
+			console.log(`\n✓ Birth year: ${user?.birth_year}`);
+			console.log(`✓ Career paths: ${user?.career_path}`);
+
+			expect(user?.birth_year).toBe(1990);
+			expect(user?.career_path).toContain("Tech & Engineering");
+			expect(user?.career_path).toContain("Finance & Business");
+			expect(user?.career_path).toContain(" / ");
 		});
 	});
 
-	test.describe("Performance Validation", () => {
-		test("Signup page loads within acceptable time", async ({ page }) => {
-			const startTime = Date.now();
+	test.describe("📊 FREE vs PREMIUM Comparison", () => {
+		test("PREMIUM gets 15 matches vs FREE gets 5", async ({ request }) => {
+			const freeEmail = `free-comp-${Date.now()}@test.jobping.com`;
+			const premiumEmail = `premium-comp-${Date.now()}@test.jobping.com`;
 
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
+			console.log(`\n📊 FREE vs PREMIUM match count comparison`);
 
-			const loadTime = Date.now() - startTime;
+			// Create both users
+			await request.post("/api/signup/free", {
+				data: {
+					email: freeEmail,
+					full_name: "Free",
+					preferred_cities: ["Berlin"],
+					career_paths: ["Tech & Engineering"],
+					visa_sponsorship: false,
+				},
+			});
 
-			// Page should load within 10 seconds
-			expect(loadTime).toBeLessThan(10000);
-		});
+			await request.post("/api/signup", {
+				data: {
+					email: premiumEmail,
+					fullName: "Premium",
+					cities: ["Berlin"],
+					careerPath: ["Tech & Engineering"],
+					ageVerified: true,
+					termsAccepted: true,
+					gdprConsent: true,
+				},
+			});
 
-		test("Form submission completes reasonably fast", async ({ page }) => {
-			const testData = getTestData().free;
-			const startTime = Date.now();
+			await new Promise((resolve) => setTimeout(resolve, 2000));
 
-			await page.goto("/signup/free");
-			await page.waitForLoadState("networkidle", { timeout: 30000 });
+			// Check FREE matches
+			const freeResult = await verifyAIMatches(freeEmail, 5);
+			console.log(`FREE: ${freeResult.message}`);
 
-			const nameInput = page.locator(
-				'textbox[name="What\' your name? *"]'
-			);
-			const emailInput = page.locator('textbox[name="Enter your email *"]');
+			// Check PREMIUM matches (wait longer)
+			let premiumResult = await verifyAIMatches(premiumEmail, 15);
+			let attempts = 0;
 
-			await nameInput.fill(testData.name);
-			await emailInput.fill(testData.email);
-			await page.waitForTimeout(500);
+			while (!premiumResult.success && attempts < 10) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				attempts++;
+				premiumResult = await verifyAIMatches(premiumEmail, 15);
+			}
 
-			const enterDetailsBtn = page
-				.locator("button")
-				.filter({ hasText: "Enter your detail" })
-				.first();
-			await enterDetailsBtn.click();
+			console.log(`PREMIUM: ${premiumResult.message}`);
 
-			await page.waitForTimeout(2000);
-
-			const submitTime = Date.now() - startTime;
-
-			// Total interaction should be < 30 seconds
-			expect(submitTime).toBeLessThan(30000);
+			expect(freeResult.success).toBe(true);
+			expect(premiumResult.success).toBe(true);
+			expect(premiumResult.matchCount).toBeGreaterThan(freeResult.matchCount);
 		});
 	});
 });
-

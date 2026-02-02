@@ -111,7 +111,8 @@ function Pricing() {
 					>
 						<div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center backdrop-blur-sm">
 							<p className="text-red-400 font-bold text-sm sm:text-base">
-								⏰ Beta pricing ends in {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}
+								⏰ Beta pricing ends in {daysRemaining} day
+								{daysRemaining !== 1 ? "s" : ""}
 							</p>
 							<p className="text-xs text-zinc-400 mt-2">
 								After Feb 28, premium will be €9/month
@@ -129,7 +130,9 @@ function Pricing() {
 				>
 					<div className="bg-gradient-to-r from-emerald-500/10 to-emerald-400/5 border border-emerald-500/30 rounded-xl p-6 sm:p-8 text-center backdrop-blur-sm">
 						<p className="text-sm sm:text-base text-zinc-300 mb-4">
-							<span className="text-white font-bold">{Copy.PRICING_VALUE_CALLOUT}</span>
+							<span className="text-white font-bold">
+								{Copy.PRICING_VALUE_CALLOUT}
+							</span>
 						</p>
 						<p className="text-base sm:text-lg font-semibold text-white mb-6">
 							{Copy.PRICING_TIME_VALUE}
@@ -148,8 +151,12 @@ function Pricing() {
 								</p>
 							</div>
 							<div className="border-l border-emerald-500/30 pl-3 sm:pl-4">
-								<p className="text-emerald-400 font-bold text-xs">JobPing Premium</p>
-								<p className="text-white font-bold text-sm sm:text-base">€5/mo</p>
+								<p className="text-emerald-400 font-bold text-xs">
+									JobPing Premium
+								</p>
+								<p className="text-white font-bold text-sm sm:text-base">
+									€5/mo
+								</p>
 							</div>
 						</div>
 					</div>

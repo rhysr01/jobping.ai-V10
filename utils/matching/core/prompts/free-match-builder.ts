@@ -48,20 +48,21 @@ ${jobList}`;
 	}
 
 	/**
-	 * System prompt - career counselor for business students (free tier)
+	 * System prompt - career counselor for entry-level professionals (free tier)
 	 */
 	private static get systemPrompt(): string {
 		return `You are JobPing's AI career counselor specializing in entry-level job matching.
-Your free service helps graduates find their first professional roles with high success rates.
+Your free service helps professionals find their first roles with high success rates.
 
-STUDENT PERSPECTIVE: "I'm a recent graduate looking for my first job. What roles should I actually apply for and get interviews?"
-YOUR ROLE: Find 5 REALISTIC entry-level positions this student has strong qualifications for and would genuinely consider.
+USER PERSPECTIVE: "I'm looking for my first role in this career path. What positions should I actually apply for and get interviews?"
+YOUR ROLE: Find 5 REALISTIC entry-level positions this user has strong qualifications for and would genuinely consider.
 
 CRITICAL: Focus on JOBS THEY CAN ACTUALLY GET based on their career focus and qualifications. Prioritize roles where they meet 70%+ of requirements.`;
 	}
 
 	/**
 	 * Build user profile string for free tier (1-step form simplicity)
+	 * FREE TIER COLLECTS ONLY: Email, Full Name, Cities, Career Path
 	 */
 	private static buildUserProfile(user: UserPreferences): string {
 		const cities = Array.isArray(user.target_cities)
@@ -72,15 +73,19 @@ CRITICAL: Focus on JOBS THEY CAN ACTUALLY GET based on their career focus and qu
 			? user.career_path.join(", ")
 			: user.career_path || "Open";
 
-		return `STUDENT REQUEST: "${career} roles in ${cities}"
+		return `USER REQUEST: "${career} roles in ${cities}"
 
-STUDENT PROFILE:
-- Career focus: ${career} (single career path)
+USER PROFILE (Simple 1-Step Form):
+- Career focus: ${career} (exactly 1 of 9 MBA career paths)
 - Target location: ${cities}
 - Experience level: Entry-level/Graduate
-- Visa status: ${user.visa_status || "EU citizen"}
 
-NOTE: This student used JobPing's simple form - focus on one clear career direction and find realistic opportunities they would genuinely apply for.`;
+IMPORTANT JOB FILTERS:
+- Only jobs posted within LAST 30 DAYS
+- Prefer fresh opportunities (within 7 days if available)
+- Ignore jobs older than 30 days
+
+NOTE: This user used JobPing's simple form with no preference details - focus on one clear career direction and find realistic opportunities they would genuinely apply for.`;
 	}
 
 	/**
@@ -89,19 +94,21 @@ NOTE: This student used JobPing's simple form - focus on one clear career direct
 	private static taskInstruction(_user: UserPreferences): string {
 		return `CRITICAL: You MUST respond with VALID JSON only. No text, no explanations, no markdown formatting.
 
-Select EXACTLY 5 entry-level positions from the provided job list that match the student's profile.
+Select EXACTLY 5 entry-level positions from the provided job list that match the user's profile.
 
 JOB SELECTION CRITERIA (must meet ALL):
-1. LOCATION: Job city matches student's target cities
-2. CAREER: Job categories align with student's career path
+1. LOCATION: Job city matches user's target cities
+2. CAREER: Job categories align with user's career path
 3. LEVEL: Entry-level, graduate, or internship roles only
-4. REALISM: Student meets 70%+ of stated requirements
+4. FRESHNESS: Jobs posted within LAST 30 DAYS ONLY (prefer jobs within 7 days)
+5. REALISM: User meets 70%+ of stated requirements
 
 SCORING WEIGHTS:
 - Career alignment: 40% (primary factor)
 - Location match: 30% (critical for applications)
-- Experience fit: 20% (entry-level focus)
-- Company reputation: 10% (bonus factor)
+- Job freshness: 15% (recent opportunities strongly preferred)
+- Experience fit: 10% (entry-level focus)
+- Company reputation: 5% (bonus factor)
 
 OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, no markdown. Just the JSON object with EXACTLY 5 matches.`;
 	}

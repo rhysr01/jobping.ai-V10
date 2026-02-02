@@ -1,10 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { debugLogger } from "@/lib/debug-logger";
 import { BrandIcons } from "../ui/BrandIcons";
-import { HotMatchBadge } from "../ui/HotMatchBadge";
 import CustomButton from "../ui/CustomButton";
 import { trackEvent } from "../../lib/analytics";
 
@@ -37,112 +36,107 @@ export function LiveJobsReview({
 	const [jobPreviews, setJobPreviews] = useState<JobPreview[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [hasFetched, setHasFetched] = useState(false);
 
 	// Fetch job previews when cities and career are selected
-	// 🐛 BUG FIX #1: Removed hasFetched from dependency array to prevent infinite loops
-	// hasFetched is used only for control flow inside the function, not as a dependency
-	const fetchJobPreviews = useCallback(async () => {
-		if (!cities.length || !careerPath || hasFetched) {
-			debugLogger.debug("LIVE_JOBS", "Skipping fetch", {
-				hasCities: cities.length > 0,
-				hasCareerPath: !!careerPath,
-				alreadyFetched: hasFetched,
-			});
+	useEffect(() => {
+		if (!cities.length || !careerPath) {
+			setJobPreviews([]);
+			setError(null);
+			setIsLoading(false);
 			return;
 		}
 
+		let mounted = true;
 		setIsLoading(true);
 		setError(null);
 
-		const tracker = debugLogger.createTracker("LIVE_JOBS_FETCH");
+		const fetchJobPreviews = async () => {
+			const tracker = debugLogger.createTracker("LIVE_JOBS_FETCH");
 
-		try {
-			// 🐛 BUG FIX #3: Normalize career path - convert array to string if needed
-			const normalizedCareerPath = Array.isArray(careerPath)
-				? careerPath[0]
-				: careerPath;
+			try {
+				// Normalize career path - convert array to string if needed
+				const normalizedCareerPath = Array.isArray(careerPath)
+					? careerPath[0]
+					: careerPath;
 
-			debugLogger.step("LIVE_JOBS", "Starting preview fetch", {
-				cities,
-				careerPath: normalizedCareerPath,
-			});
-			tracker.checkpoint("Calling preview-matches API");
-
-			// Call preview-matches API with limited results for preview
-			const response = await fetch("/api/preview-matches", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
+				debugLogger.step("LIVE_JOBS", "Starting preview fetch", {
 					cities,
-					careerPath: normalizedCareerPath, // Send as string
-					limit: 3, // Only show 3 preview jobs
-					isPreview: true,
-				}),
-			});
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				debugLogger.error("LIVE_JOBS", "API returned error", {
-					status: response.status,
-					statusText: response.statusText,
-					errorBody: errorText,
+					careerPath: normalizedCareerPath,
 				});
-				throw new Error(`Failed to fetch job previews (${response.status})`);
+				tracker.checkpoint("Calling preview-matches API");
+
+				// Call preview-matches API with limited results for preview
+				const response = await fetch("/api/preview-matches", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						cities,
+						careerPath: normalizedCareerPath, // Send as string
+						limit: 3, // Show 3 preview jobs (blurred for CRO)
+						isPreview: true,
+					}),
+				});
+
+				if (!response.ok) {
+					const errorText = await response.text();
+					debugLogger.error("LIVE_JOBS", "API returned error", {
+						status: response.status,
+						statusText: response.statusText,
+						errorBody: errorText,
+					});
+					throw new Error(`Failed to fetch job previews (${response.status})`);
+				}
+
+				const data = await response.json();
+				tracker.checkpoint("API response received", {
+					hasMatches: !!data.matches,
+					matchCount: data.matches?.length || 0,
+					totalCount: data.count,
+				});
+
+				debugLogger.success("LIVE_JOBS", "Preview fetch successful", {
+					jobCount: data.count,
+					matchesShown: data.matches?.length || 0,
+					isLowCount: data.isLowCount,
+				});
+
+				if (mounted) {
+					if (data.matches && data.matches.length > 0) {
+						setJobPreviews(data.matches.slice(0, 3)); // Limit to 3 previews
+					} else {
+						setJobPreviews([]);
+					}
+					setIsLoading(false);
+				}
+			} catch (err) {
+				const errorMsg = err instanceof Error ? err.message : String(err);
+				debugLogger.error("LIVE_JOBS", "Failed to fetch previews", {
+					error: errorMsg,
+					cities,
+					careerPath,
+				});
+				tracker.error(
+					"Fetch failed",
+					err instanceof Error ? err : new Error(String(err)),
+				);
+
+				if (process.env.NODE_ENV === "development") {
+					console.error("Error fetching job previews:", err);
+				}
+				if (mounted) {
+					setError("Unable to load job previews right now");
+					setIsLoading(false);
+				}
 			}
+		};
 
-			const data = await response.json();
-			tracker.checkpoint("API response received", {
-				hasMatches: !!data.matches,
-				matchCount: data.matches?.length || 0,
-				totalCount: data.count,
-			});
+		fetchJobPreviews();
 
-			debugLogger.success("LIVE_JOBS", "Preview fetch successful", {
-				jobCount: data.count,
-				matchesShown: data.matches?.length || 0,
-				isLowCount: data.isLowCount,
-			});
-
-			if (data.matches && data.matches.length > 0) {
-				setJobPreviews(data.matches.slice(0, 3)); // Limit to 3 previews
-			} else {
-				setJobPreviews([]);
-			}
-		} catch (err) {
-			const errorMsg = err instanceof Error ? err.message : String(err);
-			debugLogger.error("LIVE_JOBS", "Failed to fetch previews", {
-				error: errorMsg,
-				cities,
-				careerPath,
-			});
-			tracker.error("Fetch failed", err instanceof Error ? err : new Error(String(err)));
-
-			if (process.env.NODE_ENV === "development") {
-				console.error("Error fetching job previews:", err);
-			}
-			setError("Unable to load job previews right now");
-		} finally {
-			setIsLoading(false);
-			setHasFetched(true);
-		}
-	}, [cities, careerPath]);
-
-	// Trigger fetch when dependencies change
-	useEffect(() => {
-		if (cities.length > 0 && careerPath && !hasFetched) {
-			fetchJobPreviews();
-		}
-	}, [cities, careerPath, hasFetched, fetchJobPreviews]);
-
-	// 🐛 BUG FIX #2: Reset when cities or career change
-	// This clears old results and allows new fetch
-	useEffect(() => {
-		setHasFetched(false);
-		setJobPreviews([]);
-		setError(null);
+		return () => {
+			mounted = false;
+		};
 	}, [cities, careerPath]);
 
 	if (!isVisible) return null;
@@ -187,7 +181,9 @@ export function LiveJobsReview({
 							>
 								<BrandIcons.Target className="w-4 h-4 text-emerald-400" />
 							</motion.div>
-							<h3 className="text-lg font-bold text-white">🎯 Finding Your Best Fits...</h3>
+							<h3 className="text-lg font-bold text-white">
+								🎯 Finding Your Best Fits...
+							</h3>
 						</div>
 						{jobPreviews.length > 0 && (
 							<motion.div
@@ -250,8 +246,9 @@ export function LiveJobsReview({
 					{/* Job Previews */}
 					{!isLoading && !error && jobPreviews.length > 0 && (
 						<div className="space-y-3">
-							<p className="text-sm text-emerald-200 mb-4">
-								🎯 Here are some jobs you'll likely match with:
+							<p className="text-sm text-amber-300 mb-4">
+								👀 Sample jobs you might match with • Complete signup for your
+								real matches
 							</p>
 
 							{jobPreviews.map((job, index) => (
@@ -260,14 +257,26 @@ export function LiveJobsReview({
 									initial={{ opacity: 0, x: -20 }}
 									animate={{ opacity: 1, x: 0 }}
 									transition={{ delay: index * 0.1 }}
-									className="group relative rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 p-4"
+									className="group relative rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200 p-4 blur-sm"
 								>
-									{/* Hot match indicator */}
-									{job.match_score && job.match_score >= 85 && (
-										<div className="absolute -top-2 -right-2">
-											<HotMatchBadge />
+									{/* Preview indicator - shows these are sample jobs, not actual matches */}
+									<div className="absolute -top-2 -right-2 z-20">
+										<div className="bg-amber-500/80 rounded-full p-1.5 flex items-center justify-center">
+											<BrandIcons.Lock className="w-3 h-3 text-white" />
 										</div>
-									)}
+									</div>
+
+									{/* Hover overlay - reinforces signup call-to-action */}
+									<div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+										<div className="text-center">
+											<p className="text-xs font-semibold text-white mb-1">
+												Complete Signup
+											</p>
+											<p className="text-xs text-zinc-300">
+												to see your real matches
+											</p>
+										</div>
+									</div>
 
 									{/* Job title and company */}
 									<div className="mb-2">
@@ -355,7 +364,7 @@ export function LiveJobsReview({
 					)}
 
 					{/* No previews found */}
-					{!isLoading && !error && hasFetched && jobPreviews.length === 0 && (
+					{!isLoading && !error && jobPreviews.length === 0 && (
 						<motion.div
 							initial={{ opacity: 0, scale: 0.9 }}
 							animate={{ opacity: 1, scale: 1 }}

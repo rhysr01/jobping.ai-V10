@@ -23,33 +23,38 @@ export function JobCountTeaser({ cities, careerPath }: JobCountTeaserProps) {
 	const fetchJobCount = async () => {
 		// Require BOTH cities and career path
 		if (cities.length === 0 || careerPath.length === 0) {
-			console.log('JobCountTeaser: Skipping fetch - need both cities and career path');
+			console.log(
+				"JobCountTeaser: Skipping fetch - need both cities and career path",
+			);
 			return;
 		}
 
 		setLoading(true);
 		setError(false);
-		console.log('JobCountTeaser: Fetching with', { cities, careerPath: careerPath[0] });
+		console.log("JobCountTeaser: Fetching with", {
+			cities,
+			careerPath: careerPath[0],
+		});
 
 		try {
 			const response = await fetch("/api/preview-matches", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-				cities,
-				careerPath: careerPath[0], // Send the actual career path
-				limit: 0, // Count only
-				isPreview: false, // Fast count query
+					cities,
+					careerPath: careerPath[0], // Send the actual career path
+					limit: 0, // Count only
+					isPreview: false, // Fast count query
 				}),
 			});
 
 			if (!response.ok) {
-				console.error('API Response:', response.status, await response.text());
+				console.error("API Response:", response.status, await response.text());
 				throw new Error("Failed to fetch");
 			}
 
 			const responseData = await response.json();
-			console.log('API Data:', responseData); // Debug logging
+			console.log("API Data:", responseData); // Debug logging
 			// API wraps response in { data: { count, ... } }
 			const data = responseData.data || responseData;
 			setJobCount({
@@ -86,9 +91,11 @@ export function JobCountTeaser({ cities, careerPath }: JobCountTeaserProps) {
 
 	if (error || !jobCount) return null;
 
-	const careerLabel = CAREER_PATHS.find((p) => p.value === careerPath[0])?.label || "jobs";
-	const citiesText = cities.length === 1 ? cities[0] : `${cities.length} cities`;
-	
+	const careerLabel =
+		CAREER_PATHS.find((p) => p.value === careerPath[0])?.label || "jobs";
+	const citiesText =
+		cities.length === 1 ? cities[0] : `${cities.length} cities`;
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 10 }}
@@ -105,9 +112,7 @@ export function JobCountTeaser({ cities, careerPath }: JobCountTeaserProps) {
 					animate={{ scale: [1, 1.1, 1] }}
 					transition={{ duration: 2, repeat: Infinity, delay: 1 }}
 					className={`w-8 h-8 rounded-full flex items-center justify-center ${
-						jobCount.isLowCount
-							? "bg-amber-500/20"
-							: "bg-emerald-500/20"
+						jobCount.isLowCount ? "bg-amber-500/20" : "bg-emerald-500/20"
 					}`}
 				>
 					{jobCount.isLowCount ? (
@@ -116,12 +121,15 @@ export function JobCountTeaser({ cities, careerPath }: JobCountTeaserProps) {
 						<BrandIcons.Target className="w-4 h-4 text-emerald-400" />
 					)}
 				</motion.div>
-				
+
 				<div className="flex-1">
-					<div className={`font-bold text-lg ${
-						jobCount.isLowCount ? "text-amber-200" : "text-emerald-200"
-					}`}>
-						{jobCount.count.toLocaleString()} {careerLabel.split(" ")[0]} jobs available
+					<div
+						className={`font-bold text-lg ${
+							jobCount.isLowCount ? "text-amber-200" : "text-emerald-200"
+						}`}
+					>
+						{jobCount.count.toLocaleString()} {careerLabel.split(" ")[0]} jobs
+						available
 					</div>
 					<div className="text-sm text-zinc-400">
 						in {citiesText} • Updated daily

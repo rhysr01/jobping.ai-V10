@@ -16,6 +16,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.GITHUB_ACTIONS) {
 const { spawnSync } = require("node:child_process");
 const { createClient } = require("@supabase/supabase-js");
 const { processIncomingJob } = require("../scrapers/shared/processor.cjs");
+const { mapCategory } = require("../scrapers/shared/categoryMapper.cjs");
 
 // CAREER PATH TARGETS - Focus on early career roles in specific career paths
 const CAREER_PATH_QUERIES = {
@@ -34,7 +35,7 @@ const CAREER_PATH_QUERIES = {
 		"Strategy Consultant",
 		"Digital Transformation Analyst",
 		"Operations Excellence Consultant",
-		"Business Strategy Intern"
+		"Business Strategy Intern",
 	],
 	finance: [
 		"finance analyst",
@@ -46,7 +47,7 @@ const CAREER_PATH_QUERIES = {
 		"finance graduate",
 		"junior finance",
 		"finance assistant",
-		"treasury analyst"
+		"treasury analyst",
 	],
 	sales: [
 		"Sales Development Representative (SDR)",
@@ -63,7 +64,7 @@ const CAREER_PATH_QUERIES = {
 		"Channel Sales Associate",
 		"Account Development Representative",
 		"Junior Sales Executive",
-		"Client Success Manager"
+		"Client Success Manager",
 	],
 	marketing: [
 		"Marketing Intern",
@@ -80,7 +81,7 @@ const CAREER_PATH_QUERIES = {
 		"Trade Marketing Intern",
 		"Marketing Graduate Programme",
 		"Junior B2B Marketing Coordinator",
-		"Marketing Campaign Assistant"
+		"Marketing Campaign Assistant",
 	],
 	product: [
 		"Associate Product Manager (APM)",
@@ -97,7 +98,7 @@ const CAREER_PATH_QUERIES = {
 		"Product Owner Graduate",
 		"Assistant Product Manager",
 		"Product Strategy Intern",
-		"Technical Product Specialist"
+		"Technical Product Specialist",
 	],
 	operations: [
 		"Operations Analyst",
@@ -114,7 +115,7 @@ const CAREER_PATH_QUERIES = {
 		"Fulfilment Specialist",
 		"Sourcing Analyst",
 		"Process Improvement Analyst",
-		"Supply Chain Graduate"
+		"Supply Chain Graduate",
 	],
 	tech: [
 		"Software Engineer Intern",
@@ -131,7 +132,7 @@ const CAREER_PATH_QUERIES = {
 		"IT Operations Trainee",
 		"Technical Consultant",
 		"Solutions Engineer Graduate",
-		"IT Business Analyst"
+		"IT Business Analyst",
 	],
 	data: [
 		"Data Analyst",
@@ -148,7 +149,7 @@ const CAREER_PATH_QUERIES = {
 		"Insights Analyst",
 		"Junior BI Developer",
 		"Data Assistant",
-		"Research & Analytics Intern"
+		"Research & Analytics Intern",
 	],
 	sustainability: [
 		"ESG Intern",
@@ -165,7 +166,7 @@ const CAREER_PATH_QUERIES = {
 		"Sustainability Communications Intern",
 		"Junior Impact Analyst",
 		"Sustainability Operations Assistant",
-		"Green Finance Analyst"
+		"Green Finance Analyst",
 	],
 	unsure: [
 		"Graduate Trainee",
@@ -182,30 +183,40 @@ const CAREER_PATH_QUERIES = {
 		"Business Operations Analyst",
 		"Emerging Leaders Associate",
 		"Corporate Graduate Programme",
-		"Generalist Trainee"
-	]
+		"Generalist Trainee",
+	],
 };
 
 // TOP PRIORITY CITIES for career-focused roles - Reduced scope to prevent timeout
 // Focused on highest demand markets across Europe: 10 major hubs
 const CAREER_CITIES = [
-	"London", "uk",
-	"Berlin", "germany",
-	"Amsterdam", "netherlands",
-	"Paris", "france",
-	"Madrid", "spain",
-	"Dublin", "ireland",
-	"Barcelona", "spain",
-	"Munich", "germany",
-	"Stockholm", "sweden",
-	"Zurich", "switzerland"
+	"London",
+	"uk",
+	"Berlin",
+	"germany",
+	"Amsterdam",
+	"netherlands",
+	"Paris",
+	"france",
+	"Madrid",
+	"spain",
+	"Dublin",
+	"ireland",
+	"Barcelona",
+	"spain",
+	"Munich",
+	"germany",
+	"Stockholm",
+	"sweden",
+	"Zurich",
+	"switzerland",
 ];
 
 async function runCareerPathScraping() {
-	console.log('🎯 STARTING CAREER PATH-FOCUSED SCRAPING');
-	console.log('==========================================');
-	console.log('Targeting specific career areas for early career roles');
-	console.log('');
+	console.log("🎯 STARTING CAREER PATH-FOCUSED SCRAPING");
+	console.log("==========================================");
+	console.log("Targeting specific career areas for early career roles");
+	console.log("");
 
 	const supabase = getSupabase();
 	let totalJobsProcessed = 0;
@@ -273,27 +284,33 @@ except Exception as e:
     sys.exit(1)
 `;
 
-					const result = spawnSync('python3', ['-c', pythonScript], {
-						stdio: ['pipe', 'pipe', 'pipe'],
-						encoding: 'utf8',
-						timeout: 20000 // 20 second timeout per query (was 30s)
+					const result = spawnSync("python3", ["-c", pythonScript], {
+						stdio: ["pipe", "pipe", "pipe"],
+						encoding: "utf8",
+						timeout: 20000, // 20 second timeout per query (was 30s)
 					});
 
 					if (result.error || result.stderr) {
-						console.log(`❌ Python error for "${query}":`, result.stderr || result.error.message);
+						console.log(
+							`❌ Python error for "${query}":`,
+							result.stderr || result.error.message,
+						);
 						continue;
 					}
 
 					let jobs = [];
 					try {
 						const output = result.stdout.trim();
-						if (output.startsWith('ERROR:')) {
+						if (output.startsWith("ERROR:")) {
 							console.log(`❌ JobSpy error for "${query}":`, output);
 							continue;
 						}
 						jobs = JSON.parse(output);
 					} catch (parseError) {
-						console.log(`❌ JSON parse error for "${query}":`, parseError.message);
+						console.log(
+							`❌ JSON parse error for "${query}":`,
+							parseError.message,
+						);
 						continue;
 					}
 
@@ -305,14 +322,19 @@ except Exception as e:
 
 					for (const jobData of jobs) {
 						try {
+							// Map short career path name to full signup form category name
+							// e.g., "strategy" → "strategy-business-design"
+							const mappedCategory = mapCategory(careerPath);
+
 							const processed = await processIncomingJob(jobData, {
-								source: `jobspy-career-${careerPath}`
+								source: `jobspy-career-${careerPath}`,
+								categories: [mappedCategory], // Pass proper signup form category!
 							});
 
 							if (processed) {
 								const { error } = await supabase
-									.from('jobs')
-									.upsert(processed, { onConflict: 'job_hash' });
+									.from("jobs")
+									.upsert(processed, { onConflict: "job_hash" });
 
 								if (!error) {
 									batchSaved++;
@@ -324,13 +346,14 @@ except Exception as e:
 						}
 					}
 
-					console.log(`✅ Career path ${careerPath}: ${batchProcessed} processed, ${batchSaved} saved`);
+					console.log(
+						`✅ Career path ${careerPath}: ${batchProcessed} processed, ${batchSaved} saved`,
+					);
 					totalJobsProcessed += batchProcessed;
 					totalJobsSaved += batchSaved;
 
 					// Small delay between queries (reduced from 1500ms)
-					await new Promise(resolve => setTimeout(resolve, 500));
-
+					await new Promise((resolve) => setTimeout(resolve, 500));
 				} catch (error) {
 					console.log(`❌ Error with query "${query}":`, error.message);
 				}
@@ -342,16 +365,20 @@ except Exception as e:
 		console.log(`🏙️ Completed ${city}: ${totalJobsSaved} jobs saved so far`);
 	}
 
-	console.log('\n🎯 CAREER PATH SCRAPING COMPLETE');
-	console.log('=================================');
+	console.log("\n🎯 CAREER PATH SCRAPING COMPLETE");
+	console.log("=================================");
 	console.log(`📊 Total Jobs Processed: ${totalJobsProcessed}`);
 	console.log(`💾 Total Jobs Saved: ${totalJobsSaved}`);
-	console.log(`📈 Success Rate: ${totalJobsProcessed > 0 ? ((totalJobsSaved/totalJobsProcessed)*100).toFixed(1) : 0}%`);
+	console.log(
+		`📈 Success Rate: ${totalJobsProcessed > 0 ? ((totalJobsSaved / totalJobsProcessed) * 100).toFixed(1) : 0}%`,
+	);
 
 	// Summary by career path
-	console.log('\n📋 Career Path Focus Areas:');
-	Object.keys(CAREER_PATH_QUERIES).forEach(path => {
-		console.log(`   • ${path}: ${CAREER_PATH_QUERIES[path].length} targeted roles`);
+	console.log("\n📋 Career Path Focus Areas:");
+	Object.keys(CAREER_PATH_QUERIES).forEach((path) => {
+		console.log(
+			`   • ${path}: ${CAREER_PATH_QUERIES[path].length} targeted roles`,
+		);
 	});
 }
 

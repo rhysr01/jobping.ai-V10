@@ -1,1 +1,29 @@
-{"numTotalTests": 10, "numPassedTests": 7, "numFailedTests": 3, "testResults": [{"testFilePath": "tests/e2e/signup.spec.ts", "testResults": [{"title": "should handle signup", "status": "passed", "duration": 100}, {"title": "should validate email", "status": "failed", "duration": 200, "errorMessage": "rate limiting exceeded"}, {"title": "should redirect after signup", "status": "failed", "duration": 300, "errorMessage": "database connection timeout"}]}]}
+{
+	"numTotalTests": 10,
+	"numPassedTests": 7,
+	"numFailedTests": 3,
+	"testResults": [
+		{
+			"testFilePath": "tests/e2e/signup.spec.ts",
+			"testResults": [
+				{
+					"title": "should handle signup",
+					"status": "passed",
+					"duration": 100
+				},
+				{
+					"title": "should validate email",
+					"status": "failed",
+					"duration": 200,
+					"errorMessage": "rate limiting exceeded"
+				},
+				{
+					"title": "should redirect after signup",
+					"status": "failed",
+					"duration": 300,
+					"errorMessage": "database connection timeout"
+				}
+			]
+		}
+	]
+}

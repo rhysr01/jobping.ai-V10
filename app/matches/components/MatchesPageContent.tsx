@@ -181,16 +181,17 @@ export default function MatchesPageContent() {
 					/>
 
 					{/* Premium Jobs Preview - Show after user has jobs */}
-					{jobs.length > 0 && (() => {
-						// Get real user preferences from localStorage
-						const userPrefs = getStoredUserPreferencesForMatches();
-						return userPrefs ? (
-							<PremiumJobsPreview
-								userPreferences={userPrefs}
-								className="mt-8"
-							/>
-						) : null;
-					})()}
+					{jobs.length > 0 &&
+						(() => {
+							// Get real user preferences from localStorage
+							const userPrefs = getStoredUserPreferencesForMatches();
+							return userPrefs ? (
+								<PremiumJobsPreview
+									userPreferences={userPrefs}
+									className="mt-8"
+								/>
+							) : null;
+						})()}
 				</div>
 
 				{/* Ghost Matches for Empty State */}

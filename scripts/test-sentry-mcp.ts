@@ -64,7 +64,9 @@ async function checkEnvironmentVariables() {
 		logError("SENTRY_AUTH_TOKEN is not set");
 		allConfigured = false;
 	} else {
-		logSuccess(`SENTRY_AUTH_TOKEN is set (${sentryAuthToken.substring(0, 10)}...)`);
+		logSuccess(
+			`SENTRY_AUTH_TOKEN is set (${sentryAuthToken.substring(0, 10)}...)`,
+		);
 	}
 
 	if (!sentryOrg) {
@@ -184,7 +186,9 @@ async function testSentryAPI(authToken: string, org: string) {
 
 		return true;
 	} catch (error) {
-		logError(`API test failed: ${error instanceof Error ? error.message : String(error)}`);
+		logError(
+			`API test failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		if (error instanceof Error && error.stack) {
 			console.error(error.stack);
 		}
@@ -206,13 +210,17 @@ async function provideSetupInstructions() {
 	console.log("\n2. Find your organization slug:");
 	console.log("   • Go to https://sentry.io/settings/");
 	console.log("   • Your organization slug is in the URL or settings page");
-	console.log("   • Example: If URL is https://sentry.io/organizations/my-org/");
+	console.log(
+		"   • Example: If URL is https://sentry.io/organizations/my-org/",
+	);
 	console.log("     then SENTRY_ORG=my-org");
 
 	console.log("\n3. Find your project slug:");
 	console.log("   • Go to your Sentry project");
 	console.log("   • The project slug is in the URL or project settings");
-	console.log("   • Example: If URL is https://sentry.io/organizations/my-org/projects/my-project/");
+	console.log(
+		"   • Example: If URL is https://sentry.io/organizations/my-org/projects/my-project/",
+	);
 	console.log("     then SENTRY_PROJECT=my-project");
 
 	console.log("\n4. Add to .env.local:");
@@ -229,7 +237,8 @@ async function main() {
 	log("\n🔍 Sentry MCP Configuration Test", "bright");
 	log("==================================\n", "bright");
 
-	const { allConfigured, sentryAuthToken, sentryOrg } = await checkEnvironmentVariables();
+	const { allConfigured, sentryAuthToken, sentryOrg } =
+		await checkEnvironmentVariables();
 
 	if (!allConfigured) {
 		logError("\n❌ Sentry MCP is not properly configured");

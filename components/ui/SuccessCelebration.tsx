@@ -144,4 +144,3 @@ export function SuccessCelebration({
 }
 
 export default SuccessCelebration;
-

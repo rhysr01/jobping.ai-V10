@@ -106,7 +106,7 @@ function validateJob(job) {
 	const description = (job.description || "").trim();
 	if (description.length < 50) {
 		errors.push(
-			`Description too short (${description.length}/<50 chars) - filtered for quality`
+			`Description too short (${description.length}/<50 chars) - filtered for quality`,
 		);
 	}
 

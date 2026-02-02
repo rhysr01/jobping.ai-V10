@@ -35,6 +35,8 @@ if (!process.env.JOOBLE_API_KEY) {
 	process.exit(1);
 }
 const { processIncomingJob } = require("./shared/processor.cjs");
+const { validateAndFixCategories } = require("./shared/categoryMapper.cjs");
+const { getInferredCategories } = require("./shared/careerPathInference.cjs");
 
 // Jooble API endpoint - using their public API
 // Note: Jooble may require API key registration for production use
@@ -238,7 +240,10 @@ function generateSearchQueries() {
 function extractCity(location) {
 	if (!location) return "";
 	const { normalizeCity } = require("./shared/locationNormalizer.cjs");
-	const parts = location.split(",").map(p => p.trim()).filter(Boolean);
+	const parts = location
+		.split(",")
+		.map((p) => p.trim())
+		.filter(Boolean);
 	if (parts.length === 0) return "";
 	const city = normalizeCity(parts[0]);
 	return city || "Unknown";
@@ -251,14 +256,17 @@ function extractCity(location) {
 function inferCountry(location) {
 	if (!location) return "";
 	const { normalizeCountry } = require("./shared/locationNormalizer.cjs");
-	const parts = location.split(",").map(p => p.trim()).filter(Boolean);
-	
+	const parts = location
+		.split(",")
+		.map((p) => p.trim())
+		.filter(Boolean);
+
 	// Try to get country from last part first (usually most reliable)
 	if (parts.length > 1) {
 		const country = normalizeCountry(parts[parts.length - 1]);
 		if (country) return country;
 	}
-	
+
 	// Fall back to normalizing full location string
 	const country = normalizeCountry(location);
 	return country || "United Kingdom"; // Default to UK if unknown
@@ -458,6 +466,10 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 							source: "jooble",
 							defaultCity: city,
 							defaultCountry: country,
+							categories: getInferredCategories(
+								job.title || "",
+								job.description || "",
+							), // Infer career path
 						},
 					);
 
@@ -615,12 +627,12 @@ async function scrapeJooble() {
 				const saved = await scrapeJoobleQuery(keyword, city, supabase, apiKey);
 				totalSaved += saved;
 
-			// CRITICAL: Rate limiting 2 seconds between queries to prevent 429 rate limit errors
-			// 15 cities × 8 queries × 3 pages × 2s = ~960 seconds ideal, but batching reduces actual time
-			// Plus query time: reasonable within timeout with proper backoff
-			// If scraper times out before completion, it will gracefully exit
-			// Increased from 1500ms to 2000ms to prevent 429 errors (was getting 3+ errors per run)
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+				// CRITICAL: Rate limiting 2 seconds between queries to prevent 429 rate limit errors
+				// 15 cities × 8 queries × 3 pages × 2s = ~960 seconds ideal, but batching reduces actual time
+				// Plus query time: reasonable within timeout with proper backoff
+				// If scraper times out before completion, it will gracefully exit
+				// Increased from 1500ms to 2000ms to prevent 429 errors (was getting 3+ errors per run)
+				await new Promise((resolve) => setTimeout(resolve, 2000));
 			} catch (error) {
 				console.error(
 					`[Jooble] Error with ${keyword} in ${city.name}:`,

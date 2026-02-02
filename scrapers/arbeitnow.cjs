@@ -29,6 +29,8 @@ const {
 	recordApiRequest,
 } = require("./shared/telemetry.cjs");
 const { processIncomingJob } = require("./shared/processor.cjs");
+const { validateAndFixCategories } = require("./shared/categoryMapper.cjs");
+const { getInferredCategories } = require("./shared/careerPathInference.cjs");
 
 const BASE_URL = "https://www.arbeitnow.com/api/job-board-api";
 
@@ -565,6 +567,7 @@ async function scrapeArbeitnowQuery(keyword, location, supabase) {
 						source: "arbeitnow",
 						defaultCity: city,
 						defaultCountry: country,
+						categories: getInferredCategories(job.title, job.description), // Infer career path
 					},
 				);
 
@@ -698,13 +701,13 @@ async function scrapeArbeitnow() {
 				const saved = await scrapeArbeitnowQuery(keyword, city, supabase);
 				totalSaved += saved;
 
-			// Rate limiting: 2 seconds between requests (reduced aggressive requests)
-			// Arbeitnow is EXTREMELY rate-limit sensitive - increased to 3s to prevent 429 errors
-			// With 4 cities × 10 queries = 40 requests max per run
-			// 40 × 3s = 120s just for delays, still reasonable within timeout
-			// Increased from 2.5s to 3s after seeing persistent 429 errors even at 2.5s
-			// The exponential backoff handles errors, but higher delay prevents them entirely
-			await new Promise((resolve) => setTimeout(resolve, 3000));
+				// Rate limiting: 2 seconds between requests (reduced aggressive requests)
+				// Arbeitnow is EXTREMELY rate-limit sensitive - increased to 3s to prevent 429 errors
+				// With 4 cities × 10 queries = 40 requests max per run
+				// 40 × 3s = 120s just for delays, still reasonable within timeout
+				// Increased from 2.5s to 3s after seeing persistent 429 errors even at 2.5s
+				// The exponential backoff handles errors, but higher delay prevents them entirely
+				await new Promise((resolve) => setTimeout(resolve, 3000));
 			} catch (error) {
 				console.error(
 					`[Arbeitnow] Error with ${keyword} in ${city.name}:`,

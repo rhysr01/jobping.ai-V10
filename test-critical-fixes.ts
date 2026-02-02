@@ -159,8 +159,7 @@ const testCases: TestCase[] = [
 			title: "Strategy Manager",
 			company: "BigCorp",
 			location: "London, UK",
-			description:
-				"Strategy Manager. MBA required for this leadership role.",
+			description: "Strategy Manager. MBA required for this leadership role.",
 			url: "https://example.com/9",
 			source: "test",
 		},
@@ -174,8 +173,7 @@ const testCases: TestCase[] = [
 			title: "Tax Consultant",
 			company: "BigAccounting",
 			location: "Chicago, USA",
-			description:
-				"Tax Consultant. CPA required. Minimum 5 years experience.",
+			description: "Tax Consultant. CPA required. Minimum 5 years experience.",
 			url: "https://example.com/10",
 			source: "test",
 		},
@@ -261,8 +259,12 @@ function runTests() {
 
 	// Group by category
 	const byCategory = {
-		not_for_juniors_fix: testCases.filter((c) => c.category === "not_for_juniors_fix"),
-		qualification_enhancement: testCases.filter((c) => c.category === "qualification_enhancement"),
+		not_for_juniors_fix: testCases.filter(
+			(c) => c.category === "not_for_juniors_fix",
+		),
+		qualification_enhancement: testCases.filter(
+			(c) => c.category === "qualification_enhancement",
+		),
 	};
 
 	["not_for_juniors_fix", "qualification_enhancement"].forEach((category) => {
@@ -274,30 +276,30 @@ function runTests() {
 		console.log(`\n${"█".repeat(90)}`);
 		console.log(`\n${categoryName}\n`);
 
-		byCategory[category as keyof typeof byCategory].forEach((testCase, index) => {
-			const result = isEarlyCareerJob(testCase.job);
-			const isPass = result === testCase.expectedResult;
+		byCategory[category as keyof typeof byCategory].forEach(
+			(testCase, index) => {
+				const result = isEarlyCareerJob(testCase.job);
+				const isPass = result === testCase.expectedResult;
 
-			const status = isPass ? "✅" : "❌";
-			console.log(
-				`\n[${category === "not_for_juniors_fix" ? "NJ" : "QE"}.${index + 1}] ${status} ${testCase.name}`,
-			);
-			console.log(
-				`    Expected: ${testCase.expectedResult}, Got: ${result}`,
-			);
-			console.log(`    Title: "${testCase.job.title}"`);
-			console.log(`    Explanation: ${testCase.explanation}`);
+				const status = isPass ? "✅" : "❌";
+				console.log(
+					`\n[${category === "not_for_juniors_fix" ? "NJ" : "QE"}.${index + 1}] ${status} ${testCase.name}`,
+				);
+				console.log(`    Expected: ${testCase.expectedResult}, Got: ${result}`);
+				console.log(`    Title: "${testCase.job.title}"`);
+				console.log(`    Explanation: ${testCase.explanation}`);
 
-			if (isPass) {
-				passed++;
-			} else {
-				failed++;
-				failedTests.push({
-					name: testCase.name,
-					category,
-				});
-			}
-		});
+				if (isPass) {
+					passed++;
+				} else {
+					failed++;
+					failedTests.push({
+						name: testCase.name,
+						category,
+					});
+				}
+			},
+		);
 	});
 
 	console.log("\n" + "=".repeat(90));
@@ -326,4 +328,3 @@ function runTests() {
 
 // Run tests
 runTests();
-

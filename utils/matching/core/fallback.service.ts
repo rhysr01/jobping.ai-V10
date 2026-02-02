@@ -553,16 +553,81 @@ export class FallbackService {
 		// Try advanced matching with synonyms and related terms
 		// userPath is already in long form (finance-investment, data-analytics, etc)
 		const careerPathSynonyms: Record<string, string[]> = {
-			"strategy-business-design": ["strategy", "business-design", "consulting", "management", "planning"],
-			"data-analytics": ["data", "analytics", "data-science", "bi", "business-intelligence", "insights"],
-			"sales-client-success": ["sales", "business-development", "client-success", "account-management", "revenue"],
-			"marketing-growth": ["marketing", "growth", "brand", "content", "social", "campaign"],
-			"finance-investment": ["finance", "accounting", "investment", "fp&a", "financial", "budget"],
-			"operations-supply-chain": ["operations", "supply-chain", "logistics", "procurement", "efficiency"],
-			"product-innovation": ["product", "product-management", "innovation", "roadmap", "features"],
-			"tech-transformation": ["tech", "technology", "transformation", "it", "digital", "software"],
-			"sustainability-esg": ["sustainability", "esg", "environmental", "social", "governance", "csr"],
-			"all-categories": ["general", "graduate", "trainee", "rotational", "development"],
+			"strategy-business-design": [
+				"strategy",
+				"business-design",
+				"consulting",
+				"management",
+				"planning",
+			],
+			"data-analytics": [
+				"data",
+				"analytics",
+				"data-science",
+				"bi",
+				"business-intelligence",
+				"insights",
+			],
+			"sales-client-success": [
+				"sales",
+				"business-development",
+				"client-success",
+				"account-management",
+				"revenue",
+			],
+			"marketing-growth": [
+				"marketing",
+				"growth",
+				"brand",
+				"content",
+				"social",
+				"campaign",
+			],
+			"finance-investment": [
+				"finance",
+				"accounting",
+				"investment",
+				"fp&a",
+				"financial",
+				"budget",
+			],
+			"operations-supply-chain": [
+				"operations",
+				"supply-chain",
+				"logistics",
+				"procurement",
+				"efficiency",
+			],
+			"product-innovation": [
+				"product",
+				"product-management",
+				"innovation",
+				"roadmap",
+				"features",
+			],
+			"tech-transformation": [
+				"tech",
+				"technology",
+				"transformation",
+				"it",
+				"digital",
+				"software",
+			],
+			"sustainability-esg": [
+				"sustainability",
+				"esg",
+				"environmental",
+				"social",
+				"governance",
+				"csr",
+			],
+			"all-categories": [
+				"general",
+				"graduate",
+				"trainee",
+				"rotational",
+				"development",
+			],
 		};
 
 		const synonyms = careerPathSynonyms[userPath] || [userPath.toLowerCase()];
@@ -623,13 +688,22 @@ export class FallbackService {
 		const careerPathSynonyms: Record<string, string[]> = {
 			"strategy-business-design": ["strategy", "business-design", "consulting"],
 			"data-analytics": ["data", "analytics", "data-science"],
-			"sales-client-success": ["sales", "business-development", "client-success"],
+			"sales-client-success": [
+				"sales",
+				"business-development",
+				"client-success",
+			],
 			"marketing-growth": ["marketing", "growth", "brand"],
 			"finance-investment": ["finance", "accounting", "investment"],
 			"operations-supply-chain": ["operations", "supply-chain", "logistics"],
 			"product-innovation": ["product", "product-management", "innovation"],
 			"tech-transformation": ["tech", "technology", "transformation", "it"],
-			"sustainability-esg": ["sustainability", "esg", "environmental", "social"],
+			"sustainability-esg": [
+				"sustainability",
+				"esg",
+				"environmental",
+				"social",
+			],
 			"all-categories": ["general", "graduate", "trainee", "rotational"],
 		};
 

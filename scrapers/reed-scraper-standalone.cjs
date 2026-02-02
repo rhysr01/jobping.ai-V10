@@ -36,6 +36,8 @@ if (!process.env.REED_API_KEY) {
 	process.exit(1);
 }
 const { processIncomingJob } = require("./shared/processor.cjs");
+const { validateAndFixCategories } = require("./shared/categoryMapper.cjs");
+const { getInferredCategories } = require("./shared/careerPathInference.cjs");
 
 // Parse location to extract city and country
 function parseLocation(location) {
@@ -124,6 +126,7 @@ async function convertToDatabaseFormat(job) {
 	// Process through standardization pipe
 	const processed = await processIncomingJob(job, {
 		source: "reed",
+		categories: getInferredCategories(job.title || "", job.description || ""), // Infer career path
 	});
 
 	// CRITICAL: Check if processing returned null (e.g., job board company)
@@ -160,12 +163,7 @@ const REED_API = "https://www.reed.co.uk/api/1.0/search";
 // Expanded UK/Ireland cities: 5 → 6 cities from signup form
 // Conservative scaling with most generous API limits
 // Reed API is most generous: 1000 requests/day (Jobseeker API) or 2000/hour (Recruiter API)
-const UK_CITIES = [
-	"London",
-	"Manchester",
-	"Birmingham",
-	"Belfast",
-];
+const UK_CITIES = ["London", "Manchester", "Birmingham", "Belfast"];
 const IRELAND_CITIES = ["Dublin"];
 const SUPPORTED_CITIES = [...UK_CITIES, ...IRELAND_CITIES]; // UK + Ireland only from signup form
 const DEFAULT_LOCATIONS = [...UK_CITIES, ...IRELAND_CITIES]; // 5 cities total from signup form
@@ -626,7 +624,7 @@ async function scrapeLocation(location) {
 
 		while (page < queryMaxPages) {
 			const params = {
-				keywords: `${term}`,  // CRITICAL FIX: Removed early-career filter (graduate OR intern OR "entry level" OR junior) to avoid API results being too restrictive
+				keywords: `${term}`, // CRITICAL FIX: Removed early-career filter (graduate OR intern OR "entry level" OR junior) to avoid API results being too restrictive
 				locationName: location,
 				resultsToTake: resultsPerPage,
 				resultsToSkip: page * resultsPerPage,

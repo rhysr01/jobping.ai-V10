@@ -129,18 +129,19 @@ export function FreeSuccessOverlay({
 						<BrandIcons.Check className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
 					</motion.div>
 
-				<h2
-					id="success-title"
-					className="text-2xl sm:text-3xl font-bold text-white mb-2"
-				>
-					🎉 Your Perfect Matches Found!
-				</h2>
-				<p className="text-zinc-400 mb-6 text-base sm:text-lg">
-					We discovered{" "}
-					<span className="text-emerald-400 font-semibold">{matchCount}</span>{" "}
-					{matchCount === 1 ? "opportunity" : "opportunities"} hand-picked for you.{" "}
-					<span className="text-brand-300">Apply now</span> before other candidates do!
-				</p>
+					<h2
+						id="success-title"
+						className="text-2xl sm:text-3xl font-bold text-white mb-2"
+					>
+						🎉 Your Perfect Matches Found!
+					</h2>
+					<p className="text-zinc-400 mb-6 text-base sm:text-lg">
+						We discovered{" "}
+						<span className="text-emerald-400 font-semibold">{matchCount}</span>{" "}
+						{matchCount === 1 ? "opportunity" : "opportunities"} hand-picked for
+						you. <span className="text-brand-300">Apply now</span> before other
+						candidates do!
+					</p>
 
 					{countdown > 0 && (
 						<motion.div

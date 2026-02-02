@@ -24,7 +24,8 @@ export function useFreeSignupNavigation({
 			switch (stepNumber) {
 				case 1:
 					// Basic email regex check as fallback if validation is still debouncing
-					const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+					const basicEmailRegex =
+						/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 					const emailLooksValid = basicEmailRegex.test(formData.email.trim());
 					return (
 						formData.fullName.trim() !== "" &&

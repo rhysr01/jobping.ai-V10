@@ -88,7 +88,12 @@ export async function POST(request: NextRequest) {
 					.eq("email", digest.user_email)
 					.single();
 
-				if (userError || !user || !user.subscription_active || user.delivery_paused) {
+				if (
+					userError ||
+					!user ||
+					!user.subscription_active ||
+					user.delivery_paused
+				) {
 					// Cancel digest if user doesn't exist or is inactive
 					await supabase
 						.from("pending_digests")
@@ -229,115 +234,125 @@ export async function POST(request: NextRequest) {
 					},
 				);
 
-			// Send digest email
-			// 🟢 FIXED BUG #9: Try email send first, only mark sent if successful
-			let emailSentSuccessfully = false;
-			try {
-				await sendMatchedJobsEmail({
-					to: digest.user_email,
-					jobs: distributedJobs,
-					userName: user.full_name || undefined,
-					subscriptionTier: (user.subscription_tier || "free") as
-						| "free"
-						| "premium",
-					isSignupEmail: false,
-					subjectOverride: `Your ${distributedJobs.length} Additional Job Matches - JobPing`,
-					userPreferences: {
-						career_path: userPrefs?.career_path,
-						target_cities: userPrefs?.target_cities,
-						visa_status: userPrefs?.visa_status,
-						entry_level_preference: userPrefs?.entry_level_preference,
-						work_environment: userPrefs?.work_environment,
-					},
-				});
-				emailSentSuccessfully = true;
-			} catch (emailError) {
-				// Email failed - mark as failed, don't save as sent
-				apiLogger.error("Failed to send pending digest email", emailError as Error, {
+				// Send digest email
+				// 🟢 FIXED BUG #9: Try email send first, only mark sent if successful
+				let emailSentSuccessfully = false;
+				try {
+					await sendMatchedJobsEmail({
+						to: digest.user_email,
+						jobs: distributedJobs,
+						userName: user.full_name || undefined,
+						subscriptionTier: (user.subscription_tier || "free") as
+							| "free"
+							| "premium",
+						isSignupEmail: false,
+						subjectOverride: `Your ${distributedJobs.length} Additional Job Matches - JobPing`,
+						userPreferences: {
+							career_path: userPrefs?.career_path,
+							target_cities: userPrefs?.target_cities,
+							visa_status: userPrefs?.visa_status,
+							entry_level_preference: userPrefs?.entry_level_preference,
+							work_environment: userPrefs?.work_environment,
+						},
+					});
+					emailSentSuccessfully = true;
+				} catch (emailError) {
+					// Email failed - mark as failed, don't save as sent
+					apiLogger.error(
+						"Failed to send pending digest email",
+						emailError as Error,
+						{
+							email: digest.user_email,
+							digestId: digest.id,
+						},
+					);
+
+					// Update digest to mark email as failed (for manual retry later)
+					await supabase
+						.from("pending_digests")
+						.update({
+							sent: false,
+							error_message:
+								emailError instanceof Error
+									? emailError.message
+									: String(emailError),
+							last_error_at: new Date().toISOString(),
+						})
+						.eq("id", digest.id);
+
+					// Reschedule for retry in 1 hour
+					const retryTime = new Date(Date.now() + 60 * 60 * 1000);
+					await supabase
+						.from("pending_digests")
+						.update({ scheduled_for: retryTime.toISOString() })
+						.eq("id", digest.id);
+
+					errors.push({
+						email: digest.user_email,
+						error:
+							emailError instanceof Error
+								? emailError.message
+								: "Unknown error",
+					});
+					continue;
+				}
+
+				// Only mark as sent and update user if email succeeded
+				if (emailSentSuccessfully) {
+					// Mark digest as sent
+					await supabase
+						.from("pending_digests")
+						.update({ sent: true })
+						.eq("id", digest.id);
+
+					// Update user's last_email_sent
+					await supabase
+						.from("users")
+						.update({
+							last_email_sent: new Date().toISOString(),
+							email_count: (user.email_count || 0) + 1,
+						})
+						.eq("email", digest.user_email);
+
+					processed++;
+					apiLogger.info("Pending digest sent successfully", {
+						email: digest.user_email,
+						jobsSent: distributedJobs.length,
+						digestId: digest.id,
+					});
+				}
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error ? error.message : "Unknown error";
+
+				// This catch is for database/logic errors, not email errors (already handled above)
+				apiLogger.error("Failed to process pending digest", error as Error, {
 					email: digest.user_email,
 					digestId: digest.id,
 				});
 
-				// Update digest to mark email as failed (for manual retry later)
-				await supabase
-					.from("pending_digests")
-					.update({ 
-						sent: false, 
-						error_message: emailError instanceof Error ? emailError.message : String(emailError),
-						last_error_at: new Date().toISOString(),
-					})
-					.eq("id", digest.id);
-
-				// Reschedule for retry in 1 hour
-				const retryTime = new Date(Date.now() + 60 * 60 * 1000);
-				await supabase
-					.from("pending_digests")
-					.update({ scheduled_for: retryTime.toISOString() })
-					.eq("id", digest.id);
+				// Mark digest as failed for investigation
+				try {
+					await supabase
+						.from("pending_digests")
+						.update({
+							error_message: errorMessage,
+							last_error_at: new Date().toISOString(),
+						})
+						.eq("id", digest.id);
+				} catch (updateError) {
+					apiLogger.warn(
+						"Failed to mark digest error status",
+						updateError as Error,
+						{ digestId: digest.id },
+					);
+				}
 
 				errors.push({
 					email: digest.user_email,
-					error: emailError instanceof Error ? emailError.message : "Unknown error",
-				});
-				continue;
-			}
-
-			// Only mark as sent and update user if email succeeded
-			if (emailSentSuccessfully) {
-				// Mark digest as sent
-				await supabase
-					.from("pending_digests")
-					.update({ sent: true })
-					.eq("id", digest.id);
-
-				// Update user's last_email_sent
-				await supabase
-					.from("users")
-					.update({
-						last_email_sent: new Date().toISOString(),
-						email_count: (user.email_count || 0) + 1,
-					})
-					.eq("email", digest.user_email);
-
-				processed++;
-				apiLogger.info("Pending digest sent successfully", {
-					email: digest.user_email,
-					jobsSent: distributedJobs.length,
-					digestId: digest.id,
+					error: errorMessage,
 				});
 			}
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Unknown error";
-			
-			// This catch is for database/logic errors, not email errors (already handled above)
-			apiLogger.error("Failed to process pending digest", error as Error, {
-				email: digest.user_email,
-				digestId: digest.id,
-			});
-
-			// Mark digest as failed for investigation
-			try {
-				await supabase
-					.from("pending_digests")
-					.update({ 
-						error_message: errorMessage,
-						last_error_at: new Date().toISOString(),
-					})
-					.eq("id", digest.id);
-			} catch (updateError) {
-				apiLogger.warn(
-					"Failed to mark digest error status",
-					updateError as Error,
-					{ digestId: digest.id },
-				);
-			}
-
-			errors.push({
-				email: digest.user_email,
-				error: errorMessage,
-			});
-		}
 		}
 
 		return NextResponse.json({

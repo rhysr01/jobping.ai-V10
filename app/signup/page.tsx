@@ -318,7 +318,6 @@ function SignupForm() {
 									setFormData={setFormData as any}
 									loading={loading}
 									setStep={navigation.navigateToStep}
-									toggleArray={toggleArrayValue as any}
 									handleSubmit={handleSubmit}
 								/>
 							)}

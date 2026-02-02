@@ -16,7 +16,9 @@ async function testCareerJetAuth() {
 	const auth = Buffer.from(`${CAREERJET_API_KEY}:`).toString("base64");
 
 	console.log("📝 Configuration:");
-	console.log(`   API Key (first 8 chars): ${CAREERJET_API_KEY.substring(0, 8)}...`);
+	console.log(
+		`   API Key (first 8 chars): ${CAREERJET_API_KEY.substring(0, 8)}...`,
+	);
 	console.log(`   Endpoint: ${BASE_URL}`);
 	console.log(`   Auth Header: Basic ${auth}`);
 	console.log("");
@@ -57,10 +59,14 @@ async function testCareerJetAuth() {
 		});
 
 		console.log("");
-		console.log(`✅ Response Status: ${response.status} ${response.statusText}`);
+		console.log(
+			`✅ Response Status: ${response.status} ${response.statusText}`,
+		);
 		console.log(`   Headers: `);
 		console.log(`      Content-Type: ${response.headers.get("content-type")}`);
-		console.log(`      Content-Length: ${response.headers.get("content-length")}`);
+		console.log(
+			`      Content-Length: ${response.headers.get("content-length")}`,
+		);
 
 		// Try to parse response
 		const contentType = response.headers.get("content-type");
@@ -77,7 +83,9 @@ async function testCareerJetAuth() {
 		if (response.ok) {
 			console.log("🎉 SUCCESS! API is working");
 			if (typeof data === "object" && data.jobs) {
-				console.log(`   Found ${data.jobs.length} jobs (out of ${data.hits || "?"} total)`);
+				console.log(
+					`   Found ${data.jobs.length} jobs (out of ${data.hits || "?"} total)`,
+				);
 			}
 		} else {
 			console.log(`❌ ERROR: ${response.status} ${response.statusText}`);
@@ -101,4 +109,3 @@ testCareerJetAuth()
 		console.error("Fatal error:", error);
 		process.exit(1);
 	});
-

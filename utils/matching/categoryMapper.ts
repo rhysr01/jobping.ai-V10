@@ -1,6 +1,6 @@
 // Utils/matching/categoryMapper.ts
 // Category mapping - uses LONG FORM everywhere
-// 
+//
 // All categories use LONG FORM (with hyphens):
 // - finance-investment (consistent everywhere)
 // - data-analytics (consistent everywhere)

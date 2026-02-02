@@ -6,7 +6,10 @@ export interface AuthenticatedRequest extends NextRequest {
 	_rawBody?: string;
 }
 
-export async function authenticateRequest(req: NextRequest, body?: any): Promise<{
+export async function authenticateRequest(
+	req: NextRequest,
+	body?: any,
+): Promise<{
 	isAuthenticated: boolean;
 	error?: NextResponse;
 	authenticatedReq?: AuthenticatedRequest;

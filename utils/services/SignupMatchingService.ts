@@ -172,35 +172,46 @@ export class SignupMatchingService {
 
 			if (config.tier === "free") {
 				// Use Free Matching Strategy
+				// FREE form only provides: email, cities, careerPath (NO visa, entry_level, skills, etc)
 				const freePrefs: FreeUserPreferences = {
 					email: userPrefs.email,
 					target_cities: userPrefs.target_cities || [],
 					career_path: userPrefs.career_path?.[0] || null,
-					visa_status: userPrefs.visa_status,
-					entry_level_preference: userPrefs.entry_level_preference,
 					subscription_tier: "free",
 				};
 
-				strategyResult = await runFreeMatching(freePrefs, jobs, config.maxMatches);
+				strategyResult = await runFreeMatching(
+					freePrefs,
+					jobs,
+					config.maxMatches,
+				);
 			} else {
 				// Use Premium Matching Strategy
+				// PREMIUM ONLY USES FIELDS WITH FULL DB SUPPORT + VISA_STATUS
+				// Removed unsupported fields: company_types, skills, industries, roles,
+				// company_size_preference, career_keywords (no job DB data)
+				// Kept: visa_status (1.7% coverage) per user request
 				const premiumPrefs: PremiumUserPreferences = {
+					// From form Step 1 & 2
 					email: userPrefs.email,
 					target_cities: userPrefs.target_cities || [],
 					career_path: userPrefs.career_path || [],
+
+					// From form Step 3 (DB-supported + visa_status)
 					languages_spoken: userPrefs.languages_spoken || [],
-					roles_selected: userPrefs.roles_selected || [],
 					entry_level_preference: userPrefs.entry_level_preference,
 					work_environment: userPrefs.work_environment,
 					visa_status: userPrefs.visa_status,
-					skills: userPrefs.skills || [],
-					industries: userPrefs.industries || [],
-					company_size_preference: userPrefs.company_size_preference,
-					career_keywords: userPrefs.career_keywords,
+
+					// Set by service
 					subscription_tier: "premium_pending",
 				};
 
-				strategyResult = await runPremiumMatching(premiumPrefs, jobs, config.maxMatches);
+				strategyResult = await runPremiumMatching(
+					premiumPrefs,
+					jobs,
+					config.maxMatches,
+				);
 			}
 
 			const processingTime = Date.now() - startTime;
@@ -307,7 +318,7 @@ export class SignupMatchingService {
 
 		const { data: jobs } = await supabase
 			.from("jobs")
-		.select(`
+			.select(`
 			id, job_hash, title, company, location, city, country, job_url, description,
 			experience_required, work_environment, source, categories, company_profile_url,
 			language_requirements, scrape_timestamp, original_posted_date, posted_at,

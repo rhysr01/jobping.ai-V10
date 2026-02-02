@@ -13,7 +13,9 @@ async function applyMigration() {
 
 	if (!supabaseUrl || !supabaseKey) {
 		console.error("❌ Missing Supabase environment variables");
-		console.error("Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY");
+		console.error(
+			"Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY",
+		);
 		process.exit(1);
 	}
 
@@ -76,22 +78,26 @@ async function applyMigration() {
 					// If RPC doesn't exist, try direct query (for simple statements)
 					if (statement.toUpperCase().includes("CREATE TABLE")) {
 						// For CREATE TABLE, we need to use raw SQL connection
-						console.log("⚠️  RPC exec_sql not available, using alternative method...");
+						console.log(
+							"⚠️  RPC exec_sql not available, using alternative method...",
+						);
 						// Use pg directly if available
 						const { Client } = require("pg");
 						const dbUrl = `postgresql://postgres.${supabaseUrl.split("//")[1].split(".")[0]}:${supabaseKey}@aws-0-eu-central-1.pooler.supabase.com:6543/postgres`;
-						
+
 						const client = new Client({
 							connectionString: dbUrl,
 							ssl: { rejectUnauthorized: false },
 						});
-						
+
 						await client.connect();
 						await client.query(statement);
 						await client.end();
 						console.log(`✅ Statement ${i + 1}/${statements.length} executed`);
 					} else {
-						console.warn(`⚠️  Statement ${i + 1} skipped (may need manual execution)`);
+						console.warn(
+							`⚠️  Statement ${i + 1} skipped (may need manual execution)`,
+						);
 					}
 				} else {
 					console.log(`✅ Statement ${i + 1}/${statements.length} executed`);
@@ -119,7 +125,9 @@ async function applyMigration() {
 	} catch (error) {
 		console.error("❌ Error applying migration:", error);
 		console.error("\n💡 Alternative: Apply via Supabase Dashboard SQL Editor");
-		console.error("   File: supabase/migrations/20260121_create_pending_digests_table.sql");
+		console.error(
+			"   File: supabase/migrations/20260121_create_pending_digests_table.sql",
+		);
 		process.exit(1);
 	}
 }

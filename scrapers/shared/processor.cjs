@@ -53,12 +53,22 @@ function cleanCompany(companyName) {
 }
 
 /**
- * Extract language requirements from description
+ * Extract language requirements from description, title, and context
  * Comprehensive detection for 30+ languages (including visa-seeking languages)
+ * Enhanced with context-based detection (city, company location hints)
  */
-function extractLanguageRequirements(description) {
-	if (!description) return [];
-	const desc = description.toLowerCase();
+function extractLanguageRequirements(
+	description,
+	title = "",
+	city = "",
+	company = "",
+) {
+	if (!description && !title) return [];
+	const desc = (description || "").toLowerCase();
+	const titleLower = (title || "").toLowerCase();
+	const cityLower = (city || "").toLowerCase();
+	const companyLower = (company || "").toLowerCase();
+	const combinedText = `${desc} ${titleLower}`.toLowerCase();
 	const languages = [];
 
 	// Comprehensive language patterns - includes all visa-seeking languages
@@ -256,10 +266,80 @@ function extractLanguageRequirements(description) {
 		},
 	];
 
+	// Pattern matching on description and title
 	for (const { pattern, lang } of languagePatterns) {
-		if (pattern.test(desc) && !languages.includes(lang)) {
+		if (pattern.test(combinedText) && !languages.includes(lang)) {
 			languages.push(lang);
 		}
+	}
+
+	// Context-based language inference (city + company location hints)
+	// Only infer if no explicit language was found
+	if (languages.length === 0) {
+		// City-based inference
+		const cityLanguageMap = {
+			paris: "French",
+			berlin: "German",
+			munich: "German",
+			hamburg: "German",
+			amsterdam: "Dutch",
+			madrid: "Spanish",
+			barcelona: "Spanish",
+			milan: "Italian",
+			rome: "Italian",
+			vienna: "German",
+			zurich: "German",
+			brussels: "French", // Also Dutch, but French is more common
+			stockholm: "Swedish",
+			copenhagen: "Danish",
+			prague: "Czech",
+			warsaw: "Polish",
+			dublin: "English",
+			london: "English",
+			manchester: "English",
+			birmingham: "English",
+		};
+
+		// Check city-based inference
+		for (const [cityKey, inferredLang] of Object.entries(cityLanguageMap)) {
+			if (cityLower.includes(cityKey) && !languages.includes(inferredLang)) {
+				languages.push(inferredLang);
+				break; // Only infer one language from city
+			}
+		}
+
+		// Company name patterns (e.g., "Deutsche Bank" → German, "Banco" → Spanish/Portuguese)
+		if (companyLower) {
+			if (
+				companyLower.includes("deutsche") ||
+				companyLower.includes("gmbh") ||
+				companyLower.includes("ag ")
+			) {
+				if (!languages.includes("German")) languages.push("German");
+			}
+			if (
+				companyLower.includes("banco") ||
+				companyLower.includes("banque") ||
+				companyLower.includes("banca")
+			) {
+				// Could be Spanish, Portuguese, or French - infer based on city if available
+				if (cityLower.includes("madrid") || cityLower.includes("barcelona")) {
+					if (!languages.includes("Spanish")) languages.push("Spanish");
+				} else if (
+					cityLower.includes("lisbon") ||
+					cityLower.includes("porto")
+				) {
+					if (!languages.includes("Portuguese")) languages.push("Portuguese");
+				} else if (cityLower.includes("paris")) {
+					if (!languages.includes("French")) languages.push("French");
+				}
+			}
+		}
+	}
+
+	// Always include English as fallback if no languages found
+	if (languages.length === 0) {
+		languages.push("English");
 	}
 
 	// Remove duplicates and return
@@ -330,7 +410,7 @@ function detectWorkEnvironment(job) {
 /**
  * Classify job type as internship, graduate, or entry-level
  * Returns: { isInternship: boolean, isGraduate: boolean }
- * 
+ *
  * IMPROVED: Check graduate FIRST (more specific), then internship
  * Prevents "graduate internship" from being marked as just internship
  */
@@ -351,9 +431,7 @@ function classifyJobType(job) {
 		/\btrainee\s+(?:programme|program|scheme)\b/,
 	];
 
-	const isGraduate = graduatePatterns.some((pattern) =>
-		pattern.test(fullText)
-	);
+	const isGraduate = graduatePatterns.some((pattern) => pattern.test(fullText));
 
 	// If already marked as graduate, don't also mark as internship
 	if (isGraduate) {
@@ -380,7 +458,7 @@ function classifyJobType(job) {
 	];
 
 	const isInternship = internshipPatterns.some((pattern) =>
-		pattern.test(fullText)
+		pattern.test(fullText),
 	);
 
 	return { isInternship, isGraduate: false };
@@ -497,6 +575,7 @@ function extractYearsOfExperience(description) {
  * @param {string} options.source - Job source (e.g., 'reed', 'adzuna')
  * @param {string} options.defaultCity - Default city if not in location
  * @param {string} options.defaultCountry - Default country if not in location
+ * @param {string[]} options.categories - Career path categories (e.g., ['tech-transformation', 'data-analytics'])
  * @returns {Object} - Standardized job object ready for database
  */
 async function processIncomingJob(job, options = {}) {
@@ -504,12 +583,22 @@ async function processIncomingJob(job, options = {}) {
 		source = "unknown",
 		defaultCity = null,
 		defaultCountry = null,
+		categories = [],
 	} = options;
 
 	// CRITICAL: Validate source to prevent null sources
-	if (!source || source === "unknown" || source === null || source === undefined) {
-		console.error(`[Processor] ❌ Rejecting job with invalid source: "${source}" (type: ${typeof source})`);
-		console.error(`[Processor] Job details: ${job.title || 'No title'} at ${job.company || 'No company'}`);
+	if (
+		!source ||
+		source === "unknown" ||
+		source === null ||
+		source === undefined
+	) {
+		console.error(
+			`[Processor] ❌ Rejecting job with invalid source: "${source}" (type: ${typeof source})`,
+		);
+		console.error(
+			`[Processor] Job details: ${job.title || "No title"} at ${job.company || "No company"}`,
+		);
 		console.error(`[Processor] Full job object:`, JSON.stringify(job, null, 2));
 		return null; // Reject jobs with invalid sources
 	}
@@ -532,7 +621,14 @@ async function processIncomingJob(job, options = {}) {
 	});
 
 	// Run all detectors
-	const languages = extractLanguageRequirements(description);
+	const languages = extractLanguageRequirements(
+		description,
+		title,
+		locationData.city || "",
+		company,
+	);
+	const { extractIndustries } = require("./industryExtraction.cjs");
+	const industries = extractIndustries(company, description);
 	const _visaStatus = detectVisaRequirements(description);
 	const workEnv = detectWorkEnvironment({ location: rawLocation, description });
 	const { isInternship, isGraduate } = classifyJobType({ title, description });
@@ -559,28 +655,21 @@ async function processIncomingJob(job, options = {}) {
 	);
 
 	// Build categories array
-	const categories = ["early-career"];
-	if (isInternship) {
-		categories.push("internship");
-	}
-	if (isGraduate) {
-		categories.push("graduate");
-	}
+	// NOTE: early-career, internship, graduate are NOT categories!
+	// They are set as separate boolean flags (is_early_career, is_internship, is_graduate)
+	// Career paths should be passed via options.categories by scrapers
+	let categoriesFromOptions = Array.isArray(categories) ? [...categories] : [];
 
 	// CRITICAL: Validate categories to prevent old category names
 	// Note: Career path categories are added by scrapers using categoryMapper.cjs
 	// This just ensures basic categories are valid
 	const { validateAndFixCategories } = require("./categoryMapper.cjs");
-	let validatedCategories = validateAndFixCategories(categories);
+	let validatedCategories = validateAndFixCategories(categoriesFromOptions);
 
-	// CRITICAL: Ensure work-type category exists (auto-infer if missing)
-	// This prevents jobs from being saved without work-type categories
-	const { ensureWorkTypeCategory } = require("./workTypeInference.cjs");
-	validatedCategories = ensureWorkTypeCategory({
-		title,
-		description,
-		categories: validatedCategories,
-	});
+	// If no categories provided, default to unsure
+	if (validatedCategories.length === 0) {
+		validatedCategories = ["unsure"];
+	}
 
 	// Determine experience_required
 	let _experienceRequired = "entry-level";
@@ -737,12 +826,13 @@ async function processIncomingJob(job, options = {}) {
 		posted_at: postedAt,
 		original_posted_date: originalPostedDate,
 		last_seen_at: nowIso,
-		categories: ["early-career"], // Simplified categories
+		categories: validatedCategories, // Career paths (from scrapers via processIncomingJob options)
 		work_environment: workEnv || "on-site",
 		is_internship: isInternship,
 		is_graduate: isGraduate,
 		is_early_career: isEarlyCareer,
 		language_requirements: languages.length > 0 ? languages : null,
+		industries: industries.length > 0 ? industries : [],
 		min_yoe: yoERequirement.min_yoe,
 		max_yoe: yoERequirement.max_yoe,
 		scrape_timestamp: nowIso, // When this job was scraped/processed

@@ -41,11 +41,22 @@ export function classifyEarlyCareer(job: IngestJob): {
 	// Internship/placement patterns (highest priority)
 	const internshipPatterns =
 		/\b(intern|internship|placement|spring\s+intern|summer\s+intern|work\s+experience|industrial\s+placement|sandwich\s+placement)\b/i;
-	if (internshipPatterns.test(title) || internshipPatterns.test(description.slice(0, 500))) {
+	if (
+		internshipPatterns.test(title) ||
+		internshipPatterns.test(description.slice(0, 500))
+	) {
 		// But NOT if PhD required
-		const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
-		if (!phdRequired.test(title) && !phdRequired.test(description.slice(0, 500))) {
-			return { is_internship: true, is_graduate: false, is_early_career: false };
+		const phdRequired =
+			/(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+		if (
+			!phdRequired.test(title) &&
+			!phdRequired.test(description.slice(0, 500))
+		) {
+			return {
+				is_internship: true,
+				is_graduate: false,
+				is_early_career: false,
+			};
 		}
 	}
 
@@ -53,11 +64,22 @@ export function classifyEarlyCareer(job: IngestJob): {
 	// Graduate/trainee program patterns
 	const graduatePatterns =
 		/\b(graduate\s+(?:scheme|program|programme|trainee|development|role)|management\s+trainee|trainee\s+programme|trainee\s+program|rotational\s+program|apprentice|apprenticeship|new\s+grad|recent\s+graduate)\b/i;
-	if (graduatePatterns.test(title) || graduatePatterns.test(description.slice(0, 500))) {
+	if (
+		graduatePatterns.test(title) ||
+		graduatePatterns.test(description.slice(0, 500))
+	) {
 		// But NOT if PhD required
-		const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
-		if (!phdRequired.test(title) && !phdRequired.test(description.slice(0, 500))) {
-			return { is_internship: false, is_graduate: true, is_early_career: false };
+		const phdRequired =
+			/(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+		if (
+			!phdRequired.test(title) &&
+			!phdRequired.test(description.slice(0, 500))
+		) {
+			return {
+				is_internship: false,
+				is_graduate: true,
+				is_early_career: false,
+			};
 		}
 	}
 
@@ -70,7 +92,8 @@ export function classifyEarlyCareer(job: IngestJob): {
 	}
 
 	// PhD/Doctorate is HARD REJECT
-	const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+	const phdRequired =
+		/(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
 	if (phdRequired.test(title) || phdRequired.test(description.slice(0, 500))) {
 		return { is_internship: false, is_graduate: false, is_early_career: false };
 	}
@@ -89,7 +112,10 @@ export function classifyEarlyCareer(job: IngestJob): {
 	const experienceRequired =
 		/\b(minimum|min\.?|at\s+least|plus|\+)\s*(2|3|4|5|6|7|8|9|10)\+?\s*(years?|yrs?|ans|años|jahre|anni|年|年以上)\b/i;
 	const firstPartDescription = description.slice(0, 500);
-	if (experienceRequired.test(title) || experienceRequired.test(firstPartDescription)) {
+	if (
+		experienceRequired.test(title) ||
+		experienceRequired.test(firstPartDescription)
+	) {
 		return { is_internship: false, is_graduate: false, is_early_career: false };
 	}
 
@@ -122,11 +148,19 @@ export function classifyEarlyCareer(job: IngestJob): {
 			/(graduate|entry\s+level|no\s+experience|0-2\s+years|training\s+provided|learn\s+on\s+the\s+job|perfect\s+for\s+graduates)/i;
 
 		if (hasEarlyCareerContext.test(earlyContext)) {
-			return { is_internship: false, is_graduate: false, is_early_career: true };
+			return {
+				is_internship: false,
+				is_graduate: false,
+				is_early_career: true,
+			};
 		}
 
 		if (experienceRequired.test(earlyContext)) {
-			return { is_internship: false, is_graduate: false, is_early_career: false };
+			return {
+				is_internship: false,
+				is_graduate: false,
+				is_early_career: false,
+			};
 		}
 
 		// Default for ambiguous: accept as early career
@@ -463,7 +497,10 @@ export function convertToDatabaseFormat(job: IngestJob) {
 	const jobHash = makeJobHash(job);
 
 	// Determine if any early-career flag is set
-	const isEarlyCareerJob = classification.is_internship || classification.is_graduate || classification.is_early_career;
+	const isEarlyCareerJob =
+		classification.is_internship ||
+		classification.is_graduate ||
+		classification.is_early_career;
 
 	//  Log classification for debugging
 	console.log(
@@ -517,7 +554,10 @@ export function shouldSaveJob(job: IngestJob): boolean {
 	const classification = classifyEarlyCareer(job);
 
 	// North-star rule: save if early-career (any flag) and in Europe
-	const isEarlyCareer = classification.is_internship || classification.is_graduate || classification.is_early_career;
+	const isEarlyCareer =
+		classification.is_internship ||
+		classification.is_graduate ||
+		classification.is_early_career;
 	return isEarlyCareer && isEU;
 }
 
@@ -526,7 +566,11 @@ export function shouldSaveJob(job: IngestJob): boolean {
  */
 export function isEarlyCareerJob(job: IngestJob): boolean {
 	const classification = classifyEarlyCareer(job);
-	return classification.is_internship || classification.is_graduate || classification.is_early_career;
+	return (
+		classification.is_internship ||
+		classification.is_graduate ||
+		classification.is_early_career
+	);
 }
 
 /**
@@ -542,7 +586,9 @@ export function logJobProcessing(
 
 	console.log(`[${action}] ${job.company} - ${job.title}`);
 	console.log(`  Location: ${job.location} (EU: ${isEU})`);
-	console.log(`  Classification: internship: ${classification.is_internship}, graduate: ${classification.is_graduate}, early_career: ${classification.is_early_career}`);
+	console.log(
+		`  Classification: internship: ${classification.is_internship}, graduate: ${classification.is_graduate}, early_career: ${classification.is_early_career}`,
+	);
 	console.log(`  Should Save: ${shouldSaveJob(job)}`);
 
 	if (details) {

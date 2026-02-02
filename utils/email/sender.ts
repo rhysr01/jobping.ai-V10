@@ -21,7 +21,9 @@ export async function sendSubscriptionConfirmationEmail(args: {
 		to: args.to,
 		subscriptionId: args.subscriptionId,
 	});
-	console.log(`[EMAIL] sendSubscriptionConfirmationEmail called for ${args.to}`);
+	console.log(
+		`[EMAIL] sendSubscriptionConfirmationEmail called for ${args.to}`,
+	);
 
 	// Check API key BEFORE creating client
 	const apiKey = process.env.RESEND_API_KEY;
@@ -174,14 +176,18 @@ Thank you for supporting JobPing!
 		);
 		console.error(`[EMAIL] API Key prefix: ${apiKeyPrefix}...`);
 		console.error(`[EMAIL] Error stack:`, errorStack);
-		apiLogger.error("sendSubscriptionConfirmationEmail failed", error as Error, {
-			to: args.to,
-			errorMessage,
-			errorStack,
-			errorType: error?.constructor?.name,
-			apiKeyPrefix,
-			duration: Date.now() - startTime,
-		});
+		apiLogger.error(
+			"sendSubscriptionConfirmationEmail failed",
+			error as Error,
+			{
+				to: args.to,
+				errorMessage,
+				errorStack,
+				errorType: error?.constructor?.name,
+				apiKeyPrefix,
+				duration: Date.now() - startTime,
+			},
+		);
 		throw error;
 	}
 }

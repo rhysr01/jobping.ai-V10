@@ -1,27 +1,27 @@
 /**
  * Batch Validation System for JobPing Scrapers
- * 
+ *
  * Philosophy: Keep current lenient auto-fix approach (prevent job loss)
  * Enhancement: Add batch-level quality monitoring (detect degradation)
- * 
+ *
  * This monitors batch quality without rejecting jobs, allowing scrapers
  * to continue accepting partial data while alerting on concerning patterns.
- * 
+ *
  * Date: January 28, 2026
  */
 
 const QUALITY_THRESHOLDS = {
-	withDescription: 0.70,        // Alert if <70% have any description
-	withDescriptionLong: 0.50,    // Alert if <50% have descriptions ≥50 chars
-	withLocation: 0.95,           // Alert if <95% have city+country
-	withCareerPath: 0.80,         // Alert if <80% have career path
-	avgDescriptionLength: 100,    // Alert if average < 100 chars
+	withDescription: 0.7, // Alert if <70% have any description
+	withDescriptionLong: 0.5, // Alert if <50% have descriptions ≥50 chars
+	withLocation: 0.95, // Alert if <95% have city+country
+	withCareerPath: 0.8, // Alert if <80% have career path
+	avgDescriptionLength: 100, // Alert if average < 100 chars
 };
 
 /**
  * Validate batch of jobs for quality metrics
  * DOES NOT REJECT jobs - only gathers metrics
- * 
+ *
  * @param {Array} jobs - Processed jobs from processor.cjs
  * @returns {Object} - Batch validation result with stats
  */
@@ -78,7 +78,11 @@ function validateBatch(jobs) {
 		}
 
 		// Check career path categories
-		if (job.categories && Array.isArray(job.categories) && job.categories.length > 0) {
+		if (
+			job.categories &&
+			Array.isArray(job.categories) &&
+			job.categories.length > 0
+		) {
 			const hasCareerPath = job.categories.some(
 				(cat) =>
 					cat === "strategy-business-design" ||
@@ -98,16 +102,20 @@ function validateBatch(jobs) {
 	});
 
 	// Calculate percentages and averages
-	stats.percentWithDescription = jobs.length > 0 ? (stats.withDescription / jobs.length) * 100 : 0;
-	stats.percentWithDescriptionLong = jobs.length > 0 ? (stats.withDescriptionLong / jobs.length) * 100 : 0;
-	stats.percentWithLocation = jobs.length > 0 ? (stats.withLocation / jobs.length) * 100 : 0;
-	stats.percentWithCareerPath = jobs.length > 0 ? (stats.withCareerPath / jobs.length) * 100 : 0;
+	stats.percentWithDescription =
+		jobs.length > 0 ? (stats.withDescription / jobs.length) * 100 : 0;
+	stats.percentWithDescriptionLong =
+		jobs.length > 0 ? (stats.withDescriptionLong / jobs.length) * 100 : 0;
+	stats.percentWithLocation =
+		jobs.length > 0 ? (stats.withLocation / jobs.length) * 100 : 0;
+	stats.percentWithCareerPath =
+		jobs.length > 0 ? (stats.withCareerPath / jobs.length) * 100 : 0;
 	stats.averageDescriptionLength =
 		jobs.length > 0 ? Math.round(totalDescriptionLength / jobs.length) : 0;
 
 	return {
-		valid: jobs,        // ALL jobs valid (current philosophy)
-		invalid: [],        // NO jobs rejected
+		valid: jobs, // ALL jobs valid (current philosophy)
+		invalid: [], // NO jobs rejected
 		stats,
 	};
 }
@@ -115,7 +123,7 @@ function validateBatch(jobs) {
 /**
  * Check batch statistics against quality thresholds
  * Returns alerts for degradation, but allows batch to pass
- * 
+ *
  * @param {Object} stats - Stats from validateBatch()
  * @returns {Array} - Array of alert objects
  */
@@ -186,7 +194,7 @@ function checkThresholds(stats) {
 
 /**
  * Format batch report for logging
- * 
+ *
  * @param {Object} validationResult - Result from validateBatch()
  * @param {string} scraperName - Name of scraper for context
  * @returns {string} - Formatted report
@@ -213,7 +221,7 @@ function formatBatchReport(validationResult, scraperName = "Unknown") {
 
 /**
  * Log batch quality alerts
- * 
+ *
  * @param {Array} alerts - Alerts from checkThresholds()
  * @param {string} scraperName - Name of scraper
  */
@@ -225,13 +233,14 @@ function logAlerts(alerts, scraperName = "Unknown") {
 
 	console.warn(`[${scraperName}] ⚠️  Batch quality alerts:`);
 	alerts.forEach((alert) => {
-		const severityEmoji = {
-			CRITICAL: "🔴",
-			HIGH: "🟠",
-			MEDIUM: "🟡",
-			WARNING: "🟡",
-			LOW: "🔵",
-		}[alert.severity] || "⚠️";
+		const severityEmoji =
+			{
+				CRITICAL: "🔴",
+				HIGH: "🟠",
+				MEDIUM: "🟡",
+				WARNING: "🟡",
+				LOW: "🔵",
+			}[alert.severity] || "⚠️";
 
 		console.warn(
 			`   ${severityEmoji} [${alert.severity}] ${alert.type}: ${alert.message}`,
@@ -249,4 +258,3 @@ module.exports = {
 	logAlerts,
 	QUALITY_THRESHOLDS,
 };
-

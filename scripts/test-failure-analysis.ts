@@ -56,7 +56,6 @@ class TestFailureAnalyzer {
 			await this.createIssueIfNeeded();
 
 			console.log("✅ Test failure analysis completed");
-
 		} catch (error) {
 			console.error("❌ Test failure analysis failed:", error);
 			process.exit(1);
@@ -64,12 +63,22 @@ class TestFailureAnalyzer {
 	}
 
 	private async loadTestResults() {
-		const resultsPath = path.join(process.cwd(), "test-results", "results.json");
+		const resultsPath = path.join(
+			process.cwd(),
+			"test-results",
+			"results.json",
+		);
 
 		if (!fs.existsSync(resultsPath)) {
-			console.log("⚠️  No test results file found, checking Playwright results...");
+			console.log(
+				"⚠️  No test results file found, checking Playwright results...",
+			);
 			// Try to load Playwright results
-			const playwrightResultsPath = path.join(process.cwd(), "playwright-report", "results.json");
+			const playwrightResultsPath = path.join(
+				process.cwd(),
+				"playwright-report",
+				"results.json",
+			);
 			if (fs.existsSync(playwrightResultsPath)) {
 				this.parsePlaywrightResults(playwrightResultsPath);
 			} else {
@@ -80,7 +89,9 @@ class TestFailureAnalyzer {
 			this.testResults = JSON.parse(resultsContent);
 		}
 
-		console.log(`📊 Loaded results: ${this.testResults?.numTotalTests || 0} tests, ${this.testResults?.numFailedTests || 0} failed`);
+		console.log(
+			`📊 Loaded results: ${this.testResults?.numTotalTests || 0} tests, ${this.testResults?.numFailedTests || 0} failed`,
+		);
 	}
 
 	private parsePlaywrightResults(resultsPath: string) {
@@ -112,8 +123,8 @@ class TestFailureAnalyzer {
 		const patterns: string[] = [];
 
 		// Extract failed tests and error patterns
-		this.testResults.testResults.forEach(suite => {
-			suite.testResults.forEach(test => {
+		this.testResults.testResults.forEach((suite) => {
+			suite.testResults.forEach((test) => {
 				if (test.status === "failed") {
 					failedTests.push(`${suite.testFilePath}: ${test.title}`);
 					if (test.errorMessage) {
@@ -139,7 +150,8 @@ class TestFailureAnalyzer {
 
 		// Determine severity
 		let severity: "low" | "medium" | "high" | "critical" = "low";
-		const failureRate = this.testResults.numFailedTests / this.testResults.numTotalTests;
+		const failureRate =
+			this.testResults.numFailedTests / this.testResults.numTotalTests;
 
 		if (failureRate > 0.5) severity = "critical";
 		else if (failureRate > 0.25) severity = "high";
@@ -157,7 +169,9 @@ class TestFailureAnalyzer {
 			recommendations,
 		};
 
-		console.log(`🔍 Analysis complete: ${severity} severity, ${patterns.length} patterns identified`);
+		console.log(
+			`🔍 Analysis complete: ${severity} severity, ${patterns.length} patterns identified`,
+		);
 	}
 
 	private async correlateWithProduction() {
@@ -191,7 +205,9 @@ class TestFailureAnalyzer {
 			return;
 		}
 
-		console.log(`🚨 Creating GitHub issue for ${this.analysis.severity} severity failures...`);
+		console.log(
+			`🚨 Creating GitHub issue for ${this.analysis.severity} severity failures...`,
+		);
 
 		const issueTitle = this.generateIssueTitle();
 		const issueBody = this.generateIssueBody();
@@ -214,11 +230,18 @@ class TestFailureAnalyzer {
 		const { severity, failedTests } = this.analysis!;
 		const count = failedTests.length;
 
-		return `🚨 ${severity.toUpperCase()}: ${count} Test Failure${count > 1 ? 's' : ''} in CI/CD`;
+		return `🚨 ${severity.toUpperCase()}: ${count} Test Failure${count > 1 ? "s" : ""} in CI/CD`;
 	}
 
 	private generateIssueBody(): string {
-		const { testSuite, failedTests, errorMessages, patterns, severity, recommendations } = this.analysis!;
+		const {
+			testSuite,
+			failedTests,
+			errorMessages,
+			patterns,
+			severity,
+			recommendations,
+		} = this.analysis!;
 
 		return `
 ## 🚨 Test Failure Alert
@@ -229,18 +252,18 @@ class TestFailureAnalyzer {
 **Timestamp:** ${new Date().toISOString()}
 
 ### Failed Tests
-${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `\n  \`\`\`\n  ${errorMessages[i]}\n  \`\`\`` : ''}`).join('\n')}
+${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `\n  \`\`\`\n  ${errorMessages[i]}\n  \`\`\`` : ""}`).join("\n")}
 
 ### Error Patterns Detected
-${patterns.length > 0 ? patterns.map(pattern => `- ${pattern.replace('_', ' ')}`).join('\n') : 'No specific patterns identified'}
+${patterns.length > 0 ? patterns.map((pattern) => `- ${pattern.replace("_", " ")}`).join("\n") : "No specific patterns identified"}
 
 ### Automated Analysis
-- **Failure Rate:** ${this.testResults ? ((this.testResults.numFailedTests / this.testResults.numTotalTests) * 100).toFixed(1) : 'N/A'}%
+- **Failure Rate:** ${this.testResults ? ((this.testResults.numFailedTests / this.testResults.numTotalTests) * 100).toFixed(1) : "N/A"}%
 - **Severity Assessment:** ${severity}
 - This issue was created automatically by the test failure analysis system
 
 ### Recommendations
-${recommendations.map(rec => `- ${rec}`).join('\n')}
+${recommendations.map((rec) => `- ${rec}`).join("\n")}
 
 ### Investigation Steps
 1. Review the CI/CD logs for detailed error messages
@@ -279,33 +302,52 @@ ${recommendations.map(rec => `- ${rec}`).join('\n')}
 		return labels;
 	}
 
-	private generateRecommendations(patterns: string[], failureRate: number): string[] {
+	private generateRecommendations(
+		patterns: string[],
+		failureRate: number,
+	): string[] {
 		const recommendations: string[] = [];
 
 		if (failureRate > 0.5) {
-			recommendations.push("Critical failure rate detected - consider pausing deployments until resolved");
+			recommendations.push(
+				"Critical failure rate detected - consider pausing deployments until resolved",
+			);
 		}
 
 		if (patterns.includes("rate_limiting")) {
-			recommendations.push("Rate limiting detected - consider increasing test environment capacity or implementing request deduplication");
+			recommendations.push(
+				"Rate limiting detected - consider increasing test environment capacity or implementing request deduplication",
+			);
 		}
 
 		if (patterns.includes("timeout")) {
-			recommendations.push("Timeout issues detected - review test timeouts and async operations");
+			recommendations.push(
+				"Timeout issues detected - review test timeouts and async operations",
+			);
 		}
 
 		if (patterns.includes("network_error")) {
-			recommendations.push("Network errors detected - check external service dependencies and mocking");
+			recommendations.push(
+				"Network errors detected - check external service dependencies and mocking",
+			);
 		}
 
 		if (patterns.includes("database_error")) {
-			recommendations.push("Database errors detected - verify test database setup and connection pooling");
+			recommendations.push(
+				"Database errors detected - verify test database setup and connection pooling",
+			);
 		}
 
 		if (recommendations.length === 0) {
-			recommendations.push("Investigate test failures manually - no specific patterns identified");
-			recommendations.push("Check for recent code changes that might have introduced regressions");
-			recommendations.push("Verify test environment stability and resource availability");
+			recommendations.push(
+				"Investigate test failures manually - no specific patterns identified",
+			);
+			recommendations.push(
+				"Check for recent code changes that might have introduced regressions",
+			);
+			recommendations.push(
+				"Verify test environment stability and resource availability",
+			);
 		}
 
 		return recommendations;

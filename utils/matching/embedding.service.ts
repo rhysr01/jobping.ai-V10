@@ -5,10 +5,11 @@
 
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import { ENV } from "@/lib/env";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-	apiKey: process.env.OPENAI_API_KEY,
+	apiKey: ENV.OPENAI_API_KEY || "",
 });
 
 export interface JobEmbedding {
@@ -88,8 +89,8 @@ export class EmbeddingService {
 		}
 
 		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_ROLE_KEY!,
+			ENV.NEXT_PUBLIC_SUPABASE_URL,
+			ENV.SUPABASE_SERVICE_ROLE_KEY,
 		);
 
 		let successCount = 0;
@@ -154,8 +155,8 @@ export class EmbeddingService {
 		total: number;
 	}> {
 		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_ROLE_KEY!,
+			ENV.NEXT_PUBLIC_SUPABASE_URL,
+			ENV.SUPABASE_SERVICE_ROLE_KEY,
 		);
 
 		const { count: total } = await supabase

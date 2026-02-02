@@ -32,8 +32,9 @@ export interface RecoveryOptions {
 	maxRecoveryLevel: number;
 	minMatchesRequired: number;
 	enableCityExpansion: boolean;
-	enableSkillRelaxation: boolean;
 	enableIndustryBroadening: boolean;
+	// Deprecated: Skills removed from premium form
+	enableSkillRelaxation?: boolean;
 }
 
 /**
@@ -42,7 +43,7 @@ export interface RecoveryOptions {
  * Level 0: Primary matching (original algorithm)
  * Level 1: Relaxed filtering (broader criteria)
  * Level 2: City expansion (include nearby cities)
- * Level 3: Skill relaxation (partial skill matches)
+ * Level 3: Skill relaxation (deprecated - skills removed from premium form)
  * Level 4: Industry broadening (related industries)
  */
 export class ErrorRecoveryStrategies {
@@ -50,8 +51,9 @@ export class ErrorRecoveryStrategies {
 		maxRecoveryLevel: 4,
 		minMatchesRequired: 1,
 		enableCityExpansion: true,
-		enableSkillRelaxation: true,
 		enableIndustryBroadening: true,
+		// Skills removed from premium form - no longer used
+		enableSkillRelaxation: false,
 	};
 
 	/**
@@ -149,11 +151,8 @@ export class ErrorRecoveryStrategies {
 					config,
 				);
 			case 3:
-				return await ErrorRecoveryStrategies.level3SkillRelaxation(
-					userPrefs,
-					jobs,
-					config,
-				);
+			// Skills removed from premium form - skip to industry broadening
+			// Fall through to level 4
 			case 4:
 				return await ErrorRecoveryStrategies.level4IndustryBroadening(
 					userPrefs,
@@ -267,57 +266,6 @@ export class ErrorRecoveryStrategies {
 	}
 
 	/**
-	 * Level 3: Skill Relaxation
-	 * Accepts partial skill matches and related skills
-	 */
-	private static async level3SkillRelaxation(
-		userPrefs: UserPreferences,
-		jobs: JobWithMetadata[],
-		config: RecoveryOptions,
-	): Promise<Omit<RecoveryResult, "duration">> {
-		if (!config.enableSkillRelaxation || !userPrefs.skills) {
-			throw new Error("Skill relaxation not applicable or disabled");
-		}
-
-		apiLogger.info("Applying Level 3 recovery: Skill relaxation", {
-			email: userPrefs.email,
-			originalSkills: userPrefs.skills,
-		});
-
-		// Relax skill requirements - accept partial matches
-		const matches = jobs.filter((job) => {
-			const skillMatch = ErrorRecoveryStrategies.matchesSkillsRelaxed(
-				job,
-				userPrefs.skills!,
-			);
-			return skillMatch;
-		});
-
-		const rankedMatches = ErrorRecoveryStrategies.rankBySkillRelevance(
-			matches,
-			userPrefs,
-		);
-
-		return {
-			matches: rankedMatches.slice(
-				0,
-				ErrorRecoveryStrategies.getMaxMatchesForTier(
-					userPrefs.subscription_tier,
-				),
-			),
-			matchCount: Math.min(
-				rankedMatches.length,
-				ErrorRecoveryStrategies.getMaxMatchesForTier(
-					userPrefs.subscription_tier,
-				),
-			),
-			recoveryLevel: 3,
-			method: "skill-relaxation",
-			confidence: "low",
-		};
-	}
-
-	/**
 	 * Level 4: Industry Broadening
 	 * Includes related industries and broader categories
 	 */
@@ -416,24 +364,6 @@ export class ErrorRecoveryStrategies {
 		return cities.some((city) => jobLocation.includes(city.toLowerCase()));
 	}
 
-	private static matchesSkillsRelaxed(
-		job: JobWithMetadata,
-		userSkills: string[],
-	): boolean {
-		if (!job.ai_labels || job.ai_labels.length === 0) return true; // No skills info = assume match
-
-		const jobSkills = job.ai_labels.map((skill) => skill.toLowerCase());
-		const userSkillsLower = userSkills.map((skill) => skill.toLowerCase());
-
-		// Accept if at least one skill matches
-		return userSkillsLower.some((userSkill) =>
-			jobSkills.some(
-				(jobSkill) =>
-					jobSkill.includes(userSkill) || userSkill.includes(jobSkill),
-			),
-		);
-	}
-
 	private static matchesIndustryBroadened(
 		job: JobWithMetadata,
 		industries: string[],
@@ -505,26 +435,6 @@ export class ErrorRecoveryStrategies {
 		});
 	}
 
-	private static rankBySkillRelevance(
-		jobs: JobWithMetadata[],
-		userPrefs: UserPreferences,
-	): JobWithMetadata[] {
-		if (!userPrefs.skills)
-			return ErrorRecoveryStrategies.rankByBasicRelevance(jobs, userPrefs);
-
-		return jobs.sort((a, b) => {
-			const aSkillScore = ErrorRecoveryStrategies.calculateSkillMatchScore(
-				a,
-				userPrefs.skills!,
-			);
-			const bSkillScore = ErrorRecoveryStrategies.calculateSkillMatchScore(
-				b,
-				userPrefs.skills!,
-			);
-			return bSkillScore - aSkillScore;
-		});
-	}
-
 	private static rankByIndustryRelevance(
 		jobs: JobWithMetadata[],
 		userPrefs: UserPreferences,
@@ -557,6 +467,7 @@ export class ErrorRecoveryStrategies {
 		return score;
 	}
 
+	// @ts-expect-error - Deprecated helper, kept for reference
 	private static calculateSkillMatchScore(
 		job: JobWithMetadata,
 		userSkills: string[],

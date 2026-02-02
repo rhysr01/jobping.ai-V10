@@ -321,10 +321,7 @@ async function handleEUJobStats(requestId: string) {
 	const now = Date.now();
 
 	// Return cached stats if still valid (24 hours)
-	if (
-		cachedEUStats &&
-		now - lastEUStatsFetch < EU_STATS_CACHE_DURATION
-	) {
+	if (cachedEUStats && now - lastEUStatsFetch < EU_STATS_CACHE_DURATION) {
 		apiLogger.info("Returning cached EU stats", {
 			cacheAge: Math.floor((now - lastEUStatsFetch) / 1000 / 60),
 		});
@@ -438,9 +435,7 @@ async function handleEUJobStats(requestId: string) {
 	}
 
 	// Get unique cities count
-	const uniqueCities = new Set(
-		cityData?.map((j) => j.city) || [],
-	);
+	const uniqueCities = new Set(cityData?.map((j) => j.city) || []);
 	const citiesCount = uniqueCities.size;
 
 	cachedEUStats = {

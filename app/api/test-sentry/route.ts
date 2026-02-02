@@ -75,12 +75,15 @@ export async function GET(request: Request) {
 		);
 	} catch (error) {
 		// Capture any errors in the test endpoint itself
-		Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
-			tags: {
-				test: true,
-				test_type: "endpoint_error",
+		Sentry.captureException(
+			error instanceof Error ? error : new Error(String(error)),
+			{
+				tags: {
+					test: true,
+					test_type: "endpoint_error",
+				},
 			},
-		});
+		);
 
 		return NextResponse.json(
 			{

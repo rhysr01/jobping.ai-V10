@@ -6,8 +6,7 @@
 export const ERROR_MESSAGES = {
 	// Email validation
 	email_required: "We need your email to send you job matches 📧",
-	email_invalid:
-		"Hmm, that doesn't look like a valid email. Double-check it?",
+	email_invalid: "Hmm, that doesn't look like a valid email. Double-check it?",
 	email_already_exists:
 		"This email is already registered. Try logging in instead!",
 
@@ -17,8 +16,7 @@ export const ERROR_MESSAGES = {
 	invalid_city: "That city isn't available in our current regions",
 
 	// Career path validation
-	career_required:
-		"Select your career path so we can find relevant roles 🎯",
+	career_required: "Select your career path so we can find relevant roles 🎯",
 	career_invalid: "That career path isn't available",
 
 	// Experience level
@@ -26,8 +24,7 @@ export const ERROR_MESSAGES = {
 		"Let us know your experience level so we can match appropriately",
 
 	// Visa status
-	visa_required:
-		"Your visa status helps us find sponsored opportunities 📝",
+	visa_required: "Your visa status helps us find sponsored opportunities 📝",
 
 	// Form submission
 	form_submission_error:
@@ -35,8 +32,7 @@ export const ERROR_MESSAGES = {
 	form_submission_timeout: "Request took too long. Please try again",
 
 	// Network errors
-	network_error:
-		"Network error. Check your connection and try again 🌐",
+	network_error: "Network error. Check your connection and try again 🌐",
 	server_error:
 		"Server error. Our team has been notified. Please try again later",
 
@@ -45,8 +41,7 @@ export const ERROR_MESSAGES = {
 	forbidden: "You don't have permission to do that",
 
 	// Rate limiting
-	rate_limited:
-		"You're sending requests too quickly. Please wait a moment",
+	rate_limited: "You're sending requests too quickly. Please wait a moment",
 
 	// Generic
 	unknown_error: "Something went wrong. Please try again later",
@@ -61,10 +56,7 @@ export type ErrorMessageKey = keyof typeof ERROR_MESSAGES;
  */
 export function getUserFriendlyErrorMessage(
 	errorKey: ErrorMessageKey | string,
-	fallback = "Something went wrong. Please try again."
+	fallback = "Something went wrong. Please try again.",
 ): string {
-	return (
-		ERROR_MESSAGES[errorKey as ErrorMessageKey] || fallback
-	);
+	return ERROR_MESSAGES[errorKey as ErrorMessageKey] || fallback;
 }
-

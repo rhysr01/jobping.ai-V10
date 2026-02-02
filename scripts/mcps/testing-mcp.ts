@@ -18,8 +18,15 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 // Import MCP tools
-import { githubCreateIssue, githubGetRecentIssues, githubSearchIssues } from "./github-mcp.js";
-import { sentryGetRecentErrors, sentryAnalyzeErrorPatterns } from "./sentry-mcp.js";
+import {
+	githubCreateIssue,
+	githubGetRecentIssues,
+	githubSearchIssues,
+} from "./github-mcp.js";
+import {
+	sentryGetRecentErrors,
+	sentryAnalyzeErrorPatterns,
+} from "./sentry-mcp.js";
 import { supabaseQueryUsers, supabaseGetTableStats } from "./supabase-mcp.js";
 
 class TestingMCPServer {
@@ -35,7 +42,7 @@ class TestingMCPServer {
 				capabilities: {
 					tools: {},
 				},
-			}
+			},
 		);
 
 		this.setupToolHandlers();
@@ -48,7 +55,8 @@ class TestingMCPServer {
 				tools: [
 					{
 						name: "test_failure_analyzer",
-						description: "Analyze test failures and correlate with production errors",
+						description:
+							"Analyze test failures and correlate with production errors",
 						inputSchema: {
 							type: "object",
 							properties: {
@@ -58,7 +66,8 @@ class TestingMCPServer {
 								},
 								timeRange: {
 									type: "string",
-									description: "Time range to check for related errors (e.g., '1h', '24h')",
+									description:
+										"Time range to check for related errors (e.g., '1h', '24h')",
 									default: "24h",
 								},
 							},
@@ -67,7 +76,8 @@ class TestingMCPServer {
 					},
 					{
 						name: "create_test_failure_issue",
-						description: "Create a GitHub issue for test failures with automated analysis",
+						description:
+							"Create a GitHub issue for test failures with automated analysis",
 						inputSchema: {
 							type: "object",
 							properties: {
@@ -87,7 +97,8 @@ class TestingMCPServer {
 								},
 								environment: {
 									type: "string",
-									description: "Environment where tests failed (staging, production)",
+									description:
+										"Environment where tests failed (staging, production)",
 									default: "staging",
 								},
 							},
@@ -96,7 +107,8 @@ class TestingMCPServer {
 					},
 					{
 						name: "validate_test_environment",
-						description: "Validate that the test environment is properly configured",
+						description:
+							"Validate that the test environment is properly configured",
 						inputSchema: {
 							type: "object",
 							properties: {
@@ -143,7 +155,8 @@ class TestingMCPServer {
 					},
 					{
 						name: "accessibility_violation_tracker",
-						description: "Track accessibility violations and create improvement tasks",
+						description:
+							"Track accessibility violations and create improvement tasks",
 						inputSchema: {
 							type: "object",
 							properties: {
@@ -217,13 +230,13 @@ class TestingMCPServer {
 					default:
 						throw new McpError(
 							ErrorCode.MethodNotFound,
-							`Unknown tool: ${name}`
+							`Unknown tool: ${name}`,
 						);
 				}
 			} catch (error) {
 				throw new McpError(
 					ErrorCode.InternalError,
-					`Tool execution failed: ${error.message}`
+					`Tool execution failed: ${error.message}`,
 				);
 			}
 		});
@@ -242,22 +255,34 @@ class TestingMCPServer {
 			});
 
 			// Analyze correlation between test failures and production errors
-			const correlations = this.analyzeFailureCorrelations(results, sentryErrors);
+			const correlations = this.analyzeFailureCorrelations(
+				results,
+				sentryErrors,
+			);
 
 			return {
 				content: [
 					{
 						type: "text",
-						text: JSON.stringify({
-							analysis: {
-								totalTests: results.numTotalTests || 0,
-								failedTests: results.numFailedTests || 0,
-								passedTests: results.numPassedTests || 0,
-								failureRate: results.numTotalTests ? (results.numFailedTests / results.numTotalTests) * 100 : 0,
+						text: JSON.stringify(
+							{
+								analysis: {
+									totalTests: results.numTotalTests || 0,
+									failedTests: results.numFailedTests || 0,
+									passedTests: results.numPassedTests || 0,
+									failureRate: results.numTotalTests
+										? (results.numFailedTests / results.numTotalTests) * 100
+										: 0,
+								},
+								correlations,
+								recommendations: this.generateRecommendations(
+									correlations,
+									results,
+								),
 							},
-							correlations,
-							recommendations: this.generateRecommendations(correlations, results),
-						}, null, 2),
+							null,
+							2,
+						),
 					},
 				],
 			};
@@ -267,11 +292,21 @@ class TestingMCPServer {
 	}
 
 	private async handleCreateTestFailureIssue(args: any) {
-		const { testSuite, failedTests, errorMessages, environment = "staging" } = args;
+		const {
+			testSuite,
+			failedTests,
+			errorMessages,
+			environment = "staging",
+		} = args;
 
 		// Create a comprehensive GitHub issue
 		const issueTitle = `🚨 Test Failures: ${testSuite} (${failedTests.length} failures)`;
-		const issueBody = this.generateTestFailureIssueBody(testSuite, failedTests, errorMessages, environment);
+		const issueBody = this.generateTestFailureIssueBody(
+			testSuite,
+			failedTests,
+			errorMessages,
+			environment,
+		);
 
 		const labels = ["bug", "test-failure", "automation", environment];
 
@@ -296,7 +331,11 @@ class TestingMCPServer {
 	}
 
 	private async handleValidateTestEnvironment(args: any) {
-		const { checkDatabase = true, checkExternalAPIs = true, checkEnvironmentVariables = true } = args;
+		const {
+			checkDatabase = true,
+			checkExternalAPIs = true,
+			checkEnvironmentVariables = true,
+		} = args;
 
 		const validationResults = {
 			database: { status: "unknown", details: "" },
@@ -326,7 +365,9 @@ class TestingMCPServer {
 				"OPENAI_API_KEY",
 			];
 
-			const missingVars = requiredVars.filter(varName => !process.env[varName]);
+			const missingVars = requiredVars.filter(
+				(varName) => !process.env[varName],
+			);
 
 			if (missingVars.length === 0) {
 				validationResults.environmentVariables = {
@@ -362,12 +403,20 @@ class TestingMCPServer {
 	private async handlePerformanceRegressionAlert(args: any) {
 		const { baselineMetrics, currentMetrics, threshold = 10 } = args;
 
-		const regressions = this.analyzePerformanceRegressions(baselineMetrics, currentMetrics, threshold);
+		const regressions = this.analyzePerformanceRegressions(
+			baselineMetrics,
+			currentMetrics,
+			threshold,
+		);
 
 		if (regressions.length > 0) {
 			// Create GitHub issue for performance regression
 			const issueTitle = `📊 Performance Regression Alert: ${regressions.length} metrics degraded`;
-			const issueBody = this.generatePerformanceRegressionIssueBody(regressions, baselineMetrics, currentMetrics);
+			const issueBody = this.generatePerformanceRegressionIssueBody(
+				regressions,
+				baselineMetrics,
+				currentMetrics,
+			);
 
 			try {
 				const issue = await githubCreateIssue({
@@ -447,11 +496,17 @@ class TestingMCPServer {
 	private async handleTestCoverageAnalyzer(args: any) {
 		const { coverageReport, minimumThreshold = 80 } = args;
 
-		const coverageGaps = this.analyzeCoverageGaps(coverageReport, minimumThreshold);
+		const coverageGaps = this.analyzeCoverageGaps(
+			coverageReport,
+			minimumThreshold,
+		);
 
 		if (coverageGaps.length > 0) {
 			const issueTitle = `📊 Test Coverage Gaps: ${coverageGaps.length} areas below ${minimumThreshold}%`;
-			const issueBody = this.generateCoverageGapIssueBody(coverageGaps, coverageReport);
+			const issueBody = this.generateCoverageGapIssueBody(
+				coverageGaps,
+				coverageReport,
+			);
 
 			try {
 				const issue = await githubCreateIssue({
@@ -465,17 +520,19 @@ class TestingMCPServer {
 						{
 							type: "text",
 							text: `Coverage gaps identified. Created issue: ${issue.html_url}`,
-					},
-				],
+						},
+					],
+				};
 			} catch (error) {
 				return {
 					content: [
 						{
 							type: "text",
 							text: `Coverage gaps identified but failed to create issue: ${error.message}`,
-					},
-				},
-			};
+						},
+					],
+				};
+			}
 		}
 
 		return {
@@ -502,17 +559,26 @@ class TestingMCPServer {
 		const recommendations = [];
 
 		if (testResults.numFailedTests > testResults.numPassedTests) {
-			recommendations.push("High failure rate detected. Consider reviewing test stability and environment setup.");
+			recommendations.push(
+				"High failure rate detected. Consider reviewing test stability and environment setup.",
+			);
 		}
 
 		if (correlations.length > 0) {
-			recommendations.push("Test failures correlate with production errors. Investigate shared root causes.");
+			recommendations.push(
+				"Test failures correlate with production errors. Investigate shared root causes.",
+			);
 		}
 
 		return recommendations;
 	}
 
-	private generateTestFailureIssueBody(testSuite: string, failedTests: string[], errorMessages: string[], environment: string) {
+	private generateTestFailureIssueBody(
+		testSuite: string,
+		failedTests: string[],
+		errorMessages: string[],
+		environment: string,
+	) {
 		return `
 ## 🚨 Test Failure Alert
 
@@ -522,7 +588,7 @@ class TestingMCPServer {
 **Timestamp:** ${new Date().toISOString()}
 
 ### Failed Tests
-${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `: ${errorMessages[i]}` : ''}`).join('\n')}
+${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `: ${errorMessages[i]}` : ""}`).join("\n")}
 
 ### Automated Analysis
 - This issue was created automatically by the testing MCP server
@@ -540,13 +606,18 @@ ${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `: ${errorMessages
 `;
 	}
 
-	private analyzePerformanceRegressions(baseline: any, current: any, threshold: number) {
+	private analyzePerformanceRegressions(
+		baseline: any,
+		current: any,
+		threshold: number,
+	) {
 		const regressions = [];
 
 		// Analyze each metric for regression
-		Object.keys(baseline).forEach(metric => {
+		Object.keys(baseline).forEach((metric) => {
 			if (current[metric] && baseline[metric]) {
-				const change = ((current[metric] - baseline[metric]) / baseline[metric]) * 100;
+				const change =
+					((current[metric] - baseline[metric]) / baseline[metric]) * 100;
 				if (change > threshold) {
 					regressions.push({
 						metric,
@@ -561,14 +632,18 @@ ${failedTests.map((test, i) => `- ${test}${errorMessages[i] ? `: ${errorMessages
 		return regressions;
 	}
 
-	private generatePerformanceRegressionIssueBody(regressions: any[], baseline: any, current: any) {
+	private generatePerformanceRegressionIssueBody(
+		regressions: any[],
+		baseline: any,
+		current: any,
+	) {
 		return `
 ## 📊 Performance Regression Alert
 
 Performance metrics have degraded beyond the ${regressions[0]?.threshold || 10}% threshold.
 
 ### Regressions Detected
-${regressions.map(r => `- **${r.metric}:** ${r.baseline} → ${r.current} (${r.change}% increase)`).join('\n')}
+${regressions.map((r) => `- **${r.metric}:** ${r.baseline} → ${r.current} (${r.change}% increase)`).join("\n")}
 
 ### Baseline vs Current
 - **Baseline:** ${JSON.stringify(baseline, null, 2)}
@@ -598,12 +673,16 @@ ${regressions.map(r => `- **${r.metric}:** ${r.baseline} → ${r.current} (${r.c
 **Violations:** ${violations.length}
 
 ### Violations Details
-${violations.map((v, i) => `
+${violations
+	.map(
+		(v, i) => `
 #### ${i + 1}. ${v.rule}
 - **Element:** ${v.element}
 - **Severity:** ${v.severity}
 - **Description:** ${v.description}
-`).join('\n')}
+`,
+	)
+	.join("\n")}
 
 ### Automated Analysis
 - This issue was created automatically by accessibility testing
@@ -629,25 +708,27 @@ ${violations.map((v, i) => `
 		const gaps = [];
 
 		// Analyze coverage by file and function
-		Object.entries(coverageReport).forEach(([file, coverage]: [string, any]) => {
-			if (coverage.lines?.pct < threshold) {
-				gaps.push({
-					file,
-					type: 'lines',
-					coverage: coverage.lines.pct,
-					threshold,
-				});
-			}
+		Object.entries(coverageReport).forEach(
+			([file, coverage]: [string, any]) => {
+				if (coverage.lines?.pct < threshold) {
+					gaps.push({
+						file,
+						type: "lines",
+						coverage: coverage.lines.pct,
+						threshold,
+					});
+				}
 
-			if (coverage.functions?.pct < threshold) {
-				gaps.push({
-					file,
-					type: 'functions',
-					coverage: coverage.functions.pct,
-					threshold,
-				});
-			}
-		});
+				if (coverage.functions?.pct < threshold) {
+					gaps.push({
+						file,
+						type: "functions",
+						coverage: coverage.functions.pct,
+						threshold,
+					});
+				}
+			},
+		);
 
 		return gaps;
 	}
@@ -659,12 +740,12 @@ ${violations.map((v, i) => `
 Coverage analysis shows areas below the minimum threshold.
 
 ### Coverage Gaps
-${gaps.map(gap => `- **${gap.file}** (${gap.type}): ${gap.coverage}% (threshold: ${gap.threshold}%)`).join('\n')}
+${gaps.map((gap) => `- **${gap.file}** (${gap.type}): ${gap.coverage}% (threshold: ${gap.threshold}%)`).join("\n")}
 
 ### Overall Coverage
-- **Lines:** ${coverageReport.total?.lines?.pct || 'N/A'}%
-- **Functions:** ${coverageReport.total?.functions?.pct || 'N/A'}%
-- **Branches:** ${coverageReport.total?.branches?.pct || 'N/A'}%
+- **Lines:** ${coverageReport.total?.lines?.pct || "N/A"}%
+- **Functions:** ${coverageReport.total?.functions?.pct || "N/A"}%
+- **Branches:** ${coverageReport.total?.branches?.pct || "N/A"}%
 
 ### Automated Analysis
 - This issue was created automatically by coverage analysis

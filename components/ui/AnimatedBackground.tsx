@@ -12,7 +12,6 @@ export default function AnimatedBackground() {
 		setIsClient(true);
 	}, []);
 
-
 	// Prevent SSR hydration issues
 	if (!isClient) {
 		return (
@@ -25,10 +24,8 @@ export default function AnimatedBackground() {
 			{/* Base gradient */}
 			<div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-black to-zinc-950" />
 
-
 			{/* Perspective Grid - clean, professional background */}
 			<RetroGrid className="-z-20" opacity={0.15} gridSize={25} angle={35} />
-
 
 			{/* Enhanced film grain noise texture */}
 			<motion.div

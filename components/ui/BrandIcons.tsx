@@ -4,7 +4,11 @@
  */
 
 // Individual exports to prevent tree-shaking issues
-export const Briefcase = ({ className = "w-5 h-5" }: { className?: string }) => (
+export const Briefcase = ({
+	className = "w-5 h-5",
+}: {
+	className?: string;
+}) => (
 	<svg
 		className={className}
 		viewBox="0 0 24 24"
@@ -56,7 +60,11 @@ export const Sparkles = ({ className = "w-5 h-5" }: { className?: string }) => (
 	</svg>
 );
 
-export const CheckCircle = ({ className = "w-5 h-5" }: { className?: string }) => (
+export const CheckCircle = ({
+	className = "w-5 h-5",
+}: {
+	className?: string;
+}) => (
 	<svg
 		className={className}
 		viewBox="0 0 24 24"

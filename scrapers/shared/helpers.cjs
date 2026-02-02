@@ -84,7 +84,8 @@ function classifyEarlyCareer(job) {
 	const hasStrongSignal = strongEarlyCareerInTitle.test(title);
 
 	// PhD/Doctorate is HARD REJECT - even for interns/trainees
-	const phdRequired = /(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
+	const phdRequired =
+		/(phd|doctorate)\s+(required|preferred|needed|candidate)/i;
 	if (phdRequired.test(title) || phdRequired.test(description.slice(0, 500))) {
 		return false;
 	}
@@ -118,7 +119,10 @@ function classifyEarlyCareer(job) {
 	const experienceRequired =
 		/\b(minimum|min\.?|at\s+least|plus|\+)\s*(2|3|4|5|6|7|8|9|10)\+?\s*(years?|yrs?|ans|años|jahre|anni)\b/i;
 	const firstPartDescription = description.slice(0, 500); // Only check start of description
-	if (experienceRequired.test(title) || experienceRequired.test(firstPartDescription)) {
+	if (
+		experienceRequired.test(title) ||
+		experienceRequired.test(firstPartDescription)
+	) {
 		return false;
 	}
 
@@ -175,7 +179,10 @@ function classifyEarlyCareer(job) {
 	// But ONLY first 300 chars to avoid company boilerplate
 
 	const descStart = description.slice(0, 300);
-	if (strongEarlyCareerInTitle.test(descStart) || earlyCareerKeywords.test(descStart)) {
+	if (
+		strongEarlyCareerInTitle.test(descStart) ||
+		earlyCareerKeywords.test(descStart)
+	) {
 		return true;
 	}
 

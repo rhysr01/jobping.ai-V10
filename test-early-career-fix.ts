@@ -40,7 +40,8 @@ const testCases: TestCase[] = [
 			source: "test",
 		},
 		expectedResult: false,
-		reason: "Description explicitly requires 5+ years experience - should reject",
+		reason:
+			"Description explicitly requires 5+ years experience - should reject",
 	},
 	{
 		name: "Business Analyst with MBA required",
@@ -68,7 +69,8 @@ const testCases: TestCase[] = [
 			source: "test",
 		},
 		expectedResult: false,
-		reason: "Title has Director keyword - immediate rejection regardless of 'Assistant'",
+		reason:
+			"Title has Director keyword - immediate rejection regardless of 'Assistant'",
 	},
 	{
 		name: "Trainee Accountant with 5 years experience (contradictory)",
@@ -82,7 +84,8 @@ const testCases: TestCase[] = [
 			source: "test",
 		},
 		expectedResult: false,
-		reason: "Professional qualification (CPA) + 5+ years requirement in description - reject despite 'Trainee' title",
+		reason:
+			"Professional qualification (CPA) + 5+ years requirement in description - reject despite 'Trainee' title",
 	},
 
 	// ===== WEAK SENIOR DETECTION (OLD BUG) - Should NOW be REJECTED =====
@@ -120,7 +123,8 @@ const testCases: TestCase[] = [
 			title: "Chartered Engineer",
 			company: "EngineeringCorp",
 			location: "Stockholm, Sweden",
-			description: "We need a qualified Chartered Engineer with extensive experience.",
+			description:
+				"We need a qualified Chartered Engineer with extensive experience.",
 			url: "https://example.com/8",
 			source: "test",
 		},
@@ -141,7 +145,8 @@ const testCases: TestCase[] = [
 			source: "test",
 		},
 		expectedResult: true,
-		reason: "Strong early career signal 'Graduate' in title - ignore boilerplate",
+		reason:
+			"Strong early career signal 'Graduate' in title - ignore boilerplate",
 	},
 
 	// ===== CORRECT TRUE POSITIVES - Should STILL be ACCEPTED =====
@@ -241,7 +246,8 @@ const testCases: TestCase[] = [
 			source: "test",
 		},
 		expectedResult: true,
-		reason: "Ambiguous title but description has entry-level context in first 300 chars",
+		reason:
+			"Ambiguous title but description has entry-level context in first 300 chars",
 	},
 
 	// ===== EDGE CASES =====
@@ -265,7 +271,8 @@ const testCases: TestCase[] = [
 			title: "Principal Analyst",
 			company: "ConsultingGiant",
 			location: "Amsterdam, Netherlands",
-			description: "Senior leadership role for experienced analytics professional.",
+			description:
+				"Senior leadership role for experienced analytics professional.",
 			url: "https://example.com/18",
 			source: "test",
 		},
@@ -332,7 +339,9 @@ function runTests() {
 	});
 
 	console.log("\n" + "=".repeat(80));
-	console.log(`\n📊 RESULTS: ${passed} passed, ${failed} failed out of ${testCases.length}`);
+	console.log(
+		`\n📊 RESULTS: ${passed} passed, ${failed} failed out of ${testCases.length}`,
+	);
 
 	if (failed > 0) {
 		console.log("\n❌ FAILED TESTS:");
@@ -346,4 +355,3 @@ function runTests() {
 
 // Run tests
 runTests();
-

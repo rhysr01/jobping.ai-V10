@@ -472,7 +472,9 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 				new Error("Premium AI failed"),
 			);
 
-			await expect(runPremiumMatching(mockUser, mockJobs, 15)).rejects.toThrow();
+			await expect(
+				runPremiumMatching(mockUser, mockJobs, 15),
+			).rejects.toThrow();
 
 			expect(mockLogger.error).toHaveBeenCalledWith(
 				"[PREMIUM] Deep AI ranking error",
