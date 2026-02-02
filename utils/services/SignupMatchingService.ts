@@ -365,9 +365,9 @@ export class SignupMatchingService {
 				.from("jobs")
 				.select(`
 				id, job_hash, title, company, location, city, country, job_url, description,
-				experience_required, work_environment, source, categories, company_profile_url,
+				experience_required, work_environment, source, categories,
 				language_requirements, scrape_timestamp, original_posted_date, posted_at,
-				last_seen_at, is_active, scraper_run_id, created_at, is_internship, is_graduate,
+				last_seen_at, is_active, created_at, is_internship, is_graduate,
 				visa_friendly, visa_sponsored, status, filtered_reason
 			`)
 				.eq("is_active", true)
