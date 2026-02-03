@@ -284,7 +284,7 @@ async function rankAndReturnMatches(
 			match_score: Number((m.match_score || 0) / 100),
 			match_reason: String(m.match_reason || "Premium AI Match"),
 			created_at: new Date().toISOString(),
-			match_algorithm: method,
+			// Removed match_algorithm - column doesn't exist in user_matches table
 		}));
 
 		if (matchesToSave.length > 0) {

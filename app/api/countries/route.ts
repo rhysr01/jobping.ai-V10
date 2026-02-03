@@ -91,8 +91,7 @@ const getCountriesHandler = asyncHandler(async (_req: NextRequest) => {
 	const { data, error } = await supabase
 		.from("jobs")
 		.select("location, city, country")
-		.eq("is_active", true)
-		.eq("is_sent", true);
+		.eq("is_active", true); // Removed is_sent - column doesn't exist in jobs table
 
 	if (error) {
 		throw new Error(`Failed to fetch jobs: ${error.message}`);

@@ -252,19 +252,50 @@ async function rankAndReturnMatches(
 		});
 
 		// Save matches to database
-		const matchesToSave = matches.map((m: any) => ({
-			user_email: userPrefs.email,
-			job_hash: String(m.job_hash),
-			match_score: Number((m.match_score || 0) / 100),
-			match_reason: String(m.match_reason || "Matched"),
-			matched_at: new Date().toISOString(),
-			created_at: new Date().toISOString(),
-			match_algorithm: method,
-		}));
-
-		if (matchesToSave.length > 0) {
+		if (matches.length > 0) {
 			try {
 				const supabase = getDatabaseClient();
+				
+				// First get user_id from email
+				const { data: user } = await supabase
+					.from("users")
+					.select("id")
+					.eq("email", userPrefs.email)
+					.single();
+
+				if (!user) {
+					throw new Error(`User not found for email: ${userPrefs.email}`);
+				}
+
+				// Then get job_ids from job_hashes
+				const jobHashes = matches.map(m => String(m.job_hash));
+				const { data: jobs } = await supabase
+					.from("jobs")
+					.select("id, job_hash")
+					.in("job_hash", jobHashes);
+
+				if (!jobs || jobs.length === 0) {
+					throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
+				}
+
+				// Create lookup map for job_hash -> job_id
+				const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
+
+				const matchesToSave = matches.map((m: any) => {
+					const jobId = jobHashToId.get(String(m.job_hash));
+					if (!jobId) {
+						throw new Error(`Job ID not found for hash: ${m.job_hash}`);
+					}
+
+					return {
+						user_id: user.id,
+						job_id: jobId,
+						match_score: Number((m.match_score || 0) / 100),
+						match_reason: String(m.match_reason || "Matched"),
+						created_at: new Date().toISOString(),
+					};
+				});
+
 				const { error } = await supabase.from("user_matches").insert(matchesToSave);
 
 				if (error) {

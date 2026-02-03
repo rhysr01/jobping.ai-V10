@@ -72,7 +72,6 @@ const getCompaniesHandler = asyncHandler(async (_req: NextRequest) => {
 			.from("jobs")
 			.select("company, company_name, location, city, country")
 			.eq("is_active", true)
-			.eq("is_sent", true)
 			.not("company", "is", null)
 			.neq("company", ""); // Use neq() instead of not("eq", "") to avoid query generation issues
 
