@@ -20,7 +20,15 @@ const freeSignupSchema = z.object({
 		.string()
 		.min(1, "Name is required")
 		.max(100, "Name too long")
-		.regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Name contains invalid characters"), // Allow accented characters
+		.trim() // Remove leading/trailing whitespace
+		.refine(
+			(val) => val.length >= 2 && val.length <= 100,
+			{ message: "Name must be between 2 and 100 characters" }
+		)
+		.refine(
+			(val) => /^[\p{L}\s'.-]+$/u.test(val), // Unicode property \p{L} matches any letter from any language
+			{ message: "Name contains invalid characters. Only letters, spaces, hyphens, apostrophes, and periods are allowed." }
+		),
 	cities: z
 		.array(z.string().max(50))
 		.min(1, "Select at least one city")
