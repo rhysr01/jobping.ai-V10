@@ -96,6 +96,9 @@ export class SimplifiedMatchingEngine {
 
 			if (opts.useAI && prefilterResult.jobs.length >= opts.fallbackThreshold) {
 				try {
+					// Check if AI matching is available before attempting
+					console.log("🤖 Attempting AI matching for user:", user.email);
+					
 					const aiResults = await aiMatchingService.findMatches(
 						user,
 						prefilterResult.jobs
@@ -114,11 +117,14 @@ export class SimplifiedMatchingEngine {
 						});
 					}
 				} catch (aiError) {
+					console.log("❌ AI matching failed, using fallback:", aiError);
+					
 					apiLogger.warn(
 						"AI matching failed, falling back to rules",
 						aiError as Error,
 						{
 							userEmail: user.email,
+							errorMessage: aiError instanceof Error ? aiError.message : String(aiError),
 						},
 					);
 
@@ -142,12 +148,18 @@ export class SimplifiedMatchingEngine {
 			}
 
 			// Step 3: Use fallback if AI didn't work or wasn't enough
+			console.log(`🔄 Checking fallback need: ${matches.length} matches < ${opts.fallbackThreshold} threshold`);
+			
 			if (matches.length < opts.fallbackThreshold) {
+				console.log("🎯 Using fallback matching service");
+				
 				const fallbackResults = fallbackService.generateFallbackMatches(
 					jobsWithFreshness, // Use all jobs for fallback, not just prefiltered
 					user,
 					opts.fallbackThreshold * 2,
 				);
+				
+				console.log(`📊 Fallback generated ${fallbackResults.length} matches`);
 
 				const fallbackMatches =
 					convertFallbackMatchesToJobMatches(fallbackResults);
