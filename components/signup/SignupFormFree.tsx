@@ -769,21 +769,13 @@ function SignupFormFree() {
 						redirectToMatches: errorResponse?.redirectToMatches || false,
 					});
 
-					Sentry.captureMessage(
-						"User attempted to signup with existing email",
-						{
-							level: "info",
-							tags: {
-								endpoint: "signup-free",
-								error_type: "account_already_exists",
-								status_code: 409,
-							},
-							extra: {
-								email: formData.email,
-								redirectToMatches: errorResponse?.redirectToMatches || false,
-							},
-						},
-					);
+					// FIX: Don't log account_already_exists to Sentry - this is expected behavior
+					// User is redirected to matches, which is the correct flow
+					// Only log to console for debugging
+					debugLogger.info("SUBMIT_ACCOUNT_EXISTS_SENTRY", "Account exists - not logging to Sentry", {
+						email: formData.email,
+						redirectToMatches: errorResponse?.redirectToMatches || false,
+					});
 				}
 				// If it's a validation error, show the details
 				else if (error.status === 400 && error.response?.details) {

@@ -50,6 +50,7 @@
 		"check:vercel-env": "tsx scripts/check-vercel-env.ts",
 		"show:vercel-env": "tsx scripts/set-vercel-env.ts",
 		"sentry:errors": "tsx scripts/fetch-sentry-errors.ts",
+		"sentry:recent": "tsx scripts/check-recent-sentry-errors.ts",
 		"automation:start": "node automation/real-job-runner.cjs",
 		"cleanup:jobs": "tsx scripts/cleanup-jobs.ts",
 		"health:check": "curl -f http://localhost:3000/api/health || exit 1",
