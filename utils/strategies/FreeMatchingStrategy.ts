@@ -268,7 +268,7 @@ async function rankAndReturnMatches(
 					throw new Error(`User not found for email: ${userPrefs.email}`);
 				}
 
-				// Then get job_ids from job_hashes
+				// Get job_ids from job_hashes (now all jobs have proper job_hash values)
 				const jobHashes = matches.map(m => String(m.job_hash));
 				const { data: jobs } = await supabase
 					.from("jobs")

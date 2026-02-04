@@ -83,9 +83,6 @@ class RealJobRunner {
 		}
 
 		// Use TypeScript version with tsx for proper module resolution
-		const command =
-			process.env.EMBEDDING_REFRESH_COMMAND ||
-			"npx tsx scripts/generate_all_embeddings.ts";
 
 		console.log(
 			`\n🧠 Starting embedding refresh (${trigger}) using "${command}" at ${new Date().toISOString()}`,
@@ -1724,10 +1721,6 @@ class RealJobRunner {
 				console.log(`🧹 Stale jobs deactivated: ${deactivatedCount.value}`);
 			}
 
-			// AUTOMATIC: Process embeddings after each scraping cycle
-			// This ensures new jobs get embeddings quickly
-			console.log("\n🧠 Starting automatic embedding processing...");
-			await this.runEmbeddingRefresh("post-scrape", true);
 		} catch (error) {
 			console.error("❌ Scraping cycle failed:", error);
 		} finally {
