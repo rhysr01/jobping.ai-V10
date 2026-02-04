@@ -99,6 +99,21 @@ function SignupFormFree() {
 	// Ref to track redirect timeout for cleanup
 	const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+	// Test Sentry on component mount (only in development)
+	useEffect(() => {
+		if (process.env.NODE_ENV === 'development') {
+			// Send a test message to verify Sentry is working
+			Sentry.captureMessage("SignupFormFree component mounted - Sentry test", {
+				level: "info",
+				tags: {
+					component: "SignupFormFree",
+					test: "component_mount",
+					environment: process.env.NODE_ENV,
+				},
+			});
+		}
+	}, []);
+
 	// Global error handler for unhandled errors
 	useEffect(() => {
 		const handleUnhandledError = (event: ErrorEvent) => {
