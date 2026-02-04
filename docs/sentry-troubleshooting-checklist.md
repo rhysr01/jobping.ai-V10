@@ -3,7 +3,7 @@
 ## ✅ Quick Checks
 
 ### 1. Configuration Check
-Visit: `https://your-domain.com/api/debug/sentry-status`
+Visit: `https://getjobping.com/api/debug/sentry-status`
 
 **Expected Response:**
 ```json
@@ -21,7 +21,7 @@ Visit: `https://your-domain.com/api/debug/sentry-status`
 - Check DSN format is correct
 
 ### 2. Test Event
-Visit: `https://your-domain.com/api/debug/sentry-test`
+Visit: `https://getjobping.com/api/debug/sentry-test`
 
 **Expected Response:**
 ```json

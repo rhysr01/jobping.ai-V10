@@ -3,7 +3,7 @@
 ## Quick Debugging Steps
 
 ### 1. Test Sentry Integration
-Visit: `https://your-domain.com/api/debug/sentry-test`
+Visit: `https://getjobping.com/api/debug/sentry-test`
 
 This will:
 - Verify Sentry DSN is configured
@@ -11,7 +11,7 @@ This will:
 - Show Sentry configuration status
 
 ### 2. Check Signup Logs
-Visit: `https://your-domain.com/api/debug/signup-logs`
+Visit: `https://getjobping.com/api/debug/signup-logs`
 
 Query params:
 - `?errors=true` - Show only errors

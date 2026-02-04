@@ -3,7 +3,7 @@
 ## Quick Check
 
 ### 1. Check Sentry Status
-Visit: `https://your-domain.com/api/debug/sentry-status`
+Visit: `https://getjobping.com/api/debug/sentry-status`
 
 This shows:
 - If Sentry DSN is configured
@@ -11,7 +11,7 @@ This shows:
 - Test message sent status
 
 ### 2. Test Sentry Capture
-Visit: `https://your-domain.com/api/debug/sentry-test`
+Visit: `https://getjobping.com/api/debug/sentry-test`
 
 This sends test events to Sentry and confirms they're being sent.
 
