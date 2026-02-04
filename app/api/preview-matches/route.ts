@@ -8,6 +8,9 @@ import { normalizeCareerPath } from "../../../scrapers/types";
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
 
+// CRITICAL: Explicitly set runtime to ensure route is compiled correctly
+export const runtime = "nodejs";
+
 interface PreviewMatchesRequest {
 	cities: string[];
 	careerPath: string | string[];

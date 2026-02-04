@@ -15,6 +15,10 @@ import { getDatabaseClient } from "../../../../utils/core/database-pool";
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
 
+// CRITICAL: Explicitly set runtime to ensure route is compiled correctly
+// This helps Next.js recognize the route handler
+export const runtime = "nodejs";
+
 // Input validation schema
 // CRITICAL FIX: Make schema tolerant of empty strings and edge cases
 const freeSignupSchema = z.object({
