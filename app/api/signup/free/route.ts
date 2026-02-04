@@ -972,6 +972,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const matchingResult = await SignupMatchingService.runMatching(
 		userPrefs,
 		matchingConfig,
+		requestId,
+		jobsForMatching, // Pass the city-filtered jobs we already fetched
 	);
 
 	const matchesCount = matchingResult.matchCount;

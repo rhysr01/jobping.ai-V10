@@ -92,6 +92,7 @@ export class SignupMatchingService {
 		userPrefs: UserPreferences,
 		config: MatchingConfig,
 		requestId?: string,
+		preFilteredJobs?: any[], // Optional pre-filtered jobs to avoid double fetching
 	): Promise<MatchingResult> {
 		const startTime = Date.now();
 		const email = userPrefs.email;
@@ -132,10 +133,20 @@ export class SignupMatchingService {
 				};
 			}
 
-			// STEP 2: FETCH JOBS - Tier-aware job selection
+			// STEP 2: FETCH JOBS - Use pre-filtered jobs if provided, otherwise fetch
 			let jobs: any[];
 			try {
-				jobs = await SignupMatchingService.fetchJobsForTier(config);
+				if (preFilteredJobs && preFilteredJobs.length > 0) {
+					jobs = preFilteredJobs;
+					apiLogger.info(`[${config.tier.toUpperCase()}] Using pre-filtered jobs`, {
+						email,
+						requestId: requestIdStr,
+						jobCount: jobs.length,
+						tier: config.tier,
+					});
+				} else {
+					jobs = await SignupMatchingService.fetchJobsForTier(config);
+				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error);
 				apiLogger.error(
