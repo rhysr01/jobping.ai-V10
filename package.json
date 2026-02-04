@@ -48,6 +48,8 @@
 		"test:validate-strategy": "tsx scripts/validate-testing-strategy.ts",
 		"check:jobs": "tsx scripts/check-jobs-database.ts",
 		"check:vercel-env": "tsx scripts/check-vercel-env.ts",
+		"ensure:vercel-env": "tsx scripts/ensure-vercel-env.ts",
+		"check:vercel-logs": "tsx scripts/check-vercel-logs.ts",
 		"show:vercel-env": "tsx scripts/set-vercel-env.ts",
 		"sentry:errors": "tsx scripts/fetch-sentry-errors.ts",
 		"sentry:recent": "tsx scripts/check-recent-sentry-errors.ts",

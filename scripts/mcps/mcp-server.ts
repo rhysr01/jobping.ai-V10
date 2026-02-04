@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -15,8 +16,15 @@ import { SentryMCP } from "./sentry-mcp.ts";
 import { SupabaseMCP } from "./supabase-mcp.ts";
 import { VercelMCP } from "./vercel-mcp.ts";
 
+// Get the directory of this script file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+// Resolve .env.local relative to project root (two levels up from scripts/mcps/)
+const projectRoot = resolve(__dirname, "../..");
+const envPath = resolve(projectRoot, ".env.local");
+
 // Load environment variables from .env.local
-dotenvConfig({ path: resolve(process.cwd(), ".env.local") });
+dotenvConfig({ path: envPath });
 
 // Initialize Sentry with MCP monitoring
 const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;

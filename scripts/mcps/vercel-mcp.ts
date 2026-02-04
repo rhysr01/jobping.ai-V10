@@ -486,4 +486,79 @@ export class VercelMCP {
 			};
 		}
 	}
+
+	async setEnvironmentVariable(args: any) {
+		const { projectId, key, value, target = ["production", "preview", "development"], type = "encrypted" } = args;
+
+		try {
+			if (!this.accessToken) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: "⚠️  Vercel MCP not configured. Please set VERCEL_ACCESS_TOKEN first.",
+						},
+					],
+					isError: true,
+				};
+			}
+
+			if (!projectId || !key || !value) {
+				return {
+					content: [
+						{
+							type: "text",
+							text: "❌ projectId, key, and value are required",
+						},
+					],
+					isError: true,
+				};
+			}
+
+			const teamParam = this.teamId ? `?teamId=${this.teamId}` : "";
+			const url = `https://api.vercel.com/v10/projects/${projectId}/env${teamParam}`;
+
+			const response = await fetch(url, {
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${this.accessToken}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					key,
+					value,
+					target,
+					type,
+				}),
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				throw new Error(
+					`Vercel API error: ${response.status} ${response.statusText} - ${errorText}`,
+				);
+			}
+
+			const data = await response.json();
+
+			return {
+				content: [
+					{
+						type: "text",
+						text: `✅ Successfully set environment variable: ${key}\n   Environments: ${target.join(", ")}\n   Type: ${type}`,
+					},
+				],
+			};
+		} catch (error: any) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: `❌ Failed to set environment variable: ${error.message}`,
+					},
+				],
+				isError: true,
+			};
+		}
+	}
 }
