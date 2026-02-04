@@ -8,6 +8,7 @@ const {
 	classifyEarlyCareer,
 	normalizeString,
 	fetchFullJobDescription,
+	makeJobHash,
 } = require("./helpers.cjs");
 const { normalizeJobLocation } = require("./locationNormalizer.cjs");
 
@@ -841,6 +842,8 @@ async function processIncomingJob(job, options = {}) {
 		visa_friendly: visaInfo.visa_friendly,
 		is_active: true,
 		created_at: nowIso,
+		// CRITICAL: Preserve job_hash if provided by scraper, or generate one if missing
+		job_hash: job.job_hash || makeJobHash({ title, company, location: rawLocation }),
 	};
 
 	// PRODUCTION-READY: Classification is now handled by classifyEarlyCareer() in helpers

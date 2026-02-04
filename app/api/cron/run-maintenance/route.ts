@@ -519,7 +519,69 @@ export async function GET(request: NextRequest) {
 			console.error(`❌ Teaching filtering failed: ${error.message}`);
 		}
 
-		// 8. Data Integrity Constraint Enforcement
+		// 8. Job Hash Generation (Fix Missing Hashes)
+		console.log("▶️  Running: Job Hash Generation");
+		try {
+			let hashesFixed = 0;
+
+			// Find jobs without job_hash
+			const { data: jobsWithoutHash, error: hashSelectError } = await supabase
+				.from("jobs")
+				.select("id, title, company, location")
+				.is("job_hash", null)
+				.eq("is_active", true)
+				.eq("status", "active")
+				.limit(500); // Process in batches to avoid timeouts
+
+			if (!hashSelectError && jobsWithoutHash && jobsWithoutHash.length > 0) {
+				console.log(`Found ${jobsWithoutHash.length} jobs without job_hash`);
+
+				// Generate job_hash for each job using the same logic as scrapers
+				const hashUpdates = jobsWithoutHash.map((job) => {
+					const normalizedTitle = (job.title || "").toLowerCase().trim().replace(/\s+/g, " ");
+					const normalizedCompany = (job.company || "").toLowerCase().trim().replace(/\s+/g, " ");
+					const normalizedLocation = (job.location || "").toLowerCase().trim().replace(/\s+/g, " ");
+					const hashString = `${normalizedTitle}|${normalizedCompany}|${normalizedLocation}`;
+
+					let hash = 0;
+					for (let i = 0; i < hashString.length; i += 1) {
+						const code = hashString.charCodeAt(i);
+						hash = (hash << 5) - hash + code;
+						hash |= 0;
+					}
+					const job_hash = Math.abs(hash).toString(36);
+
+					return { id: job.id, job_hash };
+				});
+
+				// Update jobs with generated hashes
+				const updatePromises = hashUpdates.map(({ id, job_hash }) =>
+					supabase
+						.from("jobs")
+						.update({ job_hash })
+						.eq("id", id)
+				);
+
+				await Promise.all(updatePromises);
+				hashesFixed = hashUpdates.length;
+			}
+
+			results.push({
+				step: "Job Hash Generation",
+				count: hashesFixed,
+				status: "success",
+			});
+			console.log(`✅ Generated ${hashesFixed} missing job hashes`);
+		} catch (error: any) {
+			results.push({
+				step: "Job Hash Generation",
+				status: "failed",
+				error: error.message,
+			});
+			console.error(`❌ Job hash generation failed: ${error.message}`);
+		}
+
+		// 9. Data Integrity Constraint Enforcement
 		console.log("▶️  Running: Data Integrity Constraint Enforcement");
 		try {
 			let integrityFixed = 0;
