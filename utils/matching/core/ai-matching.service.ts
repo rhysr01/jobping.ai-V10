@@ -74,15 +74,22 @@ export class AIMatchingService {
 
 		// Check if we have a valid API key (client always exists now).
 		// A valid key should exist and have a reasonable length (e.g., > 10 characters).
-		const hasValidKey = !!ENV.OPENAI_API_KEY && ENV.OPENAI_API_KEY.length > 10;
+		// Also check it's not a placeholder value from deployment fallbacks
+		const apiKey = ENV.OPENAI_API_KEY || "";
+		const hasValidKey = apiKey.length > 10 && 
+			!apiKey.includes("placeholder") && 
+			!apiKey.includes("dummy") &&
+			apiKey.startsWith("sk-");
 
 		if (!hasValidKey) {
-			const errorMessage = "OpenAI API key not configured or invalid - AI matching unavailable";
+			const errorMessage = "OpenAI API key not configured or invalid - AI matching unavailable, using fallback";
 			
-			apiLogger.error("AI_MATCHING_UNAVAILABLE", new Error(errorMessage), {
+			apiLogger.warn("AI_MATCHING_UNAVAILABLE", {
 				hasApiKey: !!ENV.OPENAI_API_KEY,
-				apiKeyLength: ENV.OPENAI_API_KEY?.length || 0,
-				keyPrefix: ENV.OPENAI_API_KEY?.substring(0, 8) || 'none',
+				apiKeyLength: apiKey.length,
+				keyPrefix: apiKey.substring(0, 8) || 'none',
+				userEmail: user.email,
+				jobCount: jobs.length,
 			});
 			
 			Sentry.captureMessage(errorMessage, {
@@ -90,16 +97,18 @@ export class AIMatchingService {
 				tags: {
 					service: "ai-matching",
 					error_type: "invalid_api_key",
+					fallback_available: "true",
 				},
 				extra: {
 					hasApiKey: !!ENV.OPENAI_API_KEY,
-					apiKeyLength: ENV.OPENAI_API_KEY?.length || 0,
+					apiKeyLength: apiKey.length,
 					userEmail: user.email,
 					jobCount: jobs.length,
 				},
 			});
 			
-			throw new Error(errorMessage);
+			// Return empty array instead of throwing - this allows fallback matching to proceed
+			return [];
 		}
 
 		const results: AIMatchResult[] = [];
