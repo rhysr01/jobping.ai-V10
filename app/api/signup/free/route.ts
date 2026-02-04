@@ -25,13 +25,12 @@ const freeSignupSchema = z.object({
 		.min(1, "Select at least one city")
 		.max(3, "Maximum 3 cities allowed"),
 	careerPath: z.array(z.string()).min(1, "Select at least one career path"),
-	// NOTE: FREE tier does NOT collect these fields (they're PREMIUM-only per signupformfreevpremium.md)
-	// Removed:
-	// - entryLevelPreferences (PREMIUM feature)
-	// - visaStatus (PREMIUM feature)
-	// - age_verified (PREMIUM legal requirement)
-	// - terms_accepted (PREMIUM legal requirement)
-});
+	// Allow extra fields from frontend (but ignore them for free tier)
+	entryLevelPreferences: z.array(z.string()).optional(),
+	visaStatus: z.string().optional(),
+	terms_accepted: z.boolean().optional(),
+	age_verified: z.boolean().optional(),
+}).passthrough(); // Allow any additional fields
 
 export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);

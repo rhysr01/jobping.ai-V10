@@ -16,6 +16,7 @@ const { getApiUsageReport } = require("../scrapers/shared/telemetry.cjs");
 const SINGLE_RUN_MODE =
 	process.argv.includes("--single-run") ||
 	process.env.GITHUB_ACTIONS === "true";
+const RUN_EMBEDDINGS_ONLY = process.argv.includes("--run-embeddings-only");
 const SKIP_ADZUNA =
 	process.argv.includes("--skip-adzuna") || process.env.SKIP_ADZUNA === "true";
 
@@ -86,7 +87,8 @@ class RealJobRunner {
 			? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api/process-embedding-queue`
 			: `http://localhost:${process.env.PORT || 3000}/api/process-embedding-queue`;
 
-		// Ensure CRON_SECRET is set for authorization
+		console.log("[Embedding Queue] CRON_SECRET exists: " + !!process.env.CRON_SECRET);
+		console.log("[Embedding Queue] Target URL: " + targetUrl);
 		if (!process.env.CRON_SECRET) {
 			console.error(
 				"❌ CRITICAL: CRON_SECRET is not set. Cannot securely trigger embedding queue.",
@@ -1740,9 +1742,22 @@ class RealJobRunner {
 		}
 	}
 
-	// Start the automation
-	start() {
-		if (SINGLE_RUN_MODE) {
+		// Start the automation
+		start() {
+			if (RUN_EMBEDDINGS_ONLY) {
+				console.log("🎯 Running in embeddings-only mode.");
+				return this.runEmbeddingRefresh("manual", true)
+					.then(() => {
+						console.log("✅ Embedding refresh completed in embeddings-only mode.");
+						process.exit(0);
+					})
+					.catch((error) => {
+						console.error("❌ Embedding refresh failed in embeddings-only mode:", error);
+						process.exit(1);
+					});
+			}
+
+			if (SINGLE_RUN_MODE) {
 			console.log("🎯 Running in single-run mode (GitHub Actions)");
 			console.log("=====================================");
 
