@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/nextjs";
 import type { Job } from "@/scrapers/types";
 import { apiLogger } from "../../../lib/api-logger";
 import { aiMatchingCache } from "../../../lib/cache";
-import { ENV } from "@/lib/env";
+import { ENV } from "../../../lib/env";
 import {
 	generateScoreExplanation,
 	ScoreComponents,
@@ -68,8 +68,29 @@ export class AIMatchingService {
 		});
 
 		if (!this.openai) {
-			apiLogger.error("OpenAI client not initialized");
-			throw new Error("OpenAI client not initialized");
+			const errorMessage = ENV.OPENAI_API_KEY 
+				? "OpenAI client failed to initialize despite API key being present"
+				: "OpenAI API key not configured - AI matching unavailable";
+			
+			apiLogger.error("AI_MATCHING_UNAVAILABLE", new Error(errorMessage), {
+				hasApiKey: !!ENV.OPENAI_API_KEY,
+				apiKeyLength: ENV.OPENAI_API_KEY?.length || 0,
+			});
+			
+			Sentry.captureMessage(errorMessage, {
+				level: "warning",
+				tags: {
+					service: "ai-matching",
+					error_type: "client_not_initialized",
+				},
+				extra: {
+					hasApiKey: !!ENV.OPENAI_API_KEY,
+					userEmail: user.email,
+					jobCount: jobs.length,
+				},
+			});
+			
+			throw new Error(errorMessage);
 		}
 
 		const results: AIMatchResult[] = [];
@@ -403,4 +424,6 @@ export class AIMatchingService {
 	}
 }
 
-export const aiMatchingService = new AIMatchingService();
+// Export singleton with proper environment initialization
+// Pass undefined if no API key is configured - the service will handle this gracefully
+export const aiMatchingService = new AIMatchingService(ENV.OPENAI_API_KEY || undefined);
