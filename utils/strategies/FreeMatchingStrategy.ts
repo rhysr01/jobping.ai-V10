@@ -190,10 +190,39 @@ async function rankAndReturnMatchesDirect(
 		} as any;
 		
 		// Call AI matching directly on already-filtered jobs (max 20 for AI)
-		const aiResults = await aiMatchingService.findMatches(
-			userForAI,
-			jobs.slice(0, 20).map((j) => j as any),
-		);
+		let aiResults: any[] = [];
+		try {
+			aiResults = await aiMatchingService.findMatches(
+				userForAI,
+				jobs.slice(0, 20).map((j) => j as any),
+			);
+		} catch (aiError) {
+			// CRITICAL: Capture AI matching errors to Sentry
+			const error = aiError instanceof Error ? aiError : new Error(String(aiError));
+			apiLogger.error("[FREE] AI matching service error", error, {
+				email: userPrefs.email,
+				jobsCount: jobs.length,
+			});
+
+			Sentry.captureException(error, {
+				tags: {
+					service: "FreeMatchingStrategy",
+					method: "rankAndReturnMatchesDirect",
+					operation: "ai_matching",
+					tier: "free",
+				},
+				extra: {
+					email: userPrefs.email,
+					jobsCount: jobs.length,
+					maxMatches,
+				},
+				user: { email: userPrefs.email },
+				level: "error",
+			});
+
+			// Continue with empty results - fallback will handle it
+			aiResults = [];
+		}
 
 		// Convert AI results to match format
 		const matches = (aiResults || [])
@@ -399,24 +428,33 @@ async function saveMatchesAndReturn(
 			count: matchesToSave.length,
 		});
 	} catch (err) {
-		apiLogger.error("[FREE] Error saving matches", err as Error, {
+		const error = err instanceof Error ? err : new Error(String(err));
+		
+		apiLogger.error("[FREE] Error saving matches", error, {
 			email: userPrefs.email,
 			matchCount: matches.length,
 		});
 
-		Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+		// CRITICAL: Capture to Sentry with full context
+		Sentry.captureException(error, {
 			tags: {
 				service: "FreeMatchingStrategy",
-				method: "saveMatches",
+				method: "saveMatchesAndReturn",
 				tier: "free",
+				operation: "database_save",
 			},
 			extra: {
 				email: userPrefs.email,
 				matchCount: matches.length,
+				user_id: userPrefs.user_id,
+				method: method,
 			},
 			user: { email: userPrefs.email },
 			level: "error",
 		});
+
+		// CRITICAL: Re-throw error so it propagates up and gets caught by parent handlers
+		throw error;
 	}
 
 	return {

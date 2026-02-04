@@ -292,10 +292,11 @@ export class SignupMatchingService {
 			const processingTime = Date.now() - startTime;
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
+			const errorObj = error instanceof Error ? error : new Error(errorMessage);
 
 			apiLogger.error(
 				`[${config.tier.toUpperCase()}] Matching failed catastrophically`,
-				error as Error,
+				errorObj,
 				{
 					email,
 					requestId: requestIdStr,
@@ -304,6 +305,25 @@ export class SignupMatchingService {
 					error: errorMessage,
 				},
 			);
+
+			// CRITICAL: Capture to Sentry with full context
+			Sentry.captureException(errorObj, {
+				tags: {
+					service: "SignupMatchingService",
+					method: "runMatching",
+					tier: config.tier,
+					critical: "true",
+				},
+				extra: {
+					email,
+					requestId: requestIdStr,
+					tier: config.tier,
+					processingTime,
+					errorMessage,
+				},
+				user: { email },
+				level: "error",
+			});
 
 			return {
 				success: false,
@@ -356,13 +376,31 @@ export class SignupMatchingService {
 
 			return null; // No existing matches
 		} catch (error) {
+			const errorObj = error instanceof Error ? error : new Error(String(error));
+			
 			apiLogger.warn(
 				`[${tier.toUpperCase()}] Failed to check existing matches, proceeding with matching`,
 				{
 					email,
-					error: error instanceof Error ? error.message : String(error),
+					error: errorObj.message,
 				},
 			);
+
+			// Capture to Sentry (warning level - not critical, but should be tracked)
+			Sentry.captureException(errorObj, {
+				tags: {
+					service: "SignupMatchingService",
+					method: "checkExistingMatches",
+					tier: tier,
+				},
+				extra: {
+					email,
+					tier: tier,
+				},
+				user: { email },
+				level: "warning",
+			});
+
 			return null; // Proceed with matching on error
 		}
 	}

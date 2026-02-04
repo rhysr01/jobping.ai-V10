@@ -546,8 +546,27 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		matchingConfig = SignupMatchingService.getConfig("free");
 		console.log("[FREE SIGNUP] ✅ getConfig successful:", matchingConfig);
 	} catch (configError) {
+		const error = configError instanceof Error ? configError : new Error(String(configError));
+		
 		console.error("[FREE SIGNUP] ❌ getConfig failed:", configError);
-		throw new Error(`SignupMatchingService.getConfig failed: ${configError instanceof Error ? configError.message : String(configError)}`);
+		
+		// CRITICAL: Capture to Sentry before throwing
+		Sentry.captureException(error, {
+			tags: {
+				endpoint: "signup-free",
+				service: "SignupMatchingService",
+				method: "getConfig",
+				error_type: "config_error",
+			},
+			extra: {
+				requestId,
+				email: normalizedEmail,
+			},
+			user: { email: normalizedEmail },
+			level: "error",
+		});
+		
+		throw new Error(`SignupMatchingService.getConfig failed: ${error.message}`);
 	}
 	
 	console.log("[FREE SIGNUP] About to call SignupMatchingService.runMatching", {
@@ -572,11 +591,30 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			matchCount: matchingResult.matchCount,
 		});
 	} catch (matchingError) {
+		const error = matchingError instanceof Error ? matchingError : new Error(String(matchingError));
+		
 		console.error("[FREE SIGNUP] ❌ SignupMatchingService.runMatching failed", {
 			requestId,
 			error: matchingError,
-			errorMessage: matchingError instanceof Error ? matchingError.message : String(matchingError),
-			errorStack: matchingError instanceof Error ? matchingError.stack : undefined,
+			errorMessage: error.message,
+			errorStack: error.stack,
+		});
+
+		// CRITICAL: Capture to Sentry with full context
+		Sentry.captureException(error, {
+			tags: {
+				endpoint: "signup-free",
+				service: "SignupMatchingService",
+				method: "runMatching",
+				error_type: "matching_service_error",
+			},
+			extra: {
+				requestId,
+				email: normalizedEmail,
+				operation: "matching",
+			},
+			user: { email: normalizedEmail },
+			level: "error",
 		});
 		
 		// Create a failed result to continue processing
@@ -586,7 +624,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			matches: [],
 			processingTime: 0,
 			method: "error",
-			error: matchingError instanceof Error ? matchingError.message : String(matchingError),
+			error: error.message,
 		};
 	}
 
@@ -716,14 +754,31 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			path: "/",
 		});
 	} catch (sessionError) {
+		const error = sessionError instanceof Error ? sessionError : new Error(String(sessionError));
+		
 		apiLogger.warn(
 			"Failed to create user_email cookie (non-critical)",
-			sessionError as Error,
+			error,
 			{
 				requestId,
 				email: normalizedEmail,
 			},
 		);
+
+		// Capture to Sentry (warning level - non-critical but should be tracked)
+		Sentry.captureException(error, {
+			tags: {
+				endpoint: "signup-free",
+				error_type: "session_cookie_error",
+				critical: "false",
+			},
+			extra: {
+				requestId,
+				email: normalizedEmail,
+			},
+			user: { email: normalizedEmail },
+			level: "warning",
+		});
 	}
 
 	apiLogger.info("Cookie set for user", {
