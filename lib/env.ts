@@ -293,19 +293,39 @@ if (isBuildTime) {
 			);
 		});
 
-		// On Vercel, only throw for truly critical variables
+		// On Vercel, handle missing environment variables with better error messages
 		if (isVercel) {
+			// All required (non-optional) environment variables are critical
 			const criticalPaths = [
 				"NEXT_PUBLIC_SUPABASE_URL",
 				"SUPABASE_SERVICE_ROLE_KEY",
+				"RESEND_API_KEY",
+				"INTERNAL_API_HMAC_SECRET",
+				"SYSTEM_API_KEY",
 			];
-			const hasCriticalErrors = parseResult.error.issues.some((err) =>
-				criticalPaths.includes(err.path.join(".")),
-			);
+			const missingCritical = parseResult.error.issues
+				.filter((err) => criticalPaths.includes(err.path.join(".")))
+				.map((err) => err.path.join("."));
 
-			if (hasCriticalErrors) {
+			if (missingCritical.length > 0) {
 				console.error(
 					"❌ Critical environment variables missing - deployment cannot proceed",
+				);
+				console.error("");
+				console.error("📋 Missing required environment variables:");
+				missingCritical.forEach((path) => {
+					console.error(`   - ${path}`);
+				});
+				console.error("");
+				console.error(
+					"🔧 To fix this, add these variables in Vercel Dashboard:",
+				);
+				console.error("   1. Go to: Vercel Dashboard → Your Project → Settings → Environment Variables");
+				console.error("   2. Add each missing variable for Production, Preview, and Development environments");
+				console.error("   3. Redeploy your project");
+				console.error("");
+				console.error(
+					"💡 Tip: Copy values from your .env.local file (but never commit .env.local to git)",
 				);
 				throw parseResult.error;
 			} else {
