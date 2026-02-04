@@ -214,15 +214,39 @@ function SignupFormFree() {
 
 	// Enhanced submit handler with validation and loading states
 	const handleSubmit = useCallback(async () => {
-		// Force console logging for debugging
-		console.log("🚀 FREE SIGNUP SUBMIT STARTED", {
+		// COMPREHENSIVE DEBUGGING - Log everything
+		const debugInfo = {
 			loading,
 			isSubmitting,
 			step,
-			email: formData.email,
-			cities: formData.cities,
-			careerPath: formData.careerPath,
+			formData: {
+				email: formData.email,
+				fullName: formData.fullName,
+				birthYear: formData.birthYear,
+				cities: formData.cities,
+				citiesLength: formData.cities?.length,
+				careerPath: formData.careerPath,
+				careerPathLength: formData.careerPath?.length,
+				languages: formData.languages,
+				workEnvironment: formData.workEnvironment,
+				visaStatus: formData.visaStatus,
+			},
 			timestamp: new Date().toISOString(),
+			url: window.location.href,
+			userAgent: navigator.userAgent,
+		};
+
+		console.log("🚀 FREE SIGNUP SUBMIT STARTED", debugInfo);
+		
+		// Force Sentry message to ensure tracking is working
+		Sentry.captureMessage("Free signup submit started", {
+			level: "info",
+			tags: {
+				component: "SignupFormFree",
+				action: "submit_started",
+				step: step.toString(),
+			},
+			extra: debugInfo,
 		});
 
 		if (loading || isSubmitting) {
@@ -233,22 +257,29 @@ function SignupFormFree() {
 
 		const submitTracker = debugLogger.createTracker("FORM_SUBMIT");
 
-		// Client-side validation
+		// Client-side validation with comprehensive logging
 		const errors: Record<string, string> = {};
 
 		// Basic email regex as fallback (same as navigation logic)
 		const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 		const emailLooksValid = basicEmailRegex.test(formData.email.trim());
 
-		debugLogger.step("VALIDATION", "Starting client-side validation", {
+		const validationState = {
 			hasFullName: !!formData.fullName?.trim(),
 			hasEmail: !!formData.email?.trim(),
 			emailValid: emailValidation.isValid,
 			emailLooksValid,
-			citiesCount: formData.cities?.length || 0,
-			careerPathCount: formData.careerPath?.length || 0,
-			gdprConsent: formData.gdprConsent,
-		});
+			hasCities: formData.cities?.length > 0,
+			hasCareerPath: formData.careerPath?.length > 0,
+			hasLanguages: formData.languages?.length > 0,
+			hasWorkEnvironment: !!formData.workEnvironment,
+			hasVisaStatus: !!formData.visaStatus,
+			birthYear: formData.birthYear,
+		};
+
+		console.log("🔍 VALIDATION STATE", validationState);
+		
+		debugLogger.step("VALIDATION", "Starting client-side validation", validationState);
 
 		if (!formData.fullName?.trim()) {
 			errors.fullName = "Full name is required";
@@ -372,6 +403,26 @@ function SignupFormFree() {
 			console.log("📡 MAKING API CALL to /api/signup/free", {
 				apiData,
 				timestamp: new Date().toISOString(),
+				url: "/api/signup/free",
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+			});
+
+			// Also send to Sentry to track API calls
+			Sentry.captureMessage("Free signup API call initiated", {
+				level: "info",
+				tags: {
+					component: "SignupFormFree",
+					action: "api_call_start",
+					endpoint: "/api/signup/free",
+				},
+				extra: {
+					apiData: {
+						...apiData,
+						// Don't log sensitive data in production
+						email: apiData.email?.substring(0, 3) + "***",
+					},
+				},
 			});
 
 			// Add network error detection
@@ -418,11 +469,36 @@ function SignupFormFree() {
 				email: response?.email,
 				status: "success",
 			});
+			// COMPREHENSIVE SUCCESS LOGGING
+			console.log("✅ API CALL SUCCESSFUL", {
+				response,
+				timestamp: new Date().toISOString(),
+				matchCount: response?.matchesCount,
+				userId: response?.userId,
+				email: response?.email,
+			});
+
+			// Send success to Sentry
+			Sentry.captureMessage("Free signup API call successful", {
+				level: "info",
+				tags: {
+					component: "SignupFormFree",
+					action: "api_call_success",
+					endpoint: "/api/signup/free",
+				},
+				extra: {
+					matchCount: response?.matchesCount,
+					userId: response?.userId,
+					hasEmail: !!response?.email,
+				},
+			});
+
 			submitTracker.checkpoint("API response successful", {
 				matchCount: response?.matchesCount,
 			});
 
 			if (!response) {
+				console.error("❌ NO RESPONSE FROM SERVER");
 				throw new Error("No response from server");
 			}
 
@@ -453,16 +529,42 @@ function SignupFormFree() {
 
 			// Store timeout ref for cleanup
 			redirectTimeoutRef.current = setTimeout(() => {
+				const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
+				
+				console.log("🎉 SIGNUP SUCCESS - REDIRECTING", {
+					email: response.email,
+					userId: response.userId,
+					matchCount: response.matchesCount,
+					tier: "free",
+					redirectUrl,
+					timestamp: new Date().toISOString(),
+				});
+
+				// Send final success to Sentry
+				Sentry.captureMessage("Free signup completed successfully", {
+					level: "info",
+					tags: {
+						component: "SignupFormFree",
+						action: "signup_complete",
+						tier: "free",
+					},
+					extra: {
+						matchCount: response.matchesCount,
+						userId: response.userId,
+						redirectUrl,
+					},
+				});
+
 				debugLogger.step("REDIRECT", "Redirecting to matches page", {
 					email: response.email,
 					tier: "free",
 				});
 				submitTracker.complete("Form submission complete - redirecting", {
-					redirectUrl: `/matches?tier=free&email=${response.email}`,
+					redirectUrl,
 				});
-				router.push(
-					`/matches?tier=free&email=${encodeURIComponent(response.email)}`,
-				);
+				
+				console.log("🔄 EXECUTING REDIRECT to:", redirectUrl);
+				router.push(redirectUrl);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			// ENHANCED ERROR CAPTURE - Force Sentry reporting
