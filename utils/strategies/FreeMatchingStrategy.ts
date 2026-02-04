@@ -19,6 +19,7 @@ export interface FreeUserPreferences {
 	target_cities: string[];
 	career_path: string | string[] | null;
 	subscription_tier: "free";
+	user_id?: string; // Optional: if provided, skip user lookup by email
 }
 
 export interface MatchingResult {
@@ -257,15 +258,30 @@ async function rankAndReturnMatches(
 			try {
 				const supabase = getDatabaseClient();
 				
-				// First get user_id from email
-				const { data: user } = await supabase
-					.from("users")
-					.select("id")
-					.eq("email", userPrefs.email)
-					.single();
+				// Use user_id from userPrefs if available, otherwise lookup by email
+				let userId: string;
+				if (userPrefs.user_id) {
+					userId = userPrefs.user_id;
+					apiLogger.info("[FREE] Using provided user_id", {
+						email: userPrefs.email,
+						user_id: userId,
+					});
+				} else {
+					// Fallback: lookup user by email (for backward compatibility)
+					const { data: user } = await supabase
+						.from("users")
+						.select("id")
+						.eq("email", userPrefs.email)
+						.single();
 
-				if (!user) {
-					throw new Error(`User not found for email: ${userPrefs.email}`);
+					if (!user) {
+						throw new Error(`User not found for email: ${userPrefs.email}`);
+					}
+					userId = user.id;
+					apiLogger.info("[FREE] Looked up user_id by email", {
+						email: userPrefs.email,
+						user_id: userId,
+					});
 				}
 
 				// Get job_ids from job_hashes (now all jobs have proper job_hash values)
@@ -293,7 +309,7 @@ async function rankAndReturnMatches(
 					const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore;
 
 					return {
-						user_id: user.id,
+						user_id: userId,
 						job_id: jobId,
 						match_score: Number(normalizedScore),
 						match_reason: String(m.match_reason || "Matched"),
