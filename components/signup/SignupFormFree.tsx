@@ -165,11 +165,18 @@ function SignupFormFree() {
 		};
 	}, [step, formData.email]);
 
-	// Cleanup timeout on unmount
+	// Cleanup timeout on unmount - but preserve redirect if signup was successful
+	// Store redirect URL in sessionStorage so it persists even if component unmounts
 	useEffect(() => {
 		return () => {
-			if (redirectTimeoutRef.current) {
-				clearTimeout(redirectTimeoutRef.current);
+			// If we have a pending redirect, store it in sessionStorage as a fallback
+			if (redirectTimeoutRef.current && typeof window !== "undefined") {
+				const pendingRedirect = sessionStorage.getItem("pendingRedirect");
+				if (!pendingRedirect) {
+					// No pending redirect stored, safe to clear
+					clearTimeout(redirectTimeoutRef.current);
+				}
+				// If there's a pending redirect, let it complete
 			}
 		};
 	}, []);
@@ -583,9 +590,20 @@ function SignupFormFree() {
 				savePreferencesForMatches(formData as unknown as FormDataType);
 				clearProgress();
 
+				const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
+				
+				// Store redirect URL in sessionStorage as a fallback
+				if (typeof window !== "undefined") {
+					sessionStorage.setItem("pendingRedirect", redirectUrl);
+				}
+
 				setTimeout(() => {
-					const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
-					router.push(redirectUrl);
+					console.log("🔄 EXECUTING REDIRECT (no matches) to:", redirectUrl);
+					if (typeof window !== "undefined") {
+						sessionStorage.removeItem("pendingRedirect");
+					}
+					// Use window.location.href for guaranteed redirect
+					window.location.href = redirectUrl;
 				}, TIMING.REDIRECT_DELAY_MS);
 
 				return; // Exit early - don't continue with normal success flow
@@ -613,44 +631,78 @@ function SignupFormFree() {
 			savePreferencesForMatches(formData as unknown as FormDataType);
 			clearProgress();
 
-			// Store timeout ref for cleanup
-			redirectTimeoutRef.current = setTimeout(() => {
-				const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
-				
-				console.log("🎉 SIGNUP SUCCESS - REDIRECTING", {
-					email: response.email,
-					userId: response.userId,
+			// Store redirect URL for reliable navigation
+			const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
+			
+			// Store redirect URL in sessionStorage as a fallback in case component unmounts
+			if (typeof window !== "undefined") {
+				sessionStorage.setItem("pendingRedirect", redirectUrl);
+				sessionStorage.setItem("signupEmail", response.email);
+			}
+			
+			console.log("🎉 SIGNUP SUCCESS - REDIRECTING", {
+				email: response.email,
+				userId: response.userId,
+				matchCount: response.matchesCount,
+				tier: "free",
+				redirectUrl,
+				timestamp: new Date().toISOString(),
+				hasCookie: typeof document !== "undefined" ? document.cookie.includes("user_email") : "unknown",
+			});
+
+			// Send final success to Sentry
+			Sentry.captureMessage("Free signup completed successfully", {
+				level: "info",
+				tags: {
+					component: "SignupFormFree",
+					action: "signup_complete",
+					tier: "free",
+				},
+				extra: {
 					matchCount: response.matchesCount,
-					tier: "free",
+					userId: response.userId,
 					redirectUrl,
-					timestamp: new Date().toISOString(),
-				});
+				},
+			});
 
-				// Send final success to Sentry
-				Sentry.captureMessage("Free signup completed successfully", {
-					level: "info",
-					tags: {
-						component: "SignupFormFree",
-						action: "signup_complete",
-						tier: "free",
-					},
-					extra: {
-						matchCount: response.matchesCount,
-						userId: response.userId,
-						redirectUrl,
-					},
-				});
-
-				debugLogger.step("REDIRECT", "Redirecting to matches page", {
-					email: response.email,
-					tier: "free",
-				});
-				submitTracker.complete("Form submission complete - redirecting", {
-					redirectUrl,
+			debugLogger.step("REDIRECT", "Redirecting to matches page", {
+				email: response.email,
+				tier: "free",
+			});
+			submitTracker.complete("Form submission complete - redirecting", {
+				redirectUrl,
+			});
+			
+			// Use window.location.href for a more reliable redirect that won't be cancelled
+			// by component unmounting. This ensures the redirect happens even if React
+			// re-renders or the component unmounts before the timeout fires.
+			// The cookie should be set by the API response, but we add a small delay
+			// to ensure it's available before redirecting.
+			redirectTimeoutRef.current = setTimeout(() => {
+				console.log("🔄 EXECUTING REDIRECT to:", redirectUrl);
+				console.log("🍪 Cookie check before redirect:", {
+					hasUserEmailCookie: typeof document !== "undefined" ? document.cookie.includes("user_email") : "unknown",
+					allCookies: typeof document !== "undefined" ? document.cookie.split(";").map(c => c.trim().split("=")[0]) : [],
 				});
 				
-				console.log("🔄 EXECUTING REDIRECT to:", redirectUrl);
-				router.push(redirectUrl);
+				try {
+					// Clear the sessionStorage flag
+					if (typeof window !== "undefined") {
+						sessionStorage.removeItem("pendingRedirect");
+					}
+					// Use window.location.href for guaranteed redirect (works even if component unmounts)
+					// This is a full page reload, which ensures cookies are sent with the request
+					console.log("📍 Navigating to:", redirectUrl);
+					window.location.href = redirectUrl;
+				} catch (redirectError) {
+					console.error("❌ Redirect error:", redirectError);
+					// Last resort: try router.push
+					router.push(redirectUrl).catch((err) => {
+						console.error("❌ Router.push also failed:", err);
+						// Force redirect
+						window.location.href = redirectUrl;
+					});
+				}
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			// ENHANCED ERROR CAPTURE - Force Sentry reporting
@@ -695,22 +747,31 @@ function SignupFormFree() {
 			debugLogger.error("SUBMIT_ERROR", "Error during submission", errorDetails);
 			submitTracker.error("Submission failed", errorDetails);
 
-			// Force Sentry capture with full context
-			try {
-				Sentry.captureException(errorObj, {
-					tags: {
-						component: "SignupFormFree",
-						action: "final_submit",
-						step: step.toString(),
-						error_type: "free_signup_submission",
-					},
-					extra: errorDetails,
-					level: "error",
-				});
-				await Sentry.flush(2000);
-			} catch (sentryError) {
-				console.error("🚨 Failed to send error to Sentry:", sentryError);
-				console.log("[DEBUG] Error details available at window.__lastSignupError");
+			// Force Sentry capture with full context - but skip expected errors
+			// Don't capture 409 (account_already_exists) or 429 (rate limit) to Sentry
+			const isExpectedError = 
+				(error instanceof ApiError && error.status === 409) ||
+				(error instanceof ApiError && error.status === 429);
+			
+			if (!isExpectedError) {
+				try {
+					Sentry.captureException(errorObj, {
+						tags: {
+							component: "SignupFormFree",
+							action: "final_submit",
+							step: step.toString(),
+							error_type: "free_signup_submission",
+						},
+						extra: errorDetails,
+						level: "error",
+					});
+					await Sentry.flush(2000);
+				} catch (sentryError) {
+					console.error("🚨 Failed to send error to Sentry:", sentryError);
+					console.log("[DEBUG] Error details available at window.__lastSignupError");
+				}
+			} else {
+				console.log(`[Expected ${error instanceof ApiError ? error.status : 'unknown'}] Skipping Sentry capture for expected error`);
 			}
 
 			// Also send to console for immediate debugging
@@ -770,6 +831,10 @@ function SignupFormFree() {
 					});
 
 					// FIX: Don't log account_already_exists to Sentry - this is expected behavior
+					// Skip Sentry capture for account_already_exists - it's expected
+					setError(userFacingErrorMessage);
+					setIsSubmitting(false);
+					return; // Exit early - don't capture to Sentry
 					// User is redirected to matches, which is the correct flow
 					// Only log to console for debugging
 					debugLogger.info("SUBMIT_ACCOUNT_EXISTS_SENTRY", "Account exists - not logging to Sentry", {
