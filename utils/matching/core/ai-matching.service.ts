@@ -36,11 +36,16 @@ export class AIMatchingService {
 	private cache = aiMatchingCache;
 
 	constructor(openaiApiKey?: string) {
-		if (openaiApiKey) {
-			this.openai = new OpenAI({ apiKey: openaiApiKey });
-		} else if (ENV.OPENAI_API_KEY) {
-			this.openai = new OpenAI({ apiKey: ENV.OPENAI_API_KEY });
-		}
+		// Use the same pattern as embedding service - always create client
+		const apiKey = openaiApiKey || ENV.OPENAI_API_KEY || "";
+		this.openai = new OpenAI({ apiKey });
+		
+		console.log("🔑 AI Matching Service OpenAI client initialized:", {
+			hasProvidedKey: !!openaiApiKey,
+			hasENVKey: !!ENV.OPENAI_API_KEY,
+			finalKeyLength: apiKey.length,
+			finalKeyPrefix: apiKey.substring(0, 8) || 'empty',
+		});
 	}
 
 	/**
@@ -67,24 +72,27 @@ export class AIMatchingService {
 			},
 		});
 
-		if (!this.openai) {
-			const errorMessage = ENV.OPENAI_API_KEY 
-				? "OpenAI client failed to initialize despite API key being present"
-				: "OpenAI API key not configured - AI matching unavailable";
+		// Check if we have a valid API key (client always exists now)
+		const hasValidKey = ENV.OPENAI_API_KEY && ENV.OPENAI_API_KEY.startsWith('sk-');
+		
+		if (!hasValidKey) {
+			const errorMessage = "OpenAI API key not configured or invalid - AI matching unavailable";
 			
 			apiLogger.error("AI_MATCHING_UNAVAILABLE", new Error(errorMessage), {
 				hasApiKey: !!ENV.OPENAI_API_KEY,
 				apiKeyLength: ENV.OPENAI_API_KEY?.length || 0,
+				keyPrefix: ENV.OPENAI_API_KEY?.substring(0, 8) || 'none',
 			});
 			
 			Sentry.captureMessage(errorMessage, {
 				level: "warning",
 				tags: {
 					service: "ai-matching",
-					error_type: "client_not_initialized",
+					error_type: "invalid_api_key",
 				},
 				extra: {
 					hasApiKey: !!ENV.OPENAI_API_KEY,
+					apiKeyLength: ENV.OPENAI_API_KEY?.length || 0,
 					userEmail: user.email,
 					jobCount: jobs.length,
 				},
