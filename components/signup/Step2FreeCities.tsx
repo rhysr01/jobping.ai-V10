@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import React, { useState, useRef } from "react";
 import { CityChip } from "../ui/CityChip";
 import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
+import { Button } from "../ui/button";
 import { MobileNavigation } from "./MobileNavigation";
+import { UI } from "../../lib/constants";
 import { showToast } from "../../lib/toast";
 import { POPULAR_CITIES, ALL_CITIES } from "./constants";
 import type { SignupFormData } from "./types";
@@ -171,16 +173,18 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 				{/* Show More Button - Only show if not showing all cities */}
 				{!showAllCities && POPULAR_CITIES.length > 0 && (
 					<div className="mt-4 text-center">
-						<button
+						<Button
 							onClick={() => {
 								console.log("Step2FreeCities: Show more cities clicked");
 								setShowAllCities(true);
 							}}
-							className="text-sm text-brand-400 hover:text-brand-300 transition-colors underline underline-offset-2"
+							variant="ghost"
+							size="sm"
+							className="text-sm text-brand-400 hover:text-brand-300 underline underline-offset-2"
 							type="button"
 						>
 							Show {ALL_CITIES.length - POPULAR_CITIES.length} more cities →
-						</button>
+						</Button>
 					</div>
 				)}
 
@@ -217,7 +221,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 			</div>
 
 			{/* Spacer for sticky navigation */}
-			<div className="h-32" />
+			<div className={UI.SPACING.STICKY_NAV_SPACER} />
 
 			{/* Mobile Navigation */}
 			<MobileNavigation

@@ -15,6 +15,7 @@ import { debugLogger } from "@/lib/debug-logger";
 import { showToast } from "@/lib/toast";
 import ErrorBoundary from "../../components/error-boundary";
 import { useAriaAnnounce } from "../ui/AriaLiveRegion";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { PageLoading } from "../ui/skeletons";
 import { HeroSectionFree } from "./HeroSectionFree";
 import { Step1FreeBasics } from "./Step1FreeBasics";
@@ -1039,16 +1040,14 @@ function SignupFormFree() {
 							<motion.div
 								initial={{ opacity: 0, y: -10 }}
 								animate={{ opacity: 1, y: 0 }}
-								className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl"
+								className="mb-6"
 							>
-								<div className="flex items-start gap-3">
-									<div className="w-5 h-5 bg-red-500/20 rounded-full flex items-center justify-center mt-0.5">
-										<span className="text-red-400 text-sm">⚠️</span>
-									</div>
-									<div>
-										<h4 className="text-red-400 font-medium mb-2">
-											Please check your information:
-										</h4>
+								<Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
+									<span className="text-red-400 text-sm">⚠️</span>
+									<AlertTitle className="text-red-400 font-medium">
+										Please check your information:
+									</AlertTitle>
+									<AlertDescription className="mt-2">
 										<ul className="space-y-1">
 											{Object.entries(validationErrors)
 												.filter(
@@ -1064,8 +1063,8 @@ function SignupFormFree() {
 													</li>
 												))}
 										</ul>
-									</div>
-								</div>
+									</AlertDescription>
+								</Alert>
 							</motion.div>
 						)}
 

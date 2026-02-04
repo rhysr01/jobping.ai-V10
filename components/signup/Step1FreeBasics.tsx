@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import React from "react";
 import { SharedFormField } from "../ui/SharedFormField";
+import { Button } from "../ui/button";
+import { UI } from "../../lib/constants";
 import { showToast } from "../../lib/toast";
 import type { SignupFormData } from "./types";
 
@@ -196,19 +198,21 @@ export const Step1FreeBasics = React.memo(function Step1FreeBasics({
 			</div>
 
 			{/* Spacer for sticky navigation */}
-			<div className="h-32" />
+			<div className={UI.SPACING.STICKY_NAV_SPACER} />
 
 			{/* Mobile Navigation */}
 			<div className="flex justify-center mt-8">
-				<button
+				<Button
 					onClick={() => {
 						setStep(2);
 					}}
 					disabled={!isStepValid || loading}
-					className="px-6 py-3 bg-blue-500 text-white rounded disabled:opacity-50"
+					variant="default"
+					size="lg"
+					className="bg-blue-500 hover:bg-blue-600 text-white"
 				>
 					{isStepValid ? "Continue" : getDisabledMessage(1)}
-				</button>
+				</Button>
 			</div>
 		</motion.div>
 	);

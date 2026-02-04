@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import React, { useRef } from "react";
 import { BrandIcons } from "../ui/BrandIcons";
+import { Checkbox } from "../ui/checkbox";
 import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
 import { MobileNavigation } from "./MobileNavigation";
+import { UI } from "../../lib/constants";
 import { CAREER_PATHS } from "./constants";
 import { showToast } from "../../lib/toast";
 import {
@@ -228,13 +230,13 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 			{/* GDPR Consent - Required for submission */}
 			<div className="mt-6">
 				<label className="flex items-start gap-3 cursor-pointer">
-					<input
-						type="checkbox"
+					<Checkbox
+						id="gdpr-consent"
 						checked={formData.gdprConsent || false}
-						onChange={(e) =>
-							setFormData({ ...formData, gdprConsent: e.target.checked })
+						onCheckedChange={(checked) =>
+							setFormData({ ...formData, gdprConsent: checked === true })
 						}
-						className="mt-1 w-4 h-4 text-brand-500 bg-black/50 border-zinc-600 rounded focus:ring-brand-500 focus:ring-2 touch-manipulation"
+						className="mt-1"
 					/>
 					<span className="text-sm text-zinc-300 leading-relaxed">
 						I agree to the{" "}
@@ -262,7 +264,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 			</div>
 
 			{/* Spacer for sticky navigation */}
-			<div className="h-32" />
+			<div className={UI.SPACING.STICKY_NAV_SPACER} />
 
 			{/* Mobile Navigation */}
 			<MobileNavigation

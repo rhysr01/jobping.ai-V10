@@ -90,6 +90,11 @@ export const UI = {
 		TOAST: 400,
 		TOOLTIP: 500,
 	},
+
+	// Spacing constants (Tailwind classes)
+	SPACING: {
+		STICKY_NAV_SPACER: "h-32", // 8rem / 128px - spacer for sticky navigation
+	},
 } as const;
 
 /**

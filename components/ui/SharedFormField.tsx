@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import React, { useCallback, useMemo } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -190,7 +191,7 @@ export const SharedFormField = React.memo(function SharedFormField({
 					))}
 				</RadioGroup>
 			) : (
-				<input
+				<Input
 					id={id}
 					type={type}
 					value={value as string}
@@ -201,14 +202,14 @@ export const SharedFormField = React.memo(function SharedFormField({
 					autoComplete={autoComplete}
 					inputMode={inputMode}
 					disabled={disabled}
-					className={`w-full px-4 sm:px-6 py-4 sm:py-5 min-h-[56px] bg-black/50 border-2 rounded-lg text-white placeholder-zinc-400 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/30 focus:ring-offset-2 focus:ring-offset-black transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
+					className={`w-full px-4 sm:px-6 py-4 sm:py-5 min-h-[56px] bg-black/50 border-2 rounded-lg text-white placeholder-zinc-400 transition-all text-base sm:text-lg font-medium backdrop-blur-sm touch-manipulation ${
 						value
 							? success && !error
-								? "border-green-500/60 shadow-md"
+								? "border-green-500/60 shadow-md focus-visible:border-green-500/60 focus-visible:ring-green-500/30"
 								: error
-									? "border-red-500/60 shadow-md"
-									: "border-zinc-700"
-							: "border-zinc-700 hover:border-zinc-600"
+									? "border-red-500/60 shadow-md focus-visible:border-red-500/60 focus-visible:ring-red-500/30"
+									: "border-zinc-700 focus-visible:border-brand-500 focus-visible:ring-brand-500/30"
+							: "border-zinc-700 hover:border-zinc-600 focus-visible:border-brand-500 focus-visible:ring-brand-500/30"
 					}`}
 					aria-invalid={!!error}
 					aria-describedby={
