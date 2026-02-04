@@ -150,13 +150,15 @@ export async function handleError(error: unknown, req?: NextRequest): Promise<Ne
  *   // Errors are auto-caught and handled
  * });
  * 
- * CRITICAL: Return type must match Next.js RouteHandler signature exactly
- * Next.js expects: (req: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse>
+ * CRITICAL: Use `any` for context to support both:
+ * - Handlers without context: async (req: NextRequest) => Promise<NextResponse>
+ * - Handlers with context: async (req: NextRequest, context: RouteContext) => Promise<NextResponse>
+ * Next.js RouteContext is: { params: Promise<Record<string, string>> }
  */
 export function asyncHandler(
-	handler: (req: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse>,
-): (req: NextRequest, context?: { params?: Promise<Record<string, string>> }) => Promise<NextResponse> {
-	return async (req: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+	handler: (req: NextRequest, context?: any) => Promise<NextResponse>,
+): (req: NextRequest, context?: any) => Promise<NextResponse> {
+	return async (req: NextRequest, context?: any) => {
 		const requestId = getRequestId(req);
 		
 		// CRITICAL: Log handler entry to catch silent failures
