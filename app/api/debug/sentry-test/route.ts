@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
 	const testId = `test-${Date.now()}`;
 	
 	console.log("[SENTRY TEST] Starting test", {

@@ -490,7 +490,7 @@ async function handleEUJobStats(requestId: string, forceRefresh = false) {
 		lastEUStatsFetch = now;
 	} else {
 		// Don't cache zeros - log warning and use cached data if available
-		apiLogger.error(
+		apiLogger.warn(
 			"⚠️ Database returned all zeros - not caching. Check database connection and RLS policies.",
 			{
 				internships,

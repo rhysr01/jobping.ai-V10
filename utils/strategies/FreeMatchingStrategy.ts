@@ -7,6 +7,7 @@ import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
 import { getDatabaseClient } from "../core/database-pool";
+import { LOG_MARKERS } from "../../lib/log-markers";
 import { aiMatchingService } from "../matching/core/ai-matching.service";
 
 /**

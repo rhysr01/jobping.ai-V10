@@ -42,7 +42,6 @@ export function EUJobStats() {
 	const [isInView, setIsInView] = useState(false);
 
 	useEffect(() => {
-		let retryCount = 0;
 		const MAX_RETRIES = 3;
 		const RETRY_DELAY = 2000; // 2 seconds
 

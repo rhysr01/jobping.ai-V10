@@ -721,7 +721,7 @@ function SignupFormFree() {
 			setSubmissionStage("");
 
 			// Enhanced error handling for debugging
-			let errorMessage =
+			let userFacingErrorMessage =
 				"Unable to connect. Please check your internet connection and try again.";
 
 			if (error instanceof ApiError) {
@@ -730,7 +730,7 @@ function SignupFormFree() {
 					message: error.message,
 					response: error.response,
 				});
-				errorMessage = error.message;
+				userFacingErrorMessage = error.message;
 
 				// If it's a conflict error (account already exists), check for redirect flag
 				if (error.status === 409) {
@@ -760,7 +760,7 @@ function SignupFormFree() {
 						return; // Don't show error, this is a successful redirect
 					} else {
 						// Generic account exists error
-						errorMessage = "This email is already registered";
+						userFacingErrorMessage = "This email is already registered";
 					}
 
 					debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account already exists", {
@@ -828,7 +828,7 @@ function SignupFormFree() {
 						// Update error message to be more helpful
 						const errorMessages = Object.values(mappedErrors);
 						if (errorMessages.length > 0) {
-							errorMessage = errorMessages[0];
+							userFacingErrorMessage = errorMessages[0];
 						}
 					}
 
@@ -841,7 +841,7 @@ function SignupFormFree() {
 							status_code: error.status,
 						},
 						extra: {
-							errorMessage,
+							userFacingErrorMessage,
 							validationDetails: errorDetails,
 							formData: {
 								email: formData.email,
@@ -868,7 +868,7 @@ function SignupFormFree() {
 								status_code: error.status,
 							},
 							extra: {
-								errorMessage,
+								userFacingErrorMessage,
 								status: error.status,
 								formData: {
 									email: formData.email,
@@ -918,12 +918,12 @@ function SignupFormFree() {
 				},
 			});
 
-			setError(errorMessage);
+			setError(userFacingErrorMessage);
 
 			// Convert zod validation errors array to a proper string map
 			// Ensure all values are strings to prevent React rendering errors
 			const validationErrorsMap: Record<string, string> = {
-				general: errorMessage,
+				general: userFacingErrorMessage,
 			};
 			if (errorDetails && Array.isArray(errorDetails)) {
 				errorDetails.forEach((detail: any) => {
@@ -968,7 +968,7 @@ function SignupFormFree() {
 			});
 
 			setValidationErrors(safeValidationErrors);
-			showToast.error(errorMessage);
+			showToast.error(userFacingErrorMessage);
 		} finally {
 			setLoading(false);
 			setIsSubmitting(false);

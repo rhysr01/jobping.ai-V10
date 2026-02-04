@@ -6,7 +6,6 @@ import { asyncHandler, getRequestId } from "../../../../lib/errors";
 import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
 import {
 	logSignupEvent,
-	getRecentErrors,
 } from "../../../../lib/debug-signup";
 import { LOG_MARKERS } from "../../../../lib/log-markers";
 
