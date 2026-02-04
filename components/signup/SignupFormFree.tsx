@@ -397,13 +397,41 @@ function SignupFormFree() {
 				});
 				errorMessage = error.message;
 
-				// If it's a conflict error (account already exists), show a simple message
+				// If it's a conflict error (account already exists), check for redirect flag
 				if (error.status === 409) {
-					errorMessage = "This email is already registered";
+					const errorResponse = error.response;
+					
+					// Check if API wants us to redirect to matches
+					if (errorResponse?.redirectToMatches) {
+						debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account exists, redirecting to matches", {
+							email: formData.email,
+							status: 409,
+							redirectToMatches: true,
+						});
+
+						// Show success message and redirect
+						showToast.success(
+							errorResponse.message || "Welcome back! Taking you to your matches..."
+						);
+
+						// Clear form and redirect to matches
+						clearProgress();
+						
+						// Use a short delay to show the toast before redirecting
+						setTimeout(() => {
+							router.push("/matches");
+						}, 1500);
+						
+						return; // Don't show error, this is a successful redirect
+					} else {
+						// Generic account exists error
+						errorMessage = "This email is already registered";
+					}
 
 					debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account already exists", {
 						email: formData.email,
 						status: 409,
+						redirectToMatches: errorResponse?.redirectToMatches || false,
 					});
 
 					Sentry.captureMessage(
@@ -417,6 +445,7 @@ function SignupFormFree() {
 							},
 							extra: {
 								email: formData.email,
+								redirectToMatches: errorResponse?.redirectToMatches || false,
 							},
 						},
 					);
