@@ -6,19 +6,27 @@ export const runtime = "nodejs";
 
 export async function GET(_request: NextRequest) {
 	// Check all possible DSN sources (Vercel integration might use different names)
-	const dsn = 
-		process.env.SENTRY_DSN || 
-		process.env.NEXT_PUBLIC_SENTRY_DSN ||
-		process.env.SENTRY_AUTH_TOKEN ? "SET_VIA_VERCEL_INTEGRATION" : null;
+	const envDsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+	const hasAuthToken = !!process.env.SENTRY_AUTH_TOKEN;
+	const dsn = envDsn || (hasAuthToken ? "SET_VIA_VERCEL_INTEGRATION" : null);
 	
-	const isEnabled = !!dsn || !!process.env.SENTRY_AUTH_TOKEN;
+	const isEnabled = !!dsn || hasAuthToken;
 	
-	// Check if Sentry is actually initialized (would mean DSN was available at build time)
-	const sentryInitialized = typeof Sentry !== "undefined" && Sentry.getCurrentHub;
+	// Check if Sentry is actually initialized and enabled
+	// Note: Sentry Next.js doesn't expose getCurrentHub, so we check via DSN availability
+	const sentryInitialized = typeof Sentry !== "undefined" && typeof Sentry.captureMessage === "function";
+	const sentryEnabled = isEnabled && sentryInitialized;
+	
+	const dsnDisplay = dsn 
+		? (dsn === "SET_VIA_VERCEL_INTEGRATION" 
+			? "SET_VIA_VERCEL_INTEGRATION" 
+			: `${dsn.substring(0, 20)}...`)
+		: "NOT SET";
 	
 	const status: Record<string, any> = {
 		enabled: isEnabled,
-		dsn: dsn ? (dsn === "SET_VIA_VERCEL_INTEGRATION" ? "SET_VIA_VERCEL_INTEGRATION" : `${dsn.substring(0, 20)}...`) : "NOT SET",
+		sentryEnabled, // Actual runtime enabled status
+		dsn: dsnDisplay,
 		environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
 		hasSentryDSN: !!process.env.SENTRY_DSN,
 		hasNextPublicSentryDSN: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -32,8 +40,8 @@ export async function GET(_request: NextRequest) {
 		note: "If using Vercel Sentry integration, DSN may be injected at build time only. Check Sentry dashboard for events.",
 	};
 
-	// Test capture if Sentry is initialized (even if DSN not visible at runtime)
-	if (sentryInitialized) {
+	// Test capture if Sentry is initialized AND enabled (even if DSN not visible at runtime)
+	if (sentryInitialized && sentryEnabled) {
 		try {
 			Sentry.captureMessage("Sentry status check", {
 				level: "info",

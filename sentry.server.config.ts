@@ -31,11 +31,15 @@ Sentry.init({
 
 	// Only initialize if DSN is available (Vercel integration will provide this)
 	enabled: isEnabled,
+	
+	// CRITICAL: For serverless, ensure we wait for events to be sent
+	// Increase flush timeout to ensure events are sent before function terminates
+	shutdownTimeout: 10000, // 10 seconds
 
 	// Add beforeSend hook to log when events are sent (useful for debugging)
 	beforeSend(event, hint) {
 		// Always log in production for debugging
-		console.log("[Sentry Server] Event captured:", {
+		console.log("[Sentry Server] ✅ Event captured (beforeSend):", {
 			message: event.message,
 			exception: event.exception?.values?.[0]?.value,
 			level: event.level,
@@ -43,6 +47,7 @@ Sentry.init({
 			tags: event.tags,
 			eventId: event.event_id,
 			timestamp: event.timestamp,
+			willSend: true, // This event will be sent
 		});
 		
 		// Log hint if available (contains original error)
@@ -53,6 +58,8 @@ Sentry.init({
 			});
 		}
 		
+		// CRITICAL: Always return event (don't filter it out)
+		// Returning null would prevent the event from being sent
 		return event;
 	},
 });
