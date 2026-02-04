@@ -10,6 +10,16 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { logger } from "../../lib/monitoring";
+import { ENV } from "../../lib/env"; // Import the ENV object
+
+// Detect if we're in build time
+const isBuildTime =
+	process.env.NEXT_PHASE === "phase-production-build" ||
+	process.env.NEXT_PHASE === "phase-development-build" ||
+	process.env.NEXT_PHASE?.includes("build") ||
+	(process.env.VERCEL === "1" && process.env.CI === "1") ||
+	process.argv.includes("build") ||
+	process.argv.some((arg) => arg.includes("next") && arg.includes("build"));
 
 class DatabasePool {
 	private static instance: SupabaseClient | null = null;
@@ -54,12 +64,26 @@ class DatabasePool {
 		DatabasePool.isInitializing = true;
 
 		try {
-			const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-			const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+			// Use the ENV object for Supabase configuration
+			let supabaseUrl = ENV.NEXT_PUBLIC_SUPABASE_URL;
+			let supabaseKey = ENV.SUPABASE_SERVICE_ROLE_KEY;
+
+			// During build time, use placeholder values if real ones are missing
+			if (isBuildTime) {
+				if (!supabaseUrl || supabaseUrl === "https://build-placeholder.supabase.co") {
+					supabaseUrl = "https://build-placeholder.supabase.co";
+				}
+				if (
+					!supabaseKey ||
+					supabaseKey === "build-placeholder-service-role-key-minimum-20-chars"
+				) {
+					supabaseKey = "build-placeholder-service-role-key-minimum-20-chars";
+				}
+			}
 
 			if (!supabaseUrl || !supabaseKey) {
 				// Log configuration error without exposing sensitive details
-				if (process.env.NODE_ENV === "development") {
+				if (ENV.NODE_ENV === "development") {
 					console.error(
 						"❌ Missing Supabase configuration - check environment variables",
 					);
@@ -71,7 +95,7 @@ class DatabasePool {
 
 			// Warn if service role key seems incorrect (too short = might be anon key)
 			if (supabaseKey.length < 100) {
-				if (process.env.NODE_ENV === "development") {
+				if (ENV.NODE_ENV === "development") {
 					console.warn(
 						"⚠️ WARNING: SUPABASE_SERVICE_ROLE_KEY seems too short - may be using wrong key",
 					);
@@ -92,20 +116,23 @@ class DatabasePool {
 
 			// Perform initial health check (fire and forget - don't block initialization)
 			// Errors will be logged but won't prevent pool initialization
-			DatabasePool.performHealthCheck().catch((err) => {
-				if (process.env.NODE_ENV === "development") {
-					console.warn(
-						"Initial health check failed (non-blocking):",
-						err.message,
-					);
-				}
-			});
+			// Skip health check during build time
+			if (!isBuildTime) {
+				DatabasePool.performHealthCheck().catch((err) => {
+					if (ENV.NODE_ENV === "development") {
+						console.warn(
+							"Initial health check failed (non-blocking):",
+							err.message,
+						);
+					}
+				});
+			}
 
-			if (process.env.NODE_ENV === "development") {
+			if (ENV.NODE_ENV === "development" && !isBuildTime) {
 				console.log("Database connection pool initialized");
 			}
 		} catch (error) {
-			if (process.env.NODE_ENV === "development") {
+			if (ENV.NODE_ENV === "development") {
 				console.error(
 					"Failed to initialize database pool:",
 					(error as Error).message,
@@ -113,19 +140,18 @@ class DatabasePool {
 			}
 
 			// Error tracking for database initialization failures
-			logger.error("Database pool initialization failed", {
-				error: error as Error,
-				component: "database-pool",
-				operation: "initialization",
-				metadata: {
-					supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL
-						? "configured"
-						: "missing",
-					supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY
-						? "configured"
-						: "missing",
-				},
-			});
+			// Skip error tracking during build time to prevent build failures
+			if (!isBuildTime) {
+				logger.error("Database pool initialization failed", {
+					error: error as Error,
+					component: "database-pool",
+					operation: "initialization",
+					metadata: {
+						supabaseUrl: ENV.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing",
+						supabaseKey: ENV.SUPABASE_SERVICE_ROLE_KEY ? "configured" : "missing",
+					},
+				});
+			}
 
 			throw error;
 		} finally {
@@ -150,7 +176,7 @@ class DatabasePool {
 				.limit(0);
 
 			if (error) {
-				if (process.env.NODE_ENV === "development") {
+				if (ENV.NODE_ENV === "development") {
 					console.warn("Database health check failed:", error.message);
 				}
 
@@ -165,7 +191,7 @@ class DatabasePool {
 			DatabasePool.lastHealthCheck = Date.now();
 			return true;
 		} catch (error) {
-			if (process.env.NODE_ENV === "development") {
+			if (ENV.NODE_ENV === "development") {
 				console.error("Database health check error:", (error as Error).message);
 			}
 			return false;
@@ -173,8 +199,8 @@ class DatabasePool {
 	}
 
 	private static checkHealth(): void {
-		// Skip health checks in test environment to prevent async logging after tests
-		if (process.env.NODE_ENV === "test") return;
+		// Skip health checks in test environment or during build to prevent async logging
+		if (ENV.NODE_ENV === "test" || isBuildTime) return;
 
 		const now = Date.now();
 
@@ -198,7 +224,7 @@ class DatabasePool {
 					await DatabasePool.performHealthCheck();
 				} catch (error) {
 					// Silently ignore errors in background health checks
-					if (process.env.NODE_ENV === "development") {
+					if (ENV.NODE_ENV === "development") {
 						console.warn("Background health check failed:", error);
 					}
 				}
@@ -218,11 +244,11 @@ class DatabasePool {
 				// Supabase client doesn't have explicit close method
 				// but we can clean up our reference
 				DatabasePool.instance = null;
-				if (process.env.NODE_ENV === "development") {
+				if (ENV.NODE_ENV === "development") {
 					console.log("Database connection pool closed");
 				}
 			} catch (error) {
-				if (process.env.NODE_ENV === "development") {
+				if (ENV.NODE_ENV === "development") {
 					console.error(
 						"Error closing database pool:",
 						(error as Error).message,
@@ -261,7 +287,7 @@ export const getDatabasePoolStatus = () => DatabasePool.getPoolStatus();
 
 // Graceful shutdown handling
 process.on("SIGTERM", async () => {
-	if (process.env.NODE_ENV === "development") {
+	if (ENV.NODE_ENV === "development") {
 		console.log("SIGTERM received, closing database pool...");
 	}
 	await closeDatabasePool();
@@ -269,7 +295,7 @@ process.on("SIGTERM", async () => {
 });
 
 process.on("SIGINT", async () => {
-	if (process.env.NODE_ENV === "development") {
+	if (ENV.NODE_ENV === "development") {
 		console.log("SIGINT received, closing database pool...");
 	}
 	await closeDatabasePool();
