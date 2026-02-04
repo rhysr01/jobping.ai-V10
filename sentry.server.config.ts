@@ -25,9 +25,8 @@ Sentry.init({
 	tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
 	// Enable debug mode in development or when SENTRY_DEBUG is set
-	debug:
-		process.env.SENTRY_DEBUG === "true" ||
-		process.env.NODE_ENV === "development",
+	// CRITICAL: Enable debug mode to see what's happening
+	debug: true, // Always enable debug to see Sentry logs
 
 	// Only initialize if DSN is available (Vercel integration will provide this)
 	enabled: isEnabled,
@@ -35,6 +34,12 @@ Sentry.init({
 	// CRITICAL: For serverless, ensure we wait for events to be sent
 	// Increase flush timeout to ensure events are sent before function terminates
 	shutdownTimeout: 10000, // 10 seconds
+	
+	// CRITICAL: Set maxBreadcrumbs to ensure we capture context
+	maxBreadcrumbs: 50,
+	
+	// CRITICAL: Don't sample out any events in production (for debugging)
+	sampleRate: 1.0, // Send 100% of events
 
 	// Add beforeSend hook to log when events are sent (useful for debugging)
 	beforeSend(event, hint) {
