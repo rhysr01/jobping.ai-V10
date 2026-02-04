@@ -58,14 +58,15 @@ export function EUJobStats() {
 				} else {
 					throw new Error("Invalid response format");
 				}
-			} catch (_error) {
-				// Silently handle API failures - use fallback data
+			} 			catch (error) {
+				// Log error but don't show fallback data - let component show zero/loading state
+				console.error("Failed to fetch EU job stats:", error);
 				setStats({
-					internships: 2525,
-					graduateRoles: 366,
-					earlyCareer: 6115,
-					total: 8958,
-					cities: 21,
+					internships: 0,
+					graduateRoles: 0,
+					earlyCareer: 0,
+					total: 0,
+					cities: 0,
 				});
 			} finally {
 				setIsLoading(false);
@@ -92,12 +93,13 @@ export function EUJobStats() {
 		);
 	}
 
+	// Use stats from API, or show loading/zero state instead of hardcoded fallbacks
 	const displayStats = stats || {
-		internships: 2525,
-		graduateRoles: 366,
-		earlyCareer: 6115,
-		total: 8958,
-		cities: 21,
+		internships: 0,
+		graduateRoles: 0,
+		earlyCareer: 0,
+		total: 0,
+		cities: 0,
 	};
 
 	const statCards = [
@@ -128,7 +130,9 @@ export function EUJobStats() {
 			value: displayStats.total,
 			color: "zinc",
 			description:
-				"Across 21 EU cities including London, Berlin, Paris, Amsterdam, and more",
+				displayStats.cities > 0
+					? `Across ${displayStats.cities} EU cities including London, Berlin, Paris, Amsterdam, and more`
+					: "Across EU cities including London, Berlin, Paris, Amsterdam, and more",
 		},
 	];
 

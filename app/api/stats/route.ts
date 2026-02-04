@@ -374,14 +374,14 @@ async function handleEUJobStats(requestId: string) {
 		});
 	}
 
-	// Get early career count
+	// Get early career count - use is_early_career boolean field
 	let earlyCareer = 0;
 	try {
 		const { count, error: earlyCareerError } = await supabase
 			.from("jobs")
 			.select("id", { count: "exact", head: true })
 			.eq("is_active", true)
-			.contains("categories", ["early-career"])
+			.eq("is_early_career", true)
 			.eq("is_internship", false)
 			.eq("is_graduate", false);
 
