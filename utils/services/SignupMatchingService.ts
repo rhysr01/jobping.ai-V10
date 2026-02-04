@@ -226,6 +226,7 @@ export class SignupMatchingService {
 				
 				const freePrefs: FreeUserPreferences = {
 					email: userPrefs.email,
+					user_id: userPrefs.user_id, // CRITICAL FIX: Pass user_id to avoid email lookup
 					target_cities: userPrefs.target_cities || [],
 					career_path: careerPathArray.length > 0 ? careerPathArray[0] : null, // Free tier uses single career path
 					subscription_tier: "free",

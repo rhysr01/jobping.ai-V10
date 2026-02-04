@@ -236,8 +236,19 @@ async function rankAndReturnMatchesDirect(
 					});
 					return null;
 				}
+				// CRITICAL FIX: Ensure job_hash is preserved - it's required for saving matches
+				const jobHash = jobData.job_hash || m.job_hash;
+				if (!jobHash) {
+					apiLogger.warn("[FREE] Match missing job_hash", {
+						email: userPrefs.email,
+						jobData: Object.keys(jobData),
+						match: Object.keys(m),
+					});
+					return null;
+				}
 				return {
 					...jobData,
+					job_hash: jobHash, // Explicitly ensure job_hash is set
 					match_score: m.unifiedScore?.overallScore || m.match_score || 0.8,
 					match_reason: m.matchReason || m.match_reason || "AI matched",
 				};
@@ -264,12 +275,16 @@ async function rankAndReturnMatchesDirect(
 			);
 
 			// Take top filtered jobs as fallback (already matched city + career path)
-			const fallbackMatches = jobs.slice(0, maxMatches).map((job: any) => ({
-				...job,
-				match_score: 0.6, // Slightly higher score since they passed city/career filter
-				match_reason:
-					"Matched your city and career path preferences",
-			}));
+			// CRITICAL FIX: Ensure job_hash is present for fallback matches
+			const fallbackMatches = jobs.slice(0, maxMatches)
+				.filter((job: any) => job.job_hash) // Only include jobs with job_hash
+				.map((job: any) => ({
+					...job,
+					job_hash: job.job_hash, // Explicitly ensure job_hash is set
+					match_score: 0.6, // Slightly higher score since they passed city/career filter
+					match_reason:
+						"Matched your city and career path preferences",
+				}));
 
 			apiLogger.info("[FREE] Using filtered fallback job list", {
 				email: userPrefs.email,
@@ -316,12 +331,16 @@ async function rankAndReturnMatchesDirect(
 		});
 
 		// Fallback: return filtered jobs as matches
+		// CRITICAL FIX: Ensure job_hash is present for error fallback matches
 		if (jobs.length > 0) {
-			const fallbackMatches = jobs.slice(0, maxMatches).map((job: any) => ({
-				...job,
-				match_score: 0.5,
-				match_reason: "Fallback match after error",
-			}));
+			const fallbackMatches = jobs.slice(0, maxMatches)
+				.filter((job: any) => job.job_hash) // Only include jobs with job_hash
+				.map((job: any) => ({
+					...job,
+					job_hash: job.job_hash, // Explicitly ensure job_hash is set
+					match_score: 0.5,
+					match_reason: "Fallback match after error",
+				}));
 
 			return {
 				matches: fallbackMatches,
