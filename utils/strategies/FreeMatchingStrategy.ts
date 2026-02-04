@@ -260,6 +260,14 @@ async function rankAndReturnMatches(
 				
 				// Use user_id from userPrefs if available, otherwise lookup by email
 				let userId: string;
+				
+				apiLogger.info("[FREE] User ID resolution debug", {
+					email: userPrefs.email,
+					provided_user_id: userPrefs.user_id,
+					user_id_type: typeof userPrefs.user_id,
+					has_user_id: !!userPrefs.user_id,
+				});
+				
 				if (userPrefs.user_id) {
 					userId = userPrefs.user_id;
 					apiLogger.info("[FREE] Using provided user_id", {
@@ -268,14 +276,22 @@ async function rankAndReturnMatches(
 					});
 				} else {
 					// Fallback: lookup user by email (for backward compatibility)
-					const { data: user } = await supabase
+					apiLogger.warn("[FREE] No user_id provided, falling back to email lookup", {
+						email: userPrefs.email,
+					});
+					
+					const { data: user, error: lookupError } = await supabase
 						.from("users")
 						.select("id")
 						.eq("email", userPrefs.email)
 						.single();
 
-					if (!user) {
-						throw new Error(`User not found for email: ${userPrefs.email}`);
+					if (lookupError || !user) {
+						apiLogger.error("[FREE] User lookup failed", lookupError as Error, {
+							email: userPrefs.email,
+							error: lookupError,
+						});
+						throw new Error(`User not found for email: ${userPrefs.email}. Error: ${lookupError?.message || 'User not found'}`);
 					}
 					userId = user.id;
 					apiLogger.info("[FREE] Looked up user_id by email", {
@@ -283,6 +299,33 @@ async function rankAndReturnMatches(
 						user_id: userId,
 					});
 				}
+				
+				// Validate userId before proceeding
+				if (!userId) {
+					throw new Error(`Invalid user_id: ${userId} for email: ${userPrefs.email}`);
+				}
+
+				// CRITICAL: Verify user exists in database before inserting matches
+				// This prevents foreign key constraint violations
+				const { data: userExists, error: userCheckError } = await supabase
+					.from("users")
+					.select("id")
+					.eq("id", userId)
+					.single();
+
+				if (userCheckError || !userExists) {
+					apiLogger.error("[FREE] User verification failed before match insert", userCheckError as Error, {
+						email: userPrefs.email,
+						user_id: userId,
+						error: userCheckError,
+					});
+					throw new Error(`User verification failed for user_id: ${userId}, email: ${userPrefs.email}. Error: ${userCheckError?.message || 'User not found'}`);
+				}
+
+				apiLogger.info("[FREE] User verified, proceeding with match insert", {
+					email: userPrefs.email,
+					user_id: userId,
+				});
 
 				// Get job_ids from job_hashes (now all jobs have proper job_hash values)
 				const jobHashes = matches.map(m => String(m.job_hash));
@@ -317,21 +360,45 @@ async function rankAndReturnMatches(
 					};
 				});
 
+				// Log what we're about to insert for debugging
+				apiLogger.info("[FREE] About to insert matches", {
+					email: userPrefs.email,
+					user_id: userId,
+					match_count: matchesToSave.length,
+					sample_match: matchesToSave[0] ? {
+						user_id: matchesToSave[0].user_id,
+						job_id: matchesToSave[0].job_id,
+						match_score: matchesToSave[0].match_score,
+					} : null,
+				});
+
 				const { error } = await supabase.from("user_matches").insert(matchesToSave);
 
 				if (error) {
+					// Check if it's a foreign key constraint error
+					const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+					
 					apiLogger.error(
 						"[FREE] Failed to save matches to database",
 						error as Error,
 						{
 							email: userPrefs.email,
+							user_id: userId,
 							matchCount: matchesToSave.length,
 							errorCode: error.code,
+							errorMessage: error.message,
+							isForeignKeyError,
+							sampleMatch: matchesToSave[0],
 						},
 					);
 
-					// CRITICAL FIX: Propagate error instead of silently continuing
-					throw new Error(`Failed to save matches: ${error.message}`);
+					if (isForeignKeyError) {
+						// For foreign key errors, provide more context
+						throw new Error(`Foreign key constraint violation: user_id ${userId} does not exist in users table for email ${userPrefs.email}. Original error: ${error.message}`);
+					} else {
+						// CRITICAL FIX: Propagate error instead of silently continuing
+						throw new Error(`Failed to save matches: ${error.message}`);
+					}
 				} else {
 					apiLogger.info("[FREE] Successfully saved matches to database", {
 						email: userPrefs.email,

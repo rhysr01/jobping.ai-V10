@@ -419,6 +419,25 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// REFACTORED: Only use fields that FREE tier form actually collects
 	// Form fields: email, fullName, cities, careerPath (that's it!)
 	// NO visa, NO entry_level, NO skills, NO industries (premium-only)
+	// CRITICAL: Validate userData.id exists before proceeding
+	if (!userData || !userData.id) {
+		const error = new Error(`User creation failed - no user ID available. userData: ${JSON.stringify(userData)}`);
+		apiLogger.error("Free signup - user creation validation failed", error, {
+			requestId,
+			email: normalizedEmail,
+			userData: userData,
+		});
+		Sentry.captureException(error, {
+			tags: { endpoint: "signup-free", error_type: "user_creation_validation" },
+			extra: {
+				requestId,
+				email: normalizedEmail,
+				userData: userData,
+			},
+		});
+		throw error;
+	}
+
 	const userPrefs = {
 		email: userData.email,
 		user_id: userData.id, // Add user_id for proper foreign key relationships
@@ -426,6 +445,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		career_path: userData.career_path ? [userData.career_path] : [],
 		subscription_tier: "free" as const,
 	};
+
+	apiLogger.info("Free signup - userPrefs created", {
+		requestId,
+		email: normalizedEmail,
+		user_id: userData.id,
+		user_id_type: typeof userData.id,
+		target_cities: targetCities,
+	});
 
 	apiLogger.info("Free signup - delegating to SignupMatchingService", {
 		requestId,
