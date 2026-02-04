@@ -145,9 +145,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			extra: {
 				requestId,
 				url: request.url,
+				errorMessage: error.message,
+				errorStack: error.stack,
 			},
 			level: "error",
 		});
+		// CRITICAL: Flush Sentry before throwing
+		await Sentry.flush(2000);
 		throw error; // Re-throw to be caught by asyncHandler
 	}
 
@@ -256,6 +260,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			},
 			user: { email: body.email || "unknown" },
 		});
+
+		// CRITICAL: Flush Sentry before returning validation error
+		await Sentry.flush(2000);
 
 		return NextResponse.json(
 			{
@@ -649,7 +656,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		
 		console.error("[FREE SIGNUP] ❌ getConfig failed:", configError);
 		
-		// CRITICAL: Capture to Sentry before throwing
+		// CRITICAL: Capture to Sentry before throwing and FLUSH
 		Sentry.captureException(error, {
 			tags: {
 				endpoint: "signup-free",
@@ -660,10 +667,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			extra: {
 				requestId,
 				email: normalizedEmail,
+				errorMessage: error.message,
+				errorStack: error.stack,
 			},
 			user: { email: normalizedEmail },
 			level: "error",
 		});
+
+		// CRITICAL: Flush Sentry to ensure error is sent before throwing
+		await Sentry.flush(2000);
 		
 		throw new Error(`SignupMatchingService.getConfig failed: ${error.message}`);
 	}
@@ -699,7 +711,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			errorStack: error.stack,
 		});
 
-		// CRITICAL: Capture to Sentry with full context
+		// CRITICAL: Capture to Sentry with full context and FLUSH
 		Sentry.captureException(error, {
 			tags: {
 				endpoint: "signup-free",
@@ -711,10 +723,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				requestId,
 				email: normalizedEmail,
 				operation: "matching",
+				errorMessage: error.message,
+				errorStack: error.stack,
 			},
 			user: { email: normalizedEmail },
 			level: "error",
 		});
+
+		// CRITICAL: Flush Sentry to ensure error is sent
+		await Sentry.flush(2000);
 		
 		// Create a failed result to continue processing
 		matchingResult = {
@@ -904,16 +921,18 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	return response;
 
 	} catch (criticalError) {
+		const error = criticalError instanceof Error ? criticalError : new Error(String(criticalError));
+		
 		console.error("[FREE SIGNUP] 🚨 CRITICAL ERROR - Silent exception caught:", {
 			requestId,
 			error: criticalError,
-			errorMessage: criticalError instanceof Error ? criticalError.message : String(criticalError),
-			errorStack: criticalError instanceof Error ? criticalError.stack : undefined,
+			errorMessage: error.message,
+			errorStack: error.stack,
 			timestamp: new Date().toISOString(),
 		});
 
-		// Force Sentry capture of the silent exception
-		Sentry.captureException(criticalError instanceof Error ? criticalError : new Error(String(criticalError)), {
+		// CRITICAL: Force Sentry capture and FLUSH to ensure it's sent
+		Sentry.captureException(error, {
 			tags: {
 				endpoint: "signup-free",
 				error_type: "silent_exception",
@@ -923,18 +942,17 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				requestId,
 				operation: "complete_signup_flow",
 				timestamp: new Date().toISOString(),
+				errorMessage: error.message,
+				errorStack: error.stack,
 			},
 			level: "error",
 		});
 
-		// Return a proper error response
-		return NextResponse.json(
-			{
-				error: "internal_error",
-				message: "An unexpected error occurred during signup. Please try again.",
-				requestId,
-			},
-			{ status: 500 },
-		);
+		// CRITICAL: Flush Sentry to ensure error is sent before response
+		await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
+
+		// CRITICAL: Re-throw error so asyncHandler can also capture it
+		// This ensures error is captured even if inner catch block fails
+		throw error;
 	}
 });

@@ -67,7 +67,7 @@ export class RateLimitError extends AppError {
  * Logs errors and returns consistent JSON response with requestId
  * CRITICAL: Always captures errors to Sentry for monitoring
  */
-export function handleError(error: unknown, req?: NextRequest): NextResponse {
+export async function handleError(error: unknown, req?: NextRequest): Promise<NextResponse> {
 	const requestId = req ? getRequestId(req) : undefined;
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
@@ -84,9 +84,14 @@ export function handleError(error: unknown, req?: NextRequest): NextResponse {
 			statusCode: error instanceof AppError ? error.statusCode : 500,
 			code: error instanceof AppError ? error.code : undefined,
 			details: error instanceof AppError ? error.details : undefined,
+			errorMessage: errorObj.message,
+			errorStack: errorObj.stack,
 		},
 		level: error instanceof AppError && error.statusCode < 500 ? "warning" : "error",
 	});
+
+	// CRITICAL: Flush Sentry to ensure error is sent before returning response
+	await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
 
 	if (error instanceof AppError) {
 		logger.warn(error.message, {
@@ -178,7 +183,7 @@ export function asyncHandler(
 				timestamp: new Date().toISOString(),
 			});
 			
-			return handleError(error, req);
+			return await handleError(error, req);
 		}
 	};
 }
