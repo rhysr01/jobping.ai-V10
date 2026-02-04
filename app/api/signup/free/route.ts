@@ -4,6 +4,10 @@ import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../../lib/api-logger";
 import { asyncHandler, getRequestId } from "../../../../lib/errors";
 import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
+import {
+	logSignupEvent,
+	getRecentErrors,
+} from "../../../../lib/debug-signup";
 
 // Simple replacements for deleted country functions
 
@@ -53,6 +57,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);
 
 	// CRITICAL: Log immediately to catch silent failures
+	logSignupEvent("REQUEST_RECEIVED", {
+		url: request.url,
+		method: request.method,
+		sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+	}, requestId);
+
 	console.log("[FREE SIGNUP] 🚀 Request received", {
 		requestId,
 		timestamp: new Date().toISOString(),
@@ -61,20 +71,27 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// CRITICAL: Capture request start to Sentry for debugging silent failures
-	Sentry.captureMessage("Free signup request received", {
-		level: "info",
-		tags: {
-			endpoint: "signup-free",
-			stage: "request_received",
-		},
-		extra: {
-			requestId,
-			url: request.url,
-			method: request.method,
-			timestamp: new Date().toISOString(),
-			sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
-		},
-	});
+	try {
+		Sentry.captureMessage("Free signup request received", {
+			level: "info",
+			tags: {
+				endpoint: "signup-free",
+				stage: "request_received",
+			},
+			extra: {
+				requestId,
+				url: request.url,
+				method: request.method,
+				timestamp: new Date().toISOString(),
+				sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+			},
+		});
+	} catch (sentryError) {
+		logSignupEvent("SENTRY_CAPTURE_FAILED", {
+			message: "Failed to capture message to Sentry",
+			error: sentryError instanceof Error ? sentryError.message : String(sentryError),
+		}, requestId, sentryError instanceof Error ? sentryError : new Error(String(sentryError)));
+	}
 	// Note: Don't flush info messages immediately - only flush errors
 
 	// CRITICAL: Wrap entire function in try-catch to catch ANY silent exceptions
@@ -929,6 +946,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	} catch (criticalError) {
 		const error = criticalError instanceof Error ? criticalError : new Error(String(criticalError));
 		
+		// CRITICAL: Log to debug system FIRST (works even if Sentry fails)
+		logSignupEvent("CRITICAL_ERROR", {
+			operation: "complete_signup_flow",
+			errorMessage: error.message,
+			errorStack: error.stack,
+		}, requestId, error);
+		
 		console.error("[FREE SIGNUP] 🚨 CRITICAL ERROR - Silent exception caught:", {
 			requestId,
 			error: criticalError,
@@ -938,24 +962,32 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		});
 
 		// CRITICAL: Force Sentry capture and FLUSH to ensure it's sent
-		Sentry.captureException(error, {
-			tags: {
-				endpoint: "signup-free",
-				error_type: "silent_exception",
-				critical: "true",
-			},
-			extra: {
-				requestId,
-				operation: "complete_signup_flow",
-				timestamp: new Date().toISOString(),
-				errorMessage: error.message,
-				errorStack: error.stack,
-			},
-			level: "error",
-		});
+		try {
+			Sentry.captureException(error, {
+				tags: {
+					endpoint: "signup-free",
+					error_type: "silent_exception",
+					critical: "true",
+				},
+				extra: {
+					requestId,
+					operation: "complete_signup_flow",
+					timestamp: new Date().toISOString(),
+					errorMessage: error.message,
+					errorStack: error.stack,
+				},
+				level: "error",
+			});
 
-		// CRITICAL: Flush Sentry to ensure error is sent before response
-		await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
+			// CRITICAL: Flush Sentry to ensure error is sent before response
+			await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
+		} catch (sentryError) {
+			logSignupEvent("SENTRY_FLUSH_FAILED", {
+				message: "Failed to flush Sentry",
+				originalError: error.message,
+				sentryError: sentryError instanceof Error ? sentryError.message : String(sentryError),
+			}, requestId, sentryError instanceof Error ? sentryError : new Error(String(sentryError)));
+		}
 
 		// CRITICAL: Re-throw error so asyncHandler can also capture it
 		// This ensures error is captured even if inner catch block fails

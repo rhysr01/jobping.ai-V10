@@ -459,24 +459,57 @@ function SignupFormFree() {
 				});
 			} catch (networkError) {
 				// Capture network/fetch errors that might not reach Sentry
-				console.error("🚨 NETWORK ERROR in free signup:", networkError);
+				const error = networkError instanceof Error ? networkError : new Error(String(networkError));
 				
-				Sentry.captureException(networkError instanceof Error ? networkError : new Error(String(networkError)), {
-					tags: {
-						component: "SignupFormFree",
-						action: "api_call",
-						error_type: "network_error",
+				console.error("🚨 NETWORK ERROR in free signup:", {
+					error: networkError,
+					message: error.message,
+					stack: error.stack,
+					formData: {
+						email: formData.email,
+						cities: formData.cities?.length || 0,
+						careerPath: formData.careerPath?.length || 0,
 					},
-					extra: {
-						endpoint: "/api/signup/free",
+					timestamp: new Date().toISOString(),
+				});
+				
+				// Store error in window for debugging
+				if (typeof window !== "undefined") {
+					(window as any).__lastSignupError = {
+						type: "network_error",
+						error: error.message,
+						stack: error.stack,
 						formData: {
 							email: formData.email,
-							cities: formData.cities?.length || 0,
-							careerPath: formData.careerPath?.length || 0,
+							cities: formData.cities,
+							careerPath: formData.careerPath,
 						},
 						timestamp: new Date().toISOString(),
-					},
-				});
+					};
+					console.log("[DEBUG] Error stored at window.__lastSignupError");
+				}
+				
+				try {
+					Sentry.captureException(error, {
+						tags: {
+							component: "SignupFormFree",
+							action: "api_call",
+							error_type: "network_error",
+						},
+						extra: {
+							endpoint: "/api/signup/free",
+							formData: {
+								email: formData.email,
+								cities: formData.cities?.length || 0,
+								careerPath: formData.careerPath?.length || 0,
+							},
+							timestamp: new Date().toISOString(),
+						},
+					});
+					await Sentry.flush(2000);
+				} catch (sentryError) {
+					console.error("🚨 Failed to send error to Sentry:", sentryError);
+				}
 				
 				throw networkError; // Re-throw to be handled by outer catch
 			}
@@ -621,10 +654,32 @@ function SignupFormFree() {
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			// ENHANCED ERROR CAPTURE - Force Sentry reporting
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorObj = error instanceof Error ? error : new Error(errorMessage);
+			
+			// Store error in window for debugging (works even if Sentry fails)
+			if (typeof window !== "undefined") {
+				(window as any).__lastSignupError = {
+					type: error instanceof ApiError ? "ApiError" : typeof error,
+					error: errorMessage,
+					stack: errorObj.stack,
+					status: error instanceof ApiError ? error.status : undefined,
+					response: error instanceof ApiError ? error.response : undefined,
+					formData: {
+						email: formData.email,
+						cities: formData.cities,
+						careerPath: formData.careerPath,
+					},
+					step: step,
+					timestamp: new Date().toISOString(),
+				};
+				console.log("[DEBUG] Error stored at window.__lastSignupError - Check this in console!");
+			}
+			
 			const errorDetails = {
 				errorType: error instanceof ApiError ? "ApiError" : typeof error,
-				message: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
+				message: errorMessage,
+				stack: errorObj.stack,
 				status: error instanceof ApiError ? error.status : undefined,
 				response: error instanceof ApiError ? error.response : undefined,
 				formData: {
@@ -641,16 +696,22 @@ function SignupFormFree() {
 			submitTracker.error("Submission failed", errorDetails);
 
 			// Force Sentry capture with full context
-			Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
-				tags: {
-					component: "SignupFormFree",
-					action: "final_submit",
-					step: step.toString(),
-					error_type: "free_signup_submission",
-				},
-				extra: errorDetails,
-				level: "error",
-			});
+			try {
+				Sentry.captureException(errorObj, {
+					tags: {
+						component: "SignupFormFree",
+						action: "final_submit",
+						step: step.toString(),
+						error_type: "free_signup_submission",
+					},
+					extra: errorDetails,
+					level: "error",
+				});
+				await Sentry.flush(2000);
+			} catch (sentryError) {
+				console.error("🚨 Failed to send error to Sentry:", sentryError);
+				console.log("[DEBUG] Error details available at window.__lastSignupError");
+			}
 
 			// Also send to console for immediate debugging
 			console.error("🚨 FREE SIGNUP ERROR:", errorDetails);

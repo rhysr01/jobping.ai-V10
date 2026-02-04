@@ -42,10 +42,16 @@ export function EUJobStats() {
 	const [isInView, setIsInView] = useState(false);
 
 	useEffect(() => {
-		async function fetchStats() {
+		let retryCount = 0;
+		const MAX_RETRIES = 3;
+		const RETRY_DELAY = 2000; // 2 seconds
+
+		async function fetchStats(retryAttempt = 0) {
 			try {
-				const response = await fetch("/api/stats?type=eu-jobs", {
-					signal: AbortSignal.timeout(10000),
+				// Add timestamp to bust cache if needed
+				const url = `/api/stats?type=eu-jobs${retryAttempt > 0 ? `&refresh=true&_t=${Date.now()}` : ""}`;
+				const response = await fetch(url, {
+					signal: AbortSignal.timeout(15000), // Increased timeout
 				});
 
 				if (!response.ok) {
@@ -54,22 +60,50 @@ export function EUJobStats() {
 
 				const data = await response.json();
 				if (data.data) {
-					setStats(data.data);
+					const statsData = data.data;
+					// Only set stats if we have real data (not all zeros) or if it's the first successful response
+					if (
+						statsData.total > 0 ||
+						statsData.internships > 0 ||
+						statsData.graduateRoles > 0 ||
+						statsData.earlyCareer > 0 ||
+						retryAttempt === 0
+					) {
+						setStats(statsData);
+						setIsLoading(false);
+					} else if (retryAttempt < MAX_RETRIES) {
+						// If we got zeros and haven't maxed retries, retry
+						throw new Error("Received zero stats, retrying...");
+					} else {
+						// Max retries reached, show zeros
+						setStats(statsData);
+						setIsLoading(false);
+						console.warn("Max retries reached, showing zero stats");
+					}
 				} else {
 					throw new Error("Invalid response format");
 				}
-			} 			catch (error) {
-				// Log error but don't show fallback data - let component show zero/loading state
-				console.error("Failed to fetch EU job stats:", error);
-				setStats({
-					internships: 0,
-					graduateRoles: 0,
-					earlyCareer: 0,
-					total: 0,
-					cities: 0,
-				});
-			} finally {
-				setIsLoading(false);
+			} catch (error) {
+				console.error(`Failed to fetch EU job stats (attempt ${retryAttempt + 1}):`, error);
+				
+				if (retryAttempt < MAX_RETRIES) {
+					// Retry with exponential backoff
+					const delay = RETRY_DELAY * Math.pow(2, retryAttempt);
+					setTimeout(() => {
+						fetchStats(retryAttempt + 1);
+					}, delay);
+				} else {
+					// Max retries reached, show zeros
+					console.error("Max retries reached for EU job stats");
+					setStats({
+						internships: 0,
+						graduateRoles: 0,
+						earlyCareer: 0,
+						total: 0,
+						cities: 0,
+					});
+					setIsLoading(false);
+				}
 			}
 		}
 

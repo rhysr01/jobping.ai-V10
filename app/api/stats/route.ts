@@ -44,8 +44,10 @@ export const GET = asyncHandler(async (req: NextRequest) => {
 	switch (type) {
 		case "signups":
 			return handleSignupStats(requestId);
-		case "eu-jobs":
-			return handleEUJobStats(requestId);
+		case "eu-jobs": {
+			const forceRefresh = url.searchParams.get("refresh") === "true";
+			return handleEUJobStats(requestId, forceRefresh);
+		}
 		default:
 			// Default overview stats
 			break;
@@ -304,7 +306,7 @@ async function handleSignupStats(requestId: string) {
 	return response;
 }
 
-// Cache for EU job stats (24-hour cache)
+// Cache for EU job stats (5-minute cache for performance, but always try fresh first)
 let cachedEUStats: {
 	internships: number;
 	graduateRoles: number;
@@ -314,39 +316,23 @@ let cachedEUStats: {
 	timestamp: string;
 } | null = null;
 let lastEUStatsFetch: number = 0;
-const EU_STATS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const EU_STATS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes - short cache for performance only
 
-// Consolidated EU jobs stats handler with 24-hour caching
-async function handleEUJobStats(requestId: string) {
+// Consolidated EU jobs stats handler - always fetches fresh data
+async function handleEUJobStats(requestId: string, forceRefresh = false) {
 	const now = Date.now();
 
-	// Return cached stats if still valid (24 hours)
-	if (cachedEUStats && now - lastEUStatsFetch < EU_STATS_CACHE_DURATION) {
-		apiLogger.info("Returning cached EU stats", {
-			cacheAge: Math.floor((now - lastEUStatsFetch) / 1000 / 60),
-		});
-		const response = createSuccessResponse(
-			{
-				...cachedEUStats,
-				cached: true,
-				cacheAge: Math.floor((now - lastEUStatsFetch) / 1000 / 60 / 60), // hours
-			},
-			undefined,
-			undefined,
-			200,
-		);
-		response.headers.set("x-request-id", requestId);
-		response.headers.set(
-			"Cache-Control",
-			"public, s-maxage=86400, stale-while-revalidate=172800",
-		);
-		return response;
-	}
+	// Only use cache as fallback if fresh fetch fails AND cache exists AND cache is not zeros
+	const useCacheAsFallback = 
+		!forceRefresh &&
+		cachedEUStats &&
+		now - lastEUStatsFetch < EU_STATS_CACHE_DURATION &&
+		cachedEUStats.total > 0; // Only use cache if it has real data
 
-	apiLogger.info("Fetching fresh EU stats");
+	apiLogger.info("Fetching fresh EU stats from database");
 	const supabase = getDatabaseClient();
 
-	// Get internship count
+	// Get internship count - ALWAYS fetch fresh
 	const { count: internships, error: internshipsError } = await supabase
 		.from("jobs")
 		.select("id", { count: "exact", head: true })
@@ -354,13 +340,36 @@ async function handleEUJobStats(requestId: string) {
 		.eq("is_internship", true);
 
 	if (internshipsError) {
-		apiLogger.warn("Error fetching EU internships count", internshipsError, {
+		apiLogger.error("Error fetching EU internships count", internshipsError, {
 			endpoint: "/api/stats",
 			query: "euInternships",
+			error: internshipsError.message,
 		});
+		// Only fall back to cache if it has real data (not zeros)
+		if (useCacheAsFallback && cachedEUStats && cachedEUStats.total > 0) {
+			apiLogger.warn("Using cached EU stats due to internships query error");
+			const response = createSuccessResponse(
+				{
+					...cachedEUStats,
+					cached: true,
+					error: "Using cached data due to query error",
+				},
+				undefined,
+				undefined,
+				200,
+			);
+			response.headers.set("x-request-id", requestId);
+			return response;
+		}
+		throw new AppError(
+			"Failed to fetch EU job stats",
+			500,
+			"DATABASE_ERROR",
+			internshipsError,
+		);
 	}
 
-	// Get graduate roles count
+	// Get graduate roles count - ALWAYS fetch fresh
 	const { count: graduateRoles, error: graduatesError } = await supabase
 		.from("jobs")
 		.select("id", { count: "exact", head: true })
@@ -368,10 +377,33 @@ async function handleEUJobStats(requestId: string) {
 		.eq("is_graduate", true);
 
 	if (graduatesError) {
-		apiLogger.warn("Error fetching EU graduate roles count", graduatesError, {
+		apiLogger.error("Error fetching EU graduate roles count", graduatesError, {
 			endpoint: "/api/stats",
 			query: "euGraduates",
+			error: graduatesError.message,
 		});
+		// Only fall back to cache if it has real data (not zeros)
+		if (useCacheAsFallback && cachedEUStats && cachedEUStats.total > 0) {
+			apiLogger.warn("Using cached EU stats due to graduates query error");
+			const response = createSuccessResponse(
+				{
+					...cachedEUStats,
+					cached: true,
+					error: "Using cached data due to query error",
+				},
+				undefined,
+				undefined,
+				200,
+			);
+			response.headers.set("x-request-id", requestId);
+			return response;
+		}
+		throw new AppError(
+			"Failed to fetch EU job stats",
+			500,
+			"DATABASE_ERROR",
+			graduatesError,
+		);
 	}
 
 	// Get early career count - use is_early_career boolean field
@@ -438,29 +470,79 @@ async function handleEUJobStats(requestId: string) {
 	const uniqueCities = new Set(cityData?.map((j) => j.city) || []);
 	const citiesCount = uniqueCities.size;
 
-	cachedEUStats = {
-		internships: internships || 0,
-		graduateRoles: graduateRoles || 0,
+	// Ensure we have valid counts (not null/undefined)
+	const finalInternships = internships ?? 0;
+	const finalGraduates = graduateRoles ?? 0;
+	const finalTotal = total ?? 0;
+
+	// Only cache if we got real data (not all zeros)
+	const hasRealData = finalTotal > 0 || finalInternships > 0 || finalGraduates > 0 || earlyCareer > 0;
+
+	if (hasRealData) {
+		cachedEUStats = {
+			internships: finalInternships,
+			graduateRoles: finalGraduates,
+			earlyCareer: earlyCareer,
+			total: finalTotal,
+			cities: citiesCount,
+			timestamp: new Date().toISOString(),
+		};
+		lastEUStatsFetch = now;
+	} else {
+		// Don't cache zeros - log warning and use cached data if available
+		apiLogger.error(
+			"⚠️ Database returned all zeros - not caching. Check database connection and RLS policies.",
+			{
+				internships,
+				graduateRoles,
+				earlyCareer,
+				total,
+				hasCachedData: !!cachedEUStats,
+				cachedTotal: cachedEUStats?.total,
+			},
+		);
+		
+		// If we have cached data with real numbers, use it instead of zeros
+		if (cachedEUStats && cachedEUStats.total > 0) {
+			apiLogger.warn("Using cached EU stats instead of zeros");
+			const response = createSuccessResponse(
+				{
+					...cachedEUStats,
+					cached: true,
+					warning: "Using cached data - fresh query returned zeros",
+				},
+				undefined,
+				undefined,
+				200,
+			);
+			response.headers.set("x-request-id", requestId);
+			return response;
+		}
+	}
+
+	const statsToReturn = cachedEUStats || {
+		internships: finalInternships,
+		graduateRoles: finalGraduates,
 		earlyCareer: earlyCareer,
-		total: total || 0,
+		total: finalTotal,
 		cities: citiesCount,
 		timestamp: new Date().toISOString(),
 	};
 
-	lastEUStatsFetch = now;
-
-	apiLogger.info("Returning fresh EU stats", {
-		internships: cachedEUStats.internships,
-		graduateRoles: cachedEUStats.graduateRoles,
-		earlyCareer: cachedEUStats.earlyCareer,
-		total: cachedEUStats.total,
-		cities: cachedEUStats.cities,
+	apiLogger.info("Returning EU stats", {
+		internships: statsToReturn.internships,
+		graduateRoles: statsToReturn.graduateRoles,
+		earlyCareer: statsToReturn.earlyCareer,
+		total: statsToReturn.total,
+		cities: statsToReturn.cities,
+		cached: !hasRealData && !!cachedEUStats,
+		fresh: hasRealData,
 	});
 
 	const response = createSuccessResponse(
 		{
-			...cachedEUStats,
-			cached: false,
+			...statsToReturn,
+			cached: !hasRealData && !!cachedEUStats,
 		},
 		undefined,
 		undefined,
@@ -468,9 +550,10 @@ async function handleEUJobStats(requestId: string) {
 	);
 
 	response.headers.set("x-request-id", requestId);
+	// Short cache - 5 minutes max, always revalidate
 	response.headers.set(
 		"Cache-Control",
-		"public, s-maxage=86400, stale-while-revalidate=172800",
+		"public, s-maxage=300, stale-while-revalidate=600",
 	);
 	return response;
 }
