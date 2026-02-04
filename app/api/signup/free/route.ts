@@ -285,10 +285,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// Insert user with full data in one operation
-	// NOTE: The users table has a foreign key to auth.users(id), so we must NOT
-	// specify an ID here. Supabase will handle ID generation or this will fail
-	// with the foreign key constraint. For free users, we create a record without
-	// a corresponding auth.users entry (allowing NULL for now).
+	// FREE users should NOT use auth.users - only exist in public.users
+	// The foreign key constraint needs to be fixed to reference public.users.id
 	const { data: minimalUserData, error: minimalError } = await supabase
 		.from("users")
 		.insert({

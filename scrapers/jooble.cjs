@@ -329,9 +329,9 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 			// Jooble API requires POST requests to /api/{api_key} endpoint
 			const url = `${BASE_URL}${apiKey}`;
 
-			// Increased timeout to 60 seconds to handle rate limiting and large responses
+			// Increased timeout to 90 seconds to handle rate limiting and large responses
 			const controller = new AbortController();
-			const timeoutId = setTimeout(() => controller.abort(), 60000);
+			const timeoutId = setTimeout(() => controller.abort(), 90000);
 
 			let response;
 			try {
@@ -539,7 +539,7 @@ async function scrapeJoobleQuery(keyword, location, supabase, apiKey) {
 			// CRITICAL: Rate limiting between pages - 2 second delay to prevent API throttling
 			// Jooble may throttle aggressive requests - be polite with delays
 			if (hasMorePages && page <= MAX_PAGES) {
-				await new Promise((resolve) => setTimeout(resolve, 2000)); // 2s delay between pages (was 1s)
+				await new Promise((resolve) => setTimeout(resolve, 3500)); // 3.5s delay between pages (increased from 2s)
 			}
 		} catch (error) {
 			console.error(
@@ -610,12 +610,12 @@ async function scrapeJooble() {
 
 	const queries = generateSearchQueries();
 
-	// CONSERVATIVE SCALING: Reduced to 8 queries to fit within 240s cron timeout
-	// Jooble API: 15 cities × 8 queries × 3 pages = ~360 safe requests per run
-	// Timeline: 360 × (1.5s delay + ~1-2s fetch) = ~900 seconds ideal, ~300-400s realistic with batching
-	// Rate limit: 1.5s delays between requests (prevents throttling)
+	// CONSERVATIVE SCALING: Reduced to 5 queries to fit within extended timeout with aggressive rate limiting
+	// Jooble API: 15 cities × 5 queries × 3 pages = ~225 safe requests per run
+	// Timeline: 225 × (3s delay + ~1-2s fetch) = ~900-1125 seconds with aggressive rate limiting
+	// Rate limit: 3s delays between requests (prevents throttling and timeouts)
 	// Rotation: 3 query sets (SET_A, SET_B, SET_C) rotate every 8 hours for variety
-	const limitedQueries = queries.slice(0, 8); // 8 queries per run (balanced for timeout)
+	const limitedQueries = queries.slice(0, 5); // 5 queries per run (more conservative for reliability)
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -631,8 +631,8 @@ async function scrapeJooble() {
 				// 15 cities × 8 queries × 3 pages × 2s = ~960 seconds ideal, but batching reduces actual time
 				// Plus query time: reasonable within timeout with proper backoff
 				// If scraper times out before completion, it will gracefully exit
-				// Increased from 1500ms to 2000ms to prevent 429 errors (was getting 3+ errors per run)
-				await new Promise((resolve) => setTimeout(resolve, 2000));
+				// Increased from 2000ms to 3000ms to prevent 429 errors and timeouts
+				await new Promise((resolve) => setTimeout(resolve, 3000));
 			} catch (error) {
 				console.error(
 					`[Jooble] Error with ${keyword} in ${city.name}:`,

@@ -231,10 +231,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/wrappers/adzuna-wrapper.cjs", {
 					cwd: process.cwd(),
-					timeout: 300000, // 5 minutes - increased from 2min for Adzuna's comprehensive processing
+					timeout: 600000, // 10 minutes - increased from 5min for Adzuna's comprehensive processing
 					env,
 				}),
-				300000, // Increased from 120000 (2min) to 300000 (5min) for Adzuna
+				600000, // Increased from 300000 (5min) to 600000 (10min) for Adzuna
 				"Adzuna scraper",
 			);
 
@@ -776,10 +776,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/careerjet.cjs", {
 					cwd: process.cwd(),
-					timeout: 180000, // 3 minutes timeout - increased from 2min but still reasonable
+					timeout: 480000, // 8 minutes timeout - increased from 3min for better reliability
 					env: { ...process.env },
 				}),
-				180000, // Increased to 3 minutes to match exec timeout
+				480000, // Increased to 8 minutes to match exec timeout
 				"CareerJet scraper",
 			);
 
@@ -969,10 +969,10 @@ class RealJobRunner {
 			const { stdout, stderr } = await this.withTimeout(
 				execAsync("node scrapers/jooble.cjs", {
 					cwd: process.cwd(),
-					timeout: 240000, // 4 minutes timeout - more reasonable
+					timeout: 600000, // 10 minutes timeout - increased from 4min for better reliability
 					env: { ...process.env },
 				}),
-				240000, // Reduced to 4 minutes for better reliability
+				600000, // Increased to 10 minutes to match exec timeout
 				"Jooble scraper",
 			);
 

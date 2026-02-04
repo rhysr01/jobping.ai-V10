@@ -682,9 +682,9 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 				const url = `${BASE_URL}?${params.toString()}`;
 				const startTime = Date.now();
 
-				// Add 30-second timeout to prevent hanging requests
+				// Add 60-second timeout to prevent hanging requests (increased from 30s)
 				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 30000);
+				const timeoutId = setTimeout(() => controller.abort(), 60000);
 
 				let response;
 				try {
@@ -902,7 +902,7 @@ async function scrapeCareerJetQuery(city, keyword, supabase) {
 
 				// Rate limiting between pages
 				if (hasMorePages && page <= MAX_PAGES) {
-					await new Promise((resolve) => setTimeout(resolve, 1000)); // 1s delay between pages
+					await new Promise((resolve) => setTimeout(resolve, 2500)); // 2.5s delay between pages (increased from 1s)
 				}
 			} catch (error) {
 				console.error(
@@ -975,9 +975,9 @@ async function scrapeCareerJet() {
 
 	// OPTIMIZED: Reduce queries to prevent timeouts while maintaining coverage
 	// Strategy: 12 cities × 8 queries × 2 pages = ~192 requests per run (much safer)
-	// Reduced from 25 to 8 queries per city to prevent timeouts
-	// Still good coverage with adaptive rate limiting
-	const limitedBaseQueries = baseQueries.slice(0, 8); // REDUCED from 15 to 8
+	// Reduced from 8 to 6 queries per city to prevent timeouts with longer delays
+	// More conservative approach with increased rate limiting
+	const limitedBaseQueries = baseQueries.slice(0, 6); // REDUCED from 8 to 6 for better reliability
 
 	let totalSaved = 0;
 	let errors = 0;
@@ -998,7 +998,7 @@ async function scrapeCareerJet() {
 		}
 
 		// Adaptive rate limiting: start with base delay, adjust based on API response
-		let currentDelay = 800; // Start faster (800ms) - will adapt if needed
+		let currentDelay = 1500; // Start slower (1.5s) - increased from 800ms for better reliability
 		let consecutiveSlowResponses = 0;
 
 		for (const keyword of cityQueries) {
@@ -1015,14 +1015,14 @@ async function scrapeCareerJet() {
 				// Adaptive delay: slow down if API is slow or rate limited
 				if (shouldSlowDown) {
 					consecutiveSlowResponses++;
-					currentDelay = Math.min(currentDelay * 1.5, 3000); // Max 3 seconds
+					currentDelay = Math.min(currentDelay * 1.5, 5000); // Max 5 seconds (increased from 3s)
 					console.log(
 						`[CareerJet] Slowing down to ${currentDelay}ms (slow response detected)`,
 					);
 				} else if (consecutiveSlowResponses > 0) {
 					// Gradually speed up if responses are fast again
 					consecutiveSlowResponses = Math.max(0, consecutiveSlowResponses - 1);
-					currentDelay = Math.max(800, currentDelay * 0.9); // Back to base delay
+					currentDelay = Math.max(1500, currentDelay * 0.9); // Back to base delay (increased from 800ms)
 				}
 
 				// Rate limiting: adaptive delay between requests
@@ -1048,7 +1048,7 @@ async function scrapeCareerJet() {
 				}
 
 				// Slow down on errors too
-				currentDelay = Math.min(currentDelay * 1.2, 3000);
+				currentDelay = Math.min(currentDelay * 1.2, 5000); // Increased max from 3s to 5s
 			}
 		}
 	}
