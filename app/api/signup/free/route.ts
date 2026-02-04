@@ -35,12 +35,15 @@ const freeSignupSchema = z.object({
 export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);
 
-	console.log("[FREE SIGNUP] Request received", {
+	console.log("[FREE SIGNUP] 🚀 Request received", {
 		requestId,
 		timestamp: new Date().toISOString(),
 		url: request.url,
 		method: request.method,
 	});
+
+	// CRITICAL: Wrap entire function in try-catch to catch ANY silent exceptions
+	try {
 
 	// Set Sentry context for this request
 	Sentry.setContext("request", {
@@ -685,7 +688,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		matchCount: matchesCount,
 	});
 
-	console.log("[FREE SIGNUP] Signup successful, returning response", {
+	console.log("[FREE SIGNUP] 🎉 Signup successful, returning response", {
 		requestId,
 		normalizedEmail,
 		userId: userData.id,
@@ -694,4 +697,39 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	return response;
+
+	} catch (criticalError) {
+		console.error("[FREE SIGNUP] 🚨 CRITICAL ERROR - Silent exception caught:", {
+			requestId,
+			error: criticalError,
+			errorMessage: criticalError instanceof Error ? criticalError.message : String(criticalError),
+			errorStack: criticalError instanceof Error ? criticalError.stack : undefined,
+			timestamp: new Date().toISOString(),
+		});
+
+		// Force Sentry capture of the silent exception
+		Sentry.captureException(criticalError instanceof Error ? criticalError : new Error(String(criticalError)), {
+			tags: {
+				endpoint: "signup-free",
+				error_type: "silent_exception",
+				critical: "true",
+			},
+			extra: {
+				requestId,
+				operation: "complete_signup_flow",
+				timestamp: new Date().toISOString(),
+			},
+			level: "error",
+		});
+
+		// Return a proper error response
+		return NextResponse.json(
+			{
+				error: "internal_error",
+				message: "An unexpected error occurred during signup. Please try again.",
+				requestId,
+			},
+			{ status: 500 },
+		);
+	}
 });
