@@ -71,24 +71,40 @@ export async function handleError(error: unknown, req?: NextRequest): Promise<Ne
 	const requestId = req ? getRequestId(req) : undefined;
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
-	// CRITICAL: Always capture to Sentry, even for AppErrors
-	// This ensures we see ALL errors in production
-	Sentry.captureException(errorObj, {
-		tags: {
-			error_handler: "asyncHandler",
-			error_type: error instanceof AppError ? error.code || "AppError" : "UnknownError",
-			endpoint: req?.url || "unknown",
-		},
-		extra: {
+	// FIX: Don't log expected errors to Sentry (409 conflicts, 429 rate limits)
+	// These are expected behavior and shouldn't spam Sentry
+	const statusCode = error instanceof AppError ? error.statusCode : 500;
+	const isExpectedError = 
+		statusCode === 409 || // Conflict (account already exists)
+		statusCode === 429 || // Rate limit (expected behavior)
+		(error instanceof AppError && error.code === "RATE_LIMIT") ||
+		(error instanceof AppError && error.code === "DUPLICATE_EMAIL");
+
+	if (!isExpectedError) {
+		// CRITICAL: Capture unexpected errors to Sentry
+		Sentry.captureException(errorObj, {
+			tags: {
+				error_handler: "asyncHandler",
+				error_type: error instanceof AppError ? error.code || "AppError" : "UnknownError",
+				endpoint: req?.url || "unknown",
+			},
+			extra: {
+				requestId,
+				statusCode,
+				code: error instanceof AppError ? error.code : undefined,
+				details: error instanceof AppError ? error.details : undefined,
+				errorMessage: errorObj.message,
+				errorStack: errorObj.stack,
+			},
+			level: error instanceof AppError && statusCode < 500 ? "warning" : "error",
+		});
+	} else {
+		// Expected errors - just log to console, don't spam Sentry
+		console.log(`[Expected ${statusCode}] ${errorObj.message}`, {
 			requestId,
-			statusCode: error instanceof AppError ? error.statusCode : 500,
 			code: error instanceof AppError ? error.code : undefined,
-			details: error instanceof AppError ? error.details : undefined,
-			errorMessage: errorObj.message,
-			errorStack: errorObj.stack,
-		},
-		level: error instanceof AppError && error.statusCode < 500 ? "warning" : "error",
-	});
+		});
+	}
 
 	// CRITICAL: Flush Sentry to ensure error is sent before returning response
 	await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
