@@ -329,13 +329,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		});
 
 	// Check if email already used (any tier)
-	// NOTE: exec_sql RPC doesn't exist, using direct query instead
+	// NOTE: Use case-insensitive lookup since PostgreSQL email index is case-sensitive
+	// This prevents duplicate emails like "Test@example.com" vs "test@example.com"
 	let existingUser = null;
 	try {
+		// Try using ilike for case-insensitive email lookup
 		const { data, error } = await supabase
 			.from("users")
-			.select("id, subscription_tier")
-			.eq("email", normalizedEmail)
+			.select("id, subscription_tier, email, created_at")
+			.ilike("email", normalizedEmail) // Case-insensitive like
 			.maybeSingle();
 
 		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} Existing user check result`, {
@@ -343,7 +345,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			normalizedEmail,
 			hasError: !!error,
 			error: error ? { code: error.code, message: error.message } : null,
-			existingUser: data ? { id: data.id, tier: data.subscription_tier } : null,
+			existingUser: data ? { 
+				id: data.id, 
+				tier: data.subscription_tier,
+				email: data.email,
+				createdAt: data.created_at,
+				recordExists: !!data
+			} : null,
+			dataIsNull: data === null,
+			dataIsUndefined: data === undefined,
 		});
 
 		if (error) {
@@ -387,6 +397,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			normalizedEmail,
 			userId: existingUser.id,
 			tier: existingUser.subscription_tier,
+			email: existingUser.email,
+			createdAt: existingUser.created_at,
 		});
 
 		// FIX: Account already exists is expected behavior - log as INFO, not error
