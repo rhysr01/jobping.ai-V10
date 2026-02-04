@@ -51,23 +51,48 @@ Sentry.init({
 	enabled: isEnabled,
 
 	// Add beforeSend hook to log when events are sent (useful for debugging)
-	beforeSend(event) {
-		if (
-			process.env.SENTRY_DEBUG === "true" ||
-			process.env.NODE_ENV === "development"
-		) {
-			console.log("[Sentry Client] Event captured:", {
-				message: event.message,
-				exception: event.exception,
-				level: event.level,
-				environment: event.environment,
+	beforeSend(event, hint) {
+		// Always log for debugging
+		console.log("[Sentry Client] Event captured:", {
+			message: event.message,
+			exception: event.exception?.values?.[0]?.value,
+			level: event.level,
+			environment: event.environment,
+			tags: event.tags,
+			eventId: event.event_id,
+		});
+		
+		if (hint?.originalException) {
+			console.log("[Sentry Client] Original exception:", {
+				message: hint.originalException instanceof Error ? hint.originalException.message : String(hint.originalException),
 			});
+		}
+		
+		return event;
+	},
+	
+	// Add afterSend hook to verify events are actually sent
+	afterSend(event, sendResponse) {
+		if (sendResponse) {
+			console.log("[Sentry Client] Event sent successfully:", {
+				eventId: event.event_id,
+				statusCode: sendResponse.statusCode,
+			});
+		} else {
+			console.warn("[Sentry Client] Event send response is null");
 		}
 		return event;
 	},
 });
 
 if (isEnabled && typeof window !== "undefined") {
+	console.log(
+		`[Sentry Client] ✅ Initialized for environment: ${getEnvironment()}`,
+	);
+	console.log(`[Sentry Client] DSN: ${dsn.substring(0, 30)}...`);
+} else if (!isEnabled) {
+	console.warn("[Sentry Client] ❌ DSN not found - Sentry is disabled");
+} {
 	console.log(
 		`[Sentry Client] Initialized for environment: ${getEnvironment()}`,
 	);

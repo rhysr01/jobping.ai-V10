@@ -1,9 +1,11 @@
 import { type NextRequest } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../lib/api-logger";
 import { createSuccessResponse } from "../../../lib/api-response";
-import { AppError, asyncHandler } from "../../../lib/errors";
+import { AppError, asyncHandler, getRequestId } from "../../../lib/errors";
 import { getDatabaseClient } from "../../../utils/core/database-pool";
 import { normalizeCareerPath } from "../../../scrapers/types";
+import { LOG_MARKERS } from "../../../lib/log-markers";
 
 // Force dynamic rendering for this route
 export const dynamic = "force-dynamic";
@@ -41,8 +43,12 @@ interface PreviewMatchesResponse {
 }
 
 export const POST = asyncHandler(async (req: NextRequest) => {
-	const requestId =
-		req.headers.get("x-request-id") || "preview-matches-" + Date.now();
+	const requestId = getRequestId(req);
+
+	console.log(`${LOG_MARKERS.API} ${LOG_MARKERS.API_REQUEST} Preview matches request received`, {
+		requestId,
+		timestamp: new Date().toISOString(),
+	});
 
 	try {
 		const body: PreviewMatchesRequest = await req.json();
@@ -106,29 +112,49 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		// Build career path filter that includes internships, graduates, and early-career
 		// Using long form categories throughout (finance-investment, data-analytics, etc)
 		let careerPathFilter = "";
-		if (normalizedCareerPath) {
-			// Include internships, graduates, early-career, and the specific career path
-			if (isPremiumPreview) {
-				careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+		try {
+			if (normalizedCareerPath) {
+				// Include internships, graduates, early-career, and the specific career path
+				if (isPremiumPreview) {
+					careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management},categories.cs.{${normalizedCareerPath}}`;
+				} else {
+					careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+				}
+				console.log(`${LOG_MARKERS.API} ${LOG_MARKERS.DB_QUERY} Applied career path filter in OR clause`, {
+					careerPath: normalizedCareerPath,
+					filter: careerPathFilter,
+					requestId,
+				});
+				apiLogger.info("Applied career path filter in OR clause", {
+					careerPath: normalizedCareerPath,
+					requestId,
+				});
 			} else {
-				careerPathFilter = `is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{${normalizedCareerPath}}`;
+				// No career path specified - use standard early-career + internship filter
+				if (isPremiumPreview) {
+					careerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
+				} else {
+					careerPathFilter =
+						"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
+				}
 			}
-			apiLogger.info("Applied career path filter in OR clause", {
-				careerPath: normalizedCareerPath,
+
+			if (careerPathFilter) {
+				query = query.or(careerPathFilter);
+			}
+		} catch (filterError) {
+			console.error(`${LOG_MARKERS.API} ${LOG_MARKERS.API_ERROR} Error building career path filter`, {
+				error: filterError instanceof Error ? filterError.message : String(filterError),
+				normalizedCareerPath,
 				requestId,
 			});
-		} else {
-			// No career path specified - use standard early-career + internship filter
-			if (isPremiumPreview) {
-				careerPathFilter =
-					"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career},categories.cs.{business},categories.cs.{management}";
-			} else {
-				careerPathFilter =
-					"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}";
-			}
+			// Continue without career path filter if it fails
+			apiLogger.warn("Failed to build career path filter, continuing without it", filterError instanceof Error ? filterError : new Error(String(filterError)), {
+				normalizedCareerPath,
+				requestId,
+			});
 		}
-
-		query = query.or(careerPathFilter);
 
 		// Filter by visa sponsorship if specified
 		if (visaSponsorship) {
@@ -149,12 +175,41 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		}
 
 		// Execute the count query
+		console.log(`${LOG_MARKERS.API} ${LOG_MARKERS.DB_QUERY} Executing count query`, {
+			requestId,
+			cities: cities.length,
+			hasCareerPath: !!normalizedCareerPath,
+		});
 		const { count, error } = await query;
 
 		if (error) {
+			console.error(`${LOG_MARKERS.API} ${LOG_MARKERS.DB_ERROR} Database error in preview matches`, {
+				error: error.message,
+				code: error.code,
+				details: error.details,
+				cities,
+				careerPath: normalizedCareerPath,
+				visaSponsorship,
+				requestId,
+			});
+			Sentry.captureException(new Error(`Database error in preview matches: ${error.message}`), {
+				tags: {
+					endpoint: "preview-matches",
+					error_type: "database_error",
+					error_code: error.code,
+				},
+				extra: {
+					requestId,
+					cities,
+					careerPath: normalizedCareerPath,
+					errorMessage: error.message,
+					errorCode: error.code,
+					errorDetails: error.details,
+				},
+			});
 			apiLogger.error("Database error in preview matches", error, {
 				cities,
-				careerPath,
+				careerPath: normalizedCareerPath,
 				visaSponsorship,
 				requestId,
 				filters:
@@ -342,11 +397,40 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
 		return nextResponse;
 	} catch (error) {
+		const errorObj = error instanceof Error ? error : new Error(String(error));
+		
+		console.error(`${LOG_MARKERS.API} ${LOG_MARKERS.API_ERROR} Unexpected error in preview matches`, {
+			error: errorObj.message,
+			stack: errorObj.stack,
+			requestId,
+		});
+
 		if (error instanceof AppError) {
+			Sentry.captureException(errorObj, {
+				tags: {
+					endpoint: "preview-matches",
+					error_type: error.code || "AppError",
+				},
+				extra: {
+					requestId,
+					statusCode: error.statusCode,
+					code: error.code,
+				},
+			});
 			throw error;
 		}
 
-		apiLogger.error("Unexpected error in preview matches", error as Error, {
+		Sentry.captureException(errorObj, {
+			tags: {
+				endpoint: "preview-matches",
+				error_type: "unexpected_error",
+			},
+			extra: {
+				requestId,
+			},
+		});
+
+		apiLogger.error("Unexpected error in preview matches", errorObj, {
 			requestId,
 		});
 
@@ -354,7 +438,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			"An unexpected error occurred",
 			500,
 			"INTERNAL_ERROR",
-			error as Error,
+			errorObj,
 		);
 	}
 });

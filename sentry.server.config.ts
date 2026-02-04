@@ -33,17 +33,39 @@ Sentry.init({
 	enabled: isEnabled,
 
 	// Add beforeSend hook to log when events are sent (useful for debugging)
-	beforeSend(event) {
-		if (
-			process.env.SENTRY_DEBUG === "true" ||
-			process.env.NODE_ENV === "development"
-		) {
-			console.log("[Sentry Server] Event captured:", {
-				message: event.message,
-				exception: event.exception,
-				level: event.level,
-				environment: event.environment,
+	beforeSend(event, hint) {
+		// Always log in production for debugging
+		console.log("[Sentry Server] Event captured:", {
+			message: event.message,
+			exception: event.exception?.values?.[0]?.value,
+			level: event.level,
+			environment: event.environment,
+			tags: event.tags,
+			eventId: event.event_id,
+			timestamp: event.timestamp,
+		});
+		
+		// Log hint if available (contains original error)
+		if (hint?.originalException) {
+			console.log("[Sentry Server] Original exception:", {
+				message: hint.originalException instanceof Error ? hint.originalException.message : String(hint.originalException),
+				stack: hint.originalException instanceof Error ? hint.originalException.stack : undefined,
 			});
+		}
+		
+		return event;
+	},
+	
+	// Add afterSend hook to verify events are actually sent
+	afterSend(event, sendResponse) {
+		if (sendResponse) {
+			console.log("[Sentry Server] Event sent successfully:", {
+				eventId: event.event_id,
+				statusCode: sendResponse.statusCode,
+				status: sendResponse.status,
+			});
+		} else {
+			console.warn("[Sentry Server] Event send response is null - event may not have been sent");
 		}
 		return event;
 	},
@@ -51,8 +73,11 @@ Sentry.init({
 
 if (isEnabled) {
 	console.log(
-		`[Sentry Server] Initialized for environment: ${getEnvironment()}`,
+		`[Sentry Server] ✅ Initialized for environment: ${getEnvironment()}`,
 	);
+	console.log(`[Sentry Server] DSN: ${dsn.substring(0, 30)}...`);
+	console.log(`[Sentry Server] Debug mode: ${process.env.SENTRY_DEBUG === "true" || process.env.NODE_ENV === "development"}`);
 } else {
-	console.warn("[Sentry Server] DSN not found - Sentry is disabled");
+	console.warn("[Sentry Server] ❌ DSN not found - Sentry is disabled");
+	console.warn("[Sentry Server] Set SENTRY_DSN or NEXT_PUBLIC_SENTRY_DSN to enable");
 }
