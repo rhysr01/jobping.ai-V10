@@ -98,6 +98,14 @@ export class SignupMatchingService {
 		const requestIdStr = requestId || randomUUID();
 
 		try {
+			console.log(`🚀 [${config.tier.toUpperCase()}] SignupMatchingService.runMatching started`, {
+				email,
+				requestId: requestIdStr,
+				tier: config.tier,
+				maxMatches: config.maxMatches,
+				jobFreshnessDays: config.jobFreshnessDays,
+			});
+			
 			apiLogger.info(
 				`[${config.tier.toUpperCase()}] Starting signup matching`,
 				{
@@ -110,8 +118,13 @@ export class SignupMatchingService {
 			);
 
 			// STEP 1: IDEMPOTENCY CHECK - Prevent race conditions
+			console.log(`🔍 [${config.tier.toUpperCase()}] Checking for existing matches`);
+			
 			const existingMatchesResult =
 				await SignupMatchingService.checkExistingMatches(email, config.tier);
+				
+			console.log(`📊 [${config.tier.toUpperCase()}] Existing matches result:`, existingMatchesResult);
+			
 			if (existingMatchesResult) {
 				const processingTime = Date.now() - startTime;
 				apiLogger.info(
@@ -133,10 +146,15 @@ export class SignupMatchingService {
 			}
 
 			// STEP 2: FETCH JOBS - Tier-aware job selection with user context
+			console.log(`📋 [${config.tier.toUpperCase()}] Fetching jobs for tier`);
+			
 			let jobs: any[];
 			try {
 				jobs = await SignupMatchingService.fetchJobsForTier(config, userPrefs);
+				console.log(`✅ [${config.tier.toUpperCase()}] Jobs fetched:`, jobs.length);
 			} catch (error) {
+				console.log(`❌ [${config.tier.toUpperCase()}] Job fetching failed:`, error);
+			
 				const errorMessage = error instanceof Error ? error.message : String(error);
 				apiLogger.error(
 					`[${config.tier.toUpperCase()}] Failed to fetch jobs for matching`,
@@ -223,11 +241,19 @@ export class SignupMatchingService {
 					subscription_tier: "free",
 				};
 
+				console.log(`🎯 [FREE] Calling runFreeMatching with:`, {
+					freePrefs,
+					jobCount: jobs.length,
+					maxMatches: config.maxMatches,
+				});
+				
 				strategyResult = await runFreeMatching(
 					freePrefs,
 					jobs,
 					config.maxMatches,
 				);
+				
+				console.log(`📊 [FREE] runFreeMatching completed:`, strategyResult);
 			} else {
 				// Use Premium Matching Strategy
 				// PREMIUM ONLY USES FIELDS WITH FULL DB SUPPORT + VISA_STATUS
