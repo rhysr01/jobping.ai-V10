@@ -234,10 +234,17 @@ export class SignupMatchingService {
 			if (config.tier === "free") {
 				// Use Free Matching Strategy
 				// FREE form only provides: email, cities, careerPath (NO visa, entry_level, skills, etc)
+				// CRITICAL FIX: career_path can be array or string - normalize to array for FreeMatchingStrategy
+				const careerPathArray = Array.isArray(userPrefs.career_path) 
+					? userPrefs.career_path 
+					: userPrefs.career_path 
+						? [userPrefs.career_path] 
+						: [];
+				
 				const freePrefs: FreeUserPreferences = {
 					email: userPrefs.email,
 					target_cities: userPrefs.target_cities || [],
-					career_path: userPrefs.career_path?.[0] || null,
+					career_path: careerPathArray.length > 0 ? careerPathArray[0] : null, // Free tier uses single career path
 					subscription_tier: "free",
 				};
 

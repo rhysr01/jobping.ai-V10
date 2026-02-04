@@ -473,11 +473,28 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		throw error;
 	}
 
+	// CRITICAL FIX: Ensure career_path is properly set from validation data
+	// careerPath comes from form as array, stored as string in DB, need to ensure it's available
+	const careerPathForMatching = userData.career_path 
+		? [userData.career_path] 
+		: (careerPath && careerPath.length > 0 ? careerPath : []);
+	
+	if (careerPathForMatching.length === 0) {
+		const error = new Error("Career path is required for matching");
+		apiLogger.error("Free signup - career_path missing", error, {
+			requestId,
+			email: normalizedEmail,
+			userData_career_path: userData.career_path,
+			careerPath_from_validation: careerPath,
+		});
+		throw error;
+	}
+
 	const userPrefs = {
 		email: userData.email,
 		user_id: userData.id, // Add user_id for proper foreign key relationships
 		target_cities: targetCities,
-		career_path: userData.career_path ? [userData.career_path] : [],
+		career_path: careerPathForMatching,
 		subscription_tier: "free" as const,
 	};
 
@@ -487,6 +504,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		user_id: userData.id,
 		user_id_type: typeof userData.id,
 		target_cities: targetCities,
+		career_path: userPrefs.career_path,
+		career_path_length: userPrefs.career_path.length,
 	});
 
 	apiLogger.info("Free signup - delegating to SignupMatchingService", {
@@ -582,6 +601,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// Check for matches
+	// CRITICAL FIX: Return 200 even when matchesCount is 0 - let frontend handle gracefully
+	// This prevents the API client from treating it as an error (404)
 	if (matchesCount === 0) {
 		const matchingReason =
 			matchingResult.error || "No jobs matched user criteria after filtering";
@@ -622,7 +643,8 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			);
 		}
 
-		// Regular no-matches scenario
+		// Regular no-matches scenario - return 200 with matchesCount: 0
+		// This allows the frontend to handle it gracefully instead of showing an error
 		apiLogger.info("Free signup - no matches found for user criteria", {
 			requestId,
 			email: normalizedEmail,
@@ -634,32 +656,39 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				visaStatus: userData.visa_status,
 			},
 		});
-		Sentry.captureMessage("Free signup - no matches found for user criteria", {
-			level: "info",
-			tags: { endpoint: "signup-free", error_type: "no_matches_found" },
-			extra: {
-				requestId,
-				email: normalizedEmail,
-				method: matchingResult.method,
-				reason: matchingReason,
+		
+		// Don't spam Sentry for expected no-matches scenarios
+		// Only log if it's unexpected (e.g., many jobs available but none matched)
+		
+		// Return 200 with matchesCount: 0 so frontend can handle gracefully
+		const response = NextResponse.json({
+			success: true,
+			matchesCount: 0,
+			userId: userData.id,
+			email: userData.email,
+			warning: "no_matches_found",
+			message: `No matches found. ${matchingReason}. Try different cities or career paths.`,
+			details: {
 				cities: targetCities,
 				careerPath: userData.career_path,
+				method: matchingResult.method,
+				reason: matchingReason,
 			},
+			requestId,
 		});
-		return NextResponse.json(
-			{
-				error: "no_matches_found",
-				message: `No matches found. ${matchingReason}. Try different cities or career paths.`,
-				details: {
-					cities: targetCities,
-					careerPath: userData.career_path,
-					method: matchingResult.method,
-					reason: matchingReason,
-				},
-				requestId,
-			},
-			{ status: 404 },
-		);
+
+		// Set session cookie even when no matches (user still signed up successfully)
+		const isProduction = process.env.NODE_ENV === "production";
+		const secure = isProduction;
+		response.cookies.set("user_email", userData.email, {
+			httpOnly: true,
+			secure: secure,
+			sameSite: "lax",
+			maxAge: 30 * 24 * 60 * 60, // 30 days
+			path: "/",
+		});
+
+		return response;
 	}
 
 	// REFACTORED: Service already saved matches, create response

@@ -450,6 +450,8 @@ function SignupFormFree() {
 					success?: boolean;
 					error?: string;
 					details?: any;
+					message?: string;
+					warning?: string;
 				}>("/api/signup/free", {
 					method: "POST",
 					body: JSON.stringify(apiData),
@@ -519,6 +521,41 @@ function SignupFormFree() {
 
 			setSubmissionProgress(70);
 			setSubmissionStage("Preparing your matches...");
+
+			// CRITICAL FIX: Handle zero matches gracefully
+			// API now returns 200 with matchesCount: 0 instead of 404
+			if (response.matchesCount === 0) {
+				debugLogger.error("SUBMIT_NO_MATCHES", "Signup successful but no matches found", {
+					email: response.email,
+					userId: response.userId,
+					message: (response as any).message,
+				});
+
+				// Show helpful message instead of error
+				showToast.info(
+					response.message || "We couldn't find matches for your criteria. Try adjusting your city or career path preferences."
+				);
+
+				// Still set success state and redirect - user signed up successfully
+				setSuccessState({
+					show: true,
+					matchesCount: 0,
+				});
+
+				setSubmissionProgress(100);
+				setSubmissionStage("Account created! Redirecting...");
+
+				// Save preferences and redirect to matches page (which will show "no matches" message)
+				savePreferencesForMatches(formData as unknown as FormDataType);
+				clearProgress();
+
+				setTimeout(() => {
+					const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
+					router.push(redirectUrl);
+				}, TIMING.REDIRECT_DELAY_MS);
+
+				return; // Exit early - don't continue with normal success flow
+			}
 
 			// Stage 3: Success (70% - 100%)
 			setSubmissionProgress(90);
