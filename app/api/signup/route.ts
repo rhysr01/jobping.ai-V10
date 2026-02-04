@@ -362,7 +362,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 	const { data: _insertedUserData, error: userError } = await supabase
 		.from("users")
 		.insert([userData])
-		.select()
+		.select("*")
 		.single();
 
 	if (userError) {
