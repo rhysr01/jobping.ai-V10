@@ -263,8 +263,8 @@ async function rankAndReturnMatchesDirect(
 			duration: Date.now() - startTime,
 		});
 
-		// Save matches to database - call existing save function
-		return await saveMatchesAndReturn(userPrefs, matches, jobs, method, startTime, maxMatches);
+		// Save matches to database
+		return await saveMatchesAndReturn(userPrefs, matches, method, startTime);
 	} catch (error) {
 		apiLogger.error("[FREE] Direct AI ranking error", error as Error, {
 			email: userPrefs.email,
@@ -307,260 +307,116 @@ async function rankAndReturnMatchesDirect(
 }
 
 /**
- * Save matches to database and return result (extracted for reuse)
+ * Save matches to database and return result
  */
 async function saveMatchesAndReturn(
 	userPrefs: FreeUserPreferences,
 	matches: any[],
-	_jobs: JobWithMetadata[],
 	method: string,
 	startTime: number,
-	_maxMatches: number,
 ): Promise<MatchingResult> {
-	// Save matches to database
-	let matchesToSave: any[] = []; // CRITICAL FIX: Initialize here to prevent ReferenceError
-	if (matches.length > 0) {
-		try {
-			const supabase = getDatabaseClient();
-			
-			// Use user_id from userPrefs if available, otherwise lookup by email
-			let userId: string;
-			
-			apiLogger.info("[FREE] User ID resolution debug", {
-				email: userPrefs.email,
-				provided_user_id: userPrefs.user_id,
-				user_id_type: typeof userPrefs.user_id,
-				has_user_id: !!userPrefs.user_id,
-			});
-			
-			if (userPrefs.user_id) {
-				userId = userPrefs.user_id;
-				apiLogger.info("[FREE] Using provided user_id", {
-					email: userPrefs.email,
-					user_id: userId,
-				});
-			} else {
-				// Fallback: lookup user by email (for backward compatibility)
-				apiLogger.warn("[FREE] No user_id provided, falling back to email lookup", {
-					email: userPrefs.email,
-				});
-				
-				const { data: user, error: lookupError } = await supabase
-					.from("users")
-					.select("id")
-					.eq("email", userPrefs.email)
-					.single();
+	if (matches.length === 0) {
+		return {
+			matches,
+			matchCount: 0,
+			method: method,
+			duration: Date.now() - startTime,
+		};
+	}
 
-				if (lookupError || !user) {
-					apiLogger.error("[FREE] User lookup failed", lookupError as Error, {
-						email: userPrefs.email,
-						error: lookupError,
-					});
-					throw new Error(`User not found for email: ${userPrefs.email}. Error: ${lookupError?.message || 'User not found'}`);
-				}
-				userId = user.id;
-				apiLogger.info("[FREE] Looked up user_id by email", {
-					email: userPrefs.email,
-					user_id: userId,
-				});
-			}
-			
-			// Validate userId before proceeding
-			if (!userId) {
-				throw new Error(`Invalid user_id: ${userId} for email: ${userPrefs.email}`);
-			}
-
-			// CRITICAL: Verify user exists in database before inserting matches
-			// This prevents foreign key constraint violations
-			const { data: userExists, error: userCheckError } = await supabase
+	try {
+		const supabase = getDatabaseClient();
+		
+		// Resolve user_id
+		let userId: string;
+		if (userPrefs.user_id) {
+			userId = userPrefs.user_id;
+		} else {
+			const { data: user, error: lookupError } = await supabase
 				.from("users")
 				.select("id")
-				.eq("id", userId)
+				.eq("email", userPrefs.email)
 				.single();
 
-			if (userCheckError || !userExists) {
-				apiLogger.error("[FREE] User verification failed before match insert", userCheckError as Error, {
-					email: userPrefs.email,
-					user_id: userId,
-					error: userCheckError,
-				});
-				throw new Error(`User verification failed for user_id: ${userId}, email: ${userPrefs.email}. Error: ${userCheckError?.message || 'User not found'}`);
+			if (lookupError || !user) {
+				throw new Error(`User not found: ${lookupError?.message || 'User not found'}`);
 			}
-
-			apiLogger.info("[FREE] User verified, proceeding with match insert", {
-				email: userPrefs.email,
-				user_id: userId,
-			});
-
-			// Get job_ids from job_hashes (now all jobs have proper job_hash values)
-			const jobHashes = matches.map(m => String(m.job_hash));
-			
-			apiLogger.info("[FREE] Looking up job IDs from hashes", {
-				email: userPrefs.email,
-				job_hashes: jobHashes,
-				hash_count: jobHashes.length,
-			});
-			
-			const { data: jobs, error: jobLookupError } = await supabase
-				.from("jobs")
-				.select("id, job_hash")
-				.in("job_hash", jobHashes);
-
-			if (jobLookupError) {
-				apiLogger.error("[FREE] Job lookup error", jobLookupError as Error, {
-					email: userPrefs.email,
-					job_hashes: jobHashes,
-				});
-				throw new Error(`Job lookup failed: ${jobLookupError.message}`);
-			}
-
-			if (!jobs || jobs.length === 0) {
-				apiLogger.error("[FREE] No jobs found for any hashes", new Error("No jobs found"), {
-					email: userPrefs.email,
-					job_hashes: jobHashes,
-					matches_count: matches.length,
-				});
-				throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
-			}
-
-			// Log the job lookup results
-			apiLogger.info("[FREE] Job lookup results", {
-				email: userPrefs.email,
-				requested_hashes: jobHashes.length,
-				found_jobs: jobs.length,
-				found_hashes: jobs.map(j => j.job_hash),
-				missing_hashes: jobHashes.filter(hash => !jobs.find(j => j.job_hash === hash)),
-			});
-
-			// Create lookup map for job_hash -> job_id
-			const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
-
-			matchesToSave = matches.map((m: any) => {
-				const jobId = jobHashToId.get(String(m.job_hash));
-				if (!jobId) {
-					apiLogger.error("[FREE] Job ID not found for hash", new Error("Missing job ID"), {
-						email: userPrefs.email,
-						job_hash: m.job_hash,
-						available_hashes: Array.from(jobHashToId.keys()),
-					});
-					throw new Error(`Job ID not found for hash: ${m.job_hash}`);
-				}
-
-				// Fix match score normalization - check range before dividing
-				const rawScore = m.match_score || 0;
-				const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore;
-
-				return {
-					user_id: userId,
-					job_id: jobId,
-					match_score: Number(normalizedScore),
-					match_reason: String(m.match_reason || "Matched"),
-					created_at: new Date().toISOString(),
-				};
-			});
-
-			// Validate all matches before inserting
-			const invalidMatches = matchesToSave.filter(match => !match.job_id || !match.user_id);
-			if (invalidMatches.length > 0) {
-				apiLogger.error("[FREE] Invalid matches detected", new Error("Invalid match data"), {
-					email: userPrefs.email,
-					invalid_matches: invalidMatches,
-					total_matches: matchesToSave.length,
-				});
-				throw new Error(`${invalidMatches.length} matches have invalid job_id or user_id`);
-			}
-
-			// Log what we're about to insert for debugging
-			apiLogger.info("[FREE] About to insert matches", {
-				email: userPrefs.email,
-				user_id: userId,
-				match_count: matchesToSave.length,
-				sample_match: matchesToSave[0] ? {
-					user_id: matchesToSave[0].user_id,
-					job_id: matchesToSave[0].job_id,
-					match_score: matchesToSave[0].match_score,
-				} : null,
-				all_job_ids: matchesToSave.map(m => m.job_id),
-			});
-
-			const { error } = await supabase.from("user_matches").insert(matchesToSave);
-
-			if (error) {
-				// Check if it's a foreign key constraint error
-				const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
-				const isUserIdError = error.message?.includes('user_matches_user_id_fkey');
-				const isJobIdError = error.message?.includes('user_matches_job_id_fkey');
-				
-				apiLogger.error(
-					"[FREE] Failed to save matches to database",
-					error as Error,
-					{
-						email: userPrefs.email,
-						user_id: userId,
-						matchCount: matchesToSave.length,
-						errorCode: error.code,
-						errorMessage: error.message,
-						isForeignKeyError,
-						isUserIdError,
-						isJobIdError,
-						sampleMatch: matchesToSave[0],
-						allJobIds: matchesToSave.map(m => m.job_id),
-					},
-				);
-
-				if (isForeignKeyError) {
-					if (isJobIdError) {
-						// The actual constraint that exists - job_id foreign key
-						const invalidJobIds = matchesToSave.map(m => m.job_id);
-						apiLogger.error("[FREE] Job ID foreign key constraint violation", error as Error, {
-							email: userPrefs.email,
-							job_ids: invalidJobIds,
-						});
-						throw new Error(`Job ID foreign key constraint violation: One or more job_ids don't exist in jobs table. Job IDs: ${invalidJobIds.join(', ')}. Original error: ${error.message}`);
-					} else if (isUserIdError) {
-						// This constraint doesn't actually exist in the schema, but error message suggests it
-						apiLogger.warn("[FREE] Misleading user_id foreign key error - this constraint doesn't exist in schema", {
-							email: userPrefs.email,
-							user_id: userId,
-							error_code: error.code,
-						});
-						throw new Error(`Misleading user_id foreign key error: user_id ${userId} for email ${userPrefs.email}. This constraint doesn't exist in schema. Original error: ${error.message}`);
-					} else {
-						// Generic foreign key error
-						throw new Error(`Foreign key constraint violation for email ${userPrefs.email}. Original error: ${error.message}`);
-					}
-				} else {
-					// CRITICAL FIX: Propagate error instead of silently continuing
-					throw new Error(`Failed to save matches: ${error.message}`);
-				}
-			} else {
-				apiLogger.info("[FREE] Successfully saved matches to database", {
-					email: userPrefs.email,
-					count: matchesToSave.length,
-				});
-			}
-		} catch (err) {
-			apiLogger.error("[FREE] Error saving matches", err as Error, {
-				email: userPrefs.email,
-				matchCount: matchesToSave.length,
-			});
-
-			// Capture in Sentry
-			Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
-				tags: {
-					service: "FreeMatchingStrategy",
-					method: "saveMatches",
-					tier: "free",
-				},
-				extra: {
-					email: userPrefs.email,
-					matchCount: matchesToSave.length,
-					operation: "database_save",
-				},
-				user: { email: userPrefs.email },
-				level: "error",
-			});
+			userId = user.id;
 		}
+
+		if (!userId) {
+			throw new Error(`Invalid user_id for email: ${userPrefs.email}`);
+		}
+
+		// Get job_ids from job_hashes
+		const jobHashes = matches.map(m => String(m.job_hash));
+		const { data: jobs, error: jobLookupError } = await supabase
+			.from("jobs")
+			.select("id, job_hash")
+			.in("job_hash", jobHashes);
+
+		if (jobLookupError) {
+			throw new Error(`Job lookup failed: ${jobLookupError.message}`);
+		}
+
+		if (!jobs || jobs.length === 0) {
+			throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
+		}
+
+		// Create lookup map and prepare matches
+		const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
+		const matchesToSave = matches.map((m: any) => {
+			const jobId = jobHashToId.get(String(m.job_hash));
+			if (!jobId) {
+				throw new Error(`Job ID not found for hash: ${m.job_hash}`);
+			}
+
+			const rawScore = m.match_score || 0;
+			const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore;
+
+			return {
+				user_id: userId,
+				job_id: jobId,
+				match_score: Number(normalizedScore),
+				match_reason: String(m.match_reason || "Matched"),
+				created_at: new Date().toISOString(),
+			};
+		});
+
+		// Insert matches
+		const { error } = await supabase.from("user_matches").insert(matchesToSave);
+
+		if (error) {
+			const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+			if (isForeignKeyError) {
+				throw new Error(`Foreign key constraint violation: ${error.message}`);
+			}
+			throw new Error(`Failed to save matches: ${error.message}`);
+		}
+
+		apiLogger.info("[FREE] Successfully saved matches", {
+			email: userPrefs.email,
+			count: matchesToSave.length,
+		});
+	} catch (err) {
+		apiLogger.error("[FREE] Error saving matches", err as Error, {
+			email: userPrefs.email,
+			matchCount: matches.length,
+		});
+
+		Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+			tags: {
+				service: "FreeMatchingStrategy",
+				method: "saveMatches",
+				tier: "free",
+			},
+			extra: {
+				email: userPrefs.email,
+				matchCount: matches.length,
+			},
+			user: { email: userPrefs.email },
+			level: "error",
+		});
 	}
 
 	return {

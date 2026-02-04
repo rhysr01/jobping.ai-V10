@@ -5,11 +5,11 @@
 set -e  # Exit on any error
 
 # Colors for output
-RED='\\033[0;31m'
-GREEN='\\033[0;32m'
-YELLOW='\\033[1;33m'
-BLUE='\\033[0;34m'
-NC='\\033[0m' # No Color
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -271,7 +271,7 @@ generate_report() {
 
 # Trigger embedding refresh
 trigger_embedding_refresh() {
-    log_info "\\n🧠 Triggering automated embedding refresh..."
+    log_info "\n🧠 Triggering automated embedding refresh..."
     node "$PROJECT_DIR/scripts/trigger-embedding-api.cjs" 2>&1 | tee -a "$LOG_FILE"
     if [ $? -ne 0 ]; then
         log_error "❌ Embedding refresh trigger failed!"
