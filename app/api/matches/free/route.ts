@@ -6,6 +6,13 @@ import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
 
 export const GET = asyncHandler(async (request: NextRequest) => {
+	console.log("🔍 [FREE MATCHES] Request received", {
+		url: request.url,
+		method: request.method,
+		cookieNames: Array.from(request.cookies.getAll().map(c => c.name)),
+		timestamp: new Date().toISOString(),
+	});
+
 	// Set Sentry context for this request
 	Sentry.setContext("request", {
 		url: request.url,
@@ -34,6 +41,12 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	const cookies = request.cookies;
 	const userEmail = cookies.get("user_email")?.value?.toLowerCase().trim();
 
+	console.log("🍪 [FREE MATCHES] Cookie check", {
+		hasUserEmailCookie: !!cookies.get("user_email"),
+		userEmail: userEmail || 'undefined',
+		allCookieNames: cookies.getAll().map(c => c.name),
+	});
+
 	if (!userEmail) {
 		apiLogger.warn("Free matches accessed without cookie", {
 			ip:
@@ -53,11 +66,18 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	const supabase = getDatabaseClient();
 
 	// Verify user exists and is free tier
+	console.log("👤 [FREE MATCHES] Looking up user", { userEmail });
+	
 	const { data: user } = await supabase
 		.from("users")
 		.select("id, subscription_tier, email")
 		.eq("email", userEmail)
 		.maybeSingle();
+
+	console.log("📊 [FREE MATCHES] User lookup result", {
+		found: !!user,
+		user: user ? { id: user.id, subscription_tier: user.subscription_tier, email: user.email } : null,
+	});
 
 	if (!user) {
 		apiLogger.warn("Free matches - user not found", {
@@ -89,6 +109,8 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Get user's matches with job details
+	console.log("🎯 [FREE MATCHES] Fetching matches for user", { userId: user.id, userEmail });
+	
 	const { data: matches, error: matchesError } = await supabase
 		.from("user_matches")
 		.select(
@@ -122,6 +144,12 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		.eq("user_id", user.id)
 		.order("match_score", { ascending: false })
 		.order("created_at", { ascending: false });
+
+	console.log("📋 [FREE MATCHES] Query result", {
+		matchesFound: matches?.length || 0,
+		hasError: !!matchesError,
+		error: matchesError?.message || null,
+	});
 
 	if (matchesError) {
 		apiLogger.error(
