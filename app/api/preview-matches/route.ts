@@ -5,6 +5,9 @@ import { AppError, asyncHandler } from "../../../lib/errors";
 import { getDatabaseClient } from "../../../utils/core/database-pool";
 import { normalizeCareerPath } from "../../../scrapers/types";
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 interface PreviewMatchesRequest {
 	cities: string[];
 	careerPath: string | string[];

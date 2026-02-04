@@ -12,6 +12,9 @@ import { SignupMatchingService } from "../../../../utils/services/SignupMatching
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 // import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter"; // Temporarily disabled
 
+// Force dynamic rendering for this route
+export const dynamic = "force-dynamic";
+
 // Input validation schema
 // CRITICAL FIX: Make schema tolerant of empty strings and edge cases
 const freeSignupSchema = z.object({
