@@ -332,7 +332,7 @@ describe("PremiumMatchingStrategy - Premium Tier Logic", () => {
 		it("should save premium matches to database", async () => {
 			await runPremiumMatching(mockUser, mockJobs, 15);
 
-			expect(mockSupabase.from).toHaveBeenCalledWith("matches");
+			expect(mockSupabase.from).toHaveBeenCalledWith("user_matches");
 			expect(mockSupabase.upsert).toHaveBeenCalledWith(
 				expect.arrayContaining([
 					expect.objectContaining({

@@ -279,7 +279,7 @@ describe("FreeMatchingStrategy - Free Tier Logic", () => {
 
 			await runFreeMatching(mockUser, mockJobs, 5);
 
-			// Check that from was called with "matches"
+			// Check that from was called with "user_matches"
 			expect(mockSupabase.from).toHaveBeenCalledWith("matches");
 
 			// The upsert should have been called

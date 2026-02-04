@@ -252,6 +252,7 @@ async function rankAndReturnMatches(
 		});
 
 		// Save matches to database
+		let matchesToSave: any[] = []; // CRITICAL FIX: Initialize here to prevent ReferenceError
 		if (matches.length > 0) {
 			try {
 				const supabase = getDatabaseClient();
@@ -281,7 +282,7 @@ async function rankAndReturnMatches(
 				// Create lookup map for job_hash -> job_id
 				const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
 
-				const matchesToSave = matches.map((m: any) => {
+				matchesToSave = matches.map((m: any) => {
 					const jobId = jobHashToId.get(String(m.job_hash));
 					if (!jobId) {
 						throw new Error(`Job ID not found for hash: ${m.job_hash}`);

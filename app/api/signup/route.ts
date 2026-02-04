@@ -12,7 +12,6 @@ import { sendVerificationEmail } from "../../../utils/email-verification";
 // Pre-filtering removed - AI handles semantic matching
 import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
 import { SignupMatchingService } from "../../../utils/services/SignupMatchingService";
-import type { UserRow } from "../../../utils/matching/types";
 
 // ✅ PREMIUM SIGNUP VALIDATION SCHEMA (Jan 30, 2026)
 // Validates all 12 fields collected from premium users
@@ -360,7 +359,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		created_at: new Date().toISOString(),
 	};
 
-	const { data: _insertedUserData, error: userError } = await supabase
+	const { data: insertedUser, error: userError } = await supabase
 		.from("users")
 		.insert([userData])
 		.select("*")
@@ -514,6 +513,15 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 	}
 
 	apiLogger.info(`User created`, { email: data.email });
+
+	// Ensure we have the complete user data with database-generated id
+	if (!insertedUser) {
+		throw new Error("Failed to retrieve inserted user data");
+	}
+
+	// The insertedUser contains all our custom fields from the public.users table
+	// TypeScript doesn't know this, so we'll use the data directly
+	const userDataWithId = insertedUser as any;
 
 	// 🔴 BUG FIX #4: Email verification race condition
 	// Premium users must verify email BEFORE getting matches
@@ -705,30 +713,30 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		//   company_size_preference - removed due to lack of job DB data
 		const userPrefs = {
 			// From form Step 1: Personal Info
-			email: userData.email,
-			user_id: userData.id, // Add user_id for proper foreign key relationships
+			email: userDataWithId.email,
+			user_id: userDataWithId.id, // Now using the database-generated id
 
 			// From form Step 2: Geographic & Career
-			target_cities: userData.target_cities,
-			career_path: userData.career_path.split(" / "), // Convert back to array for matching
+			target_cities: userDataWithId.target_cities,
+			career_path: userDataWithId.career_path.split(" / "), // Convert back to array for matching
 
 			// From form Step 3: Preferences (DB-supported + visa_status)
-			languages_spoken: userData.languages_spoken,
-			entry_level_preference: (userData.entry_level_preference || undefined) as
+			languages_spoken: userDataWithId.languages_spoken,
+			entry_level_preference: (userDataWithId.entry_level_preference || undefined) as
 				| "entry"
 				| "mid"
 				| "senior"
 				| undefined,
-			work_environment: (userData.work_environment || undefined) as
+			work_environment: (userDataWithId.work_environment || undefined) as
 				| "remote"
 				| "on-site"
 				| "hybrid"
 				| "unclear"
 				| undefined,
-			visa_status: userData.visa_status || undefined,
+			visa_status: userDataWithId.visa_status || undefined,
 
 			// Set by API (not from form)
-			subscription_tier: "premium_pending", // Fix: should be premium_pending, not premium/free
+			subscription_tier: "premium_pending" as const, // Fix: should be premium_pending, not premium/free
 		};
 
 		const matchingConfig = SignupMatchingService.getConfig("premium_pending");

@@ -4,6 +4,7 @@ import { asyncHandler } from "../../../../lib/errors";
 import { apiLogger } from "../../../../lib/api-logger";
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
 import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
+import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
 
 export const GET = asyncHandler(async (request: NextRequest) => {
 	// Set Sentry context for this request
@@ -55,7 +56,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	// Verify user exists and is premium tier
 	const { data: user } = await supabase
 		.from("users")
-		.select("id, subscription_tier, email, subscription_active")
+		.select("id, subscription_tier, email, subscription_active, email_verified, target_cities, career_path, languages_spoken, entry_level_preference, work_environment, visa_status")
 		.eq("email", userEmail)
 		.maybeSingle();
 
@@ -91,7 +92,7 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Get user's matches with job details (premium gets more comprehensive data)
-	const { data: matches, error: matchesError } = await supabase
+	let { data: matches, error: matchesError } = await supabase
 		.from("user_matches")
 		.select(`
 			job_id,
@@ -150,6 +151,97 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 			},
 			{ status: 500 },
 		);
+	}
+
+	// BACKUP FIX: Lazy matching if no matches found for verified premium users
+	if ((!matches || matches.length === 0) && user.email_verified) {
+		try {
+			apiLogger.info("No matches found for verified premium user, triggering lazy matching", {
+				email: userEmail,
+				tier: user.subscription_tier,
+				verified: user.email_verified,
+			});
+
+			// Build user preferences from database record
+			const userPrefs = {
+				email: user.email,
+				user_id: user.id,
+				target_cities: user.target_cities || [],
+				career_path: user.career_path ? user.career_path.split(" / ") : [],
+				languages_spoken: user.languages_spoken || [],
+				entry_level_preference: user.entry_level_preference,
+				work_environment: user.work_environment,
+				visa_status: user.visa_status,
+				subscription_tier: user.subscription_tier,
+			};
+
+			const config = SignupMatchingService.getConfig("premium_pending");
+			const matchingResult = await SignupMatchingService.runMatching(userPrefs, config);
+
+			apiLogger.info("Lazy premium matching completed", {
+				email: userEmail,
+				matchCount: matchingResult.matchCount,
+				method: matchingResult.method,
+			});
+
+			// Re-query matches after generation
+			const { data: newMatches, error: newMatchesError } = await supabase
+				.from("user_matches")
+				.select(`
+					job_id,
+					match_score,
+					match_reason,
+					created_at,
+					jobs:job_id (
+						id,
+						job_hash,
+						title,
+						company,
+						company_name,
+						location,
+						city,
+						country,
+						description,
+						job_url,
+						work_environment,
+						categories,
+						is_internship,
+						is_graduate,
+						posted_at,
+						experience_required,
+						salary_min,
+						salary_max,
+						visa_sponsorship,
+						career_path,
+						primary_category,
+						career_paths,
+						work_arrangement,
+						work_mode,
+						employment_type,
+						job_type,
+						contract_type,
+						source,
+						language_requirements,
+						visa_friendly
+					)
+				`)
+				.eq("user_id", user.id)
+				.order("match_score", { ascending: false })
+				.order("created_at", { ascending: false });
+
+			if (!newMatchesError && newMatches) {
+				matches = newMatches;
+				apiLogger.info("Successfully retrieved newly generated matches", {
+					email: userEmail,
+					matchCount: matches.length,
+				});
+			}
+		} catch (lazyMatchingError) {
+			apiLogger.error("Lazy premium matching failed", lazyMatchingError as Error, {
+				email: userEmail,
+			});
+			// Continue with empty matches rather than failing the entire request
+		}
 	}
 
 	// Transform the data - Supabase returns jobs as nested objects, we need to flatten them
