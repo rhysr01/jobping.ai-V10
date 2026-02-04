@@ -82,30 +82,43 @@ export class AIMatchingService {
 			apiKey.startsWith("sk-");
 
 		if (!hasValidKey) {
-			const errorMessage = "OpenAI API key not configured or invalid - AI matching unavailable, using fallback";
+			// CRITICAL FIX: Don't log to Sentry for expected behavior (fallback works)
+			// Only log if this is unexpected (e.g., in production with valid key configured)
+			const isProduction = process.env.NODE_ENV === "production";
+			const shouldLogToSentry = isProduction && apiKey.length > 0 && !apiKey.includes("placeholder") && !apiKey.includes("dummy");
 			
-			apiLogger.warn("AI_MATCHING_UNAVAILABLE", {
-				hasApiKey: !!ENV.OPENAI_API_KEY,
-				apiKeyLength: apiKey.length,
-				keyPrefix: apiKey.substring(0, 8) || 'none',
-				userEmail: user.email,
-				jobCount: jobs.length,
-			});
-			
-			Sentry.captureMessage(errorMessage, {
-				level: "warning",
-				tags: {
-					service: "ai-matching",
-					error_type: "invalid_api_key",
-					fallback_available: "true",
-				},
-				extra: {
+			if (shouldLogToSentry) {
+				// Only log if we have a key that looks valid but failed validation
+				apiLogger.warn("AI_MATCHING_UNAVAILABLE", {
 					hasApiKey: !!ENV.OPENAI_API_KEY,
 					apiKeyLength: apiKey.length,
+					keyPrefix: apiKey.substring(0, 8) || 'none',
 					userEmail: user.email,
 					jobCount: jobs.length,
-				},
-			});
+				});
+				
+				Sentry.captureMessage("OpenAI API key validation failed - unexpected", {
+					level: "warning",
+					tags: {
+						service: "ai-matching",
+						error_type: "invalid_api_key",
+						fallback_available: "true",
+					},
+					extra: {
+						hasApiKey: !!ENV.OPENAI_API_KEY,
+						apiKeyLength: apiKey.length,
+						userEmail: user.email,
+						jobCount: jobs.length,
+					},
+				});
+			} else {
+				// Expected behavior - just log to console, don't spam Sentry
+				apiLogger.info("AI_MATCHING_UNAVAILABLE - using fallback", {
+					hasApiKey: !!ENV.OPENAI_API_KEY,
+					apiKeyLength: apiKey.length,
+					fallback_available: true,
+				});
+			}
 			
 			// Return empty array instead of throwing - this allows fallback matching to proceed
 			return [];

@@ -13,6 +13,7 @@ import { getDatabaseClient } from "../../../../utils/core/database-pool";
 // import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter"; // Temporarily disabled
 
 // Input validation schema
+// CRITICAL FIX: Make schema tolerant of empty strings and edge cases
 const freeSignupSchema = z.object({
 	email: z.string().email("Invalid email address").max(255, "Email too long"),
 	full_name: z
@@ -27,7 +28,8 @@ const freeSignupSchema = z.object({
 	careerPath: z.array(z.string()).min(1, "Select at least one career path"),
 	// Allow extra fields from frontend (but ignore them for free tier)
 	entryLevelPreferences: z.array(z.string()).optional(),
-	visaStatus: z.string().optional(),
+	// CRITICAL FIX: Handle empty strings by converting to undefined
+	visaStatus: z.string().optional().transform(val => val === "" ? undefined : val),
 	terms_accepted: z.boolean().optional(),
 	age_verified: z.boolean().optional(),
 }).passthrough(); // Allow any additional fields
@@ -112,6 +114,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.join(", ");
 		const validationError = new Error(errors);
 
+		// CRITICAL FIX: Log validation errors with full context for debugging
 		apiLogger.warn("Free signup validation failed", validationError, {
 			requestId,
 			email: body.email,
@@ -121,20 +124,39 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			careerPath: body.careerPath,
 			careerPathLength: body.careerPath?.length,
 			visaStatus: body.visaStatus,
+			entryLevelPreferences: body.entryLevelPreferences,
+			terms_accepted: body.terms_accepted,
+			age_verified: body.age_verified,
+			validationErrors: validationResult.error.issues,
 			requestBody: body,
 		});
 
-		Sentry.captureMessage("Free signup validation failed", {
-			level: "warning",
-			tags: { endpoint: "signup-free", error_type: "validation" },
-			extra: {
-				requestId,
-				email: body.email,
-				errors: validationResult.error.issues,
-				cities: body.cities,
-				careerPath: body.careerPath,
-			},
+		// CRITICAL FIX: Only log to Sentry if it's a real validation issue, not expected edge cases
+		// Filter out errors from optional fields that might be empty strings
+		const criticalErrors = validationResult.error.issues.filter((issue: any) => {
+			const path = issue.path.join(".");
+			// Don't log errors for optional fields with empty values
+			if (path === "visaStatus" && (body.visaStatus === "" || body.visaStatus === null || body.visaStatus === undefined)) {
+				return false;
+			}
+			// Always log errors for required fields
+			return ["email", "full_name", "cities", "careerPath"].includes(path);
 		});
+
+		if (criticalErrors.length > 0) {
+			Sentry.captureMessage("Free signup validation failed", {
+				level: "warning",
+				tags: { endpoint: "signup-free", error_type: "validation" },
+				extra: {
+					requestId,
+					email: body.email,
+					errors: criticalErrors,
+					allErrors: validationResult.error.issues,
+					cities: body.cities,
+					careerPath: body.careerPath,
+				},
+			});
+		}
 
 		return NextResponse.json(
 			{

@@ -5,11 +5,11 @@
 set -e  # Exit on any error
 
 # Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+BLUE='\\033[0;34m'
+NC='\\033[0m' # No Color
 
 # Configuration
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -248,15 +248,15 @@ generate_report() {
 
             console.log('📊 Daily Scraping Report');
             console.log('========================');
-            console.log(\`📅 Date: \${new Date().toLocaleDateString()}\`);
-            console.log(\`📈 Jobs added today: \${todayJobs}\`);
-            console.log(\`📊 Total jobs in database: \${totalJobs}\`);
+            console.log(\`📅 Date: ${new Date().toLocaleDateString()}\`);
+            console.log(\`📈 Jobs added today: ${todayJobs}\`);
+            console.log(\`📊 Total jobs in database: ${totalJobs}\`);
             console.log('');
             console.log('📋 Jobs by source today:');
             Object.entries(sourceCounts)
                 .sort(([,a], [,b]) => b - a)
                 .forEach(([source, count]) => {
-                    console.log(\`  • \${source}: \${count} jobs\`);
+                    console.log(\`  • ${source}: ${count} jobs\`);
                 });
 
         } catch (error) {
@@ -269,6 +269,18 @@ generate_report() {
     " 2>&1 | tee -a "$LOG_FILE"
 }
 
+# Trigger embedding refresh
+trigger_embedding_refresh() {
+    log_info "\\n🧠 Triggering automated embedding refresh..."
+    node "$PROJECT_DIR/scripts/trigger-embedding-api.cjs" 2>&1 | tee -a "$LOG_FILE"
+    if [ $? -ne 0 ]; then
+        log_error "❌ Embedding refresh trigger failed!"
+        return 1
+    fi
+    log_success "✅ Embedding refresh trigger successful."
+}
+
+
 # Main execution
 main() {
     echo ""
@@ -279,40 +291,10 @@ main() {
     preflight_checks
     run_scraping
     generate_report
+    trigger_embedding_refresh
 
     log_success "🎉 Daily scraping session completed!"
     log_info "Log saved to: $LOG_FILE"
-
-    log_info "\n🧠 Triggering automated embedding refresh..."
-    node -e "
-    require('dotenv').config({ path: '.env.local' });
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const execAsync = promisify(exec);
-
-    const targetUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api/process-embedding-queue`
-        : `http://localhost:${process.env.PORT || 3000}/api/process-embedding-queue`;
-
-    if (!process.env.CRON_SECRET) {
-        console.error('❌ CRITICAL: CRON_SECRET is not set. Cannot securely trigger embedding queue.');
-        process.exit(1);
-    }
-
-    console.log(`Calling embedding API endpoint: ${targetUrl}`);
-    execAsync(`curl -s -X POST -H \"Content-Type: application/json\" -H \"Authorization: Bearer ${process.env.CRON_SECRET}\" \"${targetUrl}\"`)
-        .then(({ stdout, stderr }) => {
-            if (stdout) console.log(stdout);
-            if (stderr) console.error(stderr);
-            console.log('✅ Embedding refresh trigger successful.');
-            process.exit(0);
-        })
-        .catch(error => {
-            console.error('❌ Embedding refresh trigger failed:', error.message);
-            process.exit(1);
-        });
-    " 2>&1 | tee -a "$LOG_FILE"
-
 }
 
 # Run main function
