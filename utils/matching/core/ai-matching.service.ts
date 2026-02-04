@@ -72,18 +72,10 @@ export class AIMatchingService {
 			},
 		});
 
-		// Check if we have a valid API key (client always exists now)
-		// OpenAI keys start with 'sk-' (covers both old 'sk-' and new 'sk-proj-' formats)
-		const hasValidKey = ENV.OPENAI_API_KEY && ENV.OPENAI_API_KEY.startsWith('sk-');
-		
-		console.log("🔍 AI Matching Service key validation:", {
-			hasENVKey: !!ENV.OPENAI_API_KEY,
-			keyLength: ENV.OPENAI_API_KEY?.length || 0,
-			keyPrefix: ENV.OPENAI_API_KEY?.substring(0, 10) || 'none',
-			startsWithSk: ENV.OPENAI_API_KEY?.startsWith('sk-') || false,
-			hasValidKey,
-		});
-		
+		// Check if we have a valid API key (client always exists now).
+		// A valid key should exist and have a reasonable length (e.g., > 10 characters).
+		const hasValidKey = !!ENV.OPENAI_API_KEY && ENV.OPENAI_API_KEY.length > 10;
+
 		if (!hasValidKey) {
 			const errorMessage = "OpenAI API key not configured or invalid - AI matching unavailable";
 			
