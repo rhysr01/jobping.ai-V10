@@ -473,14 +473,19 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// REFACTORED: Use consolidated matching service
-	console.log("[FREE SIGNUP] Starting matching", {
+	console.log("[FREE SIGNUP] ✅ Validation passed, starting matching", {
 		requestId,
 		normalizedEmail,
+		userData: {
+			id: userData.id,
+			email: userData.email,
+			subscription_tier: userData.subscription_tier,
+		},
 		userPrefs: {
 			email: userPrefs.email,
 			target_cities: userPrefs.target_cities,
 			career_path: userPrefs.career_path,
-			// FREE form does NOT collect: visa_status, entry_level, skills, etc
+			user_id: userPrefs.user_id,
 		},
 	});
 
@@ -492,19 +497,39 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		matchingConfig,
 	});
 	
-	const matchingResult = await SignupMatchingService.runMatching(
-		userPrefs,
-		matchingConfig,
-		requestId,
-		// No pre-filtered jobs - let SignupMatchingService handle everything
-	);
-	
-	console.log("[FREE SIGNUP] SignupMatchingService.runMatching completed", {
-		requestId,
-		matchingResult,
-		hasError: !!matchingResult.error,
-		matchCount: matchingResult.matchCount,
-	});
+	let matchingResult;
+	try {
+		matchingResult = await SignupMatchingService.runMatching(
+			userPrefs,
+			matchingConfig,
+			requestId,
+			// No pre-filtered jobs - let SignupMatchingService handle everything
+		);
+		
+		console.log("[FREE SIGNUP] ✅ SignupMatchingService.runMatching completed successfully", {
+			requestId,
+			matchingResult,
+			hasError: !!matchingResult.error,
+			matchCount: matchingResult.matchCount,
+		});
+	} catch (matchingError) {
+		console.error("[FREE SIGNUP] ❌ SignupMatchingService.runMatching failed", {
+			requestId,
+			error: matchingError,
+			errorMessage: matchingError instanceof Error ? matchingError.message : String(matchingError),
+			errorStack: matchingError instanceof Error ? matchingError.stack : undefined,
+		});
+		
+		// Create a failed result to continue processing
+		matchingResult = {
+			success: false,
+			matchCount: 0,
+			matches: [],
+			processingTime: 0,
+			method: "error",
+			error: matchingError instanceof Error ? matchingError.message : String(matchingError),
+		};
+	}
 
 	const matchesCount = matchingResult.matchCount;
 	console.log("[FREE SIGNUP] Matching complete", {
