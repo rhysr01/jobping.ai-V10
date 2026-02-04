@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 			.is("embedding", null)
 			.eq("is_active", true)
 			.eq("status", "active")
-			.limit(50);
+			.limit(100);
 
 		if (fetchError) {
 			console.error("[Embedding Queue] Fetch error:", fetchError);

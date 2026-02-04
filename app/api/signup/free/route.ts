@@ -51,12 +51,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// Rate limiting - prevent abuse (more lenient for legitimate users)
+	// TEMPORARILY INCREASED FOR DEBUGGING - Will revert after testing
 	const rateLimitResult = await getProductionRateLimiter().middleware(
 		request,
 		"signup-free",
 		{
 			windowMs: 60 * 60 * 1000, // 1 hour
-			maxRequests: 10, // 10 signup attempts per hour per IP (allows testing different preferences)
+			maxRequests: 100, // TEMP: Increased from 10 to 100 for debugging
 		},
 	);
 
