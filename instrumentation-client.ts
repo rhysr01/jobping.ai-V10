@@ -70,19 +70,6 @@ Sentry.init({
 		
 		return event;
 	},
-	
-	// Add afterSend hook to verify events are actually sent
-	afterSend(event, sendResponse) {
-		if (sendResponse) {
-			console.log("[Sentry Client] Event sent successfully:", {
-				eventId: event.event_id,
-				statusCode: sendResponse.statusCode,
-			});
-		} else {
-			console.warn("[Sentry Client] Event send response is null");
-		}
-		return event;
-	},
 });
 
 if (isEnabled && typeof window !== "undefined") {
@@ -92,10 +79,6 @@ if (isEnabled && typeof window !== "undefined") {
 	console.log(`[Sentry Client] DSN: ${dsn.substring(0, 30)}...`);
 } else if (!isEnabled) {
 	console.warn("[Sentry Client] ❌ DSN not found - Sentry is disabled");
-} {
-	console.log(
-		`[Sentry Client] Initialized for environment: ${getEnvironment()}`,
-	);
 }
 
 // Export the required hooks for Sentry navigation instrumentation

@@ -55,20 +55,6 @@ Sentry.init({
 		
 		return event;
 	},
-	
-	// Add afterSend hook to verify events are actually sent
-	afterSend(event, sendResponse) {
-		if (sendResponse) {
-			console.log("[Sentry Server] Event sent successfully:", {
-				eventId: event.event_id,
-				statusCode: sendResponse.statusCode,
-				status: sendResponse.status,
-			});
-		} else {
-			console.warn("[Sentry Server] Event send response is null - event may not have been sent");
-		}
-		return event;
-	},
 });
 
 if (isEnabled) {
