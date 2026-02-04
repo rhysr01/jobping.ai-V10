@@ -295,6 +295,19 @@ if (isBuildTime) {
 
 		// On Vercel, handle missing environment variables with better error messages
 		if (isVercel) {
+			// Log diagnostic information
+			const vercelEnv = process.env.VERCEL_ENV || "unknown";
+			const vercelUrl = process.env.VERCEL_URL || "unknown";
+			console.error("");
+			console.error("🔍 Diagnostic Information:");
+			console.error(`   VERCEL_ENV: ${vercelEnv}`);
+			console.error(`   VERCEL_URL: ${vercelUrl}`);
+			console.error(`   NODE_ENV: ${process.env.NODE_ENV || "unknown"}`);
+			console.error(
+				`   Total env vars available: ${Object.keys(process.env).length}`,
+			);
+			console.error("");
+
 			// All required (non-optional) environment variables are critical
 			const criticalPaths = [
 				"NEXT_PUBLIC_SUPABASE_URL",
@@ -321,11 +334,23 @@ if (isBuildTime) {
 					"🔧 To fix this, add these variables in Vercel Dashboard:",
 				);
 				console.error("   1. Go to: Vercel Dashboard → Your Project → Settings → Environment Variables");
-				console.error("   2. Add each missing variable for Production, Preview, and Development environments");
-				console.error("   3. Redeploy your project");
+				console.error(
+					`   2. ⚠️  IMPORTANT: Make sure variables are set for "${vercelEnv}" environment`,
+				);
+				console.error("      - If VERCEL_ENV=preview, set for Preview");
+				console.error("      - If VERCEL_ENV=production, set for Production");
+				console.error("      - If VERCEL_ENV=development, set for Development");
+				console.error("   3. Add each missing variable for ALL environments (Production, Preview, Development)");
+				console.error("   4. ⚠️  CRITICAL: Redeploy your project after adding variables");
+				console.error("      - Variables only apply to NEW deployments");
+				console.error("      - Go to Deployments tab → Click 'Redeploy'");
 				console.error("");
 				console.error(
 					"💡 Tip: Copy values from your .env.local file (but never commit .env.local to git)",
+				);
+				console.error("");
+				console.error(
+					"🔍 Debug: Visit /api/debug/env-check to see which variables Vercel can see",
 				);
 				throw parseResult.error;
 			} else {
