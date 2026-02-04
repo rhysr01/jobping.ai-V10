@@ -6,7 +6,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
-import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
+import { aiMatchingService } from "../matching/core/ai-matching.service";
 import { jobMatchesUserCategories } from "../matching/categoryMapper";
 import { getDatabaseClient } from "../core/database-pool";
 
@@ -164,7 +164,7 @@ export async function runPremiumMatching(
 					jobsInFallback: fallbackFiltered.length,
 				});
 
-				return await rankAndReturnMatches(
+				return await rankAndReturnMatchesDirect(
 					userPrefs,
 					fallbackFiltered,
 					"premium_fallback",
@@ -182,12 +182,14 @@ export async function runPremiumMatching(
 		}
 
 		// STAGE 2: Deep AI ranking (premium gets thorough analysis)
+		// CRITICAL FIX: Don't use SimplifiedMatchingEngine which does ANOTHER prefilter
+		// Jobs are already filtered by city + careerPath + workEnv + visa, so use AI matching directly
 		// For premium tier, we use DEEP AI because:
 		// 1. Users have provided comprehensive data (17+ fields)
 		// 2. Premium users expect high-quality matches
 		// 3. 15 matches allows for sophisticated ranking
 		// 4. We can afford heavier processing for paying users
-		return await rankAndReturnMatches(
+		return await rankAndReturnMatchesDirect(
 			userPrefs,
 			preFiltered,
 			"premium_ai_ranked",
@@ -227,9 +229,11 @@ export async function runPremiumMatching(
 }
 
 /**
- * Rank jobs using deep AI analysis and return top 15 matches
+ * Rank jobs using AI DIRECTLY - bypasses prefilter since jobs are already filtered
+ * CRITICAL FIX: Jobs are already filtered by city + careerPath + workEnv + visa,
+ * so don't prefilter again via SimplifiedMatchingEngine
  */
-async function rankAndReturnMatches(
+async function rankAndReturnMatchesDirect(
 	userPrefs: PremiumUserPreferences,
 	jobs: JobWithMetadata[],
 	method: string,
@@ -243,17 +247,18 @@ async function rankAndReturnMatches(
 			language_requirements: job.language_requirements || [],
 		}));
 
-		// Use simplified matching engine with premium configuration
-		const matchResult =
-			await simplifiedMatchingEngine.findMatchesForPremiumUser(
-				userPrefs as any,
-				normalizedJobs as any,
-			);
+		// CRITICAL FIX: Use AI matching DIRECTLY without prefilter
+		// Jobs are already filtered by city + careerPath + workEnv + visa in runPremiumMatching
+		// Don't use SimplifiedMatchingEngine which does ANOTHER prefilter
+		const aiResults = await aiMatchingService.findMatches(
+			userPrefs as any,
+			normalizedJobs.slice(0, 30).map((j) => j as any), // Premium gets more jobs for AI (30 vs 20 for free)
+		);
 
-		const matches = (matchResult?.matches || [])
-			.slice(0, maxMatches) // PREMIUM: Use configurable match count
+		// Convert AI results to match format
+		const matches = (aiResults || [])
+			.slice(0, maxMatches)
 			.map((m: any) => {
-				// Handle both formats: m.job (nested) and m directly (flat)
 				const jobData = m.job || m;
 				if (!jobData) {
 					apiLogger.warn("[PREMIUM] Match missing job data", {
@@ -264,19 +269,50 @@ async function rankAndReturnMatches(
 				}
 				return {
 					...jobData,
-					match_score: m.match_score || 0,
-					match_reason: m.match_reason || "Premium AI Match",
+					match_score: m.unifiedScore?.overallScore || m.match_score || 0.8,
+					match_reason: m.matchReason || m.match_reason || "Premium AI Match",
 				};
 			})
-			.filter(Boolean); // Remove null entries
-
-		apiLogger.info("[PREMIUM] Deep AI ranking complete", {
+			.filter(Boolean);
+		
+		apiLogger.info("[PREMIUM] Direct AI ranking complete", {
 			email: userPrefs.email,
 			inputJobs: jobs.length,
+			aiResults: aiResults.length,
 			outputMatches: matches.length,
 			method: method,
 			duration: Date.now() - startTime,
 		});
+
+		// If no matches found, try fallback with filtered jobs
+		if (matches.length === 0 && jobs.length > 0) {
+			apiLogger.warn(
+				"[PREMIUM] No matches from direct AI, using filtered job list as fallback",
+				{
+					email: userPrefs.email,
+					filteredJobs: jobs.length,
+				},
+			);
+
+			// Take top filtered jobs as fallback (already matched all premium criteria)
+			const fallbackMatches = jobs.slice(0, maxMatches).map((job: any) => ({
+				...job,
+				match_score: 0.7, // Higher score since they passed all premium filters
+				match_reason: "Matched your premium preferences (city, career, work environment, visa)",
+			}));
+
+			apiLogger.info("[PREMIUM] Using filtered fallback job list", {
+				email: userPrefs.email,
+				fallbackMatches: fallbackMatches.length,
+			});
+
+			return {
+				matches: fallbackMatches,
+				matchCount: fallbackMatches.length,
+				method: "premium_fallback_filtered",
+				duration: Date.now() - startTime,
+			};
+		}
 
 		// Save premium matches to database
 		const matchesToSave = matches.map((m: any) => {
