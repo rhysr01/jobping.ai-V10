@@ -68,8 +68,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			url: request.url,
 			method: request.method,
 			timestamp: new Date().toISOString(),
+			sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
 		},
 	});
+	// Note: Don't flush info messages immediately - only flush errors
 
 	// CRITICAL: Wrap entire function in try-catch to catch ANY silent exceptions
 	try {

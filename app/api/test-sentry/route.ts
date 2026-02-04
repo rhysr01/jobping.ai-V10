@@ -35,11 +35,16 @@ export async function GET(request: Request) {
 				},
 			});
 
+			// CRITICAL: Flush Sentry to ensure error is sent
+			await Sentry.flush(2000);
+
 			return NextResponse.json({
 				success: true,
 				message: "Test exception sent to Sentry",
 				type: "exception",
 				timestamp: new Date().toISOString(),
+				sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+				environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
 			});
 		}
 
@@ -58,10 +63,28 @@ export async function GET(request: Request) {
 				},
 			});
 
+			// CRITICAL: Flush Sentry to ensure message is sent
+			await Sentry.flush(2000);
+
 			return NextResponse.json({
 				success: true,
 				message: "Test message sent to Sentry",
 				type: "message",
+				timestamp: new Date().toISOString(),
+				sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+				environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+			});
+		}
+
+		if (type === "config") {
+			// Return Sentry configuration (without sensitive data)
+			return NextResponse.json({
+				sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+				hasServerDsn: !!process.env.SENTRY_DSN,
+				hasClientDsn: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+				environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+				nodeEnv: process.env.NODE_ENV,
+				sentryDebug: process.env.SENTRY_DEBUG === "true",
 				timestamp: new Date().toISOString(),
 			});
 		}
