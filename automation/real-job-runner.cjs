@@ -82,22 +82,34 @@ class RealJobRunner {
 			return;
 		}
 
-		// Use TypeScript version with tsx for proper module resolution
+		const targetUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+			? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/api/process-embedding-queue`
+			: `http://localhost:${process.env.PORT || 3000}/api/process-embedding-queue`;
+
+		// Ensure CRON_SECRET is set for authorization
+		if (!process.env.CRON_SECRET) {
+			console.error(
+				"❌ CRITICAL: CRON_SECRET is not set. Cannot securely trigger embedding queue.",
+			);
+			return;
+		}
 
 		console.log(
-			`\n🧠 Starting embedding refresh (${trigger}) using "${command}" at ${new Date().toISOString()}`,
+			`\n🧠 Starting embedding refresh (${trigger}) by calling API endpoint: ${targetUrl} at ${new Date().toISOString()}`,
 		);
 		if (processFullQueue) {
-			console.log("📋 Will process entire embedding queue until empty");
+			console.log("📋 API endpoint will process the embedding queue until empty");
 		}
 		this.embeddingRefreshRunning = true;
 
 		try {
-			const { stdout, stderr } = await execAsync(command, {
-				cwd: process.cwd(),
-				env: process.env,
-				timeout: 1800000, // 30 minutes timeout for full queue processing
-			});
+			const { stdout, stderr } = await execAsync(
+				`curl -s -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${process.env.CRON_SECRET}" "${targetUrl}"`, {
+					cwd: process.cwd(),
+					env: process.env,
+					timeout: 1800000, // 30 minutes timeout for API call
+				}
+			);
 
 			if (stdout) process.stdout.write(stdout);
 			if (stderr) process.stderr.write(stderr);
@@ -110,7 +122,7 @@ class RealJobRunner {
 			console.error("❌ Embedding refresh failed:", error);
 			if (error.code === "ETIMEDOUT") {
 				console.error(
-					"⚠️  Embedding refresh timed out after 30 minutes - queue may be very large",
+					"⚠️  Embedding refresh timed out after 30 minutes - API endpoint may be slow",
 				);
 			}
 		} finally {

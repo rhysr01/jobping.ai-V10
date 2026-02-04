@@ -483,12 +483,26 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	const matchingConfig = SignupMatchingService.getConfig("free");
+	
+	console.log("[FREE SIGNUP] About to call SignupMatchingService.runMatching", {
+		requestId,
+		userPrefs,
+		matchingConfig,
+	});
+	
 	const matchingResult = await SignupMatchingService.runMatching(
 		userPrefs,
 		matchingConfig,
 		requestId,
 		// No pre-filtered jobs - let SignupMatchingService handle everything
 	);
+	
+	console.log("[FREE SIGNUP] SignupMatchingService.runMatching completed", {
+		requestId,
+		matchingResult,
+		hasError: !!matchingResult.error,
+		matchCount: matchingResult.matchCount,
+	});
 
 	const matchesCount = matchingResult.matchCount;
 	console.log("[FREE SIGNUP] Matching complete", {

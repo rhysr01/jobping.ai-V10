@@ -424,6 +424,14 @@ export class AIMatchingService {
 	}
 }
 
+// Debug OpenAI API key issue
+console.log("🔍 AI Matching Service Debug:", {
+	hasENV_OPENAI_API_KEY: !!ENV.OPENAI_API_KEY,
+	keyLength: ENV.OPENAI_API_KEY?.length || 0,
+	keyPrefix: ENV.OPENAI_API_KEY?.substring(0, 8) || 'undefined',
+	NODE_ENV: process.env.NODE_ENV,
+});
+
 // Export singleton with proper environment initialization
 // Pass undefined if no API key is configured - the service will handle this gracefully
 export const aiMatchingService = new AIMatchingService(ENV.OPENAI_API_KEY || undefined);
