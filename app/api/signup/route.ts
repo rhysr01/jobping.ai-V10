@@ -12,6 +12,7 @@ import { sendVerificationEmail } from "../../../utils/email-verification";
 // Pre-filtering removed - AI handles semantic matching
 import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
 import { SignupMatchingService } from "../../../utils/services/SignupMatchingService";
+import type { UserRow } from "../../../utils/matching/types";
 
 // ✅ PREMIUM SIGNUP VALIDATION SCHEMA (Jan 30, 2026)
 // Validates all 12 fields collected from premium users
