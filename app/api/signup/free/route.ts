@@ -688,278 +688,29 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		isArray: Array.isArray(userData.target_cities),
 	});
 
-	// Fetch jobs (same pattern as existing signup)
-
-	// ENTERPRISE-LEVEL FIX: Use country-level matching instead of exact city matching
-	// This is more forgiving and lets pre-filtering handle exact city matching
-	// Strategy: Fetch jobs from target countries, then let pre-filtering match exact cities
-	const targetCountries = new Set<string>();
-	const targetCountryVariations = new Set<string>(); // All variations (codes, names, etc.)
-
-	if (targetCities.length > 0) {
-		targetCities.forEach((city) => {
-			const country = getCountryFromCity(city);
-			if (country) {
-				targetCountries.add(country);
-				// Get all variations for this country (IE, Ireland, DUBLIN, etc.)
-				const variations = getCountryVariations(country);
-				variations.forEach((v) => {
-					targetCountryVariations.add(v);
-				});
-			}
-		});
-	}
-
-	apiLogger.info("Free signup - job fetching strategy", {
-		requestId,
-		email: normalizedEmail,
-		targetCities: targetCities,
-		targetCountries: Array.from(targetCountries),
-		targetCountryVariations: Array.from(targetCountryVariations),
-		strategy: targetCountries.size > 0 ? "country-level" : "no-location-filter",
-	});
-
-	// SIMPLIFIED: Let PrefilterService handle all smart filtering
-	// Only do basic fetching - active, status, and freshness
-	// BUT: ADD COUNTRY FILTER at DB level to avoid fetching US jobs
-	const sixtyDaysAgo = new Date();
-	sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-	let query = supabase
-		.from("jobs")
-		.select("*")
-		.eq("is_active", true)
-		.eq("status", "active")
-		.is("filtered_reason", null)
-		.gte("created_at", sixtyDaysAgo.toISOString()) // Only recent jobs
-		.order("id", { ascending: false }); // Pseudo-random for variety
-
-	// CRITICAL: Filter for ALL three early-career categories for free users
-	// Free users should see: internships OR graduate schemes OR entry-level roles
-	// They don't have the ability to choose categories like premium users do
-	query = query.or(
-		"is_internship.eq.true,is_graduate.eq.true,is_early_career.eq.true",
-	);
-
-	// 🔴 CRITICAL: Add city-level filtering at DB query level
-	// This prevents fetching irrelevant jobs and improves performance
-	if (targetCities.length > 0) {
-		// Create city variations (handle case differences)
-		const cityVariations = new Set<string>();
-		targetCities.forEach(city => {
-			cityVariations.add(city); // Original case
-			cityVariations.add(city.toLowerCase()); // Lowercase
-			cityVariations.add(city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()); // Capitalized
-		});
-		
-		const citiesArray = Array.from(cityVariations);
-		query = query.in("city", citiesArray);
-		
-		apiLogger.info("Free signup - city filter applied at DB level", {
-			requestId,
-			targetCities,
-			citiesArray,
-		});
-
-		// Capture in Sentry for monitoring city mapping effectiveness
-		Sentry.captureMessage("Free signup - city filter applied", {
-			level: "info",
-			tags: {
-				service: "signup-free",
-				operation: "city_filtering",
-			},
-			extra: {
-				requestId,
-				targetCities,
-				citiesArray,
-			},
-		});
-	}
-	// CRITICAL: Add limit to prevent querying massive job pools
-	// Free tier only needs enough jobs for AI to pick top 5
-	// PrefilterService + AI will filter further
-	query = query.limit(1500);
-
-	apiLogger.info("Free signup - job query configured", {
-		requestId,
-		email: normalizedEmail,
-		strategy: "country-filter-at-db-level",
-		note: "PrefilterService handles city/career filtering after DB fetch",
-	});
-
-	let { data: allJobs, error: jobsError } = await query;
-	console.log("[FREE SIGNUP] Initial job fetch result", {
-		requestId,
-		normalizedEmail,
-		jobCount: allJobs?.length || 0,
-		hasError: !!jobsError,
-		error: jobsError
-			? { code: jobsError.code, message: jobsError.message }
-			: null,
-	});
-
-	// ENTERPRISE-LEVEL FIX: Improved fallback logic
-	// Since we already use country-level matching, fallback is simpler
-	if (
-		(jobsError || !allJobs || allJobs.length === 0) &&
-		targetCountries.size > 0
-	) {
-		apiLogger.warn(
-			"Free signup - no jobs found for target countries, trying broader fallback",
-			{
-				requestId,
-				email: normalizedEmail,
-				countries: Array.from(targetCountries),
-				cities: targetCities,
-			},
-		);
-
-		// Fallback: Remove country filter, keep early-career filter only
-		// Don't filter by career path - let pre-filtering handle it
-		let fallbackQuery = supabase
-			.from("jobs")
-			.select("*")
-			.eq("is_active", true)
-			.eq("status", "active")
-			.is("filtered_reason", null);
-
-		// Also filter for early-career roles in fallback
-		fallbackQuery = fallbackQuery.or(
-			"is_internship.eq.true,is_graduate.eq.true,categories.cs.{early-career}",
-		);
-
-		// Use same variety strategy for fallback
-		const sixtyDaysAgoFallback = new Date();
-		sixtyDaysAgoFallback.setDate(sixtyDaysAgoFallback.getDate() - 60);
-
-		fallbackQuery = fallbackQuery
-			.gte("created_at", sixtyDaysAgoFallback.toISOString())
-			.order("id", { ascending: false })
-			.limit(2000);
-
-		const fallbackResult = await fallbackQuery;
-
-		if (
-			!fallbackResult.error &&
-			fallbackResult.data &&
-			fallbackResult.data.length > 0
-		) {
-			allJobs = fallbackResult.data;
-			jobsError = null;
-			apiLogger.info(
-				"Free signup - found jobs using broader fallback (no country filter)",
-				{
-					requestId,
-					email: normalizedEmail,
-					jobCount: allJobs.length,
-					note: "Pre-filtering will handle city matching",
-				},
-			);
-		}
-	}
-
-	// Final check: if still no jobs, return error
-	if (jobsError || !allJobs || allJobs.length === 0) {
-		const reason =
-			targetCities.length === 0
-				? "No cities selected"
-				: jobsError
-					? `Database error: ${jobsError.message}`
-					: "No jobs match your criteria after all fallback attempts";
-
-		apiLogger.warn("Free signup - no jobs found after all fallbacks", {
-			requestId,
-			email: normalizedEmail,
-			cities: targetCities,
-			careerPath: userData.career_path,
-			jobsError: jobsError?.message,
-			jobsCount: allJobs?.length || 0,
-			reason,
-		});
-
-		Sentry.captureMessage("Free signup - no jobs found after all fallbacks", {
-			level: "warning",
-			tags: { endpoint: "signup-free", error_type: "no_jobs_found" },
-			extra: {
-				requestId,
-				email: normalizedEmail,
-				cities: targetCities,
-				careerPath: userData.career_path,
-				reason,
-				jobsError: jobsError?.message,
-			},
-		});
-
-		return NextResponse.json(
-			{
-				error: "no_jobs_found",
-				message: `No jobs found. ${reason}. Try different cities or career paths.`,
-				details: { cities: targetCities, careerPath: userData.career_path },
-				requestId,
-			},
-			{ status: 404 },
-		);
-	}
-
-	// NEW ARCHITECTURE: "Funnel of Truth"
-	// Stage 1: SQL Filter (already done - is_active, city, early-career)
-	// Stage 2-4: Hard Gates + Pre-Ranking + AI (handled in consolidatedMatchingV2)
-	// Stage 5: Diversity Pass (in distributeJobsWithDiversity)
-	apiLogger.info("Free signup - using new matching architecture", {
-		requestId,
-		email: normalizedEmail,
-		totalJobsFetched: allJobs?.length || 0,
-		targetCities: targetCities,
-		note: "Matching engine handles hard gates, pre-ranking, and AI matching",
-	});
-
 	// REFACTORED: Only use fields that FREE tier form actually collects
 	// Form fields: email, fullName, cities, careerPath (that's it!)
 	// NO visa, NO entry_level, NO skills, NO industries (premium-only)
 	const userPrefs = {
 		email: userData.email,
+		user_id: userData.id, // Add user_id for proper foreign key relationships
 		target_cities: targetCities,
 		career_path: userData.career_path ? [userData.career_path] : [],
 		subscription_tier: "free" as const,
 	};
 
-	// Pass all jobs to matching engine - it handles hard gates and pre-ranking
-	const jobsForMatching = allJobs || [];
-
-	if (!jobsForMatching || jobsForMatching.length === 0) {
-		apiLogger.warn("Free signup - no jobs available for matching", {
-			requestId,
-			email: normalizedEmail,
-			targetCities,
-			careerPath: userData.career_path,
-		});
-		Sentry.captureMessage("Free signup - no jobs available for matching", {
-			level: "warning",
-			tags: { endpoint: "signup-free", error_type: "no_jobs_for_matching" },
-			extra: {
-				requestId,
-				email: normalizedEmail,
-				targetCities,
-				careerPath: userData.career_path,
-			},
-		});
-		return NextResponse.json(
-			{
-				error: "no_jobs_for_matching",
-				message:
-					"No jobs available for matching. Try different cities or career paths.",
-				details: { cities: targetCities, careerPath: userData.career_path },
-				requestId,
-			},
-			{ status: 404 },
-		);
-	}
+	apiLogger.info("Free signup - delegating to SignupMatchingService", {
+		requestId,
+		email: normalizedEmail,
+		targetCities: targetCities,
+		careerPath: userData.career_path,
+		note: "SignupMatchingService handles all job fetching and filtering",
+	});
 
 	// REFACTORED: Use consolidated matching service
 	console.log("[FREE SIGNUP] Starting matching", {
 		requestId,
 		normalizedEmail,
-		jobsForMatching: jobsForMatching.length,
 		userPrefs: {
 			email: userPrefs.email,
 			target_cities: userPrefs.target_cities,
@@ -973,7 +724,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		userPrefs,
 		matchingConfig,
 		requestId,
-		jobsForMatching, // Pass the city-filtered jobs we already fetched
+		// No pre-filtered jobs - let SignupMatchingService handle everything
 	);
 
 	const matchesCount = matchingResult.matchCount;
@@ -1031,7 +782,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		apiLogger.info("Free signup - no matches found for user criteria", {
 			requestId,
 			email: normalizedEmail,
-			jobsAvailable: jobsForMatching.length,
 			method: matchingResult.method,
 			reason: matchingReason,
 			userCriteria: {
@@ -1046,7 +796,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			extra: {
 				requestId,
 				email: normalizedEmail,
-				jobsAvailable: jobsForMatching.length,
 				method: matchingResult.method,
 				reason: matchingReason,
 				cities: targetCities,

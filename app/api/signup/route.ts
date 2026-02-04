@@ -705,6 +705,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 		const userPrefs = {
 			// From form Step 1: Personal Info
 			email: userData.email,
+			user_id: userData.id, // Add user_id for proper foreign key relationships
 
 			// From form Step 2: Geographic & Career
 			target_cities: userData.target_cities,
@@ -726,9 +727,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			visa_status: userData.visa_status || undefined,
 
 			// Set by API (not from form)
-			subscription_tier: (finalSubscriptionTier === "premium"
-				? "premium"
-				: "free") as "free" | "premium",
+			subscription_tier: "premium_pending", // Fix: should be premium_pending, not premium/free
 		};
 
 		const matchingConfig = SignupMatchingService.getConfig("premium_pending");

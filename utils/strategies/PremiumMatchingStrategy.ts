@@ -8,6 +8,7 @@ import { apiLogger } from "../../lib/api-logger";
 import type { JobWithMetadata } from "../../lib/types/job";
 import { simplifiedMatchingEngine } from "../matching/core/matching-engine";
 import { jobMatchesUserCategories } from "../matching/categoryMapper";
+import { getDatabaseClient } from "../core/database-pool";
 
 export interface PremiumUserPreferences {
 	// From form Step 1: Personal Info
@@ -278,23 +279,70 @@ async function rankAndReturnMatches(
 		});
 
 		// Save premium matches to database
-		const matchesToSave = matches.map((m: any) => ({
-			user_id: userPrefs.user_id, // ✅ FIXED #P6: Use user_id instead of user_email for proper FK
-			job_id: m.id, // Link to jobs table via proper FK
-			match_score: Number((m.match_score || 0) / 100),
-			match_reason: String(m.match_reason || "Premium AI Match"),
-			created_at: new Date().toISOString(),
-			// Removed match_algorithm - column doesn't exist in user_matches table
-		}));
+		const matchesToSave = matches.map((m: any) => {
+			// Fix match score normalization - check range before dividing
+			const rawScore = m.match_score || 0;
+			const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore;
 
-		if (matchesToSave.length > 0) {
-			// Note: This uses user_matches table via views/aliases in the actual implementation
-			// For now, we log the matches to be saved (actual storage is handled by matching engine)
-			apiLogger.info("[PREMIUM] Premium matches ready for storage", {
+			return {
+				user_id: userPrefs.user_id, // ✅ FIXED #P6: Use user_id instead of user_email for proper FK
+				job_id: m.id, // Link to jobs table via proper FK
+				match_score: Number(normalizedScore),
+				match_reason: String(m.match_reason || "Premium AI Match"),
+				created_at: new Date().toISOString(),
+				// Removed match_algorithm - column doesn't exist in user_matches table
+			};
+		});
+
+	if (matchesToSave.length > 0) {
+		try {
+			const supabase = getDatabaseClient();
+			const { error } = await supabase.from("user_matches").insert(matchesToSave);
+
+			if (error) {
+				apiLogger.error(
+					"[PREMIUM] Failed to save matches to database",
+					error as Error,
+					{
+						email: userPrefs.email,
+						matchCount: matchesToSave.length,
+						errorCode: error.code,
+					},
+				);
+
+				// CRITICAL FIX: Propagate error instead of silently continuing
+				throw new Error(`Failed to save premium matches: ${error.message}`);
+			} else {
+				apiLogger.info("[PREMIUM] Successfully saved matches to database", {
+					email: userPrefs.email,
+					count: matchesToSave.length,
+				});
+			}
+		} catch (err) {
+			apiLogger.error("[PREMIUM] Error saving matches", err as Error, {
 				email: userPrefs.email,
-				count: matchesToSave.length,
+				matchCount: matchesToSave.length,
 			});
+
+			// Capture in Sentry
+			Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+				tags: {
+					service: "PremiumMatchingStrategy",
+					method: "saveMatches",
+					tier: "premium",
+				},
+				extra: {
+					email: userPrefs.email,
+					matchCount: matchesToSave.length,
+					operation: "database_save",
+				},
+				user: { email: userPrefs.email },
+				level: "error",
+			});
+
+			throw err;
 		}
+	}
 
 		return {
 			matches,

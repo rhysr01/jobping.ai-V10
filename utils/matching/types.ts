@@ -56,6 +56,7 @@ export type NormalizedUserProfile = NormalizedUser;
 
 export interface UserPreferences {
 	email: string;
+	user_id?: string; // Add user_id for proper foreign key relationships
 	full_name?: string;
 	university?: string;
 	start_date?: string;

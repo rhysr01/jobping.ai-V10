@@ -287,10 +287,14 @@ async function rankAndReturnMatches(
 						throw new Error(`Job ID not found for hash: ${m.job_hash}`);
 					}
 
+					// Fix match score normalization - check range before dividing
+					const rawScore = m.match_score || 0;
+					const normalizedScore = rawScore > 1 ? rawScore / 100 : rawScore;
+
 					return {
 						user_id: user.id,
 						job_id: jobId,
-						match_score: Number((m.match_score || 0) / 100),
+						match_score: Number(normalizedScore),
 						match_reason: String(m.match_reason || "Matched"),
 						created_at: new Date().toISOString(),
 					};
@@ -308,6 +312,9 @@ async function rankAndReturnMatches(
 							errorCode: error.code,
 						},
 					);
+
+					// CRITICAL FIX: Propagate error instead of silently continuing
+					throw new Error(`Failed to save matches: ${error.message}`);
 				} else {
 					apiLogger.info("[FREE] Successfully saved matches to database", {
 						email: userPrefs.email,

@@ -73,8 +73,9 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 		);
 	}
 
-	// Verify user has premium access
-	if (user.subscription_tier !== "premium" || !user.subscription_active) {
+	// Verify user has premium access (allow premium_pending for new signups)
+	if (!["premium", "premium_pending"].includes(user.subscription_tier) || 
+		(user.subscription_tier === "premium" && !user.subscription_active)) {
 		apiLogger.warn("Premium matches - user not premium", {
 			email: userEmail,
 			tier: user.subscription_tier,

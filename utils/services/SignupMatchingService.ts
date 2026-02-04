@@ -92,7 +92,6 @@ export class SignupMatchingService {
 		userPrefs: UserPreferences,
 		config: MatchingConfig,
 		requestId?: string,
-		preFilteredJobs?: any[], // Optional pre-filtered jobs to avoid double fetching
 	): Promise<MatchingResult> {
 		const startTime = Date.now();
 		const email = userPrefs.email;
@@ -133,20 +132,10 @@ export class SignupMatchingService {
 				};
 			}
 
-			// STEP 2: FETCH JOBS - Use pre-filtered jobs if provided, otherwise fetch
+			// STEP 2: FETCH JOBS - Tier-aware job selection with user context
 			let jobs: any[];
 			try {
-				if (preFilteredJobs && preFilteredJobs.length > 0) {
-					jobs = preFilteredJobs;
-					apiLogger.info(`[${config.tier.toUpperCase()}] Using pre-filtered jobs`, {
-						email,
-						requestId: requestIdStr,
-						jobCount: jobs.length,
-						tier: config.tier,
-					});
-				} else {
-					jobs = await SignupMatchingService.fetchJobsForTier(config);
-				}
+				jobs = await SignupMatchingService.fetchJobsForTier(config, userPrefs);
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error);
 				apiLogger.error(
@@ -248,6 +237,7 @@ export class SignupMatchingService {
 				const premiumPrefs: PremiumUserPreferences = {
 					// From form Step 1 & 2
 					email: userPrefs.email,
+					user_id: userPrefs.user_id, // Add user_id for proper FK relationships
 					target_cities: userPrefs.target_cities || [],
 					career_path: userPrefs.career_path || [],
 
@@ -377,13 +367,14 @@ export class SignupMatchingService {
 	 */
 	private static async fetchJobsForTier(
 		config: MatchingConfig,
+		userPrefs?: UserPreferences,
 	): Promise<any[]> {
 		const supabase = getDatabaseClient();
 		const freshnessDate = new Date();
 		freshnessDate.setDate(freshnessDate.getDate() - config.jobFreshnessDays);
 
 		try {
-			const { data: jobs, error } = await supabase
+			let query = supabase
 				.from("jobs")
 				.select(`
 				id, job_hash, title, company, location, city, country, job_url, description,
@@ -395,7 +386,29 @@ export class SignupMatchingService {
 				.eq("is_active", true)
 				.eq("status", "active")
 				.is("filtered_reason", null)
-				.or(`posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`)
+				.or(`posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`);
+
+			// Add city filtering for free tier users
+			if (userPrefs?.subscription_tier === "free" && userPrefs.target_cities && userPrefs.target_cities.length > 0) {
+				// Create city variations (handle case differences)
+				const cityVariations = new Set<string>();
+				userPrefs.target_cities.forEach(city => {
+					cityVariations.add(city); // Original case
+					cityVariations.add(city.toLowerCase()); // Lowercase
+					cityVariations.add(city.charAt(0).toUpperCase() + city.slice(1).toLowerCase()); // Capitalized
+				});
+				
+				const citiesArray = Array.from(cityVariations);
+				query = query.in("city", citiesArray);
+				
+				apiLogger.info("SignupMatchingService - city filter applied at DB level", {
+					tier: config.tier,
+					targetCities: userPrefs.target_cities,
+					citiesArray,
+				});
+			}
+
+			const { data: jobs, error } = await query
 				.order("created_at", { ascending: false })
 				.limit(config.maxJobsToFetch); // PRODUCTION FIX: Prevent massive DB scans
 

@@ -222,26 +222,26 @@ Step 3: Career Path
      subscription_tier: "free"
    }
 
-4. Query Jobs Database
-   ├─ Get country from cities
+4. Delegate to SignupMatchingService
+   └─ SignupMatchingService.runMatching(userPrefs, config)
+
+5. SignupMatchingService Job Fetching & Filtering
    ├─ Execute: SELECT * FROM jobs 
-      WHERE country IN (countries) 
-      LIMIT 1500
-   └─ Result: ~1500 jobs per country
+      WHERE is_active=true AND status='active' 
+      AND city IN (user.cities with case variations)
+      AND (posted_at >= freshness_date OR posted_at IS NULL)
+      LIMIT 5000
+   └─ Result: City-filtered jobs at DB level
 
-5. Simple Filter (Boolean Logic)
-   ├─ Filter by city: jobs.city == user.cities
-   ├─ Filter by career: jobs.categories includes user.careerPath
-   └─ Result: 50-300 jobs
-
-6. AI Matching
-   └─ Call simplified AI engine:
-      - Light ranking on filtered jobs
-      - Return top 5 with scores
+6. FreeMatchingStrategy Processing
+   ├─ Receives city-filtered jobs from SignupMatchingService
+   ├─ Additional filtering by career path categories
+   ├─ AI ranking via SimplifiedMatchingEngine
+   └─ Returns top 5 matches with scores
 
 7. Store Matches in Database
-   └─ INSERT into matches table:
-      - user_id, job_hash, match_score, match_reason
+   └─ INSERT into user_matches table:
+      - user_id, job_id, match_score, match_reason
 
 8. Response to Frontend
    └─ HTTP 200 OK with redirect URL: /matches
