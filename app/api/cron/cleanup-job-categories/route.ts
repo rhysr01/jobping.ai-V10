@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { ENV } from "../../../../lib/env";
 
 /**
  * Cron Job: Cleanup Invalid Job Categories
@@ -13,10 +14,9 @@ import { createClient } from "@supabase/supabase-js";
  * Scheduled: 0 4 * * * (4 AM UTC daily)
  */
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
 const initializeClients = () => {
+	const supabaseUrl = ENV.NEXT_PUBLIC_SUPABASE_URL;
+	const supabaseServiceKey = ENV.SUPABASE_SERVICE_ROLE_KEY;
 	if (!supabaseUrl || !supabaseServiceKey) {
 		throw new Error("[Cleanup Job Categories] Missing Supabase credentials");
 	}

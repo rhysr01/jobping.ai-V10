@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { ENV } from "../../../../lib/env";
 
 export const maxDuration = 300; // 5 minutes
 
@@ -13,8 +14,8 @@ export async function GET(request: NextRequest) {
 		}
 
 		const supabase = createClient(
-			process.env.NEXT_PUBLIC_SUPABASE_URL!,
-			process.env.SUPABASE_SERVICE_ROLE_KEY!,
+			ENV.NEXT_PUBLIC_SUPABASE_URL,
+			ENV.SUPABASE_SERVICE_ROLE_KEY,
 		);
 
 		console.log("🛠️ Starting automated maintenance...");

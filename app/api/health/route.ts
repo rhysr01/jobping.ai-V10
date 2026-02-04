@@ -1,10 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { ENV } from "../../../lib/env";
 
-const supabase = createClient(
-	process.env.NEXT_PUBLIC_SUPABASE_URL!,
-	process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// Detect if we're in build time
+const isBuildTime =
+	process.env.NEXT_PHASE === "phase-production-build" ||
+	process.env.NEXT_PHASE === "phase-development-build" ||
+	process.env.NEXT_PHASE?.includes("build") ||
+	(process.env.VERCEL === "1" && process.env.CI === "1") ||
+	process.argv.includes("build") ||
+	process.argv.some((arg) => arg.includes("next") && arg.includes("build"));
+
+// Use ENV object for Supabase configuration, with build-time fallbacks
+const supabaseUrl = isBuildTime
+	? ENV.NEXT_PUBLIC_SUPABASE_URL || "https://build-placeholder.supabase.co"
+	: ENV.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = isBuildTime
+	? ENV.SUPABASE_SERVICE_ROLE_KEY ||
+	  "build-placeholder-service-role-key-minimum-20-chars"
+	: ENV.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET() {
 	try {
@@ -34,7 +50,7 @@ export async function GET() {
 					response_time_ms: Date.now() - startTime,
 				},
 			},
-			environment: process.env.NODE_ENV,
+			environment: ENV.NODE_ENV,
 		};
 
 		const statusCode = dbError ? 207 : 200; // 207 = Multi-Status for partial failure
