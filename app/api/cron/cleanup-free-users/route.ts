@@ -13,11 +13,15 @@ export async function GET(request: Request) {
 		const supabase = getDatabaseClient();
 
 		// Delete free users whose expiration date has passed
+		// Add buffer to prevent race conditions with signup process
+		const bufferTime = new Date();
+		bufferTime.setMinutes(bufferTime.getMinutes() - 5); // 5 minute buffer
+		
 		const { data, error } = await supabase
 			.from("users")
 			.delete()
 			.eq("subscription_tier", "free") // Use YOUR column name
-			.lt("free_expires_at", new Date().toISOString())
+			.lt("free_expires_at", bufferTime.toISOString()) // Use buffer time instead of now
 			.select("id");
 
 		if (error) throw error;

@@ -262,9 +262,18 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// Note: Promo codes are stored in users table (promo_code_used, promo_expires_at)
 	// No separate promo_pending table cleanup needed
 
-	// Create free user record
-	const freeExpiresAt = new Date();
-	freeExpiresAt.setDate(freeExpiresAt.getDate() + 30); // 30 days from now
+	// Create free user record - ensure proper 30-day expiration
+	const now = new Date();
+	const freeExpiresAt = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from now in milliseconds
+	
+	// Log for debugging timezone/timing issues
+	console.log("[FREE SIGNUP] Expiration calculation", {
+		requestId,
+		now: now.toISOString(),
+		freeExpiresAt: freeExpiresAt.toISOString(),
+		timeDiff: freeExpiresAt.getTime() - now.getTime(),
+		daysDiff: (freeExpiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
+	});
 
 	console.log("[FREE SIGNUP] Creating user", {
 		requestId,

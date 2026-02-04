@@ -393,8 +393,25 @@ async function rankAndReturnMatches(
 					);
 
 					if (isForeignKeyError) {
-						// For foreign key errors, provide more context
-						throw new Error(`Foreign key constraint violation: user_id ${userId} does not exist in users table for email ${userPrefs.email}. Original error: ${error.message}`);
+						// For foreign key errors, provide more context and suggest retry
+						apiLogger.warn("[FREE] User may have been deleted by cleanup process during signup", {
+							email: userPrefs.email,
+							user_id: userId,
+							error_code: error.code,
+						});
+						
+						// Check if user still exists
+						const { data: userStillExists } = await supabase
+							.from("users")
+							.select("id, free_expires_at")
+							.eq("id", userId)
+							.single();
+							
+						if (!userStillExists) {
+							throw new Error(`User was deleted during signup process: user_id ${userId} for email ${userPrefs.email}. This may be due to cleanup process race condition.`);
+						} else {
+							throw new Error(`Foreign key constraint violation: user_id ${userId} exists but constraint failed for email ${userPrefs.email}. Original error: ${error.message}`);
+						}
 					} else {
 						// CRITICAL FIX: Propagate error instead of silently continuing
 						throw new Error(`Failed to save matches: ${error.message}`);
