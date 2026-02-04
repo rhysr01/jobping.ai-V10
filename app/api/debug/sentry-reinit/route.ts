@@ -37,11 +37,8 @@ export async function GET(_request: NextRequest) {
 		// Step 2: Force reinitialize Sentry with explicit DSN
 		console.log(`[SENTRY REINIT] Reinitializing Sentry with explicit DSN...`);
 		
-		// Close existing client if any
-		const currentClient = Sentry.getCurrentHub().getClient();
-		if (currentClient) {
-			await currentClient.close(2000);
-		}
+		// Note: Sentry Next.js SDK doesn't expose getCurrentHub
+		// We'll just reinitialize - if already initialized, this will update config
 
 		// Reinitialize with explicit configuration
 		Sentry.init({
