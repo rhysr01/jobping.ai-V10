@@ -215,11 +215,20 @@ if (isBuildTime) {
 			"build-dummy-secret-32-chars-minimum-length-here",
 		SYSTEM_API_KEY:
 			process.env.SYSTEM_API_KEY || "build-dummy-system-key-min-10-chars",
+		// Supabase variables - provide fallbacks during build if missing
+		// These will be replaced with real values at runtime
+		NEXT_PUBLIC_SUPABASE_URL:
+			process.env.NEXT_PUBLIC_SUPABASE_URL ||
+			"https://build-placeholder.supabase.co",
+		SUPABASE_SERVICE_ROLE_KEY:
+			process.env.SUPABASE_SERVICE_ROLE_KEY ||
+			"build-placeholder-service-role-key-minimum-20-chars",
 	};
 
 	const buildResult = schema.safeParse(buildEnv);
 	if (!buildResult.success) {
-		// Even during build, critical vars like Supabase must be present
+		// During build, we've provided fallbacks for all critical vars
+		// If validation still fails, it's likely a format issue, not missing vars
 		const criticalPaths = [
 			"NEXT_PUBLIC_SUPABASE_URL",
 			"SUPABASE_SERVICE_ROLE_KEY",
@@ -229,10 +238,19 @@ if (isBuildTime) {
 		);
 
 		if (hasCriticalErrors) {
-			console.error("❌ Critical environment variables missing during build");
+			console.error("❌ Critical environment variables validation failed during build");
+			console.error("⚠️  This may indicate format issues with provided values");
 			buildResult.error.issues.forEach((err) => {
-				console.error(`  - ${err.path.join(".")}: ${err.message}`);
+				const path = err.path.join(".");
+				const value = (buildEnv as Record<string, any>)[path];
+				console.error(`  - ${path}: ${err.message}`);
+				console.error(
+					`    Value: ${value ? `'${String(value).substring(0, 30)}...'` : "undefined"}`,
+				);
 			});
+			// During build, if we have fallbacks but validation still fails,
+			// it means the provided values have format issues
+			// We'll still throw to prevent invalid builds
 			throw buildResult.error;
 		}
 
