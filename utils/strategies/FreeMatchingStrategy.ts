@@ -477,7 +477,7 @@ async function saveMatchesAndReturn(
 				const errorMessage = `Foreign key constraint violation: user_id ${userId} for email ${userPrefs.email}. ` +
 					`This constraint references public.users(id). ` +
 					`Original error: ${error.message}`;
-				throw new Error(`Foreign key constraint violation: ${error.message}`);
+				throw new Error(errorMessage);
 			}
 			throw new Error(`Failed to save matches: ${error.message}`);
 		}
