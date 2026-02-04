@@ -687,22 +687,24 @@ function SignupFormFree() {
 				
 				try {
 					// Clear the sessionStorage flag
-					if (typeof window !== "undefined") {
-						sessionStorage.removeItem("pendingRedirect");
-					}
-					// Use window.location.href for guaranteed redirect (works even if component unmounts)
-					// This is a full page reload, which ensures cookies are sent with the request
-					console.log("📍 Navigating to:", redirectUrl);
-					window.location.href = redirectUrl;
-				} catch (redirectError) {
-					console.error("❌ Redirect error:", redirectError);
-					// Last resort: try router.push
-					router.push(redirectUrl).catch((err) => {
-						console.error("❌ Router.push also failed:", err);
-						// Force redirect
-						window.location.href = redirectUrl;
-					});
+				if (typeof window !== "undefined") {
+					sessionStorage.removeItem("pendingRedirect");
 				}
+				// Use window.location.href for guaranteed redirect (works even if component unmounts)
+				// This is a full page reload, which ensures cookies are sent with the request
+				console.log("📍 Navigating to:", redirectUrl);
+				window.location.href = redirectUrl;
+			} catch (redirectError) {
+				console.error("❌ Redirect error:", redirectError);
+				// Last resort: try router.push
+				try {
+					router.push(redirectUrl);
+				} catch (err) {
+					console.error("❌ Router.push also failed:", err);
+					// Force redirect
+					window.location.href = redirectUrl;
+				}
+			}
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
 			// ENHANCED ERROR CAPTURE - Force Sentry reporting
