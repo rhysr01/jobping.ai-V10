@@ -440,7 +440,16 @@ async function saveMatchesAndReturn(
 		}
 
 		// Get job_ids from job_hashes
-		const jobHashes = matches.map(m => String(m.job_hash));
+		// FIX: Filter out null/undefined hashes before lookup
+		const jobHashes = matches
+			.map(m => m.job_hash)
+			.filter((hash): hash is string => hash != null && hash !== "")
+			.map(hash => String(hash));
+
+		if (jobHashes.length === 0) {
+			throw new Error(`No valid job hashes found in matches. All hashes were null or empty.`);
+		}
+
 		const { data: jobs, error: jobLookupError } = await supabase
 			.from("jobs")
 			.select("id, job_hash")
@@ -451,7 +460,13 @@ async function saveMatchesAndReturn(
 		}
 
 		if (!jobs || jobs.length === 0) {
-			throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
+			// FIX: Provide more context about which hashes failed
+			const foundHashes = new Set(jobs?.map(j => j.job_hash) || []);
+			const missingHashes = jobHashes.filter(h => !foundHashes.has(h));
+			throw new Error(
+				`No jobs found for hashes. Requested: ${jobHashes.length}, Found: ${jobs?.length || 0}. ` +
+				`Missing hashes: ${missingHashes.slice(0, 5).join(", ")}${missingHashes.length > 5 ? "..." : ""}`
+			);
 		}
 
 		// Create lookup map and prepare matches
@@ -474,19 +489,72 @@ async function saveMatchesAndReturn(
 			};
 		});
 
-		// Insert matches
-		const { error } = await supabase.from("user_matches").insert(matchesToSave);
+		// FIX: Add retry logic for foreign key constraint errors
+		// This handles race conditions where user creation hasn't fully committed
+		const maxRetries = 3;
+		const retryDelay = 500; // Start with 500ms
+		let lastError: Error | null = null;
 
-		if (error) {
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			if (attempt > 0) {
+				// Wait before retry with exponential backoff
+				const delay = retryDelay * Math.pow(2, attempt - 1);
+				console.log(`${LOG_MARKERS.MATCHING_FREE} Retrying match save (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms`);
+				await new Promise(resolve => setTimeout(resolve, delay));
+
+				// Re-verify user exists before retry
+				const { data: retryUserCheck, error: retryCheckError } = await supabase
+					.from("users")
+					.select("id")
+					.eq("id", userId)
+					.single();
+
+				if (retryCheckError || !retryUserCheck) {
+					throw new Error(
+						`User verification failed on retry ${attempt + 1}: user_id ${userId} does not exist. ${retryCheckError?.message || 'User not found'}`
+					);
+				}
+			}
+
+			const { error } = await supabase.from("user_matches").insert(matchesToSave);
+
+			if (!error) {
+				// Success - break out of retry loop
+				break;
+			}
+
 			const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+			
+			if (isForeignKeyError && attempt < maxRetries - 1) {
+				// Foreign key error - will retry
+				lastError = new Error(
+					`Foreign key constraint violation (attempt ${attempt + 1}/${maxRetries}): user_id ${userId} for email ${userPrefs.email}. ` +
+					`This constraint references public.users(id). ` +
+					`Original error: ${error.message}`
+				);
+				console.warn(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_ERROR} FK constraint error, will retry`, {
+					email: userPrefs.email,
+					userId,
+					attempt: attempt + 1,
+					maxRetries,
+				});
+				continue;
+			}
+
+			// Non-FK error or max retries reached
 			if (isForeignKeyError) {
-				// Enhanced error message with user verification details
-				const errorMessage = `Foreign key constraint violation: user_id ${userId} for email ${userPrefs.email}. ` +
+				const errorMessage = `Foreign key constraint violation after ${maxRetries} attempts: user_id ${userId} for email ${userPrefs.email}. ` +
 					`This constraint references public.users(id). ` +
 					`Original error: ${error.message}`;
 				throw new Error(errorMessage);
 			}
+			
 			throw new Error(`Failed to save matches: ${error.message}`);
+		}
+
+		if (lastError && !matchesToSave.length) {
+			// If we exhausted retries and still have an error
+			throw lastError;
 		}
 
 		console.log(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_SUCCESS} Successfully saved matches`, {

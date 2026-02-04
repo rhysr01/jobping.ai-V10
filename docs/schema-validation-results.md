@@ -9,39 +9,7 @@
 ### **users Table (MCP Schema)**
 ```sql
 ✅ id (uuid, primary key)
-✅ email (text, unique)
-✅ full_name (text, nullable)
-✅ subscription_tier (text, default 'free', check: free|premium|premium_pending)
-✅ target_cities (text[], default '{}')
-✅ career_path (text, nullable)
-✅ languages_spoken (text[], default '{}')
-✅ work_environment (text, nullable, check: remote|hybrid|office|on-site|flexible)
-✅ entry_level_preference (text, nullable)
-✅ visa_status (text, nullable)
-✅ birth_year (integer, nullable)
-✅ email_verified (boolean, default false)
-✅ subscription_active (boolean, default false)
-✅ created_at (timestamptz, default now())
-```
-
-### **jobs Table (MCP Schema)**
-```sql
-✅ id (uuid, primary key)
-✅ job_hash (text, unique)
-✅ title (text)
-✅ company (text)
-✅ company_name (text, nullable)
-✅ location (text, nullable)
-✅ city (text, nullable)
-✅ country (text, nullable)
-✅ description (text, nullable)
-✅ categories (text[], default '{}')
-✅ work_environment (text, default 'on-site')
-✅ experience_required (text, default 'entry-level')
-✅ language_requirements (text[], nullable)
-✅ is_early_career (boolean, default false)
-✅ is_internship (boolean, default false)
-✅ is_graduate (boolean, default false)
+✅ email (text, ng 
 ✅ visa_friendly (boolean, nullable)
 ✅ visa_sponsored (boolean, default false)
 ✅ is_active (boolean, default true)

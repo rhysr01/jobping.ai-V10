@@ -364,12 +364,63 @@ async function rankAndReturnMatchesDirect(
 				);
 			}
 
-			const { error } = await supabase.from("user_matches").insert(matchesToSave);
+			// FIX: Add retry logic for foreign key constraint errors (same as free tier)
+			const maxRetries = 3;
+			const retryDelay = 500;
+			let lastError: Error | null = null;
 
-			if (error) {
+			for (let attempt = 0; attempt < maxRetries; attempt++) {
+				if (attempt > 0) {
+					const delay = retryDelay * Math.pow(2, attempt - 1);
+					console.log(`[PREMIUM] Retrying match save (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms`);
+					await new Promise(resolve => setTimeout(resolve, delay));
+
+					// Re-verify user exists before retry
+					const { data: retryUserCheck, error: retryCheckError } = await supabase
+						.from("users")
+						.select("id")
+						.eq("id", userPrefs.user_id)
+						.single();
+
+					if (retryCheckError || !retryUserCheck) {
+						throw new Error(
+							`User verification failed on retry ${attempt + 1}: user_id ${userPrefs.user_id} does not exist. ${retryCheckError?.message || 'User not found'}`
+						);
+					}
+				}
+
+				const { error } = await supabase.from("user_matches").insert(matchesToSave);
+
+				if (!error) {
+					// Success - break out of retry loop
+					apiLogger.info("[PREMIUM] Successfully saved matches to database", {
+						email: userPrefs.email,
+						count: matchesToSave.length,
+					});
+					break;
+				}
+
 				const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+				
+				if (isForeignKeyError && attempt < maxRetries - 1) {
+					// Foreign key error - will retry
+					lastError = new Error(
+						`Foreign key constraint violation (attempt ${attempt + 1}/${maxRetries}): user_id ${userPrefs.user_id} for email ${userPrefs.email}. ` +
+						`This constraint references public.users(id). ` +
+						`Original error: ${error.message}`
+					);
+					console.warn("[PREMIUM] FK constraint error, will retry", {
+						email: userPrefs.email,
+						userId: userPrefs.user_id,
+						attempt: attempt + 1,
+						maxRetries,
+					});
+					continue;
+				}
+
+				// Non-FK error or max retries reached
 				const errorMessage = isForeignKeyError
-					? `Foreign key constraint violation: user_id ${userPrefs.user_id} for email ${userPrefs.email}. This constraint references public.users(id). Original error: ${error.message}`
+					? `Foreign key constraint violation after ${maxRetries} attempts: user_id ${userPrefs.user_id} for email ${userPrefs.email}. This constraint references public.users(id). Original error: ${error.message}`
 					: `Failed to save premium matches: ${error.message}`;
 
 				apiLogger.error(
@@ -381,16 +432,15 @@ async function rankAndReturnMatchesDirect(
 						matchCount: matchesToSave.length,
 						errorCode: error.code,
 						isForeignKeyError,
+						attempt: attempt + 1,
 					},
 				);
 
-				// CRITICAL FIX: Propagate error instead of silently continuing
 				throw new Error(errorMessage);
-			} else {
-				apiLogger.info("[PREMIUM] Successfully saved matches to database", {
-					email: userPrefs.email,
-					count: matchesToSave.length,
-				});
+			}
+
+			if (lastError && matchesToSave.length === 0) {
+				throw lastError;
 			}
 		} catch (err) {
 			apiLogger.error("[PREMIUM] Error saving matches", err as Error, {

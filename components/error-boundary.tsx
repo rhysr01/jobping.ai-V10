@@ -31,6 +31,11 @@ export default class ErrorBoundary extends Component<Props, State> {
 			console.error("Error caught by boundary:", error, errorInfo);
 		}
 
+		// FIX: Check if this is a React hooks error - these are usually development issues
+		const isHooksError = error.message?.includes("Rendered fewer hooks") || 
+		                     error.message?.includes("hooks") ||
+		                     error.name === "Invariant Violation";
+
 		// Send to Sentry with full context
 		Sentry.captureException(error, {
 			contexts: {
@@ -41,13 +46,16 @@ export default class ErrorBoundary extends Component<Props, State> {
 			tags: {
 				errorBoundary: true,
 				errorType: error.name,
+				isHooksError: isHooksError ? "true" : "false",
 			},
 			extra: {
 				errorInfo,
 				errorMessage: error.message,
 				errorStack: error.stack,
+				componentStack: errorInfo.componentStack,
 			},
-			level: "error",
+			// FIX: React hooks errors are usually development issues - log as warning
+			level: isHooksError ? "warning" : "error",
 		});
 
 		// Update state with error info for display

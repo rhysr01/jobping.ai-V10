@@ -36,9 +36,16 @@ const freeSignupSchema = z.object({
 			(val) => val.length >= 2 && val.length <= 100,
 			{ message: "Name must be between 2 and 100 characters" }
 		)
+		// FIX: More lenient validation - allow more characters while still preventing injection
 		.refine(
-			(val) => /^[\p{L}\s'.-]+$/u.test(val), // Unicode property \p{L} matches any letter from any language
-			{ message: "Name contains invalid characters. Only letters, spaces, hyphens, apostrophes, and periods are allowed." }
+			(val) => {
+				// Allow letters, spaces, hyphens, apostrophes, periods, and common accented characters
+				// More lenient than before but still safe
+				return /^[\p{L}\p{M}\s'.-]+$/u.test(val) && 
+				       !/[<>{}[\]\\\/]/.test(val) && // Block potentially dangerous chars
+				       val.trim().length >= 2; // Ensure meaningful content after trim
+			},
+			{ message: "Please enter a valid name (2-100 characters, letters and common punctuation only)" }
 		),
 	cities: z
 		.array(z.string().max(50))
@@ -119,19 +126,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	*/
 
 	if (rateLimitResult) {
-		apiLogger.warn("Rate limit exceeded for free signup", {
+		// FIX: Rate limiting is expected behavior - log as INFO, not WARNING
+		apiLogger.info("Rate limit exceeded for free signup", {
 			requestId,
 			ip: request.headers.get("x-forwarded-for") || "unknown",
 			endpoint: "signup-free",
 		});
-		Sentry.captureMessage("Rate limit exceeded for free signup", {
-			level: "warning",
-			tags: { endpoint: "signup-free", error_type: "rate_limit" },
-			extra: {
-				requestId,
-				ip: request.headers.get("x-forwarded-for") || "unknown",
-			},
-		});
+		// FIX: Don't log rate limits to Sentry - this is expected behavior
+		// Only log if it's an unexpected rate limit scenario
 		return rateLimitResult;
 	}
 
@@ -228,19 +230,22 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			["email", "full_name", "cities", "careerPath"].includes(path)
 		);
 		
-		const validationException = new Error(
-			`Free signup validation failed: ${validationResult.error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
-		);
-		
-		Sentry.captureException(validationException, {
-			level: hasRequiredFieldErrors ? "error" : "warning",
-			tags: { 
-				endpoint: "signup-free", 
-				error_type: "validation",
-				validation_failed: "true",
-				has_required_field_errors: hasRequiredFieldErrors ? "true" : "false",
-				error_count: validationResult.error.issues.length.toString(),
-			},
+		// FIX: Only log validation errors to Sentry if they're for required fields
+		// Optional field validation failures are expected and shouldn't spam Sentry
+		if (hasRequiredFieldErrors) {
+			const validationException = new Error(
+				`Free signup validation failed: ${validationResult.error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+			);
+			
+			Sentry.captureException(validationException, {
+				level: "warning", // Changed from error to warning - validation errors are user input issues
+				tags: { 
+					endpoint: "signup-free", 
+					error_type: "validation",
+					validation_failed: "true",
+					has_required_field_errors: "true",
+					error_count: validationResult.error.issues.length.toString(),
+				},
 			extra: {
 				requestId,
 				email: body.email || "missing",
@@ -281,11 +286,22 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					age_verified: body.age_verified,
 				}),
 			},
-			user: { email: body.email || "unknown" },
-		});
+				user: { email: body.email || "unknown" },
+			});
 
-		// CRITICAL: Flush Sentry before returning validation error
-		await Sentry.flush(2000);
+			// Flush Sentry before returning validation error
+			await Sentry.flush(2000);
+		} else {
+			// Optional field validation errors - just log to console, don't spam Sentry
+			console.log("[FREE SIGNUP] Validation warnings (optional fields)", {
+				requestId,
+				email: body.email || "missing",
+				warnings: validationResult.error.issues.map((e: any) => ({
+					path: e.path.join("."),
+					message: e.message,
+				})),
+			});
+		}
 
 		return NextResponse.json(
 			{
@@ -369,6 +385,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		console.log("[FREE SIGNUP] User already exists, returning 409", {
 			requestId,
 			normalizedEmail,
+			userId: existingUser.id,
+			tier: existingUser.subscription_tier,
+		});
+
+		// FIX: Account already exists is expected behavior - log as INFO, not error
+		apiLogger.info("Existing user attempted signup", {
+			requestId,
+			email: normalizedEmail,
 			userId: existingUser.id,
 			tier: existingUser.subscription_tier,
 		});
