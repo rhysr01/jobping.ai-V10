@@ -45,11 +45,27 @@ const freeSignupSchema = z.object({
 export const POST = asyncHandler(async (request: NextRequest) => {
 	const requestId = getRequestId(request);
 
+	// CRITICAL: Log immediately to catch silent failures
 	console.log("[FREE SIGNUP] 🚀 Request received", {
 		requestId,
 		timestamp: new Date().toISOString(),
 		url: request.url,
 		method: request.method,
+	});
+
+	// CRITICAL: Capture request start to Sentry for debugging silent failures
+	Sentry.captureMessage("Free signup request received", {
+		level: "info",
+		tags: {
+			endpoint: "signup-free",
+			stage: "request_received",
+		},
+		extra: {
+			requestId,
+			url: request.url,
+			method: request.method,
+			timestamp: new Date().toISOString(),
+		},
 	});
 
 	// CRITICAL: Wrap entire function in try-catch to catch ANY silent exceptions
@@ -93,20 +109,44 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		return rateLimitResult;
 	}
 
-	const body = await request.json();
-	console.log("[FREE SIGNUP] Request body received", {
-		requestId,
-		email: body.email,
-		full_name: body.full_name,
-		cities: body.cities,
-		citiesLength: body.cities?.length,
-		careerPath: body.careerPath,
-		careerPathLength: body.careerPath?.length,
-		visaStatus: body.visaStatus,
-		hasBirthYear: !!body.birth_year,
-		age_verified: body.age_verified,
-		terms_accepted: body.terms_accepted,
-	});
+	// CRITICAL: Wrap JSON parsing in try-catch to catch parse errors
+	let body;
+	try {
+		body = await request.json();
+		console.log("[FREE SIGNUP] Request body received", {
+			requestId,
+			email: body.email,
+			full_name: body.full_name,
+			cities: body.cities,
+			citiesLength: body.cities?.length,
+			careerPath: body.careerPath,
+			careerPathLength: body.careerPath?.length,
+			visaStatus: body.visaStatus,
+			hasBirthYear: !!body.birth_year,
+			age_verified: body.age_verified,
+			terms_accepted: body.terms_accepted,
+		});
+	} catch (parseError) {
+		const error = parseError instanceof Error ? parseError : new Error(String(parseError));
+		console.error("[FREE SIGNUP] ❌ JSON parse error", {
+			requestId,
+			error: error.message,
+			stack: error.stack,
+		});
+		Sentry.captureException(error, {
+			tags: {
+				endpoint: "signup-free",
+				error_type: "json_parse_error",
+				critical: "true",
+			},
+			extra: {
+				requestId,
+				url: request.url,
+			},
+			level: "error",
+		});
+		throw error; // Re-throw to be caught by asyncHandler
+	}
 
 	// Validate input with zod
 	const validationResult = freeSignupSchema.safeParse(body);

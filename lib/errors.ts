@@ -4,6 +4,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { logger } from "./monitoring";
 
 // Request ID helper (for consistent request tracking)
@@ -64,9 +65,28 @@ export class RateLimitError extends AppError {
 /**
  * Centralized error handler
  * Logs errors and returns consistent JSON response with requestId
+ * CRITICAL: Always captures errors to Sentry for monitoring
  */
 export function handleError(error: unknown, req?: NextRequest): NextResponse {
 	const requestId = req ? getRequestId(req) : undefined;
+	const errorObj = error instanceof Error ? error : new Error(String(error));
+
+	// CRITICAL: Always capture to Sentry, even for AppErrors
+	// This ensures we see ALL errors in production
+	Sentry.captureException(errorObj, {
+		tags: {
+			error_handler: "asyncHandler",
+			error_type: error instanceof AppError ? error.code || "AppError" : "UnknownError",
+			endpoint: req?.url || "unknown",
+		},
+		extra: {
+			requestId,
+			statusCode: error instanceof AppError ? error.statusCode : 500,
+			code: error instanceof AppError ? error.code : undefined,
+			details: error instanceof AppError ? error.details : undefined,
+		},
+		level: error instanceof AppError && error.statusCode < 500 ? "warning" : "error",
+	});
 
 	if (error instanceof AppError) {
 		logger.warn(error.message, {
@@ -97,7 +117,7 @@ export function handleError(error: unknown, req?: NextRequest): NextResponse {
 
 	// Unknown error - log with full stack
 	logger.error("Unhandled error", {
-		error: error instanceof Error ? error : new Error(String(error)),
+		error: errorObj,
 	});
 
 	const response = NextResponse.json(
@@ -129,9 +149,35 @@ export function asyncHandler(
 	handler: (req: NextRequest, context?: any) => Promise<NextResponse>,
 ) {
 	return async (req: NextRequest, context?: any) => {
+		const requestId = getRequestId(req);
+		
+		// CRITICAL: Log handler entry to catch silent failures
+		console.log("[asyncHandler] Handler invoked", {
+			requestId,
+			url: req.url,
+			method: req.method,
+			timestamp: new Date().toISOString(),
+		});
+		
 		try {
-			return await handler(req, context);
+			const result = await handler(req, context);
+			
+			// Log successful completion
+			console.log("[asyncHandler] Handler completed successfully", {
+				requestId,
+				status: result.status,
+			});
+			
+			return result;
 		} catch (error) {
+			// CRITICAL: Log error before handling to catch silent failures
+			console.error("[asyncHandler] Error caught", {
+				requestId,
+				error: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
+				timestamp: new Date().toISOString(),
+			});
+			
 			return handleError(error, req);
 		}
 	};
