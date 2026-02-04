@@ -473,7 +473,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// REFACTORED: Use consolidated matching service
-	console.log("[FREE SIGNUP] ✅ Validation passed, starting matching", {
+	console.log("[FREE SIGNUP] ✅ Validation passed, testing SignupMatchingService import", {
+		hasSignupMatchingService: !!SignupMatchingService,
+		hasGetConfig: typeof SignupMatchingService.getConfig,
+		hasRunMatching: typeof SignupMatchingService.runMatching,
+	});
+	
+	console.log("[FREE SIGNUP] ✅ Starting matching", {
 		requestId,
 		normalizedEmail,
 		userData: {
@@ -489,7 +495,16 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		},
 	});
 
-	const matchingConfig = SignupMatchingService.getConfig("free");
+	// Test SignupMatchingService import and methods
+	let matchingConfig;
+	try {
+		console.log("[FREE SIGNUP] Testing SignupMatchingService.getConfig");
+		matchingConfig = SignupMatchingService.getConfig("free");
+		console.log("[FREE SIGNUP] ✅ getConfig successful:", matchingConfig);
+	} catch (configError) {
+		console.error("[FREE SIGNUP] ❌ getConfig failed:", configError);
+		throw new Error(`SignupMatchingService.getConfig failed: ${configError instanceof Error ? configError.message : String(configError)}`);
+	}
 	
 	console.log("[FREE SIGNUP] About to call SignupMatchingService.runMatching", {
 		requestId,
