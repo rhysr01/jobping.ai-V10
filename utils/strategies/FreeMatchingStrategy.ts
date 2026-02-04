@@ -375,10 +375,33 @@ async function saveMatchesAndReturn(
 	try {
 		const supabase = getDatabaseClient();
 		
-		// Resolve user_id
+		// Resolve user_id and verify user exists
 		let userId: string;
 		if (userPrefs.user_id) {
-			userId = userPrefs.user_id;
+			// Verify the provided user_id actually exists
+			const { data: userCheck, error: userCheckError } = await supabase
+				.from("users")
+				.select("id, email")
+				.eq("id", userPrefs.user_id)
+				.single();
+
+			if (userCheckError || !userCheck) {
+				// Fall back to email lookup if user_id is invalid
+				const { data: user, error: lookupError } = await supabase
+					.from("users")
+					.select("id")
+					.eq("email", userPrefs.email)
+					.single();
+
+				if (lookupError || !user) {
+					throw new Error(
+						`User not found: user_id ${userPrefs.user_id} invalid and email ${userPrefs.email} not found. ${lookupError?.message || userCheckError?.message || 'User not found'}`,
+					);
+				}
+				userId = user.id;
+			} else {
+				userId = userCheck.id;
+			}
 		} else {
 			const { data: user, error: lookupError } = await supabase
 				.from("users")
@@ -394,6 +417,19 @@ async function saveMatchesAndReturn(
 
 		if (!userId) {
 			throw new Error(`Invalid user_id for email: ${userPrefs.email}`);
+		}
+
+		// Final verification: ensure user exists before inserting matches
+		const { data: finalUserCheck, error: finalCheckError } = await supabase
+			.from("users")
+			.select("id")
+			.eq("id", userId)
+			.single();
+
+		if (finalCheckError || !finalUserCheck) {
+			throw new Error(
+				`User verification failed before saving matches: user_id ${userId} does not exist. ${finalCheckError?.message || 'User not found'}`,
+			);
 		}
 
 		// Get job_ids from job_hashes
@@ -437,6 +473,10 @@ async function saveMatchesAndReturn(
 		if (error) {
 			const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
 			if (isForeignKeyError) {
+				// Enhanced error message with user verification details
+				const errorMessage = `Foreign key constraint violation: user_id ${userId} for email ${userPrefs.email}. ` +
+					`This constraint references public.users(id). ` +
+					`Original error: ${error.message}`;
 				throw new Error(`Foreign key constraint violation: ${error.message}`);
 			}
 			throw new Error(`Failed to save matches: ${error.message}`);

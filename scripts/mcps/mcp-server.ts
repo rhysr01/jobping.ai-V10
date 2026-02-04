@@ -6,6 +6,7 @@ import {
 	ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { config as dotenvConfig } from "dotenv";
+import * as Sentry from "@sentry/node";
 import { BraveSearchMCP } from "./bravesearch-mcp.ts";
 import { GitHubMCP } from "./github-mcp.ts";
 import { PlaywrightMCP } from "./playwright-mcp.ts";
@@ -16,6 +17,51 @@ import { VercelMCP } from "./vercel-mcp.ts";
 
 // Load environment variables from .env.local
 dotenvConfig({ path: resolve(process.cwd(), ".env.local") });
+
+// Initialize Sentry with MCP monitoring
+const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+if (dsn) {
+	const integrations = [];
+	
+	// Add MCP integration if available (requires @sentry/node 9.44.0+)
+	if (typeof Sentry.mcpIntegration === "function") {
+		integrations.push(
+			Sentry.mcpIntegration({
+				// Enable MCP monitoring for all MCP server activities
+			}),
+		);
+		console.log("[Sentry MCP Server] MCP integration enabled");
+	} else {
+		console.warn(
+			"[Sentry MCP Server] mcpIntegration not available - MCP monitoring may not be fully enabled. Ensure @sentry/node >= 9.44.0",
+		);
+	}
+
+	Sentry.init({
+		dsn,
+		environment: process.env.NODE_ENV || "development",
+		tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+		debug: process.env.SENTRY_DEBUG === "true" || process.env.NODE_ENV === "development",
+		integrations: integrations.length > 0 ? integrations : undefined,
+		beforeSend(event) {
+			if (
+				process.env.SENTRY_DEBUG === "true" ||
+				process.env.NODE_ENV === "development"
+			) {
+				console.log("[Sentry MCP Server] Event captured:", {
+					message: event.message,
+					exception: event.exception,
+					level: event.level,
+					environment: event.environment,
+				});
+			}
+			return event;
+		},
+	});
+	console.log("[Sentry MCP Server] Initialized");
+} else {
+	console.warn("[Sentry MCP Server] DSN not found - Sentry MCP monitoring is disabled");
+}
 
 class JobPingMCPServer {
 	private server: Server;

@@ -21,12 +21,17 @@ export class SentryMCP {
 		const { hours = 24, limit = 50 } = args;
 
 		try {
-			if (!this.authToken) {
+			// Re-check environment variables in case they weren't loaded at construction
+			const authToken = this.authToken || process.env.SENTRY_AUTH_TOKEN || "";
+			const org = this.org || process.env.SENTRY_ORG || "";
+			const project = this.project || process.env.SENTRY_PROJECT || "";
+
+			if (!authToken || !org) {
 				return {
 					content: [
 						{
 							type: "text",
-							text: `⚠️  Sentry MCP not configured. Please set SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT environment variables.\n\nTo get these:\n1. Go to https://sentry.io/settings/tokens/\n2. Create a new token with 'Read' permissions\n3. Set SENTRY_ORG to your organization slug\n4. Set SENTRY_PROJECT to your project slug`,
+							text: `⚠️  Sentry MCP not configured. Please set SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT environment variables.\n\nCurrent values:\n- SENTRY_AUTH_TOKEN: ${authToken ? 'set' : 'missing'}\n- SENTRY_ORG: ${org || 'missing'}\n- SENTRY_PROJECT: ${project || 'missing (optional)'}\n\nTo get these:\n1. Go to https://sentry.io/settings/tokens/\n2. Create a new token with 'Read' permissions\n3. Set SENTRY_ORG to your organization slug\n4. Set SENTRY_PROJECT to your project slug`,
 						},
 					],
 				};
@@ -35,17 +40,19 @@ export class SentryMCP {
 			const _since = new Date(
 				Date.now() - hours * 60 * 60 * 1000,
 			).toISOString();
-			const url = `https://sentry.io/api/0/organizations/${this.org}/issues/?statsPeriod=${hours}h`;
+			const url = `https://sentry.io/api/0/organizations/${org}/issues/?statsPeriod=${hours}h`;
 
 			const response = await fetch(url, {
 				headers: {
-					Authorization: `Bearer ${this.authToken}`,
+					Authorization: `Bearer ${authToken}`,
+					"Content-Type": "application/json",
 				},
 			});
 
 			if (!response.ok) {
+				const errorText = await response.text().catch(() => response.statusText);
 				throw new Error(
-					`Sentry API error: ${response.status} ${response.statusText}`,
+					`Sentry API error: ${response.status} ${response.statusText}. ${errorText}. URL: ${url}`,
 				);
 			}
 
@@ -63,7 +70,7 @@ export class SentryMCP {
 				userCount: issue.userCount,
 				lastSeen: new Date(issue.lastSeen).toLocaleString(),
 				firstSeen: new Date(issue.firstSeen).toLocaleString(),
-				url: `https://sentry.io/organizations/${this.org}/issues/${issue.id}/`,
+				url: `https://sentry.io/organizations/${org}/issues/${issue.id}/`,
 			}));
 
 			return {
@@ -100,12 +107,16 @@ export class SentryMCP {
 		const { days = 7 } = args;
 
 		try {
-			if (!this.authToken) {
+			// Re-check environment variables in case they weren't loaded at construction
+			const authToken = this.authToken || process.env.SENTRY_AUTH_TOKEN || "";
+			const org = this.org || process.env.SENTRY_ORG || "";
+
+			if (!authToken || !org) {
 				return {
 					content: [
 						{
 							type: "text",
-							text: "⚠️  Sentry MCP not configured. Please set environment variables first.",
+							text: "⚠️  Sentry MCP not configured. Please set SENTRY_AUTH_TOKEN and SENTRY_ORG environment variables first.",
 						},
 					],
 				};
@@ -114,17 +125,19 @@ export class SentryMCP {
 			const _since = new Date(
 				Date.now() - days * 24 * 60 * 60 * 1000,
 			).toISOString();
-			const url = `https://sentry.io/api/0/organizations/${this.org}/issues/?statsPeriod=${days * 24}h`;
+			const url = `https://sentry.io/api/0/organizations/${org}/issues/?statsPeriod=${days * 24}h`;
 
 			const response = await fetch(url, {
 				headers: {
-					Authorization: `Bearer ${this.authToken}`,
+					Authorization: `Bearer ${authToken}`,
+					"Content-Type": "application/json",
 				},
 			});
 
 			if (!response.ok) {
+				const errorText = await response.text().catch(() => response.statusText);
 				throw new Error(
-					`Sentry API error: ${response.status} ${response.statusText}`,
+					`Sentry API error: ${response.status} ${response.statusText}. ${errorText}`,
 				);
 			}
 
@@ -200,12 +213,16 @@ export class SentryMCP {
 		const { errorId } = args;
 
 		try {
-			if (!this.authToken) {
+			// Re-check environment variables in case they weren't loaded at construction
+			const authToken = this.authToken || process.env.SENTRY_AUTH_TOKEN || "";
+			const org = this.org || process.env.SENTRY_ORG || "";
+
+			if (!authToken || !org) {
 				return {
 					content: [
 						{
 							type: "text",
-							text: "⚠️  Sentry MCP not configured. Please set environment variables first.",
+							text: "⚠️  Sentry MCP not configured. Please set SENTRY_AUTH_TOKEN and SENTRY_ORG environment variables first.",
 						},
 					],
 				};
@@ -215,13 +232,15 @@ export class SentryMCP {
 
 			const response = await fetch(url, {
 				headers: {
-					Authorization: `Bearer ${this.authToken}`,
+					Authorization: `Bearer ${authToken}`,
+					"Content-Type": "application/json",
 				},
 			});
 
 			if (!response.ok) {
+				const errorText = await response.text().catch(() => response.statusText);
 				throw new Error(
-					`Sentry API error: ${response.status} ${response.statusText}`,
+					`Sentry API error: ${response.status} ${response.statusText}. ${errorText}`,
 				);
 			}
 
@@ -235,7 +254,7 @@ export class SentryMCP {
 							Object.entries(issue.tags || {})
 								.map(([k, v]) => `${k}=${v}`)
 								.join(", ") || "none"
-						}\n\n**URL:** https://sentry.io/organizations/${this.org}/issues/${issue.id}/`,
+						}\n\n**URL:** https://sentry.io/organizations/${org}/issues/${issue.id}/`,
 					},
 				],
 			};

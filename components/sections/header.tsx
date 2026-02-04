@@ -149,47 +149,19 @@ export default function Header() {
 	return (
 		<>
 			<header
-				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-black/80 backdrop-blur-xl ${
 					scrolled
-						? "bg-black/80 backdrop-blur-md"
-						: "bg-black/60 backdrop-blur-md"
+						? "border-b border-emerald-500/30 shadow-lg shadow-emerald-500/10"
+						: "border-b border-white/5"
 				}`}
 			>
-				{/* Curved bottom edge using SVG */}
-				<div className="absolute inset-x-0 bottom-0 h-8 overflow-hidden pointer-events-none">
-					<svg
-						className="absolute bottom-0 w-full h-8"
-						preserveAspectRatio="none"
-						viewBox="0 0 1200 120"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<path
-							d="M0,0 Q600,60 1200,0 L1200,120 L0,120 Z"
-							className={scrolled ? "fill-black/80" : "fill-black/60"}
-						/>
-					</svg>
-					{/* Glow line on the curve */}
-					<svg
-						className="absolute bottom-0 w-full h-8"
-						preserveAspectRatio="none"
-						viewBox="0 0 1200 120"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<path
-							d="M0,0 Q600,60 1200,0"
-							className="stroke-emerald-500/30"
-							strokeWidth="2"
-							fill="none"
-						/>
-					</svg>
-				</div>
 
 				<div
 					className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative"
 					style={{ overflow: "visible" }}
 				>
 					<div
-						className="h-20 md:h-24 flex items-center justify-between py-2 overflow-visible"
+						className="h-20 md:h-24 flex items-center justify-between overflow-visible"
 						style={{ overflow: "visible" }}
 					>
 						{/* Logo with graduation cap */}
@@ -205,8 +177,8 @@ export default function Header() {
 							aria-label="JobPing Home"
 							style={{ overflow: "visible", paddingRight: "0.75rem" }}
 						>
-							<div className="origin-left transform scale-[0.7] sm:scale-[0.8] md:scale-90">
-								<LogoWordmark />
+							<div className="scale-75 sm:scale-90 md:scale-100 origin-left">
+							<LogoWordmark />
 							</div>
 						</Link>
 
@@ -268,9 +240,12 @@ export default function Header() {
 							)}
 
 							{/* Trust badge - desktop only */}
-							<div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-								<div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-								<span className="text-sm font-medium text-emerald-400">1,000+ students</span>
+							<div className="hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-full bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
+								<div className="relative flex h-2 w-2">
+									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+									<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+								</div>
+								<span className="text-sm font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">1,000+ students</span>
 							</div>
 
 							{/* CTA Button */}

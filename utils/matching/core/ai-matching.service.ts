@@ -460,16 +460,32 @@ let aiMatchingService: AIMatchingService;
 
 try {
 	// Debug OpenAI API key issue
+	const openaiKey = ENV.OPENAI_API_KEY || process.env.OPENAI_API_KEY || "";
+	const hasValidKey = openaiKey.length > 10 && 
+		!openaiKey.includes("placeholder") && 
+		!openaiKey.includes("dummy") &&
+		openaiKey.startsWith("sk-");
+
 	console.log("🔍 AI Matching Service Debug:", {
 		hasENV_OPENAI_API_KEY: !!ENV.OPENAI_API_KEY,
-		keyLength: ENV.OPENAI_API_KEY?.length || 0,
-		keyPrefix: ENV.OPENAI_API_KEY?.substring(0, 8) || 'undefined',
+		hasProcessEnvKey: !!process.env.OPENAI_API_KEY,
+		keyLength: openaiKey.length,
+		keyPrefix: openaiKey.substring(0, 8) || 'undefined',
+		hasValidKey,
 		NODE_ENV: process.env.NODE_ENV,
 	});
 
+	// Use the key from ENV or fallback to process.env
+	const apiKeyToUse = ENV.OPENAI_API_KEY || process.env.OPENAI_API_KEY || undefined;
+	
 	// Export singleton with proper environment initialization
-	aiMatchingService = new AIMatchingService(ENV.OPENAI_API_KEY || undefined);
-	console.log("✅ AI Matching Service initialized successfully");
+	aiMatchingService = new AIMatchingService(apiKeyToUse);
+	
+	if (hasValidKey) {
+		console.log("✅ AI Matching Service initialized successfully with valid API key");
+	} else {
+		console.warn("⚠️  AI Matching Service initialized without valid API key - will use fallback matching");
+	}
 } catch (initError) {
 	console.error("❌ AI Matching Service initialization failed:", initError);
 	

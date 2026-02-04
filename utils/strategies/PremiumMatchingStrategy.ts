@@ -333,21 +333,47 @@ async function rankAndReturnMatchesDirect(
 	if (matchesToSave.length > 0) {
 		try {
 			const supabase = getDatabaseClient();
+			
+			// Verify user exists before inserting matches
+			if (!userPrefs.user_id) {
+				throw new Error(`user_id is required for premium matches but was not provided for email: ${userPrefs.email}`);
+			}
+
+			// Final verification: ensure user exists before inserting matches
+			const { data: userCheck, error: userCheckError } = await supabase
+				.from("users")
+				.select("id")
+				.eq("id", userPrefs.user_id)
+				.single();
+
+			if (userCheckError || !userCheck) {
+				throw new Error(
+					`User verification failed before saving matches: user_id ${userPrefs.user_id} for email ${userPrefs.email} does not exist. ${userCheckError?.message || 'User not found'}`,
+				);
+			}
+
 			const { error } = await supabase.from("user_matches").insert(matchesToSave);
 
 			if (error) {
+				const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+				const errorMessage = isForeignKeyError
+					? `Foreign key constraint violation: user_id ${userPrefs.user_id} for email ${userPrefs.email}. This constraint references public.users(id). Original error: ${error.message}`
+					: `Failed to save premium matches: ${error.message}`;
+
 				apiLogger.error(
 					"[PREMIUM] Failed to save matches to database",
 					error as Error,
 					{
 						email: userPrefs.email,
+						userId: userPrefs.user_id,
 						matchCount: matchesToSave.length,
 						errorCode: error.code,
+						isForeignKeyError,
 					},
 				);
 
 				// CRITICAL FIX: Propagate error instead of silently continuing
-				throw new Error(`Failed to save premium matches: ${error.message}`);
+				throw new Error(errorMessage);
 			} else {
 				apiLogger.info("[PREMIUM] Successfully saved matches to database", {
 					email: userPrefs.email,
@@ -357,6 +383,7 @@ async function rankAndReturnMatchesDirect(
 		} catch (err) {
 			apiLogger.error("[PREMIUM] Error saving matches", err as Error, {
 				email: userPrefs.email,
+				userId: userPrefs.user_id,
 				matchCount: matchesToSave.length,
 			});
 
