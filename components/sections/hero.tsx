@@ -16,7 +16,7 @@ function Hero() {
 	return (
 		<section
 			data-testid="hero-section"
-			className="section-padding-hero pt-24 pb-20 relative isolate overflow-visible min-h-screen sm:min-h-screen flex items-center bg-transparent"
+			className="section-padding-hero pt-28 md:pt-32 pb-20 relative isolate overflow-visible min-h-screen sm:min-h-screen flex items-center bg-transparent"
 		>
 			{/* Layer 1: The Dot Grid (The Foundation) */}
 			<div

@@ -151,14 +151,37 @@ export default function Header() {
 			<header
 				className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
 					scrolled
-						? "bg-black/70 backdrop-blur-xl border-b border-white/10 shadow-lg"
-						: "bg-black/50 backdrop-blur-xl border-b border-white/5"
+						? "bg-black/80 backdrop-blur-md"
+						: "bg-black/60 backdrop-blur-md"
 				}`}
 			>
-				{/* Glassmorphic background with gradient glow */}
-				<div className="absolute inset-0">
-					{/* Top gradient glow */}
-					<div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+				{/* Curved bottom edge using SVG */}
+				<div className="absolute inset-x-0 bottom-0 h-8 overflow-hidden pointer-events-none">
+					<svg
+						className="absolute bottom-0 w-full h-8"
+						preserveAspectRatio="none"
+						viewBox="0 0 1200 120"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path
+							d="M0,0 Q600,60 1200,0 L1200,120 L0,120 Z"
+							className={scrolled ? "fill-black/80" : "fill-black/60"}
+						/>
+					</svg>
+					{/* Glow line on the curve */}
+					<svg
+						className="absolute bottom-0 w-full h-8"
+						preserveAspectRatio="none"
+						viewBox="0 0 1200 120"
+						xmlns="http://www.w3.org/2000/svg"
+					>
+						<path
+							d="M0,0 Q600,60 1200,0"
+							className="stroke-emerald-500/30"
+							strokeWidth="2"
+							fill="none"
+						/>
+					</svg>
 				</div>
 
 				<div
@@ -166,7 +189,7 @@ export default function Header() {
 					style={{ overflow: "visible" }}
 				>
 					<div
-						className="h-16 md:h-20 flex items-center justify-between py-2 overflow-visible"
+						className="h-20 md:h-24 flex items-center justify-between py-2 overflow-visible"
 						style={{ overflow: "visible" }}
 					>
 						{/* Logo with graduation cap */}
@@ -182,10 +205,7 @@ export default function Header() {
 							aria-label="JobPing Home"
 							style={{ overflow: "visible", paddingRight: "0.75rem" }}
 						>
-							<div
-								className="scale-30 sm:scale-40 md:scale-45 origin-left overflow-visible pr-2 sm:pr-3 md:pr-4"
-								style={{ overflow: "visible", minWidth: "fit-content" }}
-							>
+							<div className="origin-left transform scale-[0.7] sm:scale-[0.8] md:scale-90">
 								<LogoWordmark />
 							</div>
 						</Link>
@@ -248,19 +268,13 @@ export default function Header() {
 							)}
 
 							{/* Trust badge - desktop only */}
-							<div className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-white/10 hover:bg-white/[0.05] hover:border-emerald-500/30 transition-all">
-								{/* Pulsing dot */}
-								<div className="relative flex h-2 w-2">
-									<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-									<span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-								</div>
-								<span className="font-display text-xs font-medium text-zinc-300">
-									1,000+ students
-								</span>
+							<div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+								<div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+								<span className="text-sm font-medium text-emerald-400">1,000+ students</span>
 							</div>
 
-							{/* Enhanced CTA Button with shine effect */}
-							<Link
+							{/* CTA Button */}
+							<CustomButton
 								href="/signup/free"
 								onClick={() => {
 									trackEvent("cta_clicked", {
@@ -268,26 +282,14 @@ export default function Header() {
 										location: "header",
 									});
 								}}
-								className="font-display group relative px-6 py-3 rounded-xl font-semibold text-white overflow-hidden"
+								variant="primary"
+								size="md"
+								className="hidden sm:inline-flex"
 							>
-								{/* Black shiny background */}
-								<div className="absolute inset-0 bg-black group-hover:bg-brand-500/10 transition-all duration-300" />
-
-								{/* Shadow that grows on hover */}
-								<div className="absolute inset-0 shadow-lg shadow-black/50 group-hover:shadow-xl group-hover:shadow-black/80 rounded-xl transition-all" />
-
-								{/* Text */}
-								<span className="relative z-10 group-hover:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
-									<span className="hidden sm:inline">
-										{CTA_GET_MY_5_FREE_MATCHES}
-									</span>
-									<span className="sm:hidden">Get 5 Free Matches</span>
-									<BrandIcons.ArrowRight className="h-4 w-4" />
-								</span>
-
-								{/* Border glow */}
-								<div className="absolute inset-0 rounded-xl border border-white/30 group-hover:border-white/60 transition-colors" />
-							</Link>
+								<span className="hidden lg:inline">{CTA_GET_MY_5_FREE_MATCHES}</span>
+								<span className="lg:hidden">Get 5 Free Matches</span>
+								<BrandIcons.ArrowRight className="h-4 w-4" />
+							</CustomButton>
 						</div>
 
 						{/* Mobile Menu Button - Enhanced */}
