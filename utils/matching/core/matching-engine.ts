@@ -166,6 +166,7 @@ export class SimplifiedMatchingEngine {
 
 				// Combine with AI results if any
 				const maxResults = opts.maxMatches || opts.fallbackThreshold * 2;
+				const aiMatchCount = matches.length;
 				matches = [...matches, ...fallbackMatches]
 					.filter(
 						(match, index, arr) =>
@@ -176,7 +177,9 @@ export class SimplifiedMatchingEngine {
 					.sort((a, b) => b.match_score - a.match_score)
 					.slice(0, maxResults);
 
-				method = opts.useAI ? "ai" : "fallback";
+				// CRITICAL FIX: Set method based on whether fallback was actually used
+				// If we had AI matches, it's hybrid. If not, it's pure fallback.
+				method = aiMatchCount > 0 ? "ai" : "fallback";
 			}
 
 			// Step 4: Apply business logic to respect user choices

@@ -188,37 +188,50 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	}
 
 	// Transform the data - Supabase returns jobs as nested objects, we need to flatten them
-	const transformedMatches = (matches || []).map((match: any) => {
-		const jobData = match.jobs;
-		return {
-			id: jobData?.id,
-			job_hash: jobData?.job_hash,
-			title: jobData?.title,
-			company: jobData?.company,
-			company_name: jobData?.company_name,
-			location: jobData?.location,
-			city: jobData?.city,
-			country: jobData?.country,
-			description: jobData?.description,
-			url: jobData?.job_url,
-			job_url: jobData?.job_url,
-			work_environment: jobData?.work_environment,
-			match_score: match.match_score,
-			match_reason: match.match_reason,
-			visa_confidence: jobData?.visa_friendly ? "likely" : "unknown",
-			visa_confidence_label: jobData?.visa_friendly
-				? "Visa Friendly"
-				: "Unknown",
-			categories: jobData?.categories || [],
-			is_internship: jobData?.is_internship,
-			is_graduate: jobData?.is_graduate,
-			posted_at: jobData?.posted_at,
-			experience_required: jobData?.experience_required,
-			salary_min: jobData?.salary_min,
-			salary_max: jobData?.salary_max,
-			visa_sponsorship: jobData?.visa_sponsorship,
-		};
-	});
+	// CRITICAL FIX: Filter out matches with missing job data to prevent frontend errors
+	const transformedMatches = (matches || [])
+		.filter((match: any) => {
+			// Ensure job data exists
+			if (!match.jobs) {
+				apiLogger.warn("Match missing job data", {
+					email: userEmail,
+					matchId: match.id,
+				});
+				return false;
+			}
+			return true;
+		})
+		.map((match: any) => {
+			const jobData = match.jobs;
+			return {
+				id: jobData?.id,
+				job_hash: jobData?.job_hash,
+				title: jobData?.title || "Untitled Position",
+				company: jobData?.company || "Unknown Company",
+				company_name: jobData?.company_name || jobData?.company || "Unknown Company",
+				location: jobData?.location || jobData?.city || "Location not specified",
+				city: jobData?.city,
+				country: jobData?.country,
+				description: jobData?.description || "",
+				url: jobData?.job_url,
+				job_url: jobData?.job_url,
+				work_environment: jobData?.work_environment,
+				match_score: match.match_score || 0,
+				match_reason: match.match_reason || "Matched",
+				visa_confidence: jobData?.visa_friendly ? "likely" : "unknown",
+				visa_confidence_label: jobData?.visa_friendly
+					? "Visa Friendly"
+					: "Unknown",
+				categories: jobData?.categories || [],
+				is_internship: jobData?.is_internship || false,
+				is_graduate: jobData?.is_graduate || false,
+				posted_at: jobData?.posted_at,
+				experience_required: jobData?.experience_required,
+				salary_min: jobData?.salary_min,
+				salary_max: jobData?.salary_max,
+				visa_sponsorship: jobData?.visa_sponsorship,
+			};
+		});
 
 	// Get target companies for this user (companies that have been hiring recently)
 	const { data: targetCompanies } = await supabase

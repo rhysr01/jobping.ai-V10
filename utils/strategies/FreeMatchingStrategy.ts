@@ -171,11 +171,18 @@ async function rankAndReturnMatches(
 	try {
 		// Use simplified matching engine with free tier configuration
 		// Only pass required fields - no visa, entry_level, skills, industries
+		// CRITICAL FIX: Normalize career_path to array format
+		const careerPathArray = Array.isArray(userPrefs.career_path)
+			? userPrefs.career_path
+			: userPrefs.career_path
+				? [userPrefs.career_path]
+				: [];
+		
 		const matchResult = await simplifiedMatchingEngine.findMatchesForFreeUser(
 			{
 				email: userPrefs.email,
 				target_cities: userPrefs.target_cities,
-				career_path: userPrefs.career_path || [],
+				career_path: careerPathArray,
 				// FREE tier does NOT provide these (premium-only features):
 				entry_level_preference: undefined, // Not collected by FREE form
 				visa_status: undefined, // Not collected by FREE form
@@ -212,26 +219,27 @@ async function rankAndReturnMatches(
 			})
 			.filter(Boolean); // Remove null entries
 
-		// If no matches found, try fallback with just city filter (more lenient)
+		// If no matches found, try fallback with filtered jobs (city + career path matched)
+		// CRITICAL FIX: The `jobs` parameter here IS the filtered jobs (passed from runFreeMatching)
 		if (matches.length === 0 && jobs.length > 0) {
 			apiLogger.warn(
-				"[FREE] No matches from AI, using raw job list as fallback",
+				"[FREE] No matches from AI, using filtered job list as fallback",
 				{
 					email: userPrefs.email,
-					availableJobs: jobs.length,
+					filteredJobs: jobs.length,
 					method: method,
 				},
 			);
 
-			// Take first 5 jobs as fallback
+			// Take top filtered jobs as fallback (already matched city + career path)
 			const fallbackMatches = jobs.slice(0, maxMatches).map((job: any) => ({
 				...job,
-				match_score: 0.5,
+				match_score: 0.6, // Slightly higher score since they passed city/career filter
 				match_reason:
-					"Matching temporarily unavailable - showing available opportunities",
+					"Matched your city and career path preferences",
 			}));
 
-			apiLogger.info("[FREE] Using fallback job list", {
+			apiLogger.info("[FREE] Using filtered fallback job list", {
 				email: userPrefs.email,
 				fallbackMatches: fallbackMatches.length,
 			});
@@ -239,7 +247,7 @@ async function rankAndReturnMatches(
 			return {
 				matches: fallbackMatches,
 				matchCount: fallbackMatches.length,
-				method: "free_fallback_jobs",
+				method: "free_fallback_filtered",
 				duration: Date.now() - startTime,
 			};
 		}

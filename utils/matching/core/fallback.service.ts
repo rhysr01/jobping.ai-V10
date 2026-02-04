@@ -112,8 +112,19 @@ export class FallbackService {
 	private calculateRelevanceComponent(job: Job, user: UserPreferences): number {
 		let relevance = 0;
 
-		// Skills matching (35% of old algorithm)
-		const skillsScore = this.calculateSemanticSkillsMatch(job, user);
+		// Skills matching (for premium users with career_keywords)
+		// For free users, use career_path matching instead
+		const isFreeUser = user.subscription_tier === "free";
+		let skillsScore = 0;
+		
+		if (isFreeUser) {
+			// Free users: Use career_path matching as skills proxy
+			// This ensures semantic matching works for free tier
+			skillsScore = this.calculateAdvancedCareerPathMatch(job, user);
+		} else {
+			// Premium users: Use actual skills/keywords matching
+			skillsScore = this.calculateSemanticSkillsMatch(job, user);
+		}
 		relevance += skillsScore * 0.4; // 40% of relevance
 
 		// Experience matching (25% of old algorithm)
