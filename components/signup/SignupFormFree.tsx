@@ -950,7 +950,7 @@ function SignupFormFree() {
 	);
 
 	return (
-		<div className="min-h-screen bg-black relative overflow-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+		<div className="min-h-screen bg-surface-base relative overflow-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))]">
 			{/* Background Effects - Simplified for mobile */}
 			<div
 				className="absolute inset-0 enhanced-grid opacity-30 pointer-events-none"
@@ -970,7 +970,7 @@ function SignupFormFree() {
 			/>
 
 			{/* Progress Bar */}
-			<div className="sticky top-[-1px] z-40 bg-black/90 backdrop-blur-md border-b border-white/10 mb-6 shadow-lg">
+			<div className="sticky top-[-1px] z-40 bg-surface-base/90 backdrop-blur-md border-b border-white/10 mb-6 shadow-lg">
 				<div className="h-1.5 bg-zinc-800/80 relative overflow-hidden">
 					<motion.div
 						className="h-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"

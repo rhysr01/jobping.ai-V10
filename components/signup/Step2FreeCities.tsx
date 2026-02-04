@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import React, { useState, useRef } from "react";
 import { CityChip } from "../ui/CityChip";
 import { FormFieldError, FormFieldSuccess } from "../ui/FormFieldFeedback";
-import { Button } from "../ui/button";
+import CustomButton from "../ui/CustomButton";
 import { MobileNavigation } from "./MobileNavigation";
 import { UI } from "../../lib/constants";
 import { showToast } from "../../lib/toast";
@@ -173,7 +173,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 				{/* Show More Button - Only show if not showing all cities */}
 				{!showAllCities && POPULAR_CITIES.length > 0 && (
 					<div className="mt-4 text-center">
-						<Button
+						<CustomButton
 							onClick={() => {
 								console.log("Step2FreeCities: Show more cities clicked");
 								setShowAllCities(true);
@@ -184,7 +184,7 @@ export const Step2FreeCities = React.memo(function Step2FreeCities({
 							type="button"
 						>
 							Show {ALL_CITIES.length - POPULAR_CITIES.length} more cities →
-						</Button>
+						</CustomButton>
 					</div>
 				)}
 

@@ -40,7 +40,7 @@ export function FreeSuccessPage({
 				autoHideDelay={3000}
 			/>
 
-			<div className="min-h-screen bg-black text-white py-8">
+			<div className="min-h-screen bg-surface-base text-white py-8">
 				<div className="container mx-auto px-4 max-w-4xl">
 					{/* Success Hero - matches premium layout */}
 					<div className="text-center mb-8">

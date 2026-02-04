@@ -11,7 +11,7 @@ export function ProgressBar({ step }: ProgressBarProps) {
 	return (
 		<>
 			{/* Sticky Progress Bar - iOS Safari Compatible */}
-			<div className="sticky top-[-1px] z-40 bg-black/90 backdrop-blur-md border-b border-white/10 mb-6 shadow-lg">
+			<div className="sticky top-[-1px] z-40 bg-surface-base/90 backdrop-blur-md border-b border-white/10 mb-6 shadow-lg">
 				<div className="h-1.5 bg-zinc-800/80 relative overflow-hidden">
 					<motion.div
 						className="h-full bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
