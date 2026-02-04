@@ -99,6 +99,56 @@ function SignupFormFree() {
 	// Ref to track redirect timeout for cleanup
 	const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+	// Global error handler for unhandled errors
+	useEffect(() => {
+		const handleUnhandledError = (event: ErrorEvent) => {
+			console.error("🚨 UNHANDLED ERROR in SignupFormFree:", event.error);
+			Sentry.captureException(event.error, {
+				tags: {
+					component: "SignupFormFree",
+					error_type: "unhandled_error",
+					step: step.toString(),
+				},
+				extra: {
+					message: event.message,
+					filename: event.filename,
+					lineno: event.lineno,
+					colno: event.colno,
+					formData: {
+						email: formData.email,
+						step: step,
+					},
+				},
+			});
+		};
+
+		const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+			console.error("🚨 UNHANDLED PROMISE REJECTION in SignupFormFree:", event.reason);
+			Sentry.captureException(event.reason instanceof Error ? event.reason : new Error(String(event.reason)), {
+				tags: {
+					component: "SignupFormFree",
+					error_type: "unhandled_promise_rejection",
+					step: step.toString(),
+				},
+				extra: {
+					reason: event.reason,
+					formData: {
+						email: formData.email,
+						step: step,
+					},
+				},
+			});
+		};
+
+		window.addEventListener('error', handleUnhandledError);
+		window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+		return () => {
+			window.removeEventListener('error', handleUnhandledError);
+			window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+		};
+	}, [step, formData.email]);
+
 	// Cleanup timeout on unmount
 	useEffect(() => {
 		return () => {
@@ -164,7 +214,19 @@ function SignupFormFree() {
 
 	// Enhanced submit handler with validation and loading states
 	const handleSubmit = useCallback(async () => {
+		// Force console logging for debugging
+		console.log("🚀 FREE SIGNUP SUBMIT STARTED", {
+			loading,
+			isSubmitting,
+			step,
+			email: formData.email,
+			cities: formData.cities,
+			careerPath: formData.careerPath,
+			timestamp: new Date().toISOString(),
+		});
+
 		if (loading || isSubmitting) {
+			console.log("⏸️ Submit blocked - already in progress");
 			debugLogger.warning("SUBMIT", "Submit already in progress");
 			return;
 		}
@@ -306,17 +368,49 @@ function SignupFormFree() {
 			});
 			submitTracker.checkpoint("API call starting");
 
-			const response = await apiCallJson<{
-				userId: string;
-				email: string;
-				matchesCount: number;
-				success?: boolean;
-				error?: string;
-				details?: any;
-			}>("/api/signup/free", {
-				method: "POST",
-				body: JSON.stringify(apiData),
+			// Force console logging before API call
+			console.log("📡 MAKING API CALL to /api/signup/free", {
+				apiData,
+				timestamp: new Date().toISOString(),
 			});
+
+			// Add network error detection
+			let response;
+			try {
+				response = await apiCallJson<{
+					userId: string;
+					email: string;
+					matchesCount: number;
+					success?: boolean;
+					error?: string;
+					details?: any;
+				}>("/api/signup/free", {
+					method: "POST",
+					body: JSON.stringify(apiData),
+				});
+			} catch (networkError) {
+				// Capture network/fetch errors that might not reach Sentry
+				console.error("🚨 NETWORK ERROR in free signup:", networkError);
+				
+				Sentry.captureException(networkError instanceof Error ? networkError : new Error(String(networkError)), {
+					tags: {
+						component: "SignupFormFree",
+						action: "api_call",
+						error_type: "network_error",
+					},
+					extra: {
+						endpoint: "/api/signup/free",
+						formData: {
+							email: formData.email,
+							cities: formData.cities?.length || 0,
+							careerPath: formData.careerPath?.length || 0,
+						},
+						timestamp: new Date().toISOString(),
+					},
+				});
+				
+				throw networkError; // Re-throw to be handled by outer catch
+			}
 
 			debugLogger.success("SUBMIT_API_RESPONSE", "API response received", {
 				userId: response?.userId,
@@ -371,15 +465,41 @@ function SignupFormFree() {
 				);
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
-			debugLogger.error("SUBMIT_ERROR", "Error during submission", {
+			// ENHANCED ERROR CAPTURE - Force Sentry reporting
+			const errorDetails = {
 				errorType: error instanceof ApiError ? "ApiError" : typeof error,
 				message: error instanceof Error ? error.message : String(error),
+				stack: error instanceof Error ? error.stack : undefined,
 				status: error instanceof ApiError ? error.status : undefined,
+				response: error instanceof ApiError ? error.response : undefined,
+				formData: {
+					email: formData.email,
+					cities: formData.cities?.length || 0,
+					careerPath: formData.careerPath?.length || 0,
+					step: step,
+				},
+				timestamp: new Date().toISOString(),
+				userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
+			};
+
+			debugLogger.error("SUBMIT_ERROR", "Error during submission", errorDetails);
+			submitTracker.error("Submission failed", errorDetails);
+
+			// Force Sentry capture with full context
+			Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+				tags: {
+					component: "SignupFormFree",
+					action: "final_submit",
+					step: step.toString(),
+					error_type: "free_signup_submission",
+				},
+				extra: errorDetails,
+				level: "error",
 			});
-			submitTracker.error("Submission failed", {
-				errorType: error instanceof ApiError ? "ApiError" : typeof error,
-				message: error instanceof Error ? error.message : String(error),
-			});
+
+			// Also send to console for immediate debugging
+			console.error("🚨 FREE SIGNUP ERROR:", errorDetails);
+			console.error("🚨 FULL ERROR OBJECT:", error);
 
 			setSubmissionProgress(0);
 			setSubmissionStage("");
@@ -387,7 +507,6 @@ function SignupFormFree() {
 			// Enhanced error handling for debugging
 			let errorMessage =
 				"Unable to connect. Please check your internet connection and try again.";
-			let errorDetails = {};
 
 			if (error instanceof ApiError) {
 				debugLogger.error("SUBMIT_API_ERROR", "API error details", {
@@ -457,12 +576,12 @@ function SignupFormFree() {
 						"API Validation Error Details:",
 						error.response.details,
 					);
-					errorDetails = error.response.details;
+					const validationDetails = error.response.details;
 
 					// Parse zod validation errors into user-friendly messages
-					if (Array.isArray(error.response.details)) {
+					if (Array.isArray(validationDetails)) {
 						const fieldErrors: Record<string, string> = {};
-						error.response.details.forEach((detail: any) => {
+						validationDetails.forEach((detail: any) => {
 							if (detail.path && detail.path.length > 0) {
 								const fieldName = detail.path[0];
 								fieldErrors[fieldName] = detail.message || "Invalid value";
