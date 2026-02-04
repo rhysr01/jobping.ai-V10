@@ -8,6 +8,7 @@ import {
 	logSignupEvent,
 	getRecentErrors,
 } from "../../../../lib/debug-signup";
+import { LOG_MARKERS } from "../../../../lib/log-markers";
 
 // Simple replacements for deleted country functions
 
@@ -63,7 +64,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		sentryEnabled: !!process.env.SENTRY_DSN || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
 	}, requestId);
 
-	console.log("[FREE SIGNUP] 🚀 Request received", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.API_REQUEST} 🚀 Request received`, {
 		requestId,
 		timestamp: new Date().toISOString(),
 		url: request.url,
@@ -139,7 +140,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	let body;
 	try {
 		body = await request.json();
-		console.log("[FREE SIGNUP] Request body received", {
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.API_REQUEST} Request body received`, {
 			requestId,
 			email: body.email,
 			full_name: body.full_name,
@@ -154,7 +155,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		});
 	} catch (parseError) {
 		const error = parseError instanceof Error ? parseError : new Error(String(parseError));
-		console.error("[FREE SIGNUP] ❌ JSON parse error", {
+		console.error(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.API_ERROR} ❌ JSON parse error`, {
 			requestId,
 			error: error.message,
 			stack: error.stack,
@@ -180,7 +181,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Validate input with zod
 	const validationResult = freeSignupSchema.safeParse(body);
-	console.log("[FREE SIGNUP] Validation result", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.VALIDATION} Validation result`, {
 		requestId,
 		success: validationResult.success,
 		errors: validationResult.success ? null : validationResult.error.issues,
@@ -307,10 +308,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
-	console.log("[FREE SIGNUP] Checking for existing user", {
-		requestId,
-		normalizedEmail,
-	});
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_QUERY} Checking for existing user`, {
+			requestId,
+			normalizedEmail,
+		});
 
 	// Check if email already used (any tier)
 	// NOTE: exec_sql RPC doesn't exist, using direct query instead
@@ -322,7 +323,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.eq("email", normalizedEmail)
 			.maybeSingle();
 
-		console.log("[FREE SIGNUP] Existing user check result", {
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} Existing user check result`, {
 			requestId,
 			normalizedEmail,
 			hasError: !!error,
@@ -432,7 +433,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		daysDiff: (freeExpiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
 	});
 
-	console.log("[FREE SIGNUP] Creating user", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_INSERT} Creating user`, {
 		requestId,
 		normalizedEmail,
 		full_name,
@@ -452,17 +453,17 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		.select("id, email")
 		.single();
 
-	console.log("[FREE SIGNUP] Minimal user insert result", {
-		requestId,
-		normalizedEmail,
-		hasError: !!minimalError,
-		error: minimalError
-			? { code: minimalError.code, message: minimalError.message }
-			: null,
-		userData: minimalUserData
-			? { id: minimalUserData.id, email: minimalUserData.email }
-			: null,
-	});
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} Minimal user insert result`, {
+			requestId,
+			normalizedEmail,
+			hasError: !!minimalError,
+			error: minimalError
+				? { code: minimalError.code, message: minimalError.message }
+				: null,
+			userData: minimalUserData
+				? { id: minimalUserData.id, email: minimalUserData.email }
+				: null,
+		});
 
 	if (minimalError) {
 		apiLogger.error("Failed to create minimal user", minimalError as Error, {
@@ -482,7 +483,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Now try to update with additional fields (this might fail due to schema cache)
 	let userData: any = minimalUserData;
-	console.log("[FREE SIGNUP] Updating user with additional fields", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_UPDATE} Updating user with additional fields`, {
 		requestId,
 		normalizedEmail,
 		userId: minimalUserData.id,
@@ -510,7 +511,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			.select()
 			.single();
 
-		console.log("[FREE SIGNUP] User update result", {
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} User update result`, {
 			requestId,
 			normalizedEmail,
 			hasError: !!updateError,
@@ -652,7 +653,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		hasRunMatching: typeof SignupMatchingService.runMatching,
 	});
 	
-	console.log("[FREE SIGNUP] ✅ Starting matching", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.MATCHING_START} ✅ Starting matching`, {
 		requestId,
 		normalizedEmail,
 		userData: {
@@ -718,7 +719,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			// No pre-filtered jobs - let SignupMatchingService handle everything
 		);
 		
-		console.log("[FREE SIGNUP] ✅ SignupMatchingService.runMatching completed successfully", {
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.MATCHING_COMPLETE} ✅ SignupMatchingService.runMatching completed successfully`, {
 			requestId,
 			matchingResult,
 			hasError: !!matchingResult.error,
@@ -727,7 +728,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	} catch (matchingError) {
 		const error = matchingError instanceof Error ? matchingError : new Error(String(matchingError));
 		
-		console.error("[FREE SIGNUP] ❌ SignupMatchingService.runMatching failed", {
+		console.error(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.MATCHING_ERROR} ❌ SignupMatchingService.runMatching failed`, {
 			requestId,
 			error: matchingError,
 			errorMessage: error.message,
@@ -768,7 +769,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	}
 
 	const matchesCount = matchingResult.matchCount;
-	console.log("[FREE SIGNUP] Matching complete", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.MATCHING_COMPLETE} Matching complete`, {
 		requestId,
 		normalizedEmail,
 		matchesCount,
@@ -933,7 +934,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		matchCount: matchesCount,
 	});
 
-	console.log("[FREE SIGNUP] 🎉 Signup successful, returning response", {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.SIGNUP_SUCCESS} 🎉 Signup successful, returning response`, {
 		requestId,
 		normalizedEmail,
 		userId: userData.id,
@@ -953,7 +954,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			errorStack: error.stack,
 		}, requestId, error);
 		
-		console.error("[FREE SIGNUP] 🚨 CRITICAL ERROR - Silent exception caught:", {
+		console.error(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.CRITICAL_ERROR} 🚨 CRITICAL ERROR - Silent exception caught:`, {
 			requestId,
 			error: criticalError,
 			errorMessage: error.message,

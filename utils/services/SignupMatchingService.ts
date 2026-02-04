@@ -24,6 +24,7 @@ import {
 	type PremiumUserPreferences,
 	runPremiumMatching,
 } from "../strategies/PremiumMatchingStrategy";
+import { LOG_MARKERS } from "../../lib/log-markers";
 
 export type SubscriptionTier = "free" | "premium_pending";
 
@@ -269,6 +270,16 @@ export class SignupMatchingService {
 
 			const processingTime = Date.now() - startTime;
 
+			const matchingMarker = config.tier === "free" ? LOG_MARKERS.MATCHING_FREE : LOG_MARKERS.MATCHING_PREMIUM;
+			console.log(`${matchingMarker} ${LOG_MARKERS.MATCHING_COMPLETE} Strategy matching completed`, {
+				email,
+				requestId: requestIdStr,
+				tier: config.tier,
+				totalJobsProcessed: jobs.length,
+				matchesFound: strategyResult.matchCount,
+				processingTime,
+				method: strategyResult.method,
+			});
 			apiLogger.info(
 				`[${config.tier.toUpperCase()}] Strategy matching completed`,
 				{
@@ -295,6 +306,15 @@ export class SignupMatchingService {
 				error instanceof Error ? error.message : String(error);
 			const errorObj = error instanceof Error ? error : new Error(errorMessage);
 
+			const matchingMarker = config.tier === "free" ? LOG_MARKERS.MATCHING_FREE : LOG_MARKERS.MATCHING_PREMIUM;
+			console.error(`${matchingMarker} ${LOG_MARKERS.MATCHING_ERROR} Matching failed catastrophically`, {
+				email,
+				requestId: requestIdStr,
+				tier: config.tier,
+				processingTime,
+				error: errorMessage,
+				stack: errorObj.stack,
+			});
 			apiLogger.error(
 				`[${config.tier.toUpperCase()}] Matching failed catastrophically`,
 				errorObj,
@@ -469,6 +489,7 @@ export class SignupMatchingService {
 					query: `posted_at.gte.${freshnessDate.toISOString()},posted_at.is.null`,
 				};
 
+				console.error(`${LOG_MARKERS.MATCHING} ${LOG_MARKERS.DB_ERROR} Database error fetching jobs for tier`, errorDetails);
 				apiLogger.error("Database error fetching jobs for tier", new Error(error.message), errorDetails);
 				
 				// Capture in Sentry with detailed context

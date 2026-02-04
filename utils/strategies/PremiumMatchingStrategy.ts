@@ -9,6 +9,7 @@ import type { JobWithMetadata } from "../../lib/types/job";
 import { aiMatchingService } from "../matching/core/ai-matching.service";
 import { jobMatchesUserCategories } from "../matching/categoryMapper";
 import { getDatabaseClient } from "../core/database-pool";
+import { LOG_MARKERS } from "../../lib/log-markers";
 
 export interface PremiumUserPreferences {
 	// From form Step 1: Personal Info
@@ -54,6 +55,12 @@ export async function runPremiumMatching(
 	const startTime = Date.now();
 
 	try {
+		console.log(`${LOG_MARKERS.MATCHING_PREMIUM} ${LOG_MARKERS.MATCHING_START} Starting premium tier matching`, {
+			email: userPrefs.email,
+			cities: userPrefs.target_cities,
+			careerPaths: userPrefs.career_path,
+			jobsAvailable: jobs.length,
+		});
 		apiLogger.info("[PREMIUM] Starting premium tier matching", {
 			email: userPrefs.email,
 			cities: userPrefs.target_cities,
@@ -197,6 +204,11 @@ export async function runPremiumMatching(
 			maxMatches,
 		);
 	} catch (error) {
+		console.error(`${LOG_MARKERS.MATCHING_PREMIUM} ${LOG_MARKERS.MATCHING_ERROR} Matching error`, {
+			email: userPrefs.email,
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		});
 		apiLogger.error("[PREMIUM] Matching error", error as Error, {
 			email: userPrefs.email,
 		});

@@ -51,6 +51,12 @@ export async function runFreeMatching(
 	const startTime = Date.now();
 
 	try {
+		console.log(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.MATCHING_START} Starting lightweight free tier matching`, {
+			email: userPrefs.email,
+			cities: userPrefs.target_cities,
+			careerPath: userPrefs.career_path,
+			jobsAvailable: jobs.length,
+		});
 		apiLogger.info("[FREE] Starting lightweight free tier matching", {
 			email: userPrefs.email,
 			cities: userPrefs.target_cities,
@@ -482,6 +488,10 @@ async function saveMatchesAndReturn(
 			throw new Error(`Failed to save matches: ${error.message}`);
 		}
 
+		console.log(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_SUCCESS} Successfully saved matches`, {
+			email: userPrefs.email,
+			count: matchesToSave.length,
+		});
 		apiLogger.info("[FREE] Successfully saved matches", {
 			email: userPrefs.email,
 			count: matchesToSave.length,
@@ -489,6 +499,12 @@ async function saveMatchesAndReturn(
 	} catch (err) {
 		const error = err instanceof Error ? err : new Error(String(err));
 		
+		console.error(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_ERROR} Error saving matches`, {
+			email: userPrefs.email,
+			matchCount: matches.length,
+			error: error.message,
+			stack: error.stack,
+		});
 		apiLogger.error("[FREE] Error saving matches", error, {
 			email: userPrefs.email,
 			matchCount: matches.length,

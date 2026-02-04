@@ -12,6 +12,7 @@ import { sendVerificationEmail } from "../../../utils/email-verification";
 // Pre-filtering removed - AI handles semantic matching
 import { getProductionRateLimiter } from "../../../utils/production-rate-limiter";
 import { SignupMatchingService } from "../../../utils/services/SignupMatchingService";
+import { LOG_MARKERS } from "../../../lib/log-markers";
 
 // ✅ PREMIUM SIGNUP VALIDATION SCHEMA (Jan 30, 2026)
 // Validates all 12 fields collected from premium users
@@ -140,6 +141,12 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 			message: issue.message,
 		}));
 
+		console.log(`${LOG_MARKERS.SIGNUP_PREMIUM} ${LOG_MARKERS.VALIDATION_ERROR} Validation failed`, {
+			event: "signup_failed_validation",
+			reason: "schema_validation_failed",
+			errors,
+			timestamp: new Date().toISOString(),
+		});
 		apiLogger.info("signup_failed_validation", {
 			event: "signup_failed_validation",
 			reason: "schema_validation_failed",
