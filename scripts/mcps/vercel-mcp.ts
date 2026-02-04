@@ -213,7 +213,7 @@ export class VercelMCP {
 	}
 
 	async getEnvironmentVariables(args: any) {
-		const { projectId } = args;
+		const { projectId, includeTeamVars = true } = args;
 
 		try {
 			if (!this.accessToken) {
@@ -240,7 +240,31 @@ export class VercelMCP {
 			}
 
 			const teamParam = this.teamId ? `?teamId=${this.teamId}` : "";
-			const url = `https://api.vercel.com/v9/projects/${projectId}/env${teamParam}`;
+			
+			// Get project-level environment variables
+			const projectUrl = `https://api.vercel.com/v9/projects/${projectId}/env${teamParam}`;
+			
+			// Also get team-level environment variables if teamId is set
+			let teamVars: any[] = [];
+			if (includeTeamVars && this.teamId) {
+				try {
+					const teamUrl = `https://api.vercel.com/v1/env${teamParam}`;
+					const teamResponse = await fetch(teamUrl, {
+						headers: {
+							Authorization: `Bearer ${this.accessToken}`,
+						},
+					});
+					if (teamResponse.ok) {
+						const teamData = await teamResponse.json();
+						teamVars = teamData.envs || [];
+					}
+				} catch (error) {
+					// Silently fail for team vars - not critical
+					console.warn("Could not fetch team-level variables:", error);
+				}
+			}
+
+			const url = projectUrl;
 
 			const response = await fetch(url, {
 				headers: {
@@ -256,12 +280,26 @@ export class VercelMCP {
 
 			const data = await response.json();
 
-			if (!data.envs || data.envs.length === 0) {
+			// Merge project-level and team-level variables
+			const allEnvs = [...(data.envs || [])];
+			if (teamVars.length > 0) {
+				// Add team vars that aren't already in project vars
+				teamVars.forEach((teamVar: any) => {
+					const exists = allEnvs.some(
+						(env: any) => env.key === teamVar.key && env.target === teamVar.target,
+					);
+					if (!exists) {
+						allEnvs.push(teamVar);
+					}
+				});
+			}
+
+			if (allEnvs.length === 0) {
 				return {
 					content: [
 						{
 							type: "text",
-							text: `📋 No environment variables found for project ${projectId}`,
+							text: `📋 No environment variables found for project ${projectId}\n\n💡 Note: If you set variables at the Team level, make sure they're assigned to this project.`,
 						},
 					],
 				};
@@ -269,7 +307,7 @@ export class VercelMCP {
 
 			// Group by variable name (since same var can exist for different environments)
 			const varsByName: Record<string, any[]> = {};
-			data.envs.forEach((env: any) => {
+			allEnvs.forEach((env: any) => {
 				if (!varsByName[env.key]) {
 					varsByName[env.key] = [];
 				}
@@ -332,9 +370,12 @@ export class VercelMCP {
 			let statusText = "";
 			if (missingRequired.length > 0) {
 				statusText += `\n❌ Missing required variables:\n${missingRequired.map((v) => `   - ${v}`).join("\n")}\n`;
+				statusText += `\n💡 If you set these at Team level, make sure they're assigned to this project.\n`;
+				statusText += `   Go to: Team Settings → Environment Variables → Select variable → Assign to project\n`;
 			}
 			if (incompleteRequired.length > 0) {
 				statusText += `\n⚠️  Required variables not set for all environments:\n${incompleteRequired.map((v) => `   - ${v}`).join("\n")}\n`;
+				statusText += `\n💡 Make sure each variable is set for Production, Preview, AND Development.\n`;
 			}
 			if (missingRequired.length === 0 && incompleteRequired.length === 0) {
 				statusText += "\n✅ All required variables are properly configured!\n";
