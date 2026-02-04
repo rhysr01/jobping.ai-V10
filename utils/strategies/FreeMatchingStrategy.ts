@@ -329,14 +329,43 @@ async function rankAndReturnMatches(
 
 				// Get job_ids from job_hashes (now all jobs have proper job_hash values)
 				const jobHashes = matches.map(m => String(m.job_hash));
-				const { data: jobs } = await supabase
+				
+				apiLogger.info("[FREE] Looking up job IDs from hashes", {
+					email: userPrefs.email,
+					job_hashes: jobHashes,
+					hash_count: jobHashes.length,
+				});
+				
+				const { data: jobs, error: jobLookupError } = await supabase
 					.from("jobs")
 					.select("id, job_hash")
 					.in("job_hash", jobHashes);
 
+				if (jobLookupError) {
+					apiLogger.error("[FREE] Job lookup error", jobLookupError as Error, {
+						email: userPrefs.email,
+						job_hashes: jobHashes,
+					});
+					throw new Error(`Job lookup failed: ${jobLookupError.message}`);
+				}
+
 				if (!jobs || jobs.length === 0) {
+					apiLogger.error("[FREE] No jobs found for any hashes", new Error("No jobs found"), {
+						email: userPrefs.email,
+						job_hashes: jobHashes,
+						matches_count: matches.length,
+					});
 					throw new Error(`No jobs found for hashes: ${jobHashes.join(", ")}`);
 				}
+
+				// Log the job lookup results
+				apiLogger.info("[FREE] Job lookup results", {
+					email: userPrefs.email,
+					requested_hashes: jobHashes.length,
+					found_jobs: jobs.length,
+					found_hashes: jobs.map(j => j.job_hash),
+					missing_hashes: jobHashes.filter(hash => !jobs.find(j => j.job_hash === hash)),
+				});
 
 				// Create lookup map for job_hash -> job_id
 				const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
@@ -344,6 +373,11 @@ async function rankAndReturnMatches(
 				matchesToSave = matches.map((m: any) => {
 					const jobId = jobHashToId.get(String(m.job_hash));
 					if (!jobId) {
+						apiLogger.error("[FREE] Job ID not found for hash", new Error("Missing job ID"), {
+							email: userPrefs.email,
+							job_hash: m.job_hash,
+							available_hashes: Array.from(jobHashToId.keys()),
+						});
 						throw new Error(`Job ID not found for hash: ${m.job_hash}`);
 					}
 
@@ -360,6 +394,17 @@ async function rankAndReturnMatches(
 					};
 				});
 
+				// Validate all matches before inserting
+				const invalidMatches = matchesToSave.filter(match => !match.job_id || !match.user_id);
+				if (invalidMatches.length > 0) {
+					apiLogger.error("[FREE] Invalid matches detected", new Error("Invalid match data"), {
+						email: userPrefs.email,
+						invalid_matches: invalidMatches,
+						total_matches: matchesToSave.length,
+					});
+					throw new Error(`${invalidMatches.length} matches have invalid job_id or user_id`);
+				}
+
 				// Log what we're about to insert for debugging
 				apiLogger.info("[FREE] About to insert matches", {
 					email: userPrefs.email,
@@ -370,6 +415,7 @@ async function rankAndReturnMatches(
 						job_id: matchesToSave[0].job_id,
 						match_score: matchesToSave[0].match_score,
 					} : null,
+					all_job_ids: matchesToSave.map(m => m.job_id),
 				});
 
 				const { error } = await supabase.from("user_matches").insert(matchesToSave);
@@ -377,6 +423,8 @@ async function rankAndReturnMatches(
 				if (error) {
 					// Check if it's a foreign key constraint error
 					const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+					const isUserIdError = error.message?.includes('user_matches_user_id_fkey');
+					const isJobIdError = error.message?.includes('user_matches_job_id_fkey');
 					
 					apiLogger.error(
 						"[FREE] Failed to save matches to database",
@@ -388,29 +436,33 @@ async function rankAndReturnMatches(
 							errorCode: error.code,
 							errorMessage: error.message,
 							isForeignKeyError,
+							isUserIdError,
+							isJobIdError,
 							sampleMatch: matchesToSave[0],
+							allJobIds: matchesToSave.map(m => m.job_id),
 						},
 					);
 
 					if (isForeignKeyError) {
-						// For foreign key errors, provide more context and suggest retry
-						apiLogger.warn("[FREE] User may have been deleted by cleanup process during signup", {
-							email: userPrefs.email,
-							user_id: userId,
-							error_code: error.code,
-						});
-						
-						// Check if user still exists
-						const { data: userStillExists } = await supabase
-							.from("users")
-							.select("id, free_expires_at")
-							.eq("id", userId)
-							.single();
-							
-						if (!userStillExists) {
-							throw new Error(`User was deleted during signup process: user_id ${userId} for email ${userPrefs.email}. This may be due to cleanup process race condition.`);
+						if (isJobIdError) {
+							// The actual constraint that exists - job_id foreign key
+							const invalidJobIds = matchesToSave.map(m => m.job_id);
+							apiLogger.error("[FREE] Job ID foreign key constraint violation", error as Error, {
+								email: userPrefs.email,
+								job_ids: invalidJobIds,
+							});
+							throw new Error(`Job ID foreign key constraint violation: One or more job_ids don't exist in jobs table. Job IDs: ${invalidJobIds.join(', ')}. Original error: ${error.message}`);
+						} else if (isUserIdError) {
+							// This constraint doesn't actually exist in the schema, but error message suggests it
+							apiLogger.warn("[FREE] Misleading user_id foreign key error - this constraint doesn't exist in schema", {
+								email: userPrefs.email,
+								user_id: userId,
+								error_code: error.code,
+							});
+							throw new Error(`Misleading user_id foreign key error: user_id ${userId} for email ${userPrefs.email}. This constraint doesn't exist in schema. Original error: ${error.message}`);
 						} else {
-							throw new Error(`Foreign key constraint violation: user_id ${userId} exists but constraint failed for email ${userPrefs.email}. Original error: ${error.message}`);
+							// Generic foreign key error
+							throw new Error(`Foreign key constraint violation for email ${userPrefs.email}. Original error: ${error.message}`);
 						}
 					} else {
 						// CRITICAL FIX: Propagate error instead of silently continuing
