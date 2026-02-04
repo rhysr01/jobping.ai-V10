@@ -471,7 +471,7 @@ async function saveMatchesAndReturn(
 
 		// Create lookup map and prepare matches
 		const jobHashToId = new Map(jobs.map(job => [job.job_hash, job.id]));
-		const matchesToSave = matches.map((m: any) => {
+		let matchesToSave = matches.map((m: any) => {
 			const jobId = jobHashToId.get(String(m.job_hash));
 			if (!jobId) {
 				throw new Error(`Job ID not found for hash: ${m.job_hash}`);
@@ -489,73 +489,160 @@ async function saveMatchesAndReturn(
 			};
 		});
 
-		// FIX: Add retry logic for foreign key constraint errors
-		// This handles race conditions where user creation hasn't fully committed
-		const maxRetries = 3;
-		const retryDelay = 500; // Start with 500ms
-		let lastError: Error | null = null;
+		// FIX: Check if matches already exist for this user before inserting
+		// This prevents unique constraint violations on duplicate requests
+		const existingMatchCount = matchesToSave.length > 0 ? matchesToSave.length : 0;
+		
+		if (existingMatchCount > 0) {
+			console.log(`${LOG_MARKERS.MATCHING_FREE} Checking for existing matches before insert`, {
+				email: userPrefs.email,
+				userId,
+				matchesToInsert: matchesToSave.length,
+			});
 
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			if (attempt > 0) {
-				// Wait before retry with exponential backoff
-				const delay = retryDelay * Math.pow(2, attempt - 1);
-				console.log(`${LOG_MARKERS.MATCHING_FREE} Retrying match save (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms`);
-				await new Promise(resolve => setTimeout(resolve, delay));
-
-				// Re-verify user exists before retry
-				const { data: retryUserCheck, error: retryCheckError } = await supabase
-					.from("users")
-					.select("id")
-					.eq("id", userId)
-					.single();
-
-				if (retryCheckError || !retryUserCheck) {
-					throw new Error(
-						`User verification failed on retry ${attempt + 1}: user_id ${userId} does not exist. ${retryCheckError?.message || 'User not found'}`
-					);
-				}
-			}
-
-			const { error } = await supabase.from("user_matches").insert(matchesToSave);
-
-			if (!error) {
-				// Success - break out of retry loop
-				break;
-			}
-
-			const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+			// Get list of job_ids we're trying to insert
+			const jobIdsToCheck = matchesToSave.map(m => m.job_id);
 			
-			if (isForeignKeyError && attempt < maxRetries - 1) {
-				// Foreign key error - will retry
-				lastError = new Error(
-					`Foreign key constraint violation (attempt ${attempt + 1}/${maxRetries}): user_id ${userId} for email ${userPrefs.email}. ` +
-					`This constraint references public.users(id). ` +
-					`Original error: ${error.message}`
-				);
-				console.warn(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_ERROR} FK constraint error, will retry`, {
+			// Check which matches already exist
+			const { data: existingMatches, error: checkError } = await supabase
+				.from("user_matches")
+				.select("job_id")
+				.eq("user_id", userId)
+				.in("job_id", jobIdsToCheck);
+
+			if (checkError) {
+				console.warn(`${LOG_MARKERS.MATCHING_FREE} Error checking existing matches, proceeding with insert`, {
 					email: userPrefs.email,
 					userId,
-					attempt: attempt + 1,
-					maxRetries,
+					error: checkError.message,
 				});
-				continue;
-			}
+			} else if (existingMatches && existingMatches.length > 0) {
+				// Filter out matches that already exist
+				const existingJobIds = new Set(existingMatches.map(m => m.job_id));
+				const newMatches = matchesToSave.filter(m => !existingJobIds.has(m.job_id));
+				
+				console.log(`${LOG_MARKERS.MATCHING_FREE} Filtered duplicate matches`, {
+					email: userPrefs.email,
+					userId,
+					original: matchesToSave.length,
+					existing: existingMatches.length,
+					new: newMatches.length,
+				});
 
-			// Non-FK error or max retries reached
-			if (isForeignKeyError) {
-				const errorMessage = `Foreign key constraint violation after ${maxRetries} attempts: user_id ${userId} for email ${userPrefs.email}. ` +
-					`This constraint references public.users(id). ` +
-					`Original error: ${error.message}`;
-				throw new Error(errorMessage);
+				if (newMatches.length === 0) {
+					// All matches already exist - this is idempotent, just succeed
+					console.log(`${LOG_MARKERS.MATCHING_FREE} All matches already exist (idempotent request)`, {
+						email: userPrefs.email,
+						userId,
+						matchCount: matchesToSave.length,
+					});
+					apiLogger.info("[FREE] All matches already exist - idempotent request", {
+						email: userPrefs.email,
+						matchCount: matchesToSave.length,
+					});
+					// Skip the insert and return success
+					return {
+						matches,
+						matchCount: matches.length,
+						method: method,
+						duration: Date.now() - startTime,
+					};
+				}
+
+				// Only insert new matches
+				matchesToSave = newMatches;
 			}
-			
-			throw new Error(`Failed to save matches: ${error.message}`);
 		}
 
-		if (lastError && !matchesToSave.length) {
-			// If we exhausted retries and still have an error
-			throw lastError;
+	// FIX: Add retry logic for foreign key and unique constraint errors
+	// This handles:
+	// 1. Race conditions where user creation hasn't fully committed (FK errors)
+	// 2. Duplicate requests trying to save same matches (unique constraint errors)
+	const maxRetries = 3;
+	const retryDelay = 500; // Start with 500ms
+	let lastError: Error | null = null;
+
+	for (let attempt = 0; attempt < maxRetries; attempt++) {
+		if (attempt > 0) {
+			// Wait before retry with exponential backoff
+			const delay = retryDelay * Math.pow(2, attempt - 1);
+			console.log(`${LOG_MARKERS.MATCHING_FREE} Retrying match save (attempt ${attempt + 1}/${maxRetries}) after ${delay}ms`);
+			await new Promise(resolve => setTimeout(resolve, delay));
+
+			// Re-verify user exists before retry
+			const { data: retryUserCheck, error: retryCheckError } = await supabase
+				.from("users")
+				.select("id")
+				.eq("id", userId)
+				.single();
+
+			if (retryCheckError || !retryUserCheck) {
+				throw new Error(
+					`User verification failed on retry ${attempt + 1}: user_id ${userId} does not exist. ${retryCheckError?.message || 'User not found'}`
+				);
+			}
 		}
+
+		const { error } = await supabase.from("user_matches").insert(matchesToSave);
+
+		if (!error) {
+			// Success - break out of retry loop
+			break;
+		}
+
+		// Check error type
+		const isForeignKeyError = error.code === '23503' || error.message?.includes('foreign key constraint');
+		const isUniqueConstraintError = error.code === '23505' || error.message?.includes('user_matches_unique');
+		
+		if (isUniqueConstraintError) {
+			// Unique constraint error - matches likely already exist
+			// This is OK for idempotent requests - just log and continue
+			console.log(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_ERROR} Unique constraint error (likely duplicate request)`, {
+				email: userPrefs.email,
+				userId,
+				matchCount: matchesToSave.length,
+				errorMessage: error.message,
+			});
+			apiLogger.info("[FREE] Unique constraint error - matches likely already saved (idempotent)", {
+				email: userPrefs.email,
+				userId,
+				matchCount: matchesToSave.length,
+			});
+			// Treat as success - matches are already saved
+			break;
+		}
+		
+		if (isForeignKeyError && attempt < maxRetries - 1) {
+			// Foreign key error - will retry
+			lastError = new Error(
+				`Foreign key constraint violation (attempt ${attempt + 1}/${maxRetries}): user_id ${userId} for email ${userPrefs.email}. ` +
+				`This constraint references public.users(id). ` +
+				`Original error: ${error.message}`
+			);
+			console.warn(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_ERROR} FK constraint error, will retry`, {
+				email: userPrefs.email,
+				userId,
+				attempt: attempt + 1,
+				maxRetries,
+			});
+			continue;
+		}
+
+		// Non-FK/unique error or max retries reached
+		if (isForeignKeyError) {
+			const errorMessage = `Foreign key constraint violation after ${maxRetries} attempts: user_id ${userId} for email ${userPrefs.email}. ` +
+				`This constraint references public.users(id). ` +
+				`Original error: ${error.message}`;
+			throw new Error(errorMessage);
+		}
+		
+		throw new Error(`Failed to save matches: ${error.message}`);
+	}
+
+	if (lastError && !matchesToSave.length) {
+		// If we exhausted retries and still have an error
+		throw lastError;
+	}
 
 		console.log(`${LOG_MARKERS.MATCHING_FREE} ${LOG_MARKERS.DB_SUCCESS} Successfully saved matches`, {
 			email: userPrefs.email,

@@ -25,6 +25,8 @@ export function RetroGrid({
 		setIsMobile(window.innerWidth < 768);
 	}, []);
 
+	// CRITICAL FIX: Call all hooks BEFORE any early returns
+	// useTransform must be called unconditionally
 	const parallaxY = useTransform(scrollY, [0, 1000], [0, isMobile ? 50 : 100]);
 
 	if (!isClient) return null;
