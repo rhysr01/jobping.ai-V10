@@ -250,6 +250,28 @@ class JobPingMCPServer {
 							required: ["deploymentId"],
 						},
 					},
+					{
+						name: "vercel_get_projects",
+						description: "Get list of Vercel projects",
+						inputSchema: {
+							type: "object",
+							properties: {},
+						},
+					},
+					{
+						name: "vercel_get_environment_variables",
+						description: "Get environment variables for a Vercel project. Shows which variables are set and for which environments (Production, Preview, Development).",
+						inputSchema: {
+							type: "object",
+							properties: {
+								projectId: {
+									type: "string",
+									description: "Vercel project ID (get from vercel_get_projects)",
+								},
+							},
+							required: ["projectId"],
+						},
+					},
 
 					// Supabase tools
 					{
@@ -588,6 +610,14 @@ class JobPingMCPServer {
 					case "vercel_get_logs":
 						return this.vercel
 							? await this.vercel.getLogs(args)
+							: this.getServiceUnavailableResponse("Vercel");
+					case "vercel_get_projects":
+						return this.vercel
+							? await this.vercel.getProjects(args)
+							: this.getServiceUnavailableResponse("Vercel");
+					case "vercel_get_environment_variables":
+						return this.vercel
+							? await this.vercel.getEnvironmentVariables(args)
 							: this.getServiceUnavailableResponse("Vercel");
 					case "supabase_query_users":
 						return this.supabase
