@@ -10,7 +10,7 @@ import { SignupMatchingService } from "../../../../utils/services/SignupMatching
 
 // Note: createConsolidatedMatcher import removed - using simplified matching engine
 import { getDatabaseClient } from "../../../../utils/core/database-pool";
-import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter";
+// import { getProductionRateLimiter } from "../../../../utils/production-rate-limiter"; // Temporarily disabled
 
 // Input validation schema
 const freeSignupSchema = z.object({
@@ -51,7 +51,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	});
 
 	// Rate limiting - prevent abuse (more lenient for legitimate users)
-	// TEMPORARILY INCREASED FOR DEBUGGING - Will revert after testing
+	// TEMPORARILY DISABLED FOR DEBUGGING - Will re-enable after testing
+	const rateLimitResult = false; // Temporarily disabled
+	/*
 	const rateLimitResult = await getProductionRateLimiter().middleware(
 		request,
 		"signup-free",
@@ -60,6 +62,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			maxRequests: 100, // TEMP: Increased from 10 to 100 for debugging
 		},
 	);
+	*/
 
 	if (rateLimitResult) {
 		apiLogger.warn("Rate limit exceeded for free signup", {
