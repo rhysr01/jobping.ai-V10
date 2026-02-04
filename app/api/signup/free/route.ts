@@ -20,7 +20,7 @@ const freeSignupSchema = z.object({
 		.string()
 		.min(1, "Name is required")
 		.max(100, "Name too long")
-		.regex(/^[a-zA-Z\s'-]+$/, "Name contains invalid characters"),
+		.regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Name contains invalid characters"), // Allow accented characters
 	cities: z
 		.array(z.string().max(50))
 		.min(1, "Select at least one city")
@@ -143,20 +143,68 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			return ["email", "full_name", "cities", "careerPath"].includes(path);
 		});
 
-		if (criticalErrors.length > 0) {
-			Sentry.captureMessage("Free signup validation failed", {
-				level: "warning",
-				tags: { endpoint: "signup-free", error_type: "validation" },
-				extra: {
-					requestId,
+		// CRITICAL: Always capture validation errors to Sentry with full context
+		// This helps us debug what's actually failing in production
+		const errorPaths = validationResult.error.issues.map((issue: any) => issue.path.join("."));
+		const hasRequiredFieldErrors = errorPaths.some(path => 
+			["email", "full_name", "cities", "careerPath"].includes(path)
+		);
+		
+		const validationException = new Error(
+			`Free signup validation failed: ${validationResult.error.issues.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`
+		);
+		
+		Sentry.captureException(validationException, {
+			level: hasRequiredFieldErrors ? "error" : "warning",
+			tags: { 
+				endpoint: "signup-free", 
+				error_type: "validation",
+				validation_failed: "true",
+				has_required_field_errors: hasRequiredFieldErrors ? "true" : "false",
+				error_count: validationResult.error.issues.length.toString(),
+			},
+			extra: {
+				requestId,
+				email: body.email || "missing",
+				full_name: body.full_name || "missing",
+				cities: body.cities || [],
+				citiesLength: body.cities?.length || 0,
+				citiesType: Array.isArray(body.cities) ? "array" : typeof body.cities,
+				careerPath: body.careerPath || [],
+				careerPathLength: body.careerPath?.length || 0,
+				careerPathType: Array.isArray(body.careerPath) ? "array" : typeof body.careerPath,
+				visaStatus: body.visaStatus,
+				entryLevelPreferences: body.entryLevelPreferences,
+				terms_accepted: body.terms_accepted,
+				age_verified: body.age_verified,
+				// Detailed error breakdown
+				allValidationErrors: validationResult.error.issues.map((e: any) => ({
+					path: e.path.join("."),
+					message: e.message,
+					code: e.code,
+					received: e.received,
+					expected: e.expected,
+				})),
+				errorPaths: errorPaths,
+				criticalErrors: criticalErrors.map((e: any) => ({
+					path: e.path.join("."),
+					message: e.message,
+					code: e.code,
+				})),
+				// Full request body for debugging
+				requestBody: JSON.stringify({
 					email: body.email,
-					errors: criticalErrors,
-					allErrors: validationResult.error.issues,
+					full_name: body.full_name,
 					cities: body.cities,
 					careerPath: body.careerPath,
-				},
-			});
-		}
+					visaStatus: body.visaStatus,
+					entryLevelPreferences: body.entryLevelPreferences,
+					terms_accepted: body.terms_accepted,
+					age_verified: body.age_verified,
+				}),
+			},
+			user: { email: body.email || "unknown" },
+		});
 
 		return NextResponse.json(
 			{
