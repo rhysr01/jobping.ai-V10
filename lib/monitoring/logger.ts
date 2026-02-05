@@ -57,6 +57,35 @@ class Logger {
 		return currentLevelIndex >= configLevelIndex;
 	}
 
+	private sanitizeContext(context: LogContext): LogContext {
+		const sanitized: LogContext = {};
+		
+		for (const [key, value] of Object.entries(context)) {
+			if (value instanceof Error) {
+				// Serialize Error objects properly
+				sanitized[key] = {
+					message: value.message,
+					stack: value.stack,
+					name: value.name,
+				};
+			} else if (typeof value === "object" && value !== null && "error" in value && value.error instanceof Error) {
+				// Handle nested error objects
+				sanitized[key] = {
+					...value,
+					error: {
+						message: value.error.message,
+						stack: value.error.stack,
+						name: value.error.name,
+					},
+				};
+			} else {
+				sanitized[key] = value;
+			}
+		}
+		
+		return sanitized;
+	}
+
 	private formatLog(
 		level: LogLevel,
 		message: string,
@@ -65,18 +94,22 @@ class Logger {
 		if (!this.shouldLog(level)) return;
 
 		const timestamp = new Date().toISOString();
+		
+		// Sanitize context to prevent Error object serialization issues
+		const sanitizedContext = this.sanitizeContext(context);
+		
 		const logEntry: LogEntry = {
 			timestamp,
 			level,
 			message,
-			context,
+			context: sanitizedContext,
 			environment: MONITORING_CONFIG.environment,
 			service: this.serviceName,
 		};
 
 		if (MONITORING_CONFIG.logging.structured) {
 			// Structured JSON logging for production - always log to console for Vercel debugging
-			console.log(`[${level.toUpperCase()}] ${message}`, context);
+			console.log(`[${level.toUpperCase()}] ${message}`, sanitizedContext);
 			console.log(JSON.stringify(logEntry));
 		} else {
 			// Human-readable logging for development
@@ -89,7 +122,7 @@ class Logger {
 			}[level];
 
 			const contextStr =
-				Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+				Object.keys(sanitizedContext).length > 0 ? ` ${JSON.stringify(sanitizedContext)}` : "";
 
 			if (MONITORING_CONFIG.logging.console) {
 				console.log(
