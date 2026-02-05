@@ -390,7 +390,7 @@ async function rankAndReturnMatchesDirect(
 					scoreSource = "ai_direct";
 				} else {
 					// Intelligent fallback based on job characteristics
-					finalScore = this.calculateFallbackScore(jobData, userPrefs);
+					finalScore = FreeMatchingStrategy.calculateFallbackScore(jobData, userPrefs);
 					scoreSource = "rule_based_fallback";
 					
 					apiLogger.warn("[FREE] AI scoring failed, using fallback", {
@@ -430,39 +430,51 @@ async function rankAndReturnMatchesDirect(
 			outputMatches: matches.length,
 		});
 
-		// If no matches found, try fallback with filtered jobs (city + career path matched)
-		// CRITICAL FIX: The `jobs` parameter here IS the filtered jobs (passed from runFreeMatching)
-		if (matches.length === 0 && jobs.length > 0) {
+		// If we have fewer than maxMatches, try to fill up with fallback jobs
+		// CRITICAL FIX: Free users should always get 5 matches when possible
+		if (matches.length < maxMatches && jobs.length > 0) {
+			const neededMatches = maxMatches - matches.length;
 			apiLogger.warn(
-				"[FREE] No matches from direct AI, using filtered job list as fallback",
+				"[FREE] AI returned fewer matches than expected, filling with fallback",
 				{
 					email: userPrefs.email,
+					aiMatches: matches.length,
+					neededMatches,
 					filteredJobs: jobs.length,
 					method: method,
 				},
 			);
 
+			// Get job hashes already used by AI matches to avoid duplicates
+			const usedJobHashes = new Set(matches.map(m => m.job_hash).filter(Boolean));
+			
 			// Take diverse sample as fallback (already matched city + career path + diversity)
-			// CRITICAL FIX: Ensure job_hash is present for fallback matches
-			const fallbackMatches = diverseJobs.slice(0, maxMatches)
-				.filter((job: any) => job.job_hash) // Only include jobs with job_hash
+			// CRITICAL FIX: Ensure job_hash is present and not already used
+			const additionalMatches = diverseJobs
+				.filter((job: any) => job.job_hash && !usedJobHashes.has(job.job_hash))
+				.slice(0, neededMatches)
 				.map((job: any) => ({
 					...job,
 					job_hash: job.job_hash, // Explicitly ensure job_hash is set
-					match_score: 0.6, // Slightly higher score since they passed city/career filter + diversity
-					match_reason:
-						"Matched your city and career path preferences with good distribution",
+					match_score: FreeMatchingStrategy.calculateFallbackScore(job, userPrefs),
+					match_reason: "Matched your city and career path preferences with good distribution",
+					score_source: "rule_based_fallback", // Add metadata for debugging
 				}));
 
-			apiLogger.info("[FREE] Using filtered fallback job list", {
+			// Combine AI matches with additional fallback matches
+			const combinedMatches = [...matches, ...additionalMatches];
+
+			apiLogger.info("[FREE] Combined AI and fallback matches", {
 				email: userPrefs.email,
-				fallbackMatches: fallbackMatches.length,
+				aiMatches: matches.length,
+				fallbackMatches: additionalMatches.length,
+				totalMatches: combinedMatches.length,
 			});
 
 			return {
-				matches: fallbackMatches,
-				matchCount: fallbackMatches.length,
-				method: "free_fallback_filtered",
+				matches: combinedMatches,
+				matchCount: combinedMatches.length,
+				method: matches.length === 0 ? "free_fallback_only" : "free_ai_plus_fallback",
 				duration: Date.now() - startTime,
 			};
 		}
