@@ -860,14 +860,15 @@ async function saveMatchesAndReturn(
 	 * Calculate intelligent fallback score based on job characteristics
 	 * when AI scoring fails. Uses only fields available in free signup form.
 	 * 
-	 * Available free user data: email, full_name, cities[], careerPath[], visaStatus
+	 * Available free user data: email, full_name, cities[], careerPath[]
+	 * Note: visa_status is hardcoded to "EU citizen", no job type preferences collected
 	 */
 	private static calculateFallbackScore(job: any, userPrefs: any): number {
-		let score = 0.65; // Base score (65%) - slightly higher than before
+		let score = 0.60; // Base score (60%)
 		
 		// PRIMARY: Location match bonus (most important for free users)
 		if (job.city && userPrefs.target_cities?.includes(job.city)) {
-			score += 0.15; // +15% for exact city match
+			score += 0.20; // +20% for exact city match (increased from 15%)
 		}
 		
 		// PRIMARY: Career path alignment (second most important)
@@ -883,9 +884,9 @@ async function saveMatchesAndReturn(
 			const hasEarlyCareerMatch = job.categories.includes('early-career');
 			
 			if (hasDirectCareerMatch) {
-				score += 0.12; // +12% for direct career path match
+				score += 0.15; // +15% for direct career path match (increased from 12%)
 			} else if (hasEarlyCareerMatch) {
-				score += 0.06; // +6% for early-career category (good for all free users)
+				score += 0.08; // +8% for early-career category (increased from 6%)
 			}
 		}
 		
@@ -898,30 +899,38 @@ async function saveMatchesAndReturn(
 			}
 		}
 		
-		// SECONDARY: Job type indicators (good for entry-level users)
-		if (job.is_internship) {
-			score += 0.04; // +4% for internships (good for students)
+		// SECONDARY: Job type indicators (inferred from job flags, not user preferences)
+		if (job.is_internship || job.is_graduate) {
+			score += 0.05; // +5% for entry-level job types (good for all free users)
 		}
 		
-		if (job.is_graduate) {
-			score += 0.04; // +4% for graduate programs (good for recent grads)
-		}
-		
-		// TERTIARY: Visa sponsorship alignment (only if user needs it)
-		if (job.visa_sponsored && userPrefs.visa_status && userPrefs.visa_status !== 'EU citizen') {
-			score += 0.06; // +6% for visa sponsorship when needed
-		}
-		
-		// TERTIARY: Company quality indicators (basic heuristics)
+		// MAJOR: Company quality indicators (significantly increased)
 		if (job.company) {
 			const companyName = job.company.toLowerCase();
-			// Well-known companies that are good for early careers
-			const topCompanies = [
-				'google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix', 'spotify', 
-				'uber', 'airbnb', 'stripe', 'shopify', 'atlassian', 'salesforce'
+			
+			// Tier 1: FAANG and top tech companies
+			const tier1Companies = [
+				'google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix'
 			];
-			if (topCompanies.some(name => companyName.includes(name))) {
-				score += 0.03; // +3% for recognized companies
+			
+			// Tier 2: Other well-known tech companies
+			const tier2Companies = [
+				'spotify', 'uber', 'airbnb', 'stripe', 'shopify', 'atlassian', 
+				'salesforce', 'adobe', 'nvidia', 'tesla', 'spacex', 'palantir'
+			];
+			
+			// Tier 3: Established companies good for early careers
+			const tier3Companies = [
+				'deloitte', 'pwc', 'kpmg', 'ey', 'accenture', 'mckinsey', 'bain', 
+				'bcg', 'goldman sachs', 'morgan stanley', 'jp morgan', 'blackrock'
+			];
+			
+			if (tier1Companies.some(name => companyName.includes(name))) {
+				score += 0.12; // +12% for FAANG/top tech (massive increase from 3%)
+			} else if (tier2Companies.some(name => companyName.includes(name))) {
+				score += 0.08; // +8% for other top tech companies
+			} else if (tier3Companies.some(name => companyName.includes(name))) {
+				score += 0.05; // +5% for established companies
 			}
 		}
 		
@@ -931,15 +940,15 @@ async function saveMatchesAndReturn(
 			const daysSincePosted = (Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
 			
 			if (daysSincePosted <= 7) {
-				score += 0.02; // +2% for jobs posted within a week
+				score += 0.03; // +3% for jobs posted within a week (increased from 2%)
 			} else if (daysSincePosted <= 30) {
-				score += 0.01; // +1% for jobs posted within a month
+				score += 0.02; // +2% for jobs posted within a month (increased from 1%)
 			}
 		}
 		
-		// Ensure score stays within reasonable bounds (55-85% for fallback)
-		// This gives a good range while avoiding the old 80% ceiling
-		return Math.max(0.55, Math.min(0.85, score));
+		// Ensure score stays within reasonable bounds (55-90% for fallback)
+		// Higher ceiling to allow for great matches with top companies
+		return Math.max(0.55, Math.min(0.90, score));
 	}
 
 	/**
