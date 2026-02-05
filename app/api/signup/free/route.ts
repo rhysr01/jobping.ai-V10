@@ -457,10 +457,22 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				});
 				
 				// TEMPORARY FIX: Use RLS-bypassing function until service role RLS issue is resolved
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Calling RLS bypass function`, {
+					requestId,
+					emailToStore,
+				});
+				
 				const { data: existingUserArray, error: fetchError } = await supabase.rpc(
 					'get_user_by_email_bypass_rls',
 					{ email_param: emailToStore }
 				);
+				
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} RLS bypass function result`, {
+					requestId,
+					existingUserArray,
+					fetchError: fetchError?.message || null,
+					arrayLength: existingUserArray?.length || 0,
+				});
 				
 				const existingUser = existingUserArray && existingUserArray.length > 0 ? existingUserArray[0] : null;
 				
