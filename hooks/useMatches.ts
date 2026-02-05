@@ -186,7 +186,7 @@ export function useMatches(): UseMatchesReturn {
 		if (typeof document === "undefined") return null;
 		const cookies = document.cookie.split(";");
 		const emailCookie = cookies.find((c) =>
-			c.trim().startsWith("free_user_email="),
+			c.trim().startsWith("user_email="),
 		);
 		if (emailCookie) {
 			return decodeURIComponent(emailCookie.split("=")[1]).toLowerCase().trim();
