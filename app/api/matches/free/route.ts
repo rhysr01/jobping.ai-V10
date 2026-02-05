@@ -68,11 +68,18 @@ export const GET = asyncHandler(async (request: NextRequest) => {
 	// Verify user exists and is free tier
 	console.log("👤 [FREE MATCHES] Looking up user", { userEmail });
 	
-	const { data: user } = await supabase
+	const { data: user, error: userLookupError } = await supabase
 		.from("users")
 		.select("id, subscription_tier, email")
-		.eq("email", userEmail)
+		.ilike("email", userEmail)
 		.maybeSingle();
+		
+	console.log("🔍 [FREE MATCHES] User lookup debug", {
+		userEmail,
+		user,
+		userLookupError: userLookupError?.message || null,
+		hasUser: !!user,
+	});
 
 	console.log("📊 [FREE MATCHES] User lookup result", {
 		found: !!user,
