@@ -515,16 +515,17 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				});
 				throw errorObj;
 			}
-		// Successfully created user
-		if (newUserData) {
-			userData = newUserData;
-			console.log(`${LOG_MARKERS.SIGNUP_FREE} User created successfully`, {
-				requestId,
-				userId: (newUserData as any).id,
-			});
 		} else {
-			throw new Error("User creation returned no data");
-		}
+			// Successfully created user (no insertError)
+			if (newUserData) {
+				userData = newUserData;
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} User created successfully`, {
+					requestId,
+					userId: (newUserData as any).id,
+				});
+			} else {
+				throw new Error("User creation returned no data");
+			}
 		}
 	} catch (err) {
 		// Final fallback error handler
