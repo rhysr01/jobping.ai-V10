@@ -1,4 +1,4 @@
-/
+/**
  * Centralized copy strings for consistent messaging across the application
  */
 
