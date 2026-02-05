@@ -761,7 +761,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		
 		console.error(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.MATCHING_ERROR} ❌ SignupMatchingService.runMatching failed`, {
 			requestId,
-			error: matchingError,
 			errorMessage: error.message,
 			errorStack: error.stack,
 		});
@@ -987,7 +986,6 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		
 		console.error(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.CRITICAL_ERROR} 🚨 CRITICAL ERROR - Silent exception caught:`, {
 			requestId,
-			error: criticalError,
 			errorMessage: error.message,
 			errorStack: error.stack,
 			timestamp: new Date().toISOString(),
