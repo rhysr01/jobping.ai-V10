@@ -51,6 +51,8 @@ const freeSignupSchema = z.object({
 		.array(z.string().max(50))
 		.min(1, "Select at least one city")
 		.max(3, "Maximum 3 cities allowed"),
+	// NOTE: Frontend sends as array, but database stores as single TEXT field
+	// Accept array from frontend and take the first element
 	careerPath: z.array(z.string()).min(1, "Select at least one career path"),
 	// Allow extra fields from frontend (but ignore them for free tier)
 	entryLevelPreferences: z.array(z.string()).optional(),
@@ -346,6 +348,11 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// These are PREMIUM-only features per signupformfreevpremium.md
 	const visa_status = "EU citizen"; // Default for free tier users
 
+	// Ensure careerPath is properly extracted (take first element since DB stores as TEXT)
+	const careerPathValue = Array.isArray(careerPath) && careerPath.length > 0 
+		? careerPath[0] 
+		: careerPath;
+
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
 		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_QUERY} Checking for existing user`, {
@@ -498,7 +505,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					free_signup_at: new Date().toISOString(),
 					free_expires_at: freeExpiresAt.toISOString(),
 					target_cities: cities,
-					career_path: careerPath[0] || null,
+					career_path: careerPathValue || null,
 					// NOTE: FREE tier does NOT set entry_level_preference
 					// This is a PREMIUM-only matching feature
 					visa_status: visa_status,
