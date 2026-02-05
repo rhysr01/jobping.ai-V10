@@ -11,6 +11,159 @@ import { LOG_MARKERS } from "../../lib/log-markers";
 import { aiMatchingService } from "../matching/core/ai-matching.service";
 
 /**
+ * Calculate intelligent fallback score based on job characteristics
+ * when AI scoring fails. Uses only fields available in free signup form.
+ * 
+ * Available free user data: email, full_name, cities[], careerPath[]
+ * Note: visa_status is hardcoded to "EU citizen", no job type preferences collected
+ */
+function calculateFallbackScore(job: any, userPrefs: any): number {
+	let score = 0.60; // Base score (60%)
+	
+	// PRIMARY: Location match bonus (most important for free users)
+	if (job.city && userPrefs.target_cities?.includes(job.city)) {
+		score += 0.20; // +20% for exact city match (increased from 15%)
+	}
+	
+	// PRIMARY: Career path alignment (second most important)
+	if (job.categories && userPrefs.career_path) {
+		const userCareerPaths = Array.isArray(userPrefs.career_path) 
+			? userPrefs.career_path 
+			: [userPrefs.career_path];
+		
+		const hasDirectCareerMatch = job.categories.some((category: string) => 
+			userCareerPaths.includes(category)
+		);
+		
+		const hasEarlyCareerMatch = job.categories.includes('early-career');
+		
+		if (hasDirectCareerMatch) {
+			score += 0.15; // +15% for direct career path match (increased from 12%)
+		} else if (hasEarlyCareerMatch) {
+			score += 0.08; // +8% for early-career category (increased from 6%)
+		}
+	}
+	
+	// SECONDARY: Experience level appropriateness (inferred from job data)
+	if (job.experience_required) {
+		const expLevel = job.experience_required.toLowerCase();
+		if (expLevel.includes('entry') || expLevel.includes('junior') || 
+			expLevel.includes('graduate') || expLevel.includes('intern')) {
+			score += 0.08; // +8% for appropriate experience level
+		}
+	}
+	
+	// SECONDARY: Job type indicators (inferred from job flags, not user preferences)
+	if (job.is_internship || job.is_graduate) {
+		score += 0.05; // +5% for entry-level job types (good for all free users)
+	}
+	
+	// MAJOR: Company quality indicators (significantly increased)
+	if (job.company) {
+		const companyName = job.company.toLowerCase();
+		
+		// Tier 1: FAANG and top tech companies
+		const tier1Companies = [
+			'google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix'
+		];
+		
+		// Tier 2: Other well-known tech companies
+		const tier2Companies = [
+			'spotify', 'uber', 'airbnb', 'stripe', 'shopify', 'atlassian', 
+			'salesforce', 'adobe', 'nvidia', 'tesla', 'spacex', 'palantir'
+		];
+		
+		// Tier 3: Established companies good for early careers
+		const tier3Companies = [
+			'deloitte', 'pwc', 'kpmg', 'ey', 'accenture', 'mckinsey', 'bain', 
+			'bcg', 'goldman sachs', 'morgan stanley', 'jp morgan', 'blackrock'
+		];
+		
+		if (tier1Companies.some(name => companyName.includes(name))) {
+			score += 0.12; // +12% for FAANG/top tech (massive increase from 3%)
+		} else if (tier2Companies.some(name => companyName.includes(name))) {
+			score += 0.08; // +8% for other top tech companies
+		} else if (tier3Companies.some(name => companyName.includes(name))) {
+			score += 0.05; // +5% for established companies
+		}
+	}
+	
+	// TERTIARY: Job freshness (newer jobs are generally better)
+	if (job.posted_at || job.created_at) {
+		const jobDate = new Date(job.posted_at || job.created_at);
+		const daysSincePosted = (Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
+		
+		if (daysSincePosted <= 7) {
+			score += 0.03; // +3% for jobs posted within a week (increased from 2%)
+		} else if (daysSincePosted <= 30) {
+			score += 0.02; // +2% for jobs posted within a month (increased from 1%)
+		}
+	}
+	
+	// Ensure score stays within reasonable bounds (55-90% for fallback)
+	// Higher ceiling to allow for great matches with top companies
+	return Math.max(0.55, Math.min(0.90, score));
+}
+
+/**
+ * Validate and normalize match scores to ensure quality and consistency
+ */
+function validateAndNormalizeScore(
+	score: number, 
+	source: string, 
+	context: { jobTitle?: string; company?: string; userEmail?: string }
+): number {
+	const originalScore = score;
+	
+	// Handle invalid scores
+	if (isNaN(score) || !isFinite(score)) {
+		apiLogger.warn("[FREE] Invalid score detected, using fallback", {
+			originalScore,
+			source,
+			context,
+		});
+		return 0.6; // Default fallback
+	}
+	
+	// Normalize scores based on source
+	let normalizedScore = score;
+	
+	switch (source) {
+		case 'ai_unified':
+		case 'ai_direct':
+			// AI scores should be in 0-1 range, but sometimes come as 0-100
+			if (score > 1) {
+				normalizedScore = score / 100;
+			}
+			// Ensure AI scores are within reasonable bounds (60-95%)
+			normalizedScore = Math.max(0.6, Math.min(0.95, normalizedScore));
+			break;
+			
+		case 'rule_based_fallback':
+			// Rule-based scores are already properly bounded in calculateFallbackScore
+			normalizedScore = Math.max(0.5, Math.min(0.85, score));
+			break;
+			
+		default:
+			// Unknown source, apply conservative bounds
+			normalizedScore = Math.max(0.5, Math.min(0.9, score));
+	}
+	
+	// Log score adjustments for monitoring
+	if (Math.abs(originalScore - normalizedScore) > 0.01) {
+		apiLogger.info("[FREE] Score normalized", {
+			originalScore,
+			normalizedScore,
+			source,
+			adjustment: normalizedScore - originalScore,
+			context,
+		});
+	}
+	
+	return normalizedScore;
+}
+
+/**
  * Diversity Sampling Function - Ensures city and source distribution
  * 
  * Strategy:
@@ -390,7 +543,7 @@ async function rankAndReturnMatchesDirect(
 					scoreSource = "ai_direct";
 				} else {
 					// Intelligent fallback based on job characteristics
-					finalScore = FreeMatchingStrategy.calculateFallbackScore(jobData, userPrefs);
+					finalScore = calculateFallbackScore(jobData, userPrefs);
 					scoreSource = "rule_based_fallback";
 					
 					apiLogger.warn("[FREE] AI scoring failed, using fallback", {
@@ -407,7 +560,7 @@ async function rankAndReturnMatchesDirect(
 				}
 
 				// Validate and normalize score
-				finalScore = this.validateAndNormalizeScore(finalScore, scoreSource, {
+				finalScore = validateAndNormalizeScore(finalScore, scoreSource, {
 					jobTitle: jobData.title,
 					company: jobData.company,
 					userEmail: userPrefs.email,
@@ -456,7 +609,7 @@ async function rankAndReturnMatchesDirect(
 				.map((job: any) => ({
 					...job,
 					job_hash: job.job_hash, // Explicitly ensure job_hash is set
-					match_score: FreeMatchingStrategy.calculateFallbackScore(job, userPrefs),
+					match_score: calculateFallbackScore(job, userPrefs),
 					match_reason: "Matched your city and career path preferences with good distribution",
 					score_source: "rule_based_fallback", // Add metadata for debugging
 				}));
@@ -868,156 +1021,5 @@ async function saveMatchesAndReturn(
 		duration: Date.now() - startTime,
 	};
 
-	/**
-	 * Calculate intelligent fallback score based on job characteristics
-	 * when AI scoring fails. Uses only fields available in free signup form.
-	 * 
-	 * Available free user data: email, full_name, cities[], careerPath[]
-	 * Note: visa_status is hardcoded to "EU citizen", no job type preferences collected
-	 */
-	private static calculateFallbackScore(job: any, userPrefs: any): number {
-		let score = 0.60; // Base score (60%)
-		
-		// PRIMARY: Location match bonus (most important for free users)
-		if (job.city && userPrefs.target_cities?.includes(job.city)) {
-			score += 0.20; // +20% for exact city match (increased from 15%)
-		}
-		
-		// PRIMARY: Career path alignment (second most important)
-		if (job.categories && userPrefs.career_path) {
-			const userCareerPaths = Array.isArray(userPrefs.career_path) 
-				? userPrefs.career_path 
-				: [userPrefs.career_path];
-			
-			const hasDirectCareerMatch = job.categories.some(category => 
-				userCareerPaths.includes(category)
-			);
-			
-			const hasEarlyCareerMatch = job.categories.includes('early-career');
-			
-			if (hasDirectCareerMatch) {
-				score += 0.15; // +15% for direct career path match (increased from 12%)
-			} else if (hasEarlyCareerMatch) {
-				score += 0.08; // +8% for early-career category (increased from 6%)
-			}
-		}
-		
-		// SECONDARY: Experience level appropriateness (inferred from job data)
-		if (job.experience_required) {
-			const expLevel = job.experience_required.toLowerCase();
-			if (expLevel.includes('entry') || expLevel.includes('junior') || 
-				expLevel.includes('graduate') || expLevel.includes('intern')) {
-				score += 0.08; // +8% for appropriate experience level
-			}
-		}
-		
-		// SECONDARY: Job type indicators (inferred from job flags, not user preferences)
-		if (job.is_internship || job.is_graduate) {
-			score += 0.05; // +5% for entry-level job types (good for all free users)
-		}
-		
-		// MAJOR: Company quality indicators (significantly increased)
-		if (job.company) {
-			const companyName = job.company.toLowerCase();
-			
-			// Tier 1: FAANG and top tech companies
-			const tier1Companies = [
-				'google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix'
-			];
-			
-			// Tier 2: Other well-known tech companies
-			const tier2Companies = [
-				'spotify', 'uber', 'airbnb', 'stripe', 'shopify', 'atlassian', 
-				'salesforce', 'adobe', 'nvidia', 'tesla', 'spacex', 'palantir'
-			];
-			
-			// Tier 3: Established companies good for early careers
-			const tier3Companies = [
-				'deloitte', 'pwc', 'kpmg', 'ey', 'accenture', 'mckinsey', 'bain', 
-				'bcg', 'goldman sachs', 'morgan stanley', 'jp morgan', 'blackrock'
-			];
-			
-			if (tier1Companies.some(name => companyName.includes(name))) {
-				score += 0.12; // +12% for FAANG/top tech (massive increase from 3%)
-			} else if (tier2Companies.some(name => companyName.includes(name))) {
-				score += 0.08; // +8% for other top tech companies
-			} else if (tier3Companies.some(name => companyName.includes(name))) {
-				score += 0.05; // +5% for established companies
-			}
-		}
-		
-		// TERTIARY: Job freshness (newer jobs are generally better)
-		if (job.posted_at || job.created_at) {
-			const jobDate = new Date(job.posted_at || job.created_at);
-			const daysSincePosted = (Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
-			
-			if (daysSincePosted <= 7) {
-				score += 0.03; // +3% for jobs posted within a week (increased from 2%)
-			} else if (daysSincePosted <= 30) {
-				score += 0.02; // +2% for jobs posted within a month (increased from 1%)
-			}
-		}
-		
-		// Ensure score stays within reasonable bounds (55-90% for fallback)
-		// Higher ceiling to allow for great matches with top companies
-		return Math.max(0.55, Math.min(0.90, score));
-	}
 
-	/**
-	 * Validate and normalize match scores to ensure quality and consistency
-	 */
-	private static validateAndNormalizeScore(
-		score: number, 
-		source: string, 
-		context: { jobTitle?: string; company?: string; userEmail?: string }
-	): number {
-		const originalScore = score;
-		
-		// Handle invalid scores
-		if (isNaN(score) || !isFinite(score)) {
-			apiLogger.warn("[FREE] Invalid score detected, using fallback", {
-				originalScore,
-				source,
-				context,
-			});
-			return 0.6; // Default fallback
-		}
-		
-		// Normalize scores based on source
-		let normalizedScore = score;
-		
-		switch (source) {
-			case 'ai_unified':
-			case 'ai_direct':
-				// AI scores should be in 0-1 range, but sometimes come as 0-100
-				if (score > 1) {
-					normalizedScore = score / 100;
-				}
-				// Ensure AI scores are within reasonable bounds (60-95%)
-				normalizedScore = Math.max(0.6, Math.min(0.95, normalizedScore));
-				break;
-				
-			case 'rule_based_fallback':
-				// Rule-based scores are already properly bounded in calculateFallbackScore
-				normalizedScore = Math.max(0.5, Math.min(0.85, score));
-				break;
-				
-			default:
-				// Unknown source, apply conservative bounds
-				normalizedScore = Math.max(0.5, Math.min(0.9, score));
-		}
-		
-		// Log score adjustments for monitoring
-		if (Math.abs(originalScore - normalizedScore) > 0.01) {
-			apiLogger.info("[FREE] Score normalized", {
-				originalScore,
-				normalizedScore,
-				source,
-				adjustment: normalizedScore - originalScore,
-				context,
-			});
-		}
-		
-		return normalizedScore;
-	}
 }
