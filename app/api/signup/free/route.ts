@@ -410,6 +410,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			// Check if it's a duplicate email error
 			const isDuplicateEmail = insertError.code === '23505' || insertError.message?.includes('users_email_key');
 			
+			console.error(`${LOG_MARKERS.SIGNUP_FREE} User insert error`, {
+				requestId,
+				code: insertError.code,
+				message: insertError.message,
+				isDuplicateEmail,
+				emailToStore,
+			});
+			
 			if (isDuplicateEmail && emailToStore) {
 				// Email already exists - that's fine! Just fetch it and use that user
 				console.log(`${LOG_MARKERS.SIGNUP_FREE} Duplicate email, fetching existing user`, {
@@ -423,6 +431,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					.eq("email", emailToStore)
 					.maybeSingle();
 				
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Fetch result for duplicate email`, {
+					requestId,
+					existingUser,
+					fetchError,
+				});
+				
 				if (existingUser) {
 					console.log(`${LOG_MARKERS.SIGNUP_FREE} Using existing user for duplicate email`, {
 						requestId,
@@ -431,29 +445,48 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					userData = existingUser;
 					isDuplicateUser = true;
 				} else {
-					// Couldn't fetch the duplicate - that's an error
+					// Couldn't fetch the duplicate - log details and throw
+					console.error(`${LOG_MARKERS.SIGNUP_FREE} Couldn't find duplicate user despite duplicate error`, {
+						requestId,
+						email: emailToStore,
+						fetchError,
+						insertError: {
+							code: insertError.code,
+							message: insertError.message,
+						},
+					});
 					apiLogger.error("Duplicate email error but couldn't find the user", fetchError as Error, {
 						requestId,
 						email: emailToStore,
+						insertError: {
+							code: insertError.code,
+							message: insertError.message,
+						},
 					});
-					throw insertError;
+					// Convert to proper Error object before throwing
+					const errorObj = new Error(`Duplicate email exists but couldn't be fetched: ${emailToStore}`);
+					throw errorObj;
 				}
 			} else {
 				// Some other error - throw it
-				const errorObj = insertError instanceof Error ? insertError : new Error(String(insertError));
+				const errorMessage = (insertError as any)?.message || "Unknown user creation error";
+				const errorObj = insertError instanceof Error ? insertError : new Error(errorMessage);
 				apiLogger.error("Failed to create user", errorObj, {
 					requestId,
 					email: emailToStore,
 				});
 				throw errorObj;
 			}
-		} else {
-			// Successfully created user
+		// Successfully created user
+		if (newUserData) {
 			userData = newUserData;
 			console.log(`${LOG_MARKERS.SIGNUP_FREE} User created successfully`, {
 				requestId,
-				userId: newUserData.id,
+				userId: (newUserData as any).id,
 			});
+		} else {
+			throw new Error("User creation returned no data");
+		}
 		}
 	} catch (err) {
 		// Final fallback error handler
