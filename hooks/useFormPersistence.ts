@@ -171,7 +171,19 @@ export function useFormPersistence(
 			// Restore data based on tier
 			if (tier === "premium") {
 				// Premium: restore formData and step
-				setFormData(parsed.formData);
+				setFormData((prev) => ({
+					...prev,
+					...parsed.formData,
+					cities: parsed.formData.cities || [],
+					languages: (parsed.formData as PremiumFormData).languages || [],
+					workEnvironment: (parsed.formData as PremiumFormData).workEnvironment || [],
+					entryLevelPreferences: (parsed.formData as PremiumFormData).entryLevelPreferences || [],
+					roles: (parsed.formData as PremiumFormData).roles || [],
+					keywords: (parsed.formData as PremiumFormData).keywords || [],
+					industries: (parsed.formData as PremiumFormData).industries || [],
+					companySizePreferences: (parsed.formData as PremiumFormData).companySizePreferences || [],
+					careerPath: Array.isArray((parsed.formData as PremiumFormData).careerPath) ? (parsed.formData as PremiumFormData).careerPath : [],
+				}));
 				if (hasStep && setStep && parsed.step !== undefined) {
 					setStep(parsed.step);
 				}
