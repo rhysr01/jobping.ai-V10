@@ -3,19 +3,6 @@ import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../../lib/api-logger";
 
-// TEMPORARY DEBUG - Check service role key (Force fresh deployment)
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-console.log('[DEBUG_SERVICE_KEY_FRESH]', {
-	hasKey: !!serviceKey,
-	keyLength: serviceKey.length,
-	startsWithEyJ: serviceKey.startsWith('eyJ'),
-	first50: serviceKey.substring(0, 50),
-	// Decode JWT to check if it contains service_role
-	isServiceRole: serviceKey.includes('service_role') || (serviceKey.length > 100 && serviceKey.split('.').length === 3),
-	environment: process.env.NODE_ENV,
-	vercelEnv: process.env.VERCEL_ENV,
-	timestamp: new Date().toISOString(),
-});
 import { asyncHandler, getRequestId } from "../../../../lib/errors";
 import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
 import {
@@ -456,25 +443,24 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					insertErrorMessage: insertError?.message,
 				});
 				
-				// TEMPORARY FIX: Use RLS-bypassing function until service role RLS issue is resolved
-				console.log(`${LOG_MARKERS.SIGNUP_FREE} Calling RLS bypass function`, {
+				// Query for existing user using standard Supabase client (RLS policy fixed)
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Querying for existing user with fixed RLS policy`, {
 					requestId,
 					emailToStore,
 				});
 				
-				const { data: existingUserArray, error: fetchError } = await supabase.rpc(
-					'get_user_by_email_bypass_rls',
-					{ email_param: emailToStore }
-				);
+				const { data: existingUser, error: fetchError } = await supabase
+					.from("users")
+					.select("id, email")
+					.ilike("email", emailToStore)
+					.maybeSingle();
 				
-				console.log(`${LOG_MARKERS.SIGNUP_FREE} RLS bypass function result`, {
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Standard query result`, {
 					requestId,
-					existingUserArray,
+					existingUser,
 					fetchError: fetchError?.message || null,
-					arrayLength: existingUserArray?.length || 0,
+					hasUser: !!existingUser,
 				});
-				
-				const existingUser = existingUserArray && existingUserArray.length > 0 ? existingUserArray[0] : null;
 				
 				console.log(`${LOG_MARKERS.SIGNUP_FREE} Fetch result for duplicate email`, {
 					requestId,
