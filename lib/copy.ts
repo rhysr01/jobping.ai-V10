@@ -25,16 +25,17 @@ export const TRUST_TEXT_NO_CARD_SETUP = "No credit card • 2-minute setup";
 
 // Hero section
 export const HERO_TITLE = "JobPing";
-export const HERO_HEADLINE = "Get hand-picked early-career jobs across Europe";
+export const HERO_HEADLINE = "Your EU career,";
+export const HERO_HEADLINE_ACCENT = "hand-picked & matched.";
 export const HERO_SUBLINE =
-	"We scan 4,000+ EU companies daily and send you only roles you're qualified for - filtered by location and experience.";
+	"We scan 4,000+ companies to deliver roles you're actually qualified for. Filtered by location, career path, and visa status.";
 export const HERO_SUBLINE_MICRO =
 	"No dashboards. No job boards. Just roles you can actually apply for.";
 export const HERO_CTA = "Get my first 5 matches";
 export const HERO_PRIMARY_CTA = "Start Free - See Your First 5 Matches";
 export const HERO_SECONDARY_CTA = "View Instant Matches";
 export const HERO_PILL =
-	"For EU students & recent grads - visa sponsorship available for internationals";
+	"🇪🇺 For EU students & grads • Visa sponsorship available";
 export const HERO_SOCIAL_PROOF = "Trusted by students in 7 countries";
 
 // How it works

@@ -106,7 +106,7 @@ export default async function RootLayout({
 }) {
 	// Get the nonce from the security-headers middleware
 	const headersList = await headers();
-	const nonce = headersList.get("x-nonce") || "";
+	const nonce = headersList.get("x-nonce") || undefined;
 
 	return (
 		<html lang="en" className="scroll-smooth" suppressHydrationWarning>
@@ -143,7 +143,7 @@ export default async function RootLayout({
 				<meta name="apple-mobile-web-app-title" content="JobPing" />
 				<link rel="apple-touch-icon" href="/og-image.png" />
 				<script
-					nonce={nonce}
+					{...(nonce && { nonce })}
 					type="application/ld+json"
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: Safe JSON-LD structured data
 					dangerouslySetInnerHTML={{
@@ -184,7 +184,7 @@ export default async function RootLayout({
 				{/* PWA Service Worker Registration - Only on mobile for better performance */}
 				<Script
 					id="pwa-registration"
-					nonce={nonce}
+					{...(nonce && { nonce })}
 					strategy="afterInteractive"
 					/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe PWA service worker script */
 					dangerouslySetInnerHTML={{
