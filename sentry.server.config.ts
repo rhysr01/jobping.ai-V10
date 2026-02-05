@@ -22,18 +22,16 @@ Sentry.init({
 	environment: getEnvironment(),
 
 	// Adjust this value in production, or use tracesSampler for greater control
-	tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+	tracesSampleRate: process.env.NODE_ENV === "production" ? 0.01 : 0.1, // Reduce tracing in production
 
-	// Enable debug mode in development or when SENTRY_DEBUG is set
-	// CRITICAL: Enable debug mode to see what's happening
-	debug: true, // Always enable debug to see Sentry logs
+	// Enable debug mode only in development or when explicitly requested
+	debug: process.env.NODE_ENV === "development" || process.env.SENTRY_DEBUG === "true",
 
 	// Only initialize if DSN is available (Vercel integration will provide this)
 	enabled: isEnabled,
 	
-	// CRITICAL: For serverless, ensure we wait for events to be sent
-	// Increase flush timeout to ensure events are sent before function terminates
-	shutdownTimeout: 10000, // 10 seconds
+	// For serverless, reduce timeout to prevent hanging
+	shutdownTimeout: 2000, // 2 seconds
 	
 	// CRITICAL: Set maxBreadcrumbs to ensure we capture context
 	maxBreadcrumbs: 50,
@@ -41,30 +39,18 @@ Sentry.init({
 	// CRITICAL: Don't sample out any events in production (for debugging)
 	sampleRate: 1.0, // Send 100% of events
 
-	// Add beforeSend hook to log when events are sent (useful for debugging)
-	beforeSend(event, hint) {
-		// Always log in production for debugging
-		console.log("[Sentry Server] ✅ Event captured (beforeSend):", {
-			message: event.message,
-			exception: event.exception?.values?.[0]?.value,
-			level: event.level,
-			environment: event.environment,
-			tags: event.tags,
-			eventId: event.event_id,
-			timestamp: event.timestamp,
-			willSend: true, // This event will be sent
-		});
-		
-		// Log hint if available (contains original error)
-		if (hint?.originalException) {
-			console.log("[Sentry Server] Original exception:", {
-				message: hint.originalException instanceof Error ? hint.originalException.message : String(hint.originalException),
-				stack: hint.originalException instanceof Error ? hint.originalException.stack : undefined,
+	// Add beforeSend hook to log when events are sent (only in development)
+	beforeSend(event) {
+		// Only log in development to reduce noise
+		if (process.env.NODE_ENV === "development") {
+			console.log("[Sentry Server] Event captured:", {
+				message: event.message,
+				exception: event.exception?.values?.[0]?.value,
+				level: event.level,
 			});
 		}
 		
-		// CRITICAL: Always return event (don't filter it out)
-		// Returning null would prevent the event from being sent
+		// Always return event (don't filter it out)
 		return event;
 	},
 });
