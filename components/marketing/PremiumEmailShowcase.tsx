@@ -86,7 +86,7 @@ const EMAIL_JOBS = {
 	],
 	wednesday: [
 		{
-			title: "Senior Technical Accelerator Consultant – Impact",
+			title: "Technical Accelerator Consultant – Impact",
 			company: "ServiceNow",
 			location: "London, UK",
 			jobUrl: "https://uk.indeed.com/viewjob?jk=dbd4d0aa59a890db",
@@ -96,7 +96,7 @@ const EMAIL_JOBS = {
 			visaConfidence: "verified",
 			tags: ["On-Site", "Entry Level"],
 			description:
-				"Senior Technical Accelerator Consultant – Impact at ServiceNow.",
+				"Technical Accelerator Consultant – Impact at ServiceNow.",
 		},
 		{
 			title: "Consultant transformation Finance SAP S/4HANA",

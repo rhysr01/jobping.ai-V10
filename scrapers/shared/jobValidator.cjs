@@ -121,7 +121,7 @@ function validateJob(job) {
 			title.includes('graduate program') ||
 			title.includes('graduate scheme')
 		)) ||
-		// Manager roles (unless it's trainee/junior/graduate manager)
+		// Manager roles (unless it's trainee/junior/graduate/internship manager)
 		(title.includes('manager') && !(
 			title.includes('trainee') && title.includes('manager') ||
 			title.includes('junior') && title.includes('manager') ||
@@ -132,10 +132,13 @@ function validateJob(job) {
 			title.includes('account manager') ||
 			title.includes('relationship manager') ||
 			title.includes('product manager') ||
-			(title.includes('project manager') && (title.includes('junior') || title.includes('graduate') || title.includes('trainee')))
+			title.includes('stage') && title.includes('manager') || // French/Italian internships
+			title.includes('tirocinio') && title.includes('manager') || // Italian internships
+			title.includes('intern') && title.includes('manager') ||
+			(title.includes('project manager') && (title.includes('junior') || title.includes('graduate') || title.includes('trainee') || title.includes('stage')))
 		)) ||
-		// Director roles (all directors are senior)
-		title.includes('director') ||
+		// Director roles (all directors are senior, except assistants)
+		(title.includes('director') && !title.includes('assistant')) ||
 		// Head of roles (all are senior)
 		title.includes('head of') ||
 		// VP/Vice President roles

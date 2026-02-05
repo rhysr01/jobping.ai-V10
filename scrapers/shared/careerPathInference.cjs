@@ -151,7 +151,6 @@ const CAREER_PATH_KEYWORDS = {
 		"m&a",
 		"mergers & acquisitions",
 		// NEW: Specific consulting roles
-		"recruiter", // HR recruiting/recruitment strategy
 		"risk management", // Risk consulting
 		"delay analysis", // Project delay consulting
 		"peritaje", // Technical assessment/inspection
@@ -163,10 +162,7 @@ const CAREER_PATH_KEYWORDS = {
 		// PHASE 4: Budget and compliance roles
 		"contrôle de gestion", // French: budget control
 		"adjoint daf", // French: CFO assistant
-		// PHASE 5: Trainee programs and specialist finance roles
-		"global finance trainee", // Finance trainee programs
-		"chef de mission comptable", // French: accounting mission leader
-		"contable junior", // Spanish: junior accountant
+		// PHASE 5: Trainee programs and specialist roles
 		"mandatsleiter treuhand", // German: trust/fiduciary
 		"liquidatore sinistri", // Italian: claims underwriter
 		// PHASE 6A: Business Analysis & Project Management
@@ -179,12 +175,9 @@ const CAREER_PATH_KEYWORDS = {
 		// PHASE 6B+: Additional strategy & business roles
 		"project manager", // Project management (emphasis)
 		"team leader", // Team leadership
-		"hr specialist", // HR operations
-		"people operations", // People operations management
 		"business analyst", // Business analysis (emphasis)
 		"management consultant", // Consulting (emphasis)
 		"projectleiter", // German: project leader
-		"hr partner", // HR business partner entry-level
 		// PHASE 6C: Business analyst trainee
 		"business analyst trainee", // BA training programs
 		// PHASE 6D: Strategy & Business roles from mega batch analysis
@@ -194,7 +187,6 @@ const CAREER_PATH_KEYWORDS = {
 		"compliance junior", // Entry compliance
 		"insurance management trainee", // Insurance operations training
 		"project leadership", // Project leadership strategy
-		"hr business partner", // HR/People business partnership
 		"organizational consultant", // Organizational development (emphasis)
 		"management trainee", // Management training programs (emphasis)
 	],
@@ -269,7 +261,7 @@ const CAREER_PATH_KEYWORDS = {
 		// PHASE 6B+: Additional finance & investment roles
 		"financial advisor", // Financial advisory
 		"investment advisor", // Investment management
-		"analyst", // Financial analyst (generic)
+		// Removed: "analyst" - too generic, causes conflicts
 		"banker", // Banking operations
 		"accountant", // Accounting (emphasis)
 		"credit analyst", // Credit assessment
@@ -289,6 +281,10 @@ const CAREER_PATH_KEYWORDS = {
 		"financial controller", // Financial control (emphasis)
 		"compliance analyst", // Financial compliance
 		"portfolio specialist", // Portfolio management
+		// MOVED FROM STRATEGY: Finance-specific roles
+		"global finance trainee", // Finance trainee programs
+		"chef de mission comptable", // French: accounting mission leader
+		"contable junior", // Spanish: junior accountant
 	],
 
 	"sales-client-success": [
@@ -362,6 +358,12 @@ const CAREER_PATH_KEYWORDS = {
 		"territory sales manager", // Territory-based sales (emphasis)
 		"sales associate junior", // Entry-level sales
 		"inside sales rep", // Inside/remote sales
+		// MOVED FROM MARKETING: Sales-focused roles
+		"chargé de clientèle", // French: account management/client service
+		"client services", // Client-focused service
+		// MOVED FROM TECH: CRM-related roles
+		"crm specialist", // CRM specialist
+		"customer relationship management", // CRM operations
 	],
 
 	"marketing-growth": [
@@ -431,9 +433,7 @@ const CAREER_PATH_KEYWORDS = {
 		// NEW: Specific marketing roles
 		"pr-berater", // German: PR consultant
 		"marketeer", // Online/recruitment marketing
-		"chargé de clientèle", // French: account management/marketing
 		"portfolio", // Portfolio management
-		"client services", // Client-focused marketing
 		"event und kommunikation", // German: event & communications
 		// PHASE 3: Advertising and project-based marketing
 		"amazon advertising specialist", // Advertising/marketing
@@ -448,8 +448,8 @@ const CAREER_PATH_KEYWORDS = {
 		"marketing specialist", // Marketing specialist (emphasis)
 		"communication", // Communication role
 		"pr", // Public relations
-		"media", // Media role
-		"creative", // Creative role
+		// Removed: "media" - too generic, keep specific roles like "social media"
+		// Removed: "creative" - too generic, keep specific roles like "creative director"
 		"advertising", // Advertising role
 		"werbung", // German: advertising
 		"digital communication", // Digital comms (emphasis)
@@ -593,9 +593,9 @@ const CAREER_PATH_KEYWORDS = {
 		"dispatcher", // Logistics dispatcher
 		"planner", // Operations planner
 		"buyer", // Procurement buyer
-		"trainee", // Generic trainee program (entry-level)
+		// Removed: "trainee" - too generic, causes conflicts
 		"berufseinsteiger", // German: career starter/graduate
-		"coordinator", // Coordinator (generic)
+		// Removed: "coordinator" - too generic, causes conflicts
 		"planning", // Planning role
 		"purchasing", // Purchasing role
 		"warehouse", // Warehouse operations
@@ -627,6 +627,12 @@ const CAREER_PATH_KEYWORDS = {
 		"operations coordinator", // Operations support (emphasis)
 		"efficiency specialist", // Operational efficiency (avoid improvement collision)
 		"quality assurance operator", // Quality control operations
+		// MOVED FROM SUSTAINABILITY: Quality management roles
+		"quality specialist", // Quality management
+		"qualitätsmanagement", // German: quality management
+		// MOVED FROM TECH: ERP-related roles
+		"erp specialist", // ERP specialist
+		"enterprise resource planning", // ERP operations
 	],
 
 	"data-analytics": [
@@ -673,6 +679,9 @@ const CAREER_PATH_KEYWORDS = {
 		"business intelligence", // BI operations
 		"reporting specialist", // Reporting operations
 		"data quality specialist", // Data quality assurance
+		// MOVED FROM TECH: BI-specific roles
+		"bi specialist", // Business intelligence specialist
+		"bi-specialist", // Business intelligence specialist (hyphenated)
 	],
 
 	"tech-transformation": [
@@ -741,7 +750,6 @@ const CAREER_PATH_KEYWORDS = {
 		"security",
 		// NEW: Specific tech roles
 		"network architect", // Infrastructure specific
-		"BI-specialist", // Business intelligence
 		"systems specialist", // Systems specific (M365/Power Platform)
 		"serviceservice technician", // Service tech role
 		"elektroniker", // German: electronics/electrical tech
@@ -770,8 +778,7 @@ const CAREER_PATH_KEYWORDS = {
 		"systemingenieur", // German: systems engineer
 		"programmer", // Programmer (emphasis)
 		"database", // Database role
-		"crm", // CRM specialist
-		"erp", // ERP specialist
+		// Moved: CRM to sales, ERP to operations
 		"web developer", // Web developer
 		// PHASE 6D: Tech roles from mega batch analysis
 		"javascript developer", // Frontend/backend JavaScript
@@ -818,10 +825,13 @@ const CAREER_PATH_KEYWORDS = {
 		"energiedienstleistung", // German: energy services
 		"energie consulting", // Energy consulting
 		"energieeffizienz", // German: energy efficiency
-		"quality specialist", // Quality management (Phase 6A)
-		"compliance officer", // Compliance (Phase 6A)
-		"qualitätsmanagement", // German: quality management
 	],
+
+	// NOTE: HR/People keywords removed from strategy-business-design
+	// If adding "hr-people" category in future, these would belong there:
+	// "recruiter", "hr specialist", "people operations", "hr partner", 
+	// "hr business partner", "talent acquisition", "recruitment", 
+	// "human resources", "people analytics", "organizational development"
 };
 
 /**
