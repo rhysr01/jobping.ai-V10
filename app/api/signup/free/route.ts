@@ -435,10 +435,11 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					userEmail: emailToStore,
 				});
 				
+				// Use ilike for case-insensitive search since PostgreSQL unique constraints are case-insensitive
 				const { data: existingUser, error: fetchError } = await supabase
 					.from("users")
 					.select("id, email")
-					.eq("email", emailToStore)
+					.ilike("email", emailToStore)
 					.maybeSingle();
 				
 				console.log(`${LOG_MARKERS.SIGNUP_FREE} Fetch result for duplicate email`, {
