@@ -456,11 +456,13 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					insertErrorMessage: insertError?.message,
 				});
 				
-				const { data: existingUser, error: fetchError } = await supabase
-					.from("users")
-					.select("id, email")
-					.ilike("email", emailToStore)
-					.maybeSingle();
+				// TEMPORARY FIX: Use RLS-bypassing function until service role RLS issue is resolved
+				const { data: existingUserArray, error: fetchError } = await supabase.rpc(
+					'get_user_by_email_bypass_rls',
+					{ email_param: emailToStore }
+				);
+				
+				const existingUser = existingUserArray && existingUserArray.length > 0 ? existingUserArray[0] : null;
 				
 				console.log(`${LOG_MARKERS.SIGNUP_FREE} Fetch result for duplicate email`, {
 					requestId,
