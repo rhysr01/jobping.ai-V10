@@ -1089,7 +1089,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				level: "error",
 			});
 	} catch (sentryError) {
-		console.error("[FREE SIGNUP] Failed to capture error in Sentry", sentryError);
+		console.error("[FREE SIGNUP] Failed to capture error in Sentry", {
+			sentryErrorMessage: sentryError instanceof Error ? sentryError.message : String(sentryError),
+			sentryErrorStack: sentryError instanceof Error ? sentryError.stack : undefined,
+		});
 	}
 
 	// CRITICAL: Re-throw error so asyncHandler can also capture it
