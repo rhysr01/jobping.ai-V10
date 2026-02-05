@@ -21,7 +21,7 @@ export const apiLogger = {
 		context?: Record<string, any>,
 	) => {
 		if (error instanceof Error) {
-			logger.warn(message, { component: "api", error, ...context });
+			logger.warn(message, { component: "api", errorMessage: error.message, errorStack: error.stack, ...context });
 		} else {
 			logger.warn(message, { component: "api", ...(error || {}), ...context });
 		}

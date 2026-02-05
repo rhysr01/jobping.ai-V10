@@ -455,27 +455,22 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					userData = existingUser;
 					isDuplicateUser = true;
 				} else {
-					// Couldn't fetch the duplicate - log details and throw
-					console.error(`${LOG_MARKERS.SIGNUP_FREE} Couldn't find duplicate user despite duplicate error`, {
+					// Couldn't fetch the duplicate - return proper error response
+					console.warn(`${LOG_MARKERS.SIGNUP_FREE} Duplicate email detected but couldn't fetch user`, {
 						requestId,
 						email: emailToStore,
 						fetchError,
-						insertError: {
-							code: insertError.code,
-							message: insertError.message,
-						},
 					});
-					apiLogger.error("Duplicate email error but couldn't find the user", fetchError as Error, {
-						requestId,
-						email: emailToStore,
-						insertError: {
-							code: insertError.code,
-							message: insertError.message,
+					
+					// Return 409 Conflict response
+					return NextResponse.json(
+						{
+							error: "duplicate_email",
+							message: "This email is already registered. Please sign in instead.",
+							requestId,
 						},
-					});
-					// Convert to proper Error object before throwing
-					const errorObj = new Error(`Duplicate email exists but couldn't be fetched: ${emailToStore}`);
-					throw errorObj;
+						{ status: 409 },
+					);
 				}
 			} else {
 				// Some other error - throw it
