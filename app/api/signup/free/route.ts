@@ -408,11 +408,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				}
 			} else {
 				// Some other error - throw it
-				apiLogger.error("Failed to create user", insertError as Error, {
+				const errorObj = insertError instanceof Error ? insertError : new Error(String(insertError));
+				apiLogger.error("Failed to create user", errorObj, {
 					requestId,
 					email: emailToStore,
 				});
-				throw insertError;
+				throw errorObj;
 			}
 		} else {
 			// Successfully created user
@@ -424,20 +425,21 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		}
 	} catch (err) {
 		// Final fallback error handler
-		const errorMessage = err instanceof Error ? err.message : String(err);
-		apiLogger.error("Failed to create or fetch user", err as Error, {
+		const error = err instanceof Error ? err : new Error(String(err));
+		const errorMessage = error.message;
+		apiLogger.error("Failed to create or fetch user", error, {
 			requestId,
 			email: emailToStore,
 			error: errorMessage,
 		});
-		Sentry.captureException(err, {
+		Sentry.captureException(error, {
 			tags: { endpoint: "signup-free", error_type: "user_creation_fatal" },
 			extra: {
 				requestId,
 				email: emailToStore,
 			},
 		});
-		throw err;
+		throw error;
 	}
 
 	// Validate we have a user
