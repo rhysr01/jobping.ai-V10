@@ -30,7 +30,8 @@ export const apiLogger = {
 	error: (message: string, error?: Error, context?: Record<string, any>) => {
 		logger.error(message, {
 			component: "api",
-			error,
+			errorMessage: error?.message,
+			errorStack: error?.stack,
 			...context,
 		});
 	},
