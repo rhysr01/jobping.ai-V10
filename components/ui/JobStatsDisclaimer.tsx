@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Info, Globe, Search, Eye, Target, Zap, Award, Network } from "lucide-react";
-import { Badge } from "./badge";
 
 interface JobStatsDisclaimerProps {
 	className?: string;
