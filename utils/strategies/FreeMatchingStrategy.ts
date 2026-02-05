@@ -11,6 +11,116 @@ import { LOG_MARKERS } from "../../lib/log-markers";
 import { aiMatchingService } from "../matching/core/ai-matching.service";
 
 /**
+ * Diversity Sampling Function - Ensures city and source distribution
+ * 
+ * Strategy:
+ * - Distribute jobs across all selected cities
+ * - Limit jobs per source to prevent clustering
+ * - Maintain randomness within constraints
+ */
+function diversifySample(jobs: JobWithMetadata[], targetCities: string[], maxJobs: number = 20): JobWithMetadata[] {
+	if (jobs.length === 0 || targetCities.length === 0) {
+		return jobs.slice(0, maxJobs);
+	}
+
+	// Group jobs by city (case-insensitive)
+	const cityGroups = new Map<string, JobWithMetadata[]>();
+	const sourceGroups = new Map<string, JobWithMetadata[]>();
+	
+	jobs.forEach(job => {
+		const cityKey = job.city?.toLowerCase() || 'unknown';
+		const sourceKey = job.source || 'unknown';
+		
+		if (!cityGroups.has(cityKey)) {
+			cityGroups.set(cityKey, []);
+		}
+		if (!sourceGroups.has(sourceKey)) {
+			sourceGroups.set(sourceKey, []);
+		}
+		
+		cityGroups.get(cityKey)!.push(job);
+		sourceGroups.get(sourceKey)!.push(job);
+	});
+
+	// Calculate jobs per city (distribute evenly)
+	const jobsPerCity = Math.ceil(maxJobs / targetCities.length);
+	// Align with existing infrastructure: prefilter.service.ts uses 3 jobs per source
+	const maxJobsPerSource = 3;
+	
+	const sampled: JobWithMetadata[] = [];
+	const usedSourceCounts = new Map<string, number>();
+	
+	// Sample from each target city
+	for (const targetCity of targetCities) {
+		const cityKey = targetCity.toLowerCase();
+		const cityJobs = cityGroups.get(cityKey) || [];
+		
+		if (cityJobs.length === 0) {
+			console.log(`${LOG_MARKERS.MATCHING_FREE} No jobs found for city: ${targetCity}`);
+			continue;
+		}
+		
+		// Shuffle jobs within this city for randomness
+		const shuffledCityJobs = [...cityJobs].sort(() => Math.random() - 0.5);
+		
+		let cityJobsAdded = 0;
+		for (const job of shuffledCityJobs) {
+			if (cityJobsAdded >= jobsPerCity) break;
+			if (sampled.length >= maxJobs) break;
+			
+			// Check source diversity constraint
+			const sourceKey = job.source || 'unknown';
+			const currentSourceCount = usedSourceCounts.get(sourceKey) || 0;
+			
+			if (currentSourceCount >= maxJobsPerSource) {
+				continue; // Skip this job to maintain source diversity
+			}
+			
+			sampled.push(job);
+			usedSourceCounts.set(sourceKey, currentSourceCount + 1);
+			cityJobsAdded++;
+		}
+		
+		console.log(`${LOG_MARKERS.MATCHING_FREE} Sampled ${cityJobsAdded} jobs from ${targetCity} (${cityJobs.length} available)`);
+	}
+	
+	// If we haven't reached maxJobs, fill with remaining jobs (maintaining source limits)
+	if (sampled.length < maxJobs) {
+		const remainingJobs = jobs.filter(job => !sampled.includes(job));
+		const shuffledRemaining = remainingJobs.sort(() => Math.random() - 0.5);
+		
+		for (const job of shuffledRemaining) {
+			if (sampled.length >= maxJobs) break;
+			
+			const sourceKey = job.source || 'unknown';
+			const currentSourceCount = usedSourceCounts.get(sourceKey) || 0;
+			
+			if (currentSourceCount < maxJobsPerSource) {
+				sampled.push(job);
+				usedSourceCounts.set(sourceKey, currentSourceCount + 1);
+			}
+		}
+	}
+	
+	// Log diversity results
+	const cityDistribution = new Map<string, number>();
+	const sourceDistribution = new Map<string, number>();
+	
+	sampled.forEach(job => {
+		const city = job.city || 'unknown';
+		const source = job.source || 'unknown';
+		cityDistribution.set(city, (cityDistribution.get(city) || 0) + 1);
+		sourceDistribution.set(source, (sourceDistribution.get(source) || 0) + 1);
+	});
+	
+	console.log(`${LOG_MARKERS.MATCHING_FREE} Final diversity sample: ${sampled.length} jobs`);
+	console.log(`${LOG_MARKERS.MATCHING_FREE} City distribution:`, Object.fromEntries(cityDistribution));
+	console.log(`${LOG_MARKERS.MATCHING_FREE} Source distribution:`, Object.fromEntries(sourceDistribution));
+	
+	return sampled;
+}
+
+/**
  * FREE Tier User Preferences - ONLY fields collected from form
  * Form collects: email, fullName, cities (1-3), careerPath (exactly 1)
  * NO visa, NO entry_level, NO skills, NO industries (premium-only features)
@@ -177,6 +287,9 @@ async function rankAndReturnMatchesDirect(
 	startTime: number,
 	maxMatches: number,
 ): Promise<MatchingResult> {
+	// Apply diversity sampling before AI ranking to ensure city/source distribution
+	const diverseJobs = diversifySample(jobs, userPrefs.target_cities, 20);
+	
 	try {
 		// CRITICAL FIX: Use AI matching DIRECTLY without prefilter
 		// Jobs are already filtered by city + careerPath in runFreeMatching
@@ -196,12 +309,19 @@ async function rankAndReturnMatchesDirect(
 			subscription_tier: "free" as const,
 		} as any;
 		
-		// Call AI matching directly on already-filtered jobs (max 20 for AI)
+		console.log(`${LOG_MARKERS.MATCHING_FREE} Diversity sampling complete`, {
+			email: userPrefs.email,
+			originalJobs: jobs.length,
+			diverseSample: diverseJobs.length,
+			targetCities: userPrefs.target_cities,
+		});
+		
+		// Call AI matching on diverse sample
 		let aiResults: any[] = [];
 		try {
 			aiResults = await aiMatchingService.findMatches(
 				userForAI,
-				jobs.slice(0, 20).map((j) => j as any),
+				diverseJobs.map((j) => j as any),
 			);
 		} catch (aiError) {
 			// CRITICAL: Capture AI matching errors to Sentry
@@ -281,16 +401,16 @@ async function rankAndReturnMatchesDirect(
 				},
 			);
 
-			// Take top filtered jobs as fallback (already matched city + career path)
+			// Take diverse sample as fallback (already matched city + career path + diversity)
 			// CRITICAL FIX: Ensure job_hash is present for fallback matches
-			const fallbackMatches = jobs.slice(0, maxMatches)
+			const fallbackMatches = diverseJobs.slice(0, maxMatches)
 				.filter((job: any) => job.job_hash) // Only include jobs with job_hash
 				.map((job: any) => ({
 					...job,
 					job_hash: job.job_hash, // Explicitly ensure job_hash is set
-					match_score: 0.6, // Slightly higher score since they passed city/career filter
+					match_score: 0.6, // Slightly higher score since they passed city/career filter + diversity
 					match_reason:
-						"Matched your city and career path preferences",
+						"Matched your city and career path preferences with good distribution",
 				}));
 
 			apiLogger.info("[FREE] Using filtered fallback job list", {
@@ -337,16 +457,16 @@ async function rankAndReturnMatchesDirect(
 			level: "error",
 		});
 
-		// Fallback: return filtered jobs as matches
+		// Fallback: return diverse sample as matches
 		// CRITICAL FIX: Ensure job_hash is present for error fallback matches
-		if (jobs.length > 0) {
-			const fallbackMatches = jobs.slice(0, maxMatches)
+		if (diverseJobs.length > 0) {
+			const fallbackMatches = diverseJobs.slice(0, maxMatches)
 				.filter((job: any) => job.job_hash) // Only include jobs with job_hash
 				.map((job: any) => ({
 					...job,
 					job_hash: job.job_hash, // Explicitly ensure job_hash is set
 					match_score: 0.5,
-					match_reason: "Fallback match after error",
+					match_reason: "Diverse fallback match after error",
 				}));
 
 			return {
