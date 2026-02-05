@@ -858,26 +858,38 @@ async function saveMatchesAndReturn(
 
 	/**
 	 * Calculate intelligent fallback score based on job characteristics
-	 * when AI scoring fails. Provides more nuanced scoring than hardcoded values.
+	 * when AI scoring fails. Uses only fields available in free signup form.
+	 * 
+	 * Available free user data: email, full_name, cities[], careerPath[], visaStatus
 	 */
 	private static calculateFallbackScore(job: any, userPrefs: any): number {
-		let score = 0.6; // Base score (60%)
+		let score = 0.65; // Base score (65%) - slightly higher than before
 		
-		// Location match bonus
+		// PRIMARY: Location match bonus (most important for free users)
 		if (job.city && userPrefs.target_cities?.includes(job.city)) {
-			score += 0.15; // +15% for city match
+			score += 0.15; // +15% for exact city match
 		}
 		
-		// Career path alignment
+		// PRIMARY: Career path alignment (second most important)
 		if (job.categories && userPrefs.career_path) {
-			const hasCareerMatch = job.categories.includes(userPrefs.career_path) ||
-				job.categories.includes('early-career');
-			if (hasCareerMatch) {
-				score += 0.1; // +10% for career alignment
+			const userCareerPaths = Array.isArray(userPrefs.career_path) 
+				? userPrefs.career_path 
+				: [userPrefs.career_path];
+			
+			const hasDirectCareerMatch = job.categories.some(category => 
+				userCareerPaths.includes(category)
+			);
+			
+			const hasEarlyCareerMatch = job.categories.includes('early-career');
+			
+			if (hasDirectCareerMatch) {
+				score += 0.12; // +12% for direct career path match
+			} else if (hasEarlyCareerMatch) {
+				score += 0.06; // +6% for early-career category (good for all free users)
 			}
 		}
 		
-		// Experience level appropriateness
+		// SECONDARY: Experience level appropriateness (inferred from job data)
 		if (job.experience_required) {
 			const expLevel = job.experience_required.toLowerCase();
 			if (expLevel.includes('entry') || expLevel.includes('junior') || 
@@ -886,31 +898,34 @@ async function saveMatchesAndReturn(
 			}
 		}
 		
-		// Job type bonuses
-		if (job.is_internship && userPrefs.entry_level_preference?.includes('internship')) {
-			score += 0.05; // +5% for internship match
+		// SECONDARY: Job type indicators (good for entry-level users)
+		if (job.is_internship) {
+			score += 0.04; // +4% for internships (good for students)
 		}
 		
-		if (job.is_graduate && userPrefs.entry_level_preference?.includes('graduate')) {
-			score += 0.05; // +5% for graduate program match
+		if (job.is_graduate) {
+			score += 0.04; // +4% for graduate programs (good for recent grads)
 		}
 		
-		// Visa sponsorship alignment
-		if (job.visa_sponsored && userPrefs.visa_status !== 'EU citizen') {
-			score += 0.07; // +7% for visa sponsorship when needed
+		// TERTIARY: Visa sponsorship alignment (only if user needs it)
+		if (job.visa_sponsored && userPrefs.visa_status && userPrefs.visa_status !== 'EU citizen') {
+			score += 0.06; // +6% for visa sponsorship when needed
 		}
 		
-		// Company quality indicators (basic heuristics)
+		// TERTIARY: Company quality indicators (basic heuristics)
 		if (job.company) {
 			const companyName = job.company.toLowerCase();
-			// Well-known companies get a small boost
-			const knownCompanies = ['google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix', 'spotify', 'uber', 'airbnb'];
-			if (knownCompanies.some(name => companyName.includes(name))) {
+			// Well-known companies that are good for early careers
+			const topCompanies = [
+				'google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix', 'spotify', 
+				'uber', 'airbnb', 'stripe', 'shopify', 'atlassian', 'salesforce'
+			];
+			if (topCompanies.some(name => companyName.includes(name))) {
 				score += 0.03; // +3% for recognized companies
 			}
 		}
 		
-		// Job freshness (newer jobs are generally better)
+		// TERTIARY: Job freshness (newer jobs are generally better)
 		if (job.posted_at || job.created_at) {
 			const jobDate = new Date(job.posted_at || job.created_at);
 			const daysSincePosted = (Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -922,8 +937,9 @@ async function saveMatchesAndReturn(
 			}
 		}
 		
-		// Ensure score stays within reasonable bounds (50-85% for fallback)
-		return Math.max(0.5, Math.min(0.85, score));
+		// Ensure score stays within reasonable bounds (55-85% for fallback)
+		// This gives a good range while avoiding the old 80% ceiling
+		return Math.max(0.55, Math.min(0.85, score));
 	}
 
 	/**
