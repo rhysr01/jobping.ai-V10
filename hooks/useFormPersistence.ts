@@ -9,7 +9,7 @@ interface BaseFormData {
 	email?: string;
 	fullName?: string;
 	cities?: string[];
-	careerPath?: string;
+	careerPath?: string | string[];
 	visaSponsorship?: string;
 	gdprConsent?: boolean;
 	// GDPR compliance fields
@@ -182,7 +182,11 @@ export function useFormPersistence(
 					keywords: (parsed.formData as PremiumFormData).keywords || [],
 					industries: (parsed.formData as PremiumFormData).industries || [],
 					companySizePreferences: (parsed.formData as PremiumFormData).companySizePreferences || [],
-					careerPath: Array.isArray((parsed.formData as PremiumFormData).careerPath) ? (parsed.formData as PremiumFormData).careerPath : [],
+					careerPath: Array.isArray((parsed.formData as PremiumFormData).careerPath)
+						? (parsed.formData as PremiumFormData).careerPath
+						: (typeof (parsed.formData as PremiumFormData).careerPath === "string"
+						? [(parsed.formData as PremiumFormData).careerPath as string]
+						: []),
 				}));
 				if (hasStep && setStep && parsed.step !== undefined) {
 					setStep(parsed.step);
@@ -260,7 +264,9 @@ export function useFormPersistence(
 						: (data as PremiumFormData).cities || [],
 				careerPath:
 					tier === "free"
-						? [(data as FreeFormData).careerPath]
+						? Array.isArray((data as FreeFormData).careerPath)
+							? (data as FreeFormData).careerPath
+							: ((data as FreeFormData).careerPath ? [(data as FreeFormData).careerPath] : [])
 						: (data as PremiumFormData).careerPath || [],
 				tier: tier,
 			};
@@ -291,7 +297,9 @@ export function useFormPersistence(
 					const freeData = formData as FreeFormData;
 					preferencesToSave = {
 						cities: freeData.cities || [],
-						careerPath: freeData.careerPath ? [freeData.careerPath] : [],
+						careerPath: Array.isArray(freeData.careerPath)
+							? freeData.careerPath
+							: (freeData.careerPath ? [freeData.careerPath] : []),
 						tier: "free" as const,
 					};
 				} else {
@@ -394,12 +402,14 @@ export function getStoredUserPreferencesForMatches(): {
 			const parsed: SavedFormState = JSON.parse(stored);
 			const age = Date.now() - parsed.timestamp;
 			if (age <= EXPIRATION_MS) {
-				const data = parsed.formData as FreeFormData;
-				return {
-					cities: data.cities || [],
-					careerPath: data.careerPath ? [data.careerPath] : [],
-					tier: "free" as const,
-				};
+			const data = parsed.formData as FreeFormData;
+			return {
+				cities: data.cities || [],
+				careerPath: Array.isArray(data.careerPath)
+					? data.careerPath
+					: (data.careerPath ? [data.careerPath] : []),
+				tier: "free" as const,
+			};
 			}
 		}
 	} catch (error) {

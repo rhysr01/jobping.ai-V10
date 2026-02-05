@@ -15,7 +15,6 @@ import { getStoredUserPreferencesForMatches } from "../../../hooks/useFormPersis
 export default function MatchesPageContent() {
 	const {
 		jobs,
-		targetCompanies,
 		customScan,
 		loading,
 		error,
