@@ -354,6 +354,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	const supabase = getDatabaseClient();
 	const normalizedEmail = email.toLowerCase().trim();
+	
+	// Debug: Check if we have service role access
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} Database client info`, {
+		requestId,
+		hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+		keyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+		keyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) || 'missing',
+	});
 		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_QUERY} Checking for existing user`, {
 			requestId,
 			normalizedEmail,
@@ -425,6 +433,15 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				});
 				
 				// Use ilike for case-insensitive search since PostgreSQL unique constraints are case-insensitive
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Attempting to fetch existing user with email`, {
+					requestId,
+					emailToStore,
+					emailOriginal: email,
+					normalizedEmail,
+					insertErrorCode: insertError?.code,
+					insertErrorMessage: insertError?.message,
+				});
+				
 				const { data: existingUser, error: fetchError } = await supabase
 					.from("users")
 					.select("id, email")
@@ -435,6 +452,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					requestId,
 					existingUser,
 					fetchError,
+					emailQueried: emailToStore,
 				});
 				
 				if (existingUser) {
