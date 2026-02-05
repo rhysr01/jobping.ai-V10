@@ -104,11 +104,10 @@ JOB SELECTION CRITERIA (must meet ALL):
 5. REALISM: User meets 70%+ of stated requirements
 
 SCORING WEIGHTS:
-- Career alignment: 40% (primary factor)
-- Location match: 30% (critical for applications)
-- Job freshness: 15% (recent opportunities strongly preferred)
-- Experience fit: 10% (entry-level focus)
-- Company reputation: 5% (bonus factor)
+- Career alignment: 45% (primary factor - exact match with user's chosen path)
+- Location match: 35% (critical for applications - must match user's target cities)
+- Job freshness: 15% (recent opportunities preferred - within 30 days)
+- Company reputation: 5% (bonus factor - well-known companies get slight preference)
 
 OUTPUT REQUIREMENT: Return ONLY valid JSON. No introductions, no explanations, no markdown. Just the JSON object with EXACTLY 5 matches.`;
 	}

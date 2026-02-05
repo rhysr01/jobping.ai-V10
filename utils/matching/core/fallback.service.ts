@@ -148,23 +148,9 @@ export class FallbackService {
 	private calculateQualityComponent(job: Job, _user: UserPreferences): number {
 		let quality = 50; // Base quality
 
-		// Company reputation (simplified assessment)
-		if (job.company) {
-			const company = job.company.toLowerCase();
-			if (
-				company.includes("google") ||
-				company.includes("microsoft") ||
-				company.includes("amazon") ||
-				company.includes("apple")
-			) {
-				quality += 25; // Top tech companies
-			} else if (
-				company.includes("consulting") ||
-				company.includes("investment")
-			) {
-				quality += 15; // Professional services
-			}
-		}
+		// Company reputation - removed hardcoded assessment
+		// Fallback service focuses on basic job quality indicators
+		// Company reputation is better handled by AI with broader knowledge
 
 		// Role stability indicators
 		if (job.title) {

@@ -430,10 +430,9 @@ export class PrefilterService {
 	): number {
 		let quality = 40; // Base quality
 
-		// Company reputation
-		if (this.isTopCompany(job.company)) {
-			quality += 25;
-		}
+		// Company reputation - removed hardcoded list
+		// AI will now handle company reputation assessment more comprehensively
+		// Base quality score remains, allowing for more nuanced evaluation
 
 		// Job title quality indicators
 		if (job.title) {
@@ -610,23 +609,8 @@ export class PrefilterService {
 		);
 	}
 
-	private isTopCompany(company: string): boolean {
-		const topCompanies = [
-			"google",
-			"microsoft",
-			"amazon",
-			"apple",
-			"meta",
-			"netflix",
-			"tesla",
-			"uber",
-			"airbnb",
-			"spotify",
-			"slack",
-			"notion",
-		];
-		return topCompanies.some((tc) => company.toLowerCase().includes(tc));
-	}
+	// Removed isTopCompany method - let AI handle company reputation assessment
+	// This allows for more flexible and comprehensive company evaluation
 
 	private getSourceDistribution(jobs: any[]): Record<string, number> {
 		const distribution: Record<string, number> = {};

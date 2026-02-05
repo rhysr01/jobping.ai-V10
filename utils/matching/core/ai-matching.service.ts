@@ -100,30 +100,94 @@ export class AIMatchingService {
 		const results: AIMatchResult[] = [];
 		const startTime = Date.now();
 
-		// Process jobs in batches to avoid rate limits
-		const batchSize = 5;
+		// PERFORMANCE OPTIMIZATION: Smaller batches + parallel processing + reduced delays
+		const batchSize = 3; // Reduced from 5 to 3 for faster individual batches
+		const maxConcurrentBatches = 2; // Process 2 batches in parallel
+		const delayBetweenBatches = 500; // Reduced from 1000ms to 500ms
+		
+		// Create all batches first
+		const batches: Job[][] = [];
 		for (let i = 0; i < jobs.length; i += batchSize) {
-			const batch = jobs.slice(i, i + batchSize);
-			const batchResults = await this.processBatch(user, batch, {
-				maxRetries,
-				timeoutMs,
-				useCache,
-				model,
-			});
-			results.push(...batchResults);
-
-			// Rate limiting
-			if (i + batchSize < jobs.length) {
-				await new Promise((resolve) => setTimeout(resolve, 1000));
+			batches.push(jobs.slice(i, i + batchSize));
+		}
+		
+		apiLogger.info("AI batch processing strategy", {
+			metadata: {
+				userEmail: user.email,
+				totalJobs: jobs.length,
+				totalBatches: batches.length,
+				batchSize,
+				maxConcurrentBatches,
+				delayBetweenBatches,
+			},
+		});
+		
+		// Process batches with controlled concurrency
+		for (let i = 0; i < batches.length; i += maxConcurrentBatches) {
+			const concurrentBatches = batches.slice(i, i + maxConcurrentBatches);
+			
+			try {
+				// Process multiple batches in parallel
+				const batchPromises = concurrentBatches.map((batch, index) => 
+					this.processBatch(user, batch, {
+						maxRetries,
+						timeoutMs,
+						useCache,
+						model,
+					}).catch(error => {
+						// Log individual batch failures but don't fail the entire process
+						apiLogger.warn("Individual batch processing failed", {
+							metadata: {
+								userEmail: user.email,
+								batchIndex: i + index,
+								batchSize: batch.length,
+								error: error instanceof Error ? error.message : String(error),
+							},
+						});
+						return []; // Return empty array for failed batch
+					})
+				);
+				
+				// Wait for all concurrent batches to complete
+				const batchResultsArray = await Promise.all(batchPromises);
+				
+				// Flatten and add results (filter out empty arrays from failed batches)
+				batchResultsArray.forEach(batchResults => {
+					if (batchResults.length > 0) {
+						results.push(...batchResults);
+					}
+				});
+				
+				// Rate limiting between concurrent batch groups (not individual batches)
+				if (i + maxConcurrentBatches < batches.length) {
+					await new Promise((resolve) => setTimeout(resolve, delayBetweenBatches));
+				}
+			} catch (error) {
+				// Handle unexpected errors in batch group processing
+				apiLogger.error("Batch group processing failed", error as Error, {
+					metadata: {
+						userEmail: user.email,
+						batchGroupIndex: Math.floor(i / maxConcurrentBatches),
+						concurrentBatchesCount: concurrentBatches.length,
+					},
+				});
+				
+				// Continue with next batch group rather than failing completely
+				continue;
 			}
 		}
 
+		const totalProcessingTime = Date.now() - startTime;
+		
 		apiLogger.info("AI matching completed", {
 			metadata: {
 				userEmail: user.email,
 				jobsProcessed: jobs.length,
 				matchesFound: results.length,
-				processingTime: Date.now() - startTime,
+				processingTime: totalProcessingTime,
+				totalBatches: Math.ceil(jobs.length / batchSize),
+				avgTimePerBatch: Math.round(totalProcessingTime / Math.ceil(jobs.length / batchSize)),
+				optimizationApplied: "parallel_batching",
 			},
 		});
 

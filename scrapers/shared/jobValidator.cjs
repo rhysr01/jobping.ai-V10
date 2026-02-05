@@ -110,6 +110,63 @@ function validateJob(job) {
 		);
 	}
 
+	// CRITICAL: Filter out senior/manager/director roles at scraper level
+	// This prevents senior roles from entering the database in the first place
+	const title = (job.title || "").toLowerCase();
+	const isSeniorRole = (
+		// Senior roles (unless it's a graduate program)
+		(title.includes('senior') && !(
+			title.includes('graduate') && title.includes('senior') ||
+			title.includes('senior') && title.includes('graduate') ||
+			title.includes('graduate program') ||
+			title.includes('graduate scheme')
+		)) ||
+		// Manager roles (unless it's trainee/junior/graduate manager)
+		(title.includes('manager') && !(
+			title.includes('trainee') && title.includes('manager') ||
+			title.includes('junior') && title.includes('manager') ||
+			title.includes('graduate') && title.includes('manager') ||
+			title.includes('management trainee') ||
+			title.includes('entry level') && title.includes('manager') ||
+			title.includes('assistant') && title.includes('manager') ||
+			title.includes('account manager') ||
+			title.includes('relationship manager') ||
+			title.includes('product manager') ||
+			(title.includes('project manager') && (title.includes('junior') || title.includes('graduate') || title.includes('trainee')))
+		)) ||
+		// Director roles (all directors are senior)
+		title.includes('director') ||
+		// Head of roles (all are senior)
+		title.includes('head of') ||
+		// VP/Vice President roles
+		title.includes(' vp ') || title.includes('vice president') ||
+		// Chief/Executive roles
+		title.includes('chief') || title.includes('executive director') ||
+		// Lead/Principal roles (unless junior/graduate)
+		(title.includes('lead') && !(
+			title.includes('junior') && title.includes('lead') ||
+			title.includes('graduate') && title.includes('lead')
+		)) ||
+		(title.includes('principal') && !title.includes('graduate'))
+	);
+
+	// Check if it's clearly a graduate/trainee program (override senior filter)
+	const isGraduateProgram = (
+		title.includes('graduate program') ||
+		title.includes('graduate scheme') ||
+		title.includes('trainee program') ||
+		title.includes('rotational program') ||
+		title.includes('leadership program') ||
+		description.toLowerCase().includes('graduate program') ||
+		description.toLowerCase().includes('graduate scheme') ||
+		job.is_graduate === true ||
+		job.is_internship === true
+	);
+
+	if (isSeniorRole && !isGraduateProgram) {
+		errors.push(`Senior role filtered: ${job.title} - not suitable for entry-level candidates`);
+	}
+
 	// WARNING: Job board detection (don't reject - let duplicate detection handle it)
 	const companyLower = (job.company || "").toLowerCase();
 	const companyNameLower = (job.company_name || "").toLowerCase();
