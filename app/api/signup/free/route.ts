@@ -201,14 +201,25 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			full_name: body.full_name,
 			cities: body.cities,
 			citiesLength: body.cities?.length,
+			citiesTypes: body.cities?.map((c: any) => typeof c),
 			careerPath: body.careerPath,
 			careerPathLength: body.careerPath?.length,
+			careerPathTypes: body.careerPath?.map((c: any) => typeof c),
 			visaStatus: body.visaStatus,
+			visaStatusType: typeof body.visaStatus,
 			entryLevelPreferences: body.entryLevelPreferences,
 			terms_accepted: body.terms_accepted,
+			terms_acceptedType: typeof body.terms_accepted,
 			age_verified: body.age_verified,
-			validationErrors: validationResult.error.issues,
-			requestBody: body,
+			age_verifiedType: typeof body.age_verified,
+			validationErrors: validationResult.error.issues.map((e: any) => ({
+				path: e.path,
+				message: e.message,
+				code: e.code,
+				received: e.received,
+				expected: e.expected,
+			})),
+			requestBody: JSON.stringify(body),
 		});
 
 		// CRITICAL FIX: Only log to Sentry if it's a real validation issue, not expected edge cases
@@ -303,16 +314,30 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			});
 		}
 
-		return NextResponse.json(
-			{
-				error: "invalid_input",
-				message:
-					"Please check your information and try again. All fields are required and must be valid.",
-				details: validationResult.error.issues,
-				requestId,
+	return NextResponse.json(
+		{
+			error: "invalid_input",
+			message:
+				"Please check your information and try again. All fields are required and must be valid.",
+			details: validationResult.error.issues.map((issue: any) => ({
+				path: issue.path.join("."),
+				message: issue.message,
+				code: issue.code,
+			})),
+			requestId,
+			debugInfo: {
+				receivedFields: {
+					email: typeof body.email,
+					full_name: typeof body.full_name,
+					cities: `array of ${body.cities?.map((c: any) => typeof c).join(",")}`,
+					careerPath: `array of ${body.careerPath?.map((c: any) => typeof c).join(",")}`,
+					terms_accepted: typeof body.terms_accepted,
+					age_verified: typeof body.age_verified,
+				},
 			},
-			{ status: 400 },
-		);
+		},
+		{ status: 400 },
+	);
 	}
 
 	const { email, full_name, cities, careerPath } = validationResult.data;
