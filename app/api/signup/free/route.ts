@@ -2,6 +2,19 @@ import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../../lib/api-logger";
+
+// TEMPORARY DEBUG - Check service role key
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+console.log('[DEBUG_SERVICE_KEY]', {
+	hasKey: !!serviceKey,
+	keyLength: serviceKey.length,
+	startsWithEyJ: serviceKey.startsWith('eyJ'),
+	first50: serviceKey.substring(0, 50),
+	// Decode JWT to check if it contains service_role
+	isServiceRole: serviceKey.includes('service_role') || (serviceKey.length > 100 && serviceKey.split('.').length === 3),
+	environment: process.env.NODE_ENV,
+	vercelEnv: process.env.VERCEL_ENV,
+});
 import { asyncHandler, getRequestId } from "../../../../lib/errors";
 import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
 import {

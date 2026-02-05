@@ -67,6 +67,16 @@ class DatabasePool {
 			// Use the ENV object for Supabase configuration
 			let supabaseUrl = ENV.NEXT_PUBLIC_SUPABASE_URL;
 			let supabaseKey = ENV.SUPABASE_SERVICE_ROLE_KEY;
+			
+			// TEMPORARY DEBUG - Log what key we're using
+			console.log('[DEBUG_DATABASE_POOL]', {
+				hasUrl: !!supabaseUrl,
+				hasKey: !!supabaseKey,
+				keyLength: supabaseKey?.length || 0,
+				keyPrefix: supabaseKey?.substring(0, 30) || 'missing',
+				isJWT: supabaseKey?.startsWith('eyJ') || false,
+				environment: ENV.NODE_ENV,
+			});
 
 			// During build time, use placeholder values if real ones are missing
 			if (isBuildTime) {
