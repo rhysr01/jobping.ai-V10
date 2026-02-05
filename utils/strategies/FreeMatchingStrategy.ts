@@ -373,11 +373,52 @@ async function rankAndReturnMatchesDirect(
 					});
 					return null;
 				}
+
+				// PHASE 1 FIX: Enhanced scoring system to eliminate 80% ceiling
+				// - Removed hardcoded 0.8 fallback that was causing score clustering
+				// - Fixed property name mismatch (overallScore vs overall)
+				// - Added intelligent rule-based fallback scoring
+				// - Implemented proper score validation and normalization
+				let finalScore = 0;
+				let scoreSource = "unknown";
+
+				if (m.unifiedScore?.overall) {
+					finalScore = m.unifiedScore.overall / 100; // Convert to 0-1 range
+					scoreSource = "ai_unified";
+				} else if (m.match_score) {
+					finalScore = typeof m.match_score === 'number' ? m.match_score : parseFloat(m.match_score);
+					scoreSource = "ai_direct";
+				} else {
+					// Intelligent fallback based on job characteristics
+					finalScore = this.calculateFallbackScore(jobData, userPrefs);
+					scoreSource = "rule_based_fallback";
+					
+					apiLogger.warn("[FREE] AI scoring failed, using fallback", {
+						email: userPrefs.email,
+						jobTitle: jobData.title,
+						company: jobData.company,
+						fallbackScore: finalScore,
+						aiResult: {
+							hasUnifiedScore: !!m.unifiedScore,
+							hasMatchScore: !!m.match_score,
+							unifiedScoreKeys: m.unifiedScore ? Object.keys(m.unifiedScore) : [],
+						},
+					});
+				}
+
+				// Validate and normalize score
+				finalScore = this.validateAndNormalizeScore(finalScore, scoreSource, {
+					jobTitle: jobData.title,
+					company: jobData.company,
+					userEmail: userPrefs.email,
+				});
+
 				return {
 					...jobData,
 					job_hash: jobHash, // Explicitly ensure job_hash is set
-					match_score: m.unifiedScore?.overallScore || m.match_score || 0.8,
-					match_reason: m.matchReason || m.match_reason || "AI matched",
+					match_score: finalScore,
+					match_reason: m.matchReason || m.match_reason || `Matched via ${scoreSource}`,
+					score_source: scoreSource, // Add metadata for debugging
 				};
 			})
 			.filter(Boolean);
@@ -814,4 +855,132 @@ async function saveMatchesAndReturn(
 		method: method,
 		duration: Date.now() - startTime,
 	};
+
+	/**
+	 * Calculate intelligent fallback score based on job characteristics
+	 * when AI scoring fails. Provides more nuanced scoring than hardcoded values.
+	 */
+	private static calculateFallbackScore(job: any, userPrefs: any): number {
+		let score = 0.6; // Base score (60%)
+		
+		// Location match bonus
+		if (job.city && userPrefs.target_cities?.includes(job.city)) {
+			score += 0.15; // +15% for city match
+		}
+		
+		// Career path alignment
+		if (job.categories && userPrefs.career_path) {
+			const hasCareerMatch = job.categories.includes(userPrefs.career_path) ||
+				job.categories.includes('early-career');
+			if (hasCareerMatch) {
+				score += 0.1; // +10% for career alignment
+			}
+		}
+		
+		// Experience level appropriateness
+		if (job.experience_required) {
+			const expLevel = job.experience_required.toLowerCase();
+			if (expLevel.includes('entry') || expLevel.includes('junior') || 
+				expLevel.includes('graduate') || expLevel.includes('intern')) {
+				score += 0.08; // +8% for appropriate experience level
+			}
+		}
+		
+		// Job type bonuses
+		if (job.is_internship && userPrefs.entry_level_preference?.includes('internship')) {
+			score += 0.05; // +5% for internship match
+		}
+		
+		if (job.is_graduate && userPrefs.entry_level_preference?.includes('graduate')) {
+			score += 0.05; // +5% for graduate program match
+		}
+		
+		// Visa sponsorship alignment
+		if (job.visa_sponsored && userPrefs.visa_status !== 'EU citizen') {
+			score += 0.07; // +7% for visa sponsorship when needed
+		}
+		
+		// Company quality indicators (basic heuristics)
+		if (job.company) {
+			const companyName = job.company.toLowerCase();
+			// Well-known companies get a small boost
+			const knownCompanies = ['google', 'microsoft', 'amazon', 'meta', 'apple', 'netflix', 'spotify', 'uber', 'airbnb'];
+			if (knownCompanies.some(name => companyName.includes(name))) {
+				score += 0.03; // +3% for recognized companies
+			}
+		}
+		
+		// Job freshness (newer jobs are generally better)
+		if (job.posted_at || job.created_at) {
+			const jobDate = new Date(job.posted_at || job.created_at);
+			const daysSincePosted = (Date.now() - jobDate.getTime()) / (1000 * 60 * 60 * 24);
+			
+			if (daysSincePosted <= 7) {
+				score += 0.02; // +2% for jobs posted within a week
+			} else if (daysSincePosted <= 30) {
+				score += 0.01; // +1% for jobs posted within a month
+			}
+		}
+		
+		// Ensure score stays within reasonable bounds (50-85% for fallback)
+		return Math.max(0.5, Math.min(0.85, score));
+	}
+
+	/**
+	 * Validate and normalize match scores to ensure quality and consistency
+	 */
+	private static validateAndNormalizeScore(
+		score: number, 
+		source: string, 
+		context: { jobTitle?: string; company?: string; userEmail?: string }
+	): number {
+		const originalScore = score;
+		
+		// Handle invalid scores
+		if (isNaN(score) || !isFinite(score)) {
+			apiLogger.warn("[FREE] Invalid score detected, using fallback", {
+				originalScore,
+				source,
+				context,
+			});
+			return 0.6; // Default fallback
+		}
+		
+		// Normalize scores based on source
+		let normalizedScore = score;
+		
+		switch (source) {
+			case 'ai_unified':
+			case 'ai_direct':
+				// AI scores should be in 0-1 range, but sometimes come as 0-100
+				if (score > 1) {
+					normalizedScore = score / 100;
+				}
+				// Ensure AI scores are within reasonable bounds (60-95%)
+				normalizedScore = Math.max(0.6, Math.min(0.95, normalizedScore));
+				break;
+				
+			case 'rule_based_fallback':
+				// Rule-based scores are already properly bounded in calculateFallbackScore
+				normalizedScore = Math.max(0.5, Math.min(0.85, score));
+				break;
+				
+			default:
+				// Unknown source, apply conservative bounds
+				normalizedScore = Math.max(0.5, Math.min(0.9, score));
+		}
+		
+		// Log score adjustments for monitoring
+		if (Math.abs(originalScore - normalizedScore) > 0.01) {
+			apiLogger.info("[FREE] Score normalized", {
+				originalScore,
+				normalizedScore,
+				source,
+				adjustment: normalizedScore - originalScore,
+				context,
+			});
+		}
+		
+		return normalizedScore;
+	}
 }

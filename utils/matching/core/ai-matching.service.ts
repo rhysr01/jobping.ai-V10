@@ -442,6 +442,23 @@ export class AIMatchingService {
 						job.title || "Unknown Position",
 					);
 
+					// Add detailed logging for score tracking
+					apiLogger.info("AI match score created", {
+						metadata: {
+							jobIndex,
+							jobTitle: job.title,
+							company: job.company,
+							rawAIScore: match.matchScore || match.match_score || match.score,
+							finalOverallScore: overallScore,
+							unifiedScoreStructure: {
+								overall: unifiedScore.overall,
+								confidence: unifiedScore.confidence,
+								method: unifiedScore.method,
+							},
+							aiResponseFields: Object.keys(match),
+						},
+					});
+
 					return {
 						job,
 						unifiedScore,
