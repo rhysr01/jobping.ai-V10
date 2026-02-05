@@ -8,7 +8,7 @@ import LogoWordmark from "../logo-wordmark";
 import { BrandIcons } from "../ui/BrandIcons";
 import CustomButton from "../ui/CustomButton";
 import { trackEvent } from "../../lib/analytics";
-import { CTA_GET_MY_5_FREE_MATCHES } from "../../lib/copy";
+import { CTA_GET_5_FREE_MATCHES } from "../../lib/copy";
 
 export default function Header() {
 	const [scrolled, setScrolled] = useState(false);
@@ -261,7 +261,7 @@ export default function Header() {
 								size="md"
 								className="hidden sm:inline-flex"
 							>
-								<span className="hidden lg:inline">{CTA_GET_MY_5_FREE_MATCHES}</span>
+								<span className="hidden lg:inline">{CTA_GET_5_FREE_MATCHES}</span>
 								<span className="lg:hidden">Get 5 Free Matches</span>
 								<BrandIcons.ArrowRight className="h-4 w-4" />
 							</CustomButton>

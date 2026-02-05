@@ -6,7 +6,7 @@ import { TiltCard } from "../ui/TiltCard";
 import Link from "next/link";
 import { BrandIcons } from "../ui/BrandIcons";
 import {
-	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_5_FREE_MATCHES,
 	CTA_GET_MY_5_FREE_MATCHES_ARIA,
 } from "../../lib/copy";
 import { trackEvent } from "../../lib/analytics";
@@ -257,7 +257,7 @@ export function HeroMobileMockup({
 									aria-label={CTA_GET_MY_5_FREE_MATCHES_ARIA}
 								>
 									<span className="flex items-center justify-center gap-2">
-										{CTA_GET_MY_5_FREE_MATCHES}
+										{CTA_GET_5_FREE_MATCHES}
 										<BrandIcons.ArrowRight className="h-4 w-4" />
 									</span>
 								</Link>

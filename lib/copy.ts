@@ -1,4 +1,4 @@
-/**
+/
  * Centralized copy strings for consistent messaging across the application
  */
 
@@ -146,6 +146,7 @@ export const PREMIUM_PLAN_SUBTITLE = `15 jobs/week • 3× delivery`;
 export const PREMIUM_PLAN_VALUE = "€0.33 per job match";
 export const PREMIUM_PLAN_PRICE = "€5";
 export const PREMIUM_PLAN_PRICE_UNIT = "/month";
+export const PREMIUM_PLAN_ANNUAL = "€20 for 3 months (save €1)";
 export const PREMIUM_PLAN_DESCRIPTION = `5 fresh matches delivered 3× per week (Mon/Wed/Fri) from companies actively hiring.`;
 export const PREMIUM_PLAN_GUARANTEE =
 	"💸 If you don't apply to 3+ jobs in 30 days, we'll refund you.";
