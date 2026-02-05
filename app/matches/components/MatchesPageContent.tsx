@@ -39,32 +39,36 @@ export default function MatchesPageContent() {
 	const [showMatchingSuite, setShowMatchingSuite] = useState(false);
 	const [successMatchCount] = useState(0);
 
+	// CRITICAL FIX: Declare currentStage at component level, not inside conditional
+	// Hooks must ALWAYS be called unconditionally, not inside if/else blocks
+	const [currentStage, setCurrentStage] = useState<
+		"validating" | "matching" | "preparing"
+	>("validating");
+
 	// Set up scroll listener
 	useEffect(() => {
 		window.addEventListener("scroll", handleScroll, { passive: true });
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, [handleScroll]);
 
+	// Update stage based on loading state
+	useEffect(() => {
+		if (!loading || showMatchingSuite) return;
+
+		const stages = [
+			{ stage: "validating" as const, delay: 0 },
+			{ stage: "matching" as const, delay: 2000 },
+			{ stage: "preparing" as const, delay: 6000 },
+		];
+
+		const timeouts = stages.map(({ stage, delay }) =>
+			setTimeout(() => setCurrentStage(stage), delay),
+		);
+
+		return () => timeouts.forEach(clearTimeout);
+	}, [loading, showMatchingSuite]);
+
 	if (loading && !showMatchingSuite) {
-		// Simple stage progression
-		const [currentStage, setCurrentStage] = useState<
-			"validating" | "matching" | "preparing"
-		>("validating");
-
-		useEffect(() => {
-			const stages = [
-				{ stage: "validating" as const, delay: 0 },
-				{ stage: "matching" as const, delay: 2000 },
-				{ stage: "preparing" as const, delay: 6000 },
-			];
-
-			const timeouts = stages.map(({ stage, delay }) =>
-				setTimeout(() => setCurrentStage(stage), delay),
-			);
-
-			return () => timeouts.forEach(clearTimeout);
-		}, []);
-
 		return (
 			<div className="min-h-screen bg-black flex items-center justify-center p-4">
 				<div className="flex items-center justify-center py-8">
