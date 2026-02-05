@@ -20,8 +20,6 @@ import { JobCountTeaser } from "./JobCountTeaser";
 interface Step3FreeCareerProps {
 	formData: SignupFormData;
 	setFormData: React.Dispatch<React.SetStateAction<SignupFormData>>;
-	touchedFields: Set<string>;
-	setTouchedFields: React.Dispatch<React.SetStateAction<Set<string>>>;
 	loading: boolean;
 	setStep: (step: number) => void;
 	handleSubmit: () => void;
@@ -30,8 +28,6 @@ interface Step3FreeCareerProps {
 export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 	formData,
 	setFormData,
-	touchedFields: _touchedFields,
-	setTouchedFields,
 	loading,
 	setStep,
 	handleSubmit,
@@ -41,13 +37,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 	};
 
 	const handleCareerPathSelect = (pathValue: string) => {
-		console.log("Career path selected:", pathValue);
-		setFormData((prev) => {
-			const newData = { ...prev, careerPath: [pathValue] };
-			console.log("Updated formData:", newData);
-			return newData;
-		});
-		setTouchedFields((prev) => new Set(prev).add("careerPath"));
+		setFormData((prev) => ({ ...prev, careerPath: [pathValue] }));
 
 		// Show success feedback
 		const selectedPath = CAREER_PATHS.find((p) => p.value === pathValue);
@@ -56,16 +46,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 		}
 	};
 
-	const handleCareerPathBlur = () => {
-		setTouchedFields((prev) => new Set(prev).add("careerPath"));
-	};
-
 	const isStepValid = formData.careerPath && formData.careerPath.length > 0;
-	console.log("Step3 validation:", {
-		careerPath: formData.careerPath,
-		isStepValid,
-		gdprConsent: formData.gdprConsent,
-	});
 
 	return (
 		<motion.div
@@ -116,7 +97,6 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					role="radiogroup"
 					aria-labelledby="career-label"
 					aria-describedby="career-help"
-					onBlur={handleCareerPathBlur}
 				>
 					{CAREER_PATHS.map((path) => {
 						const isSelected = formData.careerPath.includes(path.value);
@@ -218,13 +198,6 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 					/>
 				)}
 
-				{/* Error Display */}
-				{!isStepValid && (
-					<FormFieldError
-						error="Please select a career path to continue."
-						id="career-error"
-					/>
-				)}
 			</div>
 
 			{/* GDPR Consent - Required for submission */}
@@ -274,16 +247,7 @@ export const Step3FreeCareer = React.memo(function Step3FreeCareer({
 				nextDisabled={!isStepValid || !formData.gdprConsent || loading}
 				nextLabel="Get My 5 Matches"
 				loading={loading}
-				onNext={() => {
-					console.log("Submit button clicked - final validation:", {
-						isStepValid,
-						gdprConsent: formData.gdprConsent,
-						loading,
-						careerPath: formData.careerPath,
-						nextDisabled: !isStepValid || !formData.gdprConsent || loading,
-					});
-					handleSubmit();
-				}}
+				onNext={handleSubmit}
 			/>
 		</motion.div>
 	);

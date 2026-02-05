@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { trackEvent } from "../../lib/analytics";
 import {
-	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_5_FREE_MATCHES,
 	CTA_GET_MY_5_FREE_MATCHES_ARIA,
 } from "../../lib/copy";
 import { BrandIcons } from "./BrandIcons";
@@ -96,7 +96,7 @@ export default function StickyMobileCTA() {
 							{/* Content */}
 							<span className="relative z-10 flex items-center gap-2">
 								<BrandIcons.Mail className="w-5 h-5" />
-								<span>{CTA_GET_MY_5_FREE_MATCHES}</span>
+								<span>{CTA_GET_5_FREE_MATCHES}</span>
 								<BrandIcons.ArrowRight className="w-5 h-5" />
 							</span>
 

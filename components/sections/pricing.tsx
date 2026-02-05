@@ -20,7 +20,7 @@ const TIERS = [
 		description:
 			"5 instant matches to try JobPing (one-time preview, no ongoing emails)",
 		features: Copy.FREE_PLAN_FEATURES,
-		cta: "Get 5 Free Matches",
+		cta: "Try Free Preview",
 		href: "/signup/free",
 		popular: false,
 		icon: BrandIcons.Zap,
@@ -32,7 +32,7 @@ const TIERS = [
 		description:
 			"5 fresh matches 3× per week (Mon/Wed/Fri) from companies actively hiring visa-sponsored roles",
 		features: Copy.PREMIUM_PLAN_FEATURES,
-		cta: "Get Premium Access",
+		cta: "Start Premium",
 		href: "/signup",
 		popular: true,
 		icon: Star,

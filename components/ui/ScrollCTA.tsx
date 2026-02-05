@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { trackEvent } from "../../lib/analytics";
 import {
-	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_5_FREE_MATCHES,
 	TRUST_TEXT_NO_CARD_SETUP,
 } from "../../lib/copy";
 import { BrandIcons } from "./BrandIcons";
@@ -90,7 +90,7 @@ export default function ScrollCTA() {
 						<div className="relative flex items-center gap-4">
 							<div className="flex-1">
 								<p className="font-display text-sm font-semibold text-white mb-1">
-									{CTA_GET_MY_5_FREE_MATCHES}
+									{CTA_GET_5_FREE_MATCHES}
 								</p>
 								<p className="text-xs text-zinc-400 hidden md:flex">
 									{TRUST_TEXT_NO_CARD_SETUP}
@@ -120,7 +120,7 @@ export default function ScrollCTA() {
 
 								{/* Text */}
 								<span className="relative z-10 group-hover/btn:-translate-y-0.5 inline-flex items-center gap-2 transition-transform">
-									{CTA_GET_MY_5_FREE_MATCHES}
+									{CTA_GET_5_FREE_MATCHES}
 									<BrandIcons.ArrowRight className="h-4 w-4" />
 								</span>
 

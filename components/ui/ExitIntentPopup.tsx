@@ -10,7 +10,7 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import {
-	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_5_FREE_MATCHES,
 	TRUST_TEXT_INSTANT_SETUP,
 } from "../../lib/copy";
 import { BrandIcons } from "./BrandIcons";
@@ -93,7 +93,7 @@ export default function ExitIntentPopup() {
 						<BrandIcons.Zap className="w-6 h-6 text-emerald-400" />
 					</div>
 					<SheetTitle className="text-xl sm:text-2xl font-black text-white mb-3">
-						{CTA_GET_MY_5_FREE_MATCHES}
+						{CTA_GET_5_FREE_MATCHES}
 					</SheetTitle>
 					<SheetDescription className="text-sm sm:text-base text-zinc-300 mb-5 max-w-md mx-auto">
 						See <strong className="text-white">5 hand-picked jobs</strong>{" "}
@@ -115,7 +115,7 @@ export default function ExitIntentPopup() {
 						onClick={() => setShowPopup(false)}
 						className="btn-primary w-full max-w-sm text-sm sm:text-base py-3 sm:py-3.5 min-h-[48px] text-center"
 					>
-						{CTA_GET_MY_5_FREE_MATCHES} →
+						{CTA_GET_5_FREE_MATCHES} →
 					</Link>
 
 					<button

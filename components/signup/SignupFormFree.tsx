@@ -75,15 +75,11 @@ function SignupFormFree() {
 
 	const { announce, Announcement } = useAriaAnnounce();
 
-	// Enhanced submission progress state
+	// Simplified submission state
 	const [submissionProgress, setSubmissionProgress] = useState(0);
 	const [submissionStage, setSubmissionStage] = useState<string>("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [validationErrors, setValidationErrors] = useState<
-		Record<string, string>
-	>({});
 	const [isMounted, setIsMounted] = useState(false);
-	const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
 	// Form persistence hook
 	// SignupFormData is compatible with FormDataType since it contains all required fields
@@ -235,382 +231,78 @@ function SignupFormFree() {
 		announce,
 	});
 
-	// Enhanced submit handler with validation and loading states
+	// Simplified submit handler with essential validation only
 	const handleSubmit = useCallback(async () => {
-		// COMPREHENSIVE DEBUGGING - Log everything
-		const debugInfo = {
-			loading,
-			isSubmitting,
-			step,
-			formData: {
-				email: formData.email,
-				fullName: formData.fullName,
-				birthYear: formData.birthYear,
-				cities: formData.cities,
-				citiesLength: formData.cities?.length,
-				careerPath: formData.careerPath,
-				careerPathLength: formData.careerPath?.length,
-				languages: formData.languages,
-				workEnvironment: formData.workEnvironment,
-				visaStatus: formData.visaStatus,
-			},
-			timestamp: new Date().toISOString(),
-			url: window.location.href,
-			userAgent: navigator.userAgent,
-		};
-
-		console.log("🚀 FREE SIGNUP SUBMIT STARTED", debugInfo);
-		
-		// Force Sentry message to ensure tracking is working
-		Sentry.captureMessage("Free signup submit started", {
-			level: "info",
-			tags: {
-				component: "SignupFormFree",
-				action: "submit_started",
-				step: step.toString(),
-			},
-			extra: debugInfo,
-		});
-
 		if (loading || isSubmitting) {
-			console.log("⏸️ Submit blocked - already in progress");
-			debugLogger.warning("SUBMIT", "Submit already in progress");
 			return;
 		}
 
-		const submitTracker = debugLogger.createTracker("FORM_SUBMIT");
+		// Simple client-side validation
+		if (!formData.fullName?.trim() || !formData.email?.trim() || 
+			!formData.cities?.length || !formData.careerPath?.length || 
+			!formData.gdprConsent) {
+			setError("Please complete all required fields");
+			return;
+		}
 
-		// Client-side validation with comprehensive logging
-		const errors: Record<string, string> = {};
-
-		// Basic email regex as fallback (same as navigation logic)
+		// Basic email validation
 		const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-		const emailLooksValid = basicEmailRegex.test(formData.email.trim());
-
-		const validationState = {
-			hasFullName: !!formData.fullName?.trim(),
-			hasEmail: !!formData.email?.trim(),
-			emailValid: emailValidation.isValid,
-			emailLooksValid,
-			hasCities: formData.cities?.length > 0,
-			hasCareerPath: formData.careerPath?.length > 0,
-			hasLanguages: formData.languages?.length > 0,
-			hasWorkEnvironment: !!formData.workEnvironment,
-			hasVisaStatus: !!formData.visaStatus,
-			birthYear: formData.birthYear,
-		};
-
-		console.log("🔍 VALIDATION STATE", validationState);
-		
-		debugLogger.step("VALIDATION", "Starting client-side validation", validationState);
-
-		if (!formData.fullName?.trim()) {
-			errors.fullName = "Full name is required";
-		}
-		if (!formData.email?.trim()) {
-			errors.email = "Email is required";
-		} else if (!emailValidation.isValid && !emailLooksValid) {
-			// Allow email if either debounced validation passed OR basic regex passes
-			// This prevents UX issues with 500ms debounce delay
-			errors.email =
-				emailValidation.error || "Please enter a valid email address";
-		}
-		if (!formData.cities?.length) {
-			errors.cities = "Please select at least one city";
-		}
-		if (!formData.careerPath?.length) {
-			errors.careerPath = "Please select at least one career path";
-		}
-		if (!formData.gdprConsent) {
-			errors.gdprConsent =
-				"Please accept the Terms of Service and Privacy Policy";
-		}
-
-		setValidationErrors(errors);
-
-		if (Object.keys(errors).length > 0) {
-			debugLogger.error("VALIDATION", "Client-side validation failed", {
-				errors,
-			});
-			submitTracker.error("Validation failed", {
-				errorCount: Object.keys(errors).length,
-			});
+		if (!emailValidation.isValid && !basicEmailRegex.test(formData.email.trim())) {
+			setError("Please enter a valid email address");
 			return;
 		}
-
-		debugLogger.success("VALIDATION", "All client-side validations passed");
-		submitTracker.checkpoint("Validation complete");
 
 		setIsSubmitting(true);
 		setLoading(true);
 		setError("");
-		setValidationErrors({});
 		setSubmissionProgress(0);
-		setSubmissionStage("Validating your details...");
-
-		// Enhanced progress tracking with visual feedback
-		setTimeout(() => setSubmissionProgress(10), 100);
+		setSubmissionStage("Finding your matches...");
 
 		try {
-			debugLogger.step("SUBMIT_START", "Starting form submission", {
-				email: formData.email,
-				cities: formData.cities,
-				careerPath: formData.careerPath,
-			});
-			submitTracker.checkpoint("Form submission started");
+			// Simple progress tracking
+			setSubmissionProgress(20);
+			setSubmissionStage("Analyzing your preferences...");
+			
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			setSubmissionProgress(50);
 
-			// Stage 1: Validation (10% - 30%)
-			setSubmissionProgress(10);
-			await new Promise((resolve) => setTimeout(resolve, 300));
-			setSubmissionProgress(30);
-			setSubmissionStage("Finding your perfect matches...");
-			debugLogger.step("SUBMIT_STAGE", "Stage 1: Validation", {
-				progress: "30%",
-			});
-
-			// Stage 2: API Call (30% - 70%)
-			setSubmissionProgress(40);
-
-			// Transform form data to match API expectations
-			// CRITICAL: API requires age_verified and terms_accepted to be exactly true (not just truthy)
-			// If gdprConsent is true, both must be true for validation to pass
+			// Prepare API data
 			const apiData = {
 				email: formData.email,
 				full_name: formData.fullName,
 				cities: formData.cities || [],
 				careerPath: formData.careerPath || [],
 				entryLevelPreferences: formData.entryLevelPreferences || [],
-				// Note: visaStatus is optional for free tier - API defaults to "EU citizen"
-				// Visa filtering is a premium feature
-				visaStatus: "", // Will default to "EU citizen" in API
-				// Map gdprConsent to terms_accepted (required by API)
-				// API validation requires exactly true, not just truthy
+				visaStatus: "", // Defaults to "EU citizen" in API
 				terms_accepted: formData.gdprConsent === true,
-				// Set age_verified to true when user accepts terms (accepting terms implies age verification)
-				// API validation requires exactly true, not just truthy
 				age_verified: formData.gdprConsent === true,
 			};
 
-			debugLogger.debug("SUBMIT_API_DATA", "Prepared API payload", {
-				email: apiData.email,
-				citiesLength: apiData.cities?.length,
-				careerPathLength: apiData.careerPath?.length,
-				termsAccepted: apiData.terms_accepted,
-				ageVerified: apiData.age_verified,
-			});
-
-			// Validate critical fields before sending
-			if (!apiData.cities || apiData.cities.length === 0) {
-				throw new Error("Please select at least one city");
-			}
-			if (!apiData.careerPath || apiData.careerPath.length === 0) {
-				throw new Error("Please select at least one career path");
-			}
-			if (!apiData.terms_accepted) {
-				throw new Error(
-					"Please accept the Terms of Service and Privacy Policy",
-				);
-			}
-			if (!apiData.age_verified) {
-				throw new Error("Age verification is required");
-			}
-
-			debugLogger.step("SUBMIT_STAGE", "Stage 2: API Call", {
-				progress: "40%",
-				endpoint: "/api/signup/free",
+			const response = await apiCallJson<{
+				userId: string;
+				email: string;
+				matchesCount: number;
+				success?: boolean;
+				error?: string;
+				message?: string;
+			}>("/api/signup/free", {
 				method: "POST",
-			});
-			submitTracker.checkpoint("API call starting");
-
-			// Force console logging before API call
-			console.log("📡 MAKING API CALL to /api/signup/free", {
-				apiData,
-				timestamp: new Date().toISOString(),
-				url: "/api/signup/free",
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-			});
-
-			// Also send to Sentry to track API calls
-			Sentry.captureMessage("Free signup API call initiated", {
-				level: "info",
-				tags: {
-					component: "SignupFormFree",
-					action: "api_call_start",
-					endpoint: "/api/signup/free",
-				},
-				extra: {
-					apiData: {
-						...apiData,
-						// Don't log sensitive data in production
-						email: apiData.email?.substring(0, 3) + "***",
-					},
-				},
-			});
-
-			// Add network error detection
-			let response;
-			try {
-				response = await apiCallJson<{
-					userId: string;
-					email: string;
-					matchesCount: number;
-					success?: boolean;
-					error?: string;
-					details?: any;
-					message?: string;
-					warning?: string;
-				}>("/api/signup/free", {
-					method: "POST",
-					body: JSON.stringify(apiData),
-				});
-			} catch (networkError) {
-				// Capture network/fetch errors that might not reach Sentry
-				const error = networkError instanceof Error ? networkError : new Error(String(networkError));
-				
-				console.error("🚨 NETWORK ERROR in free signup:", {
-					error: networkError,
-					message: error.message,
-					stack: error.stack,
-					formData: {
-						email: formData.email,
-						cities: formData.cities?.length || 0,
-						careerPath: formData.careerPath?.length || 0,
-					},
-					timestamp: new Date().toISOString(),
-				});
-				
-				// Store error in window for debugging
-				if (typeof window !== "undefined") {
-					(window as any).__lastSignupError = {
-						type: "network_error",
-						error: error.message,
-						stack: error.stack,
-						formData: {
-							email: formData.email,
-							cities: formData.cities,
-							careerPath: formData.careerPath,
-						},
-						timestamp: new Date().toISOString(),
-					};
-					console.log("[DEBUG] Error stored at window.__lastSignupError");
-				}
-				
-				try {
-					Sentry.captureException(error, {
-						tags: {
-							component: "SignupFormFree",
-							action: "api_call",
-							error_type: "network_error",
-						},
-						extra: {
-							endpoint: "/api/signup/free",
-							formData: {
-								email: formData.email,
-								cities: formData.cities?.length || 0,
-								careerPath: formData.careerPath?.length || 0,
-							},
-							timestamp: new Date().toISOString(),
-						},
-					});
-					await Sentry.flush(2000);
-				} catch (sentryError) {
-					console.error("🚨 Failed to send error to Sentry:", sentryError);
-				}
-				
-				throw networkError; // Re-throw to be handled by outer catch
-			}
-
-			debugLogger.success("SUBMIT_API_RESPONSE", "API response received", {
-				userId: response?.userId,
-				matchCount: response?.matchesCount,
-				email: response?.email,
-				status: "success",
-			});
-			// COMPREHENSIVE SUCCESS LOGGING
-			console.log("✅ API CALL SUCCESSFUL", {
-				response,
-				timestamp: new Date().toISOString(),
-				matchCount: response?.matchesCount,
-				userId: response?.userId,
-				email: response?.email,
-			});
-
-			// Send success to Sentry
-			Sentry.captureMessage("Free signup API call successful", {
-				level: "info",
-				tags: {
-					component: "SignupFormFree",
-					action: "api_call_success",
-					endpoint: "/api/signup/free",
-				},
-				extra: {
-					matchCount: response?.matchesCount,
-					userId: response?.userId,
-					hasEmail: !!response?.email,
-				},
-			});
-
-			submitTracker.checkpoint("API response successful", {
-				matchCount: response?.matchesCount,
+				body: JSON.stringify(apiData),
 			});
 
 			if (!response) {
-				console.error("❌ NO RESPONSE FROM SERVER");
 				throw new Error("No response from server");
 			}
 
-			setSubmissionProgress(70);
+			setSubmissionProgress(80);
 			setSubmissionStage("Preparing your matches...");
 
-			// CRITICAL FIX: Handle zero matches gracefully
-			// API now returns 200 with matchesCount: 0 instead of 404
+			// Handle zero matches gracefully
 			if (response.matchesCount === 0) {
-				debugLogger.error("SUBMIT_NO_MATCHES", "Signup successful but no matches found", {
-					email: response.email,
-					userId: response.userId,
-					message: (response as any).message,
-				});
-
-				// Show helpful message instead of error
 				showToast.info(
-					response.message || "We couldn't find matches for your criteria. Try adjusting your city or career path preferences."
+					response.message || "We couldn't find matches for your criteria. Try adjusting your preferences."
 				);
-
-				// Still set success state and redirect - user signed up successfully
-				setSuccessState({
-					show: true,
-					matchesCount: 0,
-				});
-
-				setSubmissionProgress(100);
-				setSubmissionStage("Account created! Redirecting...");
-
-				// Save preferences and redirect to matches page (which will show "no matches" message)
-				savePreferencesForMatches(formData as unknown as FormDataType);
-				clearProgress();
-
-				const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
-				
-				// Store redirect URL in sessionStorage as a fallback
-				if (typeof window !== "undefined") {
-					sessionStorage.setItem("pendingRedirect", redirectUrl);
-				}
-
-				setTimeout(() => {
-					console.log("🔄 EXECUTING REDIRECT (no matches) to:", redirectUrl);
-					if (typeof window !== "undefined") {
-						sessionStorage.removeItem("pendingRedirect");
-					}
-					// Use window.location.href for guaranteed redirect
-					window.location.href = redirectUrl;
-				}, TIMING.REDIRECT_DELAY_MS);
-
-				return; // Exit early - don't continue with normal success flow
 			}
-
-			// Stage 3: Success (70% - 100%)
-			setSubmissionProgress(90);
 
 			setSuccessState({
 				show: true,
@@ -620,413 +312,48 @@ function SignupFormFree() {
 			setSubmissionProgress(100);
 			setSubmissionStage("Complete! Redirecting...");
 
-			debugLogger.success("SUBMIT_SUCCESS", "Signup successful!", {
-				email: response.email,
-				userId: response.userId,
-				matchCount: response.matchesCount,
-			});
-
-			// Save preferences for matches page before clearing form progress
-			// This allows PremiumJobsPreview to access user preferences
+			// Save preferences and redirect
 			savePreferencesForMatches(formData as unknown as FormDataType);
 			clearProgress();
 
-			// Store redirect URL for reliable navigation
 			const redirectUrl = `/matches?tier=free&email=${encodeURIComponent(response.email)}`;
 			
-			// Store redirect URL in sessionStorage as a fallback in case component unmounts
 			if (typeof window !== "undefined") {
 				sessionStorage.setItem("pendingRedirect", redirectUrl);
 				sessionStorage.setItem("signupEmail", response.email);
 			}
 			
-			console.log("🎉 SIGNUP SUCCESS - REDIRECTING", {
-				email: response.email,
-				userId: response.userId,
-				matchCount: response.matchesCount,
-				tier: "free",
-				redirectUrl,
-				timestamp: new Date().toISOString(),
-				hasCookie: typeof document !== "undefined" ? document.cookie.includes("user_email") : "unknown",
-			});
-
-			// Send final success to Sentry
-			Sentry.captureMessage("Free signup completed successfully", {
-				level: "info",
-				tags: {
-					component: "SignupFormFree",
-					action: "signup_complete",
-					tier: "free",
-				},
-				extra: {
-					matchCount: response.matchesCount,
-					userId: response.userId,
-					redirectUrl,
-				},
-			});
-
-			debugLogger.step("REDIRECT", "Redirecting to matches page", {
-				email: response.email,
-				tier: "free",
-			});
-			submitTracker.complete("Form submission complete - redirecting", {
-				redirectUrl,
-			});
-			
-			// Use window.location.href for a more reliable redirect that won't be cancelled
-			// by component unmounting. This ensures the redirect happens even if React
-			// re-renders or the component unmounts before the timeout fires.
-			// The cookie should be set by the API response, but we add a small delay
-			// to ensure it's available before redirecting.
 			redirectTimeoutRef.current = setTimeout(() => {
-				console.log("🔄 EXECUTING REDIRECT to:", redirectUrl);
-				console.log("🍪 Cookie check before redirect:", {
-					hasUserEmailCookie: typeof document !== "undefined" ? document.cookie.includes("user_email") : "unknown",
-					allCookies: typeof document !== "undefined" ? document.cookie.split(";").map(c => c.trim().split("=")[0]) : [],
-				});
-				
-				try {
-					// Clear the sessionStorage flag
 				if (typeof window !== "undefined") {
 					sessionStorage.removeItem("pendingRedirect");
 				}
-				// Use window.location.href for guaranteed redirect (works even if component unmounts)
-				// This is a full page reload, which ensures cookies are sent with the request
-				console.log("📍 Navigating to:", redirectUrl);
 				window.location.href = redirectUrl;
-			} catch (redirectError) {
-				console.error("❌ Redirect error:", redirectError);
-				// Last resort: try router.push
-				try {
-					router.push(redirectUrl);
-				} catch (err) {
-					console.error("❌ Router.push also failed:", err);
-					// Force redirect
-					window.location.href = redirectUrl;
-				}
-			}
 			}, TIMING.REDIRECT_DELAY_MS);
 		} catch (error) {
-			// ENHANCED ERROR CAPTURE - Force Sentry reporting
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			const errorObj = error instanceof Error ? error : new Error(errorMessage);
-			
-			// Store error in window for debugging (works even if Sentry fails)
-			if (typeof window !== "undefined") {
-				(window as any).__lastSignupError = {
-					type: error instanceof ApiError ? "ApiError" : typeof error,
-					error: errorMessage,
-					stack: errorObj.stack,
-					status: error instanceof ApiError ? error.status : undefined,
-					response: error instanceof ApiError ? error.response : undefined,
-					formData: {
-						email: formData.email,
-						cities: formData.cities,
-						careerPath: formData.careerPath,
-					},
-					step: step,
-					timestamp: new Date().toISOString(),
-				};
-				console.log("[DEBUG] Error stored at window.__lastSignupError - Check this in console!");
-			}
-			
-			const errorDetails = {
-				errorType: error instanceof ApiError ? "ApiError" : typeof error,
-				message: errorMessage,
-				stack: errorObj.stack,
-				status: error instanceof ApiError ? error.status : undefined,
-				response: error instanceof ApiError ? error.response : undefined,
-				formData: {
-					email: formData.email,
-					cities: formData.cities?.length || 0,
-					careerPath: formData.careerPath?.length || 0,
-					step: step,
-				},
-				timestamp: new Date().toISOString(),
-				userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'unknown',
-			};
-
-			debugLogger.error("SUBMIT_ERROR", "Error during submission", errorDetails);
-			submitTracker.error("Submission failed", errorDetails);
-
-			// Force Sentry capture with full context - but skip expected errors
-			// Don't capture 409 (account_already_exists) or 429 (rate limit) to Sentry
-			const isExpectedError = 
-				(error instanceof ApiError && error.status === 409) ||
-				(error instanceof ApiError && error.status === 429);
-			
-			if (!isExpectedError) {
-				try {
-					Sentry.captureException(errorObj, {
-						tags: {
-							component: "SignupFormFree",
-							action: "final_submit",
-							step: step.toString(),
-							error_type: "free_signup_submission",
-						},
-						extra: errorDetails,
-						level: "error",
-					});
-					await Sentry.flush(2000);
-				} catch (sentryError) {
-					console.error("🚨 Failed to send error to Sentry:", sentryError);
-					console.log("[DEBUG] Error details available at window.__lastSignupError");
-				}
-			} else {
-				console.log(`[Expected ${error instanceof ApiError ? error.status : 'unknown'}] Skipping Sentry capture for expected error`);
-			}
-
-			// Also send to console for immediate debugging
-			console.error("🚨 FREE SIGNUP ERROR:", errorDetails);
-			console.error("🚨 FULL ERROR OBJECT:", error);
-
 			setSubmissionProgress(0);
 			setSubmissionStage("");
 
-			// Enhanced error handling for debugging
-			let userFacingErrorMessage =
-				"Unable to connect. Please check your internet connection and try again.";
+			let userFacingErrorMessage = "Unable to connect. Please try again.";
 
 			if (error instanceof ApiError) {
-				debugLogger.error("SUBMIT_API_ERROR", "API error details", {
-					status: error.status,
-					message: error.message,
-					response: error.response,
-				});
 				userFacingErrorMessage = error.message;
 
-				// If it's a conflict error (account already exists), check for redirect flag
+				// Handle account already exists
 				if (error.status === 409) {
 					const errorResponse = error.response;
 					
-					// Check if API wants us to redirect to matches
 					if (errorResponse?.redirectToMatches) {
-						debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account exists, redirecting to matches", {
-							email: formData.email,
-							status: 409,
-							redirectToMatches: true,
-						});
-
-						// Show success message and redirect
-						showToast.success(
-							errorResponse.message || "Welcome back! Taking you to your matches..."
-						);
-
-						// Clear form and redirect to matches
+						showToast.success("Welcome back! Taking you to your matches...");
 						clearProgress();
-						
-						// Use a short delay to show the toast before redirecting
-						setTimeout(() => {
-							router.push("/matches");
-						}, 1500);
-						
-						return; // Don't show error, this is a successful redirect
+						setTimeout(() => router.push("/matches"), 1500);
+						return;
 					} else {
-						// Generic account exists error
 						userFacingErrorMessage = "This email is already registered";
 					}
-
-					debugLogger.info("SUBMIT_ACCOUNT_EXISTS", "Account already exists", {
-						email: formData.email,
-						status: 409,
-						redirectToMatches: errorResponse?.redirectToMatches || false,
-					});
-
-					// FIX: Don't log account_already_exists to Sentry - this is expected behavior
-					// Skip Sentry capture for account_already_exists - it's expected
-					setError(userFacingErrorMessage);
-					setIsSubmitting(false);
-					return; // Exit early - don't capture to Sentry
-					// User is redirected to matches, which is the correct flow
-					// Only log to console for debugging
-					debugLogger.info("SUBMIT_ACCOUNT_EXISTS_SENTRY", "Account exists - not logging to Sentry", {
-						email: formData.email,
-						redirectToMatches: errorResponse?.redirectToMatches || false,
-					});
 				}
-				// If it's a validation error, show the details
-				else if (error.status === 400 && error.response?.details) {
-					debugLogger.error(
-						"SUBMIT_VALIDATION_ERROR",
-						"API Validation Error Details:",
-						error.response.details,
-					);
-					const validationDetails = error.response.details;
-
-					// Parse zod validation errors into user-friendly messages
-					if (Array.isArray(validationDetails)) {
-						const fieldErrors: Record<string, string> = {};
-						validationDetails.forEach((detail: any) => {
-							if (detail.path && detail.path.length > 0) {
-								const fieldName = detail.path[0];
-								fieldErrors[fieldName] = detail.message || "Invalid value";
-							}
-						});
-
-						// Map API field names to form field names
-						const mappedErrors: Record<string, string> = {};
-						if (fieldErrors.full_name)
-							mappedErrors.fullName = fieldErrors.full_name;
-						if (fieldErrors.careerPath)
-							mappedErrors.careerPath = fieldErrors.careerPath;
-						if (fieldErrors.terms_accepted)
-							mappedErrors.gdprConsent = fieldErrors.terms_accepted;
-						if (fieldErrors.age_verified)
-							mappedErrors.ageVerified = fieldErrors.age_verified;
-						if (fieldErrors.visaStatus)
-							mappedErrors.visaStatus = fieldErrors.visaStatus;
-						if (fieldErrors.cities) mappedErrors.cities = fieldErrors.cities;
-
-						setValidationErrors(mappedErrors);
-						debugLogger.debug(
-							"SUBMIT_MAPPED_ERRORS",
-							"Mapped error fields",
-							mappedErrors,
-						);
-
-						// Update error message to be more helpful
-						const errorMessages = Object.values(mappedErrors);
-						if (errorMessages.length > 0) {
-							userFacingErrorMessage = errorMessages[0];
-						}
-					}
-
-					// Track validation errors in Sentry for monitoring
-					Sentry.captureMessage("Free signup API validation error", {
-						level: "warning",
-						tags: {
-							endpoint: "signup-free",
-							error_type: "api_validation",
-							status_code: error.status,
-						},
-						extra: {
-							userFacingErrorMessage,
-							validationDetails: errorDetails,
-							formData: {
-								email: formData.email,
-								fullName: formData.fullName,
-								cities: formData.cities,
-								citiesLength: formData.cities?.length,
-								careerPath: formData.careerPath,
-								careerPathLength: formData.careerPath?.length,
-								gdprConsent: formData.gdprConsent,
-								ageVerified: formData.ageVerified,
-								termsAccepted: formData.gdprConsent, // Map to terms_accepted
-							},
-							apiResponse: error.response,
-						},
-					});
-				} else {
-					// Track other API errors (network, server errors, etc.)
-					Sentry.captureException(
-						error instanceof Error ? error : new Error(String(error)),
-						{
-							tags: {
-								endpoint: "signup-free",
-								error_type: "api_error",
-								status_code: error.status,
-							},
-							extra: {
-								userFacingErrorMessage,
-								status: error.status,
-								formData: {
-									email: formData.email,
-									fullName: formData.fullName,
-									cities: formData.cities,
-									citiesLength: formData.cities?.length,
-									careerPath: formData.careerPath,
-									careerPathLength: formData.careerPath?.length,
-								},
-								apiResponse: error.response,
-							},
-						},
-					);
-				}
-			} else {
-				// Track unexpected errors (not ApiError instances)
-				Sentry.captureException(
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						tags: {
-							endpoint: "signup-free",
-							error_type: "unexpected_error",
-						},
-						extra: {
-							errorMessage: String(error),
-							formData: {
-								email: formData.email,
-								fullName: formData.fullName,
-								cities: formData.cities,
-								careerPath: formData.careerPath,
-							},
-						},
-					},
-				);
 			}
-
-			debugLogger.error("SUBMIT_FINAL_ERROR", "Signup submission error:", {
-				error: error instanceof ApiError ? error.message : String(error),
-				status: error instanceof ApiError ? error.status : undefined,
-				details: errorDetails,
-				formData: {
-					email: formData.email,
-					fullName: formData.fullName,
-					cities: formData.cities,
-					careerPath: formData.careerPath,
-					gdprConsent: formData.gdprConsent,
-				},
-			});
 
 			setError(userFacingErrorMessage);
-
-			// Convert zod validation errors array to a proper string map
-			// Ensure all values are strings to prevent React rendering errors
-			const validationErrorsMap: Record<string, string> = {
-				general: userFacingErrorMessage,
-			};
-			if (errorDetails && Array.isArray(errorDetails)) {
-				errorDetails.forEach((detail: any) => {
-					if (detail && typeof detail === "object") {
-						if (detail.path && Array.isArray(detail.path)) {
-							const field = detail.path.join(".");
-							const message =
-								typeof detail.message === "string"
-									? detail.message
-									: "Invalid value";
-							validationErrorsMap[field] = message;
-						} else if (typeof detail.message === "string") {
-							// Handle case where detail is a simple object with message
-							validationErrorsMap[detail.path || "unknown"] = detail.message;
-						}
-					}
-				});
-			} else if (
-				errorDetails &&
-				typeof errorDetails === "object" &&
-				!Array.isArray(errorDetails)
-			) {
-				// If errorDetails is already an object, merge it properly but ensure all values are strings
-				Object.entries(errorDetails).forEach(([key, value]) => {
-					if (typeof value === "string") {
-						validationErrorsMap[key] = value;
-					} else if (value && typeof value === "object" && "message" in value) {
-						validationErrorsMap[key] = String(
-							(value as any).message || "Invalid value",
-						);
-					} else {
-						validationErrorsMap[key] = String(value || "Invalid value");
-					}
-				});
-			}
-
-			// Final safety check: ensure all values are strings
-			const safeValidationErrors: Record<string, string> = {};
-			Object.entries(validationErrorsMap).forEach(([key, value]) => {
-				safeValidationErrors[key] =
-					typeof value === "string" ? value : String(value || "");
-			});
-
-			setValidationErrors(safeValidationErrors);
 			showToast.error(userFacingErrorMessage);
 		} finally {
 			setLoading(false);
@@ -1152,41 +479,21 @@ function SignupFormFree() {
 						</motion.div>
 					)}
 
-					{/* Form Validation Errors */}
-					{/* Only show errors if mounted, not currently submitting, and errors are relevant to current step */}
-					{isMounted &&
-						Object.keys(validationErrors).length > 0 &&
-						!isSubmitting && (
-							<motion.div
-								initial={{ opacity: 0, y: -10 }}
-								animate={{ opacity: 1, y: 0 }}
-								className="mb-6"
-							>
-								<Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
-									<span className="text-red-400 text-sm">⚠️</span>
-									<AlertTitle className="text-red-400 font-medium">
-										Please check your information:
-									</AlertTitle>
-									<AlertDescription className="mt-2">
-										<ul className="space-y-1">
-											{Object.entries(validationErrors)
-												.filter(
-													([_, error]) => error && typeof error === "string",
-												)
-												.map(([field, error]) => (
-													<li
-														key={field}
-														className="text-red-300 text-sm flex items-center gap-2"
-													>
-														<span className="w-1 h-1 bg-red-400 rounded-full"></span>
-														{error as string}
-													</li>
-												))}
-										</ul>
-									</AlertDescription>
-								</Alert>
-							</motion.div>
-						)}
+					{/* Simple Error Display */}
+					{signupError && !isSubmitting && (
+						<motion.div
+							initial={{ opacity: 0, y: -10 }}
+							animate={{ opacity: 1, y: 0 }}
+							className="mb-6"
+						>
+							<Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
+								<span className="text-red-400 text-sm">⚠️</span>
+								<AlertTitle className="text-red-400 font-medium">
+									{signupError}
+								</AlertTitle>
+							</Alert>
+						</motion.div>
+					)}
 
 					{/* Step content */}
 					<div className="text-white text-center">
@@ -1195,16 +502,9 @@ function SignupFormFree() {
 								key="step1"
 								formData={formData}
 								setFormData={setFormData}
-								touchedFields={new Set()}
-								setTouchedFields={() => {}}
-								fieldErrors={{}}
-								setFieldErrors={() => {}}
-								announce={announce}
 								loading={loading}
 								setStep={navigation.navigateToStep}
 								emailValidation={emailValidation}
-								shouldShowError={shouldShowError}
-								getDisabledMessage={getDisabledMessage}
 							/>
 						)}
 						{step === 2 && (
@@ -1212,8 +512,6 @@ function SignupFormFree() {
 								key="step2"
 								formData={formData}
 								setFormData={setFormData}
-								touchedFields={touchedFields}
-								setTouchedFields={setTouchedFields}
 								loading={loading}
 								setStep={navigation.navigateToStep}
 							/>
@@ -1224,8 +522,6 @@ function SignupFormFree() {
 									key="step3"
 									formData={formData}
 									setFormData={setFormData}
-									touchedFields={new Set()}
-									setTouchedFields={() => {}}
 									loading={loading}
 									setStep={navigation.navigateToStep}
 									handleSubmit={handleSubmit}

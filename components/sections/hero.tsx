@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { trackEvent } from "../../lib/analytics";
 import {
-	CTA_GET_MY_5_FREE_MATCHES,
+	CTA_GET_5_FREE_MATCHES,
 	CTA_GET_MY_5_FREE_MATCHES_ARIA,
 	HERO_HEADLINE,
 	HERO_HEADLINE_ACCENT,
@@ -82,7 +82,7 @@ function Hero() {
 							aria-label={CTA_GET_MY_5_FREE_MATCHES_ARIA}
 							className="group h-14 rounded-full bg-emerald-500 px-8 text-lg font-bold text-black transition-all duration-200 hover:scale-105 hover:bg-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] active:scale-95"
 						>
-							{CTA_GET_MY_5_FREE_MATCHES}
+							{CTA_GET_5_FREE_MATCHES}
 							<BrandIcons.ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
 						</CustomButton>
 						

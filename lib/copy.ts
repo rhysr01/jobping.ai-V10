@@ -14,14 +14,19 @@ export const CTA_PREMIUM = "Upgrade to Premium";
 export const VP_TAGLINE =
 	"Stop searching. Start applying.\nNo logins. Zero scrolling. Jobs in your inbox.";
 
-// Standardized CTA text (used across multiple components)
-export const CTA_GET_MY_5_FREE_MATCHES = "Get My 5 Free Matches";
+// Differentiated CTA text for better conversion
+export const CTA_GET_5_FREE_MATCHES = "Get 5 Free Matches";
+export const CTA_START_PREMIUM = "Start Premium";
+export const CTA_TRY_JOBPING_FREE = "Try JobPing Free";
+export const CTA_SEE_MY_MATCHES = "See My Matches";
 export const CTA_GET_MY_5_FREE_MATCHES_ARIA = "Get my 5 free matches";
 
 // Standardized trust/reassurance text
 export const TRUST_TEXT_INSTANT_SETUP =
 	"⚡ Instant matches • No credit card • 2-minute setup";
 export const TRUST_TEXT_NO_CARD_SETUP = "No credit card • 2-minute setup";
+export const TRUST_TEXT_FREE_PREVIEW = "One-time preview • No ongoing emails";
+export const TRUST_TEXT_PREMIUM_DELIVERY = "Weekly delivery • Fresh jobs • AI learning";
 
 // Hero section
 export const HERO_TITLE = "JobPing";
@@ -123,41 +128,36 @@ export const PRICING_COMPETITOR_LINKEDIN = "€30/month";
 export const PRICING_COMPETITOR_GENERIC = "€0-20";
 
 // Free plan
-export const FREE_PLAN_TITLE = "Free";
+export const FREE_PLAN_TITLE = "Free Preview";
 export const FREE_PLAN_SUBTITLE = "5 instant matches";
 export const FREE_PLAN_FEATURES = [
-	`Get 5 instant matches`,
+	`5 instant matches to try JobPing`,
 	"View matches on website",
 	"Jobs posted within last 30 days",
+	"One-time preview (no ongoing emails)",
 	"No credit card required",
-	"Takes under 2 minutes",
-	"One-time preview",
+	"2-minute setup",
 ];
-export const FREE_PLAN_DESCRIPTION = `See your first 5 matches on your personalized dashboard. This is a one-time preview to see how JobPing works. No credit card required.`;
+export const FREE_PLAN_DESCRIPTION = `See your first 5 matches instantly. This is a one-time preview to see how JobPing works - no ongoing emails or commitment.`;
 
 // Premium plan
-// Time-to-apply stats (estimated until real data available)
-export const PREMIUM_TIME_TO_APPLY_HOURS = 12;
-export const FREE_TIME_TO_APPLY_HOURS = 72;
-
 export const PREMIUM_PLAN_TITLE = "Premium";
 export const PREMIUM_PLAN_SUBTITLE = `15 jobs/week • 3× delivery`;
-export const PREMIUM_PLAN_VALUE = "€0.08 per job match";
+export const PREMIUM_PLAN_VALUE = "€0.33 per job match";
 export const PREMIUM_PLAN_PRICE = "€5";
-export const PREMIUM_PLAN_PRICE_UNIT = "/mo";
-export const PREMIUM_PLAN_ANNUAL = "€20 for 3 months (save €1)";
-export const PREMIUM_PLAN_DESCRIPTION = `5 fresh matches 3× per week (Mon/Wed/Fri) from companies actively hiring.`;
+export const PREMIUM_PLAN_PRICE_UNIT = "/month";
+export const PREMIUM_PLAN_DESCRIPTION = `5 fresh matches delivered 3× per week (Mon/Wed/Fri) from companies actively hiring.`;
 export const PREMIUM_PLAN_GUARANTEE =
 	"💸 If you don't apply to 3+ jobs in 30 days, we'll refund you.";
 export const PREMIUM_SOCIAL_PROOF_PERCENT = "89";
 export const PREMIUM_PLAN_FEATURES = [
-	`✨ 15 fresh matches every week (Mon/Wed/Fri)`,
-	`⚡ Jobs posted within 7 days (fresher roles)`,
-	`🎯 AI-powered visa sponsorship scoring`,
-	`🔄 AI learns from your feedback instantly`,
-	`📧 Delivered to your inbox automatically`,
-	`🚫 No scrolling, no dashboards, no BS`,
-	`⏸️ Cancel anytime, no questions asked`,
+	`15 fresh matches every week (Mon/Wed/Fri)`,
+	`Jobs posted within 7 days (fresher than free)`,
+	`AI-powered visa sponsorship scoring`,
+	`AI learns from your feedback`,
+	`Delivered to your inbox automatically`,
+	`No scrolling, no dashboards needed`,
+	`Cancel anytime, no questions asked`,
 ];
 
 // Reassurance

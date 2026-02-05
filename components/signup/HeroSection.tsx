@@ -31,11 +31,10 @@ export function HeroSection({
 				Onboarding
 			</span>
 			<h1 className="mt-4 sm:mt-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white">
-				15 Jobs Per Week, 3× Weekly
+				15 Fresh Jobs Weekly - Premium
 			</h1>
 			<p className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-zinc-100 px-2">
-				Stop scrolling LinkedIn for hours. Get AI-matched jobs delivered
-				Mon/Wed/Fri - matched to your career path, cities, and visa needs.
+				Get 5 fresh matches delivered Mon/Wed/Fri - matched to your career path, cities, and visa needs. AI learns from your feedback.
 			</p>
 
 			<div className="mt-6 sm:mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm md:text-base font-medium text-zinc-100">
