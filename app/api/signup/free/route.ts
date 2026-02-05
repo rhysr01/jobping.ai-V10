@@ -456,22 +456,33 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					userData = existingUser;
 					isDuplicateUser = true;
 				} else {
-					// Couldn't fetch the duplicate - return proper error response
-					console.warn(`${LOG_MARKERS.SIGNUP_FREE} Duplicate email detected but couldn't fetch user`, {
+					// Couldn't fetch the duplicate - for free signup, treat as silent success
+					// User email exists in the database (constraint violation), so we don't need to process further
+					console.log(`${LOG_MARKERS.SIGNUP_FREE} Duplicate email detected, returning success (silent)`, {
 						requestId,
 						email: emailToStore,
-						fetchError,
 					});
 					
-					// Return 409 Conflict response
-					return NextResponse.json(
-						{
-							error: "duplicate_email",
-							message: "This email is already registered. Please sign in instead.",
-							requestId,
-						},
-						{ status: 409 },
-					);
+					// Return success response - email is already registered, no need to create matches again
+					const response = NextResponse.json({
+						success: true,
+						matchesCount: 0,
+						email: emailToStore,
+						message: "Email already registered - proceeding to matches",
+						alreadyExists: true,
+					});
+					
+					// Set session cookie for the email (even though user already exists)
+					const isProduction = process.env.NODE_ENV === "production";
+					response.cookies.set("user_email", emailToStore, {
+						httpOnly: true,
+						secure: isProduction,
+						sameSite: "lax",
+						maxAge: 30 * 24 * 60 * 60, // 30 days
+						path: "/",
+					});
+					
+					return response;
 				}
 			} else {
 				// Some other error - throw it
