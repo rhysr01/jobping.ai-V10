@@ -299,7 +299,9 @@ export function LiveJobsReview({
 											<div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5">
 												<BrandIcons.CheckCircle className="h-3 w-3 text-emerald-400" />
 												<span className="text-xs font-medium text-emerald-400">
-													{job.match_score}% match
+													{Math.round(
+														job.match_score > 1 ? job.match_score : job.match_score * 100
+													)}% match
 												</span>
 											</div>
 											{job.match_reason && (

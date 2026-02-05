@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 import { GhostMatches } from "../../../components/matches/GhostMatches";
 import { FreeMatchingSuite } from "../../../components/signup/FreeMatchingSuite";
 import { JobList } from "../../../components/matches/JobList";
-import { UpgradeBanner } from "../../../components/matches/UpgradeBanner";
 import CustomScanTrigger from "../../../components/ui/CustomScanTrigger";
 import JobClosedModal from "../../../components/ui/JobClosedModal";
-import TargetCompaniesAlert from "../../../components/ui/TargetCompaniesAlert";
 import { SmartLoading } from "../../../components/ui/smart-loading";
 import { PremiumJobsPreview } from "../../../components/matches/PremiumJobsPreview";
 import { useMatches } from "../../../hooks/useMatches";
@@ -21,8 +19,6 @@ export default function MatchesPageContent() {
 		customScan,
 		loading,
 		error,
-		showUpgradeBanner,
-		jobsViewed,
 		clickedJobId,
 		dismissedJobIds,
 		dismissingJobId,
@@ -126,25 +122,10 @@ export default function MatchesPageContent() {
 				/>
 			)}
 
-			{/* Upgrade Banner */}
-			<UpgradeBanner
-				showUpgradeBanner={showUpgradeBanner}
-				jobsViewed={jobsViewed}
-			/>
+			{/* Upgrade Banner - REMOVED: was blocking view of matches */}
 
 			{/* Main Content */}
 			<div className="container mx-auto px-4 max-w-4xl">
-				{/* Target Companies Alert */}
-				{targetCompanies && targetCompanies.length > 0 && (
-					<div className="mb-8">
-						<TargetCompaniesAlert
-							companies={targetCompanies}
-							message="These companies have been hiring recently"
-							onSetAlert={() => {}}
-						/>
-					</div>
-				)}
-
 				{/* Custom Scan Trigger */}
 				{customScan && (
 					<div className="mb-8">
@@ -173,16 +154,15 @@ export default function MatchesPageContent() {
 						</p>
 					</div>
 
-					{/* Job List */}
-					<JobList
-						jobs={jobs}
-						dismissedJobIds={dismissedJobIds}
-						dismissingJobId={dismissingJobId}
-						clickedJobId={clickedJobId}
-						onJobClick={handleJobClick}
-						onJobDismiss={handleJobDismiss}
-						showUpgradeBanner={showUpgradeBanner}
-					/>
+				{/* Job List */}
+				<JobList
+					jobs={jobs}
+					dismissedJobIds={dismissedJobIds}
+					dismissingJobId={dismissingJobId}
+					clickedJobId={clickedJobId}
+					onJobClick={handleJobClick}
+					onJobDismiss={handleJobDismiss}
+				/>
 
 					{/* Premium Jobs Preview - Show after user has jobs */}
 					{jobs.length > 0 &&

@@ -24,7 +24,6 @@ interface JobListProps {
 		job?: Job,
 	) => void;
 	onJobDismiss: (job: Job) => void;
-	showUpgradeBanner: boolean;
 }
 
 export function JobList({
@@ -34,7 +33,6 @@ export function JobList({
 	clickedJobId,
 	onJobClick,
 	onJobDismiss,
-	showUpgradeBanner,
 }: JobListProps) {
 	return (
 		<div className="space-y-6">
@@ -110,7 +108,9 @@ export function JobList({
 												<div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1">
 													<BrandIcons.CheckCircle className="h-4 w-4 text-emerald-400" />
 													<span className="text-sm font-medium text-emerald-400">
-														{job.match_score}% match
+														{Math.round(
+															job.match_score > 1 ? job.match_score : job.match_score * 100
+														)}% match
 													</span>
 												</div>
 												{job.match_reason && (
@@ -223,7 +223,9 @@ export function JobList({
 												<BrandIcons.CheckCircle className="h-5 w-5 text-emerald-400" />
 												<div>
 													<p className="font-semibold text-emerald-400">
-														{job.match_score}% match
+														{Math.round(
+															job.match_score > 1 ? job.match_score : job.match_score * 100
+														)}% match
 													</p>
 													{job.match_reason && (
 														<p className="text-xs text-emerald-300">
@@ -302,24 +304,7 @@ export function JobList({
 								</HoverCardContent>
 							</HoverCard>
 
-							{/* Upgrade Banner */}
-							{showUpgradeBanner && index === 0 && (
-								<motion.div
-									initial={{ opacity: 0, y: 10 }}
-									animate={{ opacity: 1, y: 0 }}
-									className="mt-6 rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/10 p-4"
-								>
-									<p className="text-sm text-amber-200">
-										🎯 <strong>Want more matches?</strong> Upgrade to Premium
-										for 15 jobs/week instead of 5.
-									</p>
-									<Link href="/pricing" className="mt-2 inline-block">
-										<CustomButton variant="secondary" size="sm">
-											Upgrade Now →
-										</CustomButton>
-									</Link>
-								</motion.div>
-							)}
+							{/* Upgrade Banner removed - was blocking job cards */}
 						</motion.div>
 					</AnimatePresence>
 				);

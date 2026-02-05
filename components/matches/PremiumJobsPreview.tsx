@@ -238,8 +238,10 @@ export function PremiumJobsPreview({
 									<p className="text-zinc-400 text-sm">{job.location}</p>
 								</div>
 								<div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full">
-									<span className="text-sm font-bold">{job.match_score}%</span>
-									{job.match_score >= 90 && <span className="text-xs">🔥</span>}
+									<span className="text-sm font-bold">{Math.round(
+										job.match_score > 1 ? job.match_score : job.match_score * 100
+									)}%</span>
+									{(job.match_score > 1 ? job.match_score : job.match_score * 100) >= 90 && <span className="text-xs">🔥</span>}
 								</div>
 							</div>
 

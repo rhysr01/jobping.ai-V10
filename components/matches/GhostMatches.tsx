@@ -126,9 +126,11 @@ export function GhostMatches({ onUpgradeClick }: GhostMatchesProps) {
 							{/* Real job content - visible but locked */}
 							<div className="relative z-0">
 								<div className="flex items-center gap-2 mb-3 flex-wrap">
-									<span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-										{job.match_score}% Match
-									</span>
+								<span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+									{Math.round(
+										job.match_score > 1 ? job.match_score : job.match_score * 100
+									)}% Match
+								</span>
 								</div>
 								<h3 className="text-xl font-bold text-zinc-100 mb-1.5 leading-tight break-words">
 									{job.title}

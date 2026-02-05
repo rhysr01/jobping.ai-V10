@@ -198,7 +198,9 @@ export function HeroMobileMockup({
 												>
 													<div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
 													<span className="text-xs font-bold text-white">
-														{job.matchScore}% Match
+														{Math.round(
+															job.matchScore > 1 ? job.matchScore : job.matchScore * 100
+														)}% Match
 													</span>
 												</div>
 												<div className="text-xs font-semibold text-white truncate ml-2">

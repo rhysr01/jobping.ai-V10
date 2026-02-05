@@ -290,19 +290,21 @@ function MatchEvidencePageContent() {
 							<div className="flex justify-between text-sm mb-1">
 								<span className="text-gray-300">Match Confidence</span>
 								<span className="text-gray-400">
-									{evidence.match.match_score}%
+									{Math.round(
+										evidence.match.match_score > 1 ? evidence.match.match_score : evidence.match.match_score * 100
+									)}%
 								</span>
 							</div>
 							<div className="w-full bg-zinc-800 rounded-full h-2">
 								<div
 									className={`h-2 rounded-full ${
-										evidence.match.match_score >= 80
+										(evidence.match.match_score > 1 ? evidence.match.match_score : evidence.match.match_score * 100) >= 80
 											? "bg-green-500"
-											: evidence.match.match_score >= 70
+											: (evidence.match.match_score > 1 ? evidence.match.match_score : evidence.match.match_score * 100) >= 70
 												? "bg-yellow-500"
 												: "bg-gray-500"
 									}`}
-									style={{ width: `${evidence.match.match_score}%` }}
+									style={{ width: `${Math.round(evidence.match.match_score > 1 ? evidence.match.match_score : evidence.match.match_score * 100)}%` }}
 								></div>
 							</div>
 						</div>

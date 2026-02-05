@@ -88,7 +88,9 @@ export default function JobClosedModal({
 										</p>
 										<div className="mt-2 flex items-center gap-2">
 											<span className="text-xs px-2 py-1 rounded bg-brand-500/20 text-brand-300">
-												{match.match_score}% Match
+												{Math.round(
+													match.match_score > 1 ? match.match_score : match.match_score * 100
+												)}% Match
 											</span>
 										</div>
 									</div>
