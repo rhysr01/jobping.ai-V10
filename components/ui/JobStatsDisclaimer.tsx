@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Info, Building2, Globe, Search, Users, Briefcase, Star, Eye, Target, MapPin, Zap, Award, Network } from "lucide-react";
+import { Info, Globe, Search, Eye, Target, Zap, Award, Network } from "lucide-react";
 import { Badge } from "./badge";
 
 interface JobStatsDisclaimerProps {
