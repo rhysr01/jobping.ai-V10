@@ -10,7 +10,10 @@
 			"maxDuration": 60
 		},
 		"app/api/signup/free/route.ts": {
-			"maxDuration": 90
+			"maxDuration": 180
+		},
+		"app/api/signup/route.ts": {
+			"maxDuration": 120
 		},
 		"app/api/match-users/route.ts": {
 			"maxDuration": 300
