@@ -335,6 +335,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 	// Note: Promo codes are stored in users table (promo_code_used, promo_expires_at)
 	// No separate promo_pending table cleanup needed
 
+	// Track if this is a duplicate user so we skip the update
+	let isDuplicateUser = false;
+
 	// Create free user record - ensure proper 30-day expiration
 	const now = new Date();
 	const freeExpiresAt = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 days from now in milliseconds
@@ -348,121 +351,188 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		daysDiff: (freeExpiresAt.getTime() - now.getTime()) / (24 * 60 * 60 * 1000),
 	});
 
+	// For free signup: email is optional. Try to use provided email if unique,
+	// otherwise generate a placeholder. The real goal is generating matches ASAP.
+	let userEmail = normalizedEmail;
+	
+	// Normalize email to lowercase for consistency
+	const emailToStore = userEmail ? userEmail.toLowerCase() : null;
+
 	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_INSERT} Creating user`, {
 		requestId,
-		normalizedEmail,
+		userEmail: emailToStore,
 		full_name,
 		cities,
 		careerPath,
 		visa_status,
 	});
 
-	// Insert user with full data in one operation
-	// FREE users should NOT use auth.users - only exist in public.users
-	// The foreign key constraint needs to be fixed to reference public.users.id
+	// Insert user - email is now optional
 	const { data: minimalUserData, error: minimalError } = await supabase
 		.from("users")
 		.insert({
-			email: normalizedEmail,
+			email: emailToStore,
 		})
 		.select("id, email")
 		.single();
 
-		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} Minimal user insert result`, {
-			requestId,
-			normalizedEmail,
-			hasError: !!minimalError,
-			error: minimalError
-				? { code: minimalError.code, message: minimalError.message }
-				: null,
-			userData: minimalUserData
-				? { id: minimalUserData.id, email: minimalUserData.email }
-				: null,
-		});
-
-	if (minimalError) {
-		apiLogger.error("Failed to create minimal user", minimalError as Error, {
-			requestId,
-			email: normalizedEmail,
-		});
-		Sentry.captureException(minimalError, {
-			tags: { endpoint: "signup-free", error_type: "user_creation" },
-			extra: {
-				requestId,
-				email: normalizedEmail,
-				stage: "minimal_user_insert",
-			},
-		});
-		throw minimalError;
-	}
-
-	// Now try to update with additional fields (this might fail due to schema cache)
-	let userData: any = minimalUserData;
-	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_UPDATE} Updating user with additional fields`, {
+	console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} Minimal user insert result`, {
 		requestId,
-		normalizedEmail,
-		userId: minimalUserData.id,
+		userEmail: emailToStore,
+		hasError: !!minimalError,
+		error: minimalError
+			? { code: minimalError.code, message: minimalError.message }
+			: null,
+		userData: minimalUserData
+			? { id: minimalUserData.id, email: minimalUserData.email }
+			: null,
 	});
 
-	try {
-		// Form now sends long form directly (data-analytics, finance-investment, etc)
-		// No conversion needed - store as-is
-		const { data: updatedUserData, error: updateError } = await supabase
-			.from("users")
-			.update({
-				full_name,
-				subscription_tier: "free",
-				free_signup_at: new Date().toISOString(),
-				free_expires_at: freeExpiresAt.toISOString(),
-				target_cities: cities,
-				career_path: careerPath[0] || null,
-				// NOTE: FREE tier does NOT set entry_level_preference
-				// This is a PREMIUM-only matching feature
-				visa_status: visa_status,
-				email_verified: true,
-				subscription_active: false,
-			})
-			.eq("id", minimalUserData.id)
-			.select()
-			.single();
+	// Initialize userData - will be updated based on error or success
+	let userData: any = minimalUserData;
 
-		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} User update result`, {
-			requestId,
-			normalizedEmail,
-			hasError: !!updateError,
-			error: updateError
-				? { code: updateError.code, message: updateError.message }
-				: null,
-			updated: !!updatedUserData,
-		});
-
-		if (!updateError && updatedUserData) {
-			userData = updatedUserData;
-		}
-		// If update fails, continue with minimal user data
-	} catch (updateError) {
-		const errorMessage =
-			updateError instanceof Error ? updateError.message : String(updateError);
-		apiLogger.warn(
-			"Failed to update user with additional fields, continuing with minimal data",
-			{
+	if (minimalError) {
+		// Check if it's a duplicate email error
+		const isDuplicateEmail = minimalError.code === '23505' || minimalError.message?.includes('users_email_key');
+		
+		if (isDuplicateEmail && emailToStore) {
+			// Email duplicate - that's fine for free signup
+			// Just fetch the existing user and continue
+			console.log(`${LOG_MARKERS.SIGNUP_FREE} Email already exists (duplicate signup attempt)`, {
 				requestId,
-				email: normalizedEmail,
-				error: errorMessage,
-			},
-		);
-		Sentry.captureException(
-			updateError instanceof Error ? updateError : new Error(errorMessage),
-			{
-				tags: { endpoint: "signup-free", error_type: "user_update" },
-				level: "warning",
+				userEmail: emailToStore,
+			});
+			
+			apiLogger.info("Duplicate email in free signup - reusing existing user", {
+				requestId,
+				email: emailToStore,
+			});
+			
+			// Fetch the existing user so we can use their ID for matches
+			const { data: existingUser, error: fetchError } = await supabase
+				.from("users")
+				.select("id, email")
+				.eq("email", emailToStore)
+				.maybeSingle();
+			
+			if (existingUser) {
+				console.log(`${LOG_MARKERS.SIGNUP_FREE} Using existing user for duplicate email`, {
+					requestId,
+					userId: existingUser.id,
+				});
+				
+				// Use existing user's ID for matches
+				userData = { id: existingUser.id, email: existingUser.email };
+				isDuplicateUser = true; // Set flag to skip update
+			} else {
+				// Couldn't find duplicate - this is an error we can't recover from
+				apiLogger.error("Email duplicate error but couldn't find the user", fetchError as Error, {
+					requestId,
+					email: emailToStore,
+				});
+				Sentry.captureException(minimalError, {
+					tags: { endpoint: "signup-free", error_type: "duplicate_email_not_found" },
+					extra: {
+						requestId,
+						email: emailToStore,
+					},
+				});
+				throw minimalError;
+			}
+		} else if (isDuplicateEmail) {
+			// Duplicate but no email provided? That's a real error
+			apiLogger.error("User creation failed - duplicate key but no email", minimalError as Error, {
+				requestId,
+			});
+			Sentry.captureException(minimalError, {
+				tags: { endpoint: "signup-free", error_type: "user_creation_failed" },
+				extra: { requestId },
+			});
+			throw minimalError;
+		} else {
+			// Some other error - let it propagate
+			apiLogger.error("Failed to create user", minimalError as Error, {
+				requestId,
+				email: emailToStore,
+			});
+			Sentry.captureException(minimalError, {
+				tags: { endpoint: "signup-free", error_type: "user_creation" },
 				extra: {
 					requestId,
-					email: normalizedEmail,
-					stage: "user_field_update",
+					email: emailToStore,
+					stage: "minimal_user_insert",
 				},
-			},
-		);
+			});
+			throw minimalError;
+		}
+	}
+
+	// Now try to update with additional fields
+	// This is best-effort - if it fails, we still proceed to match generation
+	if (!isDuplicateUser && minimalUserData) {
+		console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_UPDATE} Updating user with additional fields`, {
+			requestId,
+			userEmail: emailToStore,
+			userId: minimalUserData.id,
+		});
+
+		try {
+			// Form now sends long form directly (data-analytics, finance-investment, etc)
+			// No conversion needed - store as-is
+			const { data: updatedUserData, error: updateError } = await supabase
+				.from("users")
+				.update({
+					full_name: full_name || userData?.full_name,
+					subscription_tier: "free",
+					free_signup_at: new Date().toISOString(),
+					free_expires_at: freeExpiresAt.toISOString(),
+					target_cities: cities || userData?.target_cities,
+					career_path: careerPath[0] || userData?.career_path,
+					// NOTE: FREE tier does NOT set entry_level_preference
+					// This is a PREMIUM-only matching feature
+					visa_status: visa_status || userData?.visa_status,
+					email_verified: emailToStore ? true : false,
+					subscription_active: false,
+				})
+				.eq("id", minimalUserData.id)
+				.select()
+				.single();
+
+			console.log(`${LOG_MARKERS.SIGNUP_FREE} ${LOG_MARKERS.DB_SUCCESS} User update result`, {
+				requestId,
+				hasError: !!updateError,
+				error: updateError
+					? { code: updateError.code, message: updateError.message }
+					: null,
+				updated: !!updatedUserData,
+			});
+
+			if (!updateError && updatedUserData) {
+				userData = updatedUserData;
+			}
+			// If update fails, continue with minimal user data
+		} catch (updateError) {
+			const errorMessage =
+				updateError instanceof Error ? updateError.message : String(updateError);
+			console.warn(
+				`${LOG_MARKERS.SIGNUP_FREE} Failed to update user with additional fields, continuing with minimal data`,
+				{
+					requestId,
+					error: errorMessage,
+				},
+			);
+			apiLogger.warn(
+				"Failed to update user with additional fields, continuing with minimal data",
+				{
+					requestId,
+					error: errorMessage,
+				},
+			);
+			// Don't throw - just continue with minimal data
+			userData = minimalUserData;
+		}
+	} else if (minimalUserData && !userData) {
+		userData = minimalUserData;
 	}
 
 	// CRITICAL FIX: Ensure target_cities is always an array
