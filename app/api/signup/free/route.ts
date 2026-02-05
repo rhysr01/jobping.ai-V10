@@ -178,7 +178,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			level: "error",
 		});
 		// CRITICAL: Flush Sentry before throwing
-		await Sentry.flush(2000);
+		await Promise.race([
+			Sentry.flush(2000),
+			new Promise(resolve => setTimeout(resolve, 2100))
+		]).catch(() => {
+			console.warn("[FREE SIGNUP] JSON parse error - Sentry flush timeout");
+		});
 		throw error; // Re-throw to be caught by asyncHandler
 	}
 
@@ -303,7 +308,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			});
 
 			// Flush Sentry before returning validation error
-			await Sentry.flush(2000);
+			await Promise.race([
+				Sentry.flush(2000),
+				new Promise(resolve => setTimeout(resolve, 2100))
+			]).catch(() => {
+				console.warn("[FREE SIGNUP] Validation error - Sentry flush timeout");
+			});
 		} else {
 			// Optional field validation errors - just log to console, don't spam Sentry
 			console.log("[FREE SIGNUP] Validation warnings (optional fields)", {
@@ -730,7 +740,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		});
 
 		// CRITICAL: Flush Sentry to ensure error is sent before throwing
-		await Sentry.flush(2000);
+		await Promise.race([
+			Sentry.flush(2000),
+			new Promise(resolve => setTimeout(resolve, 2100))
+		]).catch(() => {
+			console.warn("[FREE SIGNUP] getConfig error - Sentry flush timeout");
+		});
 		
 		throw new Error(`SignupMatchingService.getConfig failed: ${error.message}`);
 	}
@@ -785,7 +800,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 		});
 
 		// CRITICAL: Flush Sentry to ensure error is sent
-		await Sentry.flush(2000);
+		await Promise.race([
+			Sentry.flush(2000),
+			new Promise(resolve => setTimeout(resolve, 2100))
+		]).catch(() => {
+			console.warn("[FREE SIGNUP] Matching error - Sentry flush timeout");
+		});
 		
 		// Create a failed result to continue processing
 		matchingResult = {
@@ -1010,7 +1030,14 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			});
 
 			// CRITICAL: Flush Sentry to ensure error is sent before response
-			await Sentry.flush(2000); // Wait up to 2 seconds for Sentry to send
+			// Use a Promise.race to prevent hanging if Sentry doesn't respond
+			await Promise.race([
+				Sentry.flush(2000),
+				new Promise(resolve => setTimeout(resolve, 2100))
+			]).catch(() => {
+				// Sentry flush timeout or error - continue anyway
+				console.warn("[FREE SIGNUP] Sentry flush timeout or failed, continuing");
+			});
 		} catch (sentryError) {
 			logSignupEvent("SENTRY_FLUSH_FAILED", {
 				message: "Failed to flush Sentry",
