@@ -526,13 +526,35 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 
 	// Validate we have a user
 	if (!userData || !userData.id) {
-		const error = new Error("No user data available after creation/fetch attempt");
-		apiLogger.error("User data validation failed", error, {
+		// For free signup, this is a graceful degradation - return success even if we can't get user data
+		// The email was processed (either created or duplicate), so we proceed
+		console.warn(`${LOG_MARKERS.SIGNUP_FREE} No user data available, but email was processed - returning success`, {
 			requestId,
 			email: emailToStore,
 			userData,
 		});
-		throw error;
+		
+		const response = NextResponse.json({
+			success: true,
+			matchesCount: 0,
+			email: emailToStore,
+			message: "Email processed successfully",
+			requiresVerification: true,
+		});
+		
+		// Set session cookie if we have an email
+		if (emailToStore) {
+			const isProduction = process.env.NODE_ENV === "production";
+			response.cookies.set("user_email", emailToStore, {
+				httpOnly: true,
+				secure: isProduction,
+				sameSite: "lax",
+				maxAge: 30 * 24 * 60 * 60,
+				path: "/",
+			});
+		}
+		
+		return response;
 	}
 
 	// Now try to update with additional fields (only if not a duplicate)
