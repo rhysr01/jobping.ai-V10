@@ -3,9 +3,9 @@ import { z } from "zod";
 import * as Sentry from "@sentry/nextjs";
 import { apiLogger } from "../../../../lib/api-logger";
 
-// TEMPORARY DEBUG - Check service role key
+// TEMPORARY DEBUG - Check service role key (Force fresh deployment)
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-console.log('[DEBUG_SERVICE_KEY]', {
+console.log('[DEBUG_SERVICE_KEY_FRESH]', {
 	hasKey: !!serviceKey,
 	keyLength: serviceKey.length,
 	startsWithEyJ: serviceKey.startsWith('eyJ'),
@@ -14,6 +14,7 @@ console.log('[DEBUG_SERVICE_KEY]', {
 	isServiceRole: serviceKey.includes('service_role') || (serviceKey.length > 100 && serviceKey.split('.').length === 3),
 	environment: process.env.NODE_ENV,
 	vercelEnv: process.env.VERCEL_ENV,
+	timestamp: new Date().toISOString(),
 });
 import { asyncHandler, getRequestId } from "../../../../lib/errors";
 import { SignupMatchingService } from "../../../../utils/services/SignupMatchingService";
