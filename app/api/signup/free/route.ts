@@ -177,12 +177,9 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			},
 			level: "error",
 		});
-		// CRITICAL: Flush Sentry before throwing
-		await Promise.race([
-			Sentry.flush(2000),
-			new Promise(resolve => setTimeout(resolve, 2100))
-		]).catch(() => {
-			console.warn("[FREE SIGNUP] JSON parse error - Sentry flush timeout");
+		// Capture in Sentry
+		Sentry.captureException(error, {
+			tags: { endpoint: "signup-free", error_type: "json_parse_error" },
 		});
 		throw error; // Re-throw to be caught by asyncHandler
 	}
@@ -264,55 +261,47 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 					has_required_field_errors: "true",
 					error_count: validationResult.error.issues.length.toString(),
 				},
-			extra: {
-				requestId,
-				email: body.email || "missing",
-				full_name: body.full_name || "missing",
-				cities: body.cities || [],
-				citiesLength: body.cities?.length || 0,
-				citiesType: Array.isArray(body.cities) ? "array" : typeof body.cities,
-				careerPath: body.careerPath || [],
-				careerPathLength: body.careerPath?.length || 0,
-				careerPathType: Array.isArray(body.careerPath) ? "array" : typeof body.careerPath,
-				visaStatus: body.visaStatus,
-				entryLevelPreferences: body.entryLevelPreferences,
-				terms_accepted: body.terms_accepted,
-				age_verified: body.age_verified,
-				// Detailed error breakdown
-				allValidationErrors: validationResult.error.issues.map((e: any) => ({
-					path: e.path.join("."),
-					message: e.message,
-					code: e.code,
-					received: e.received,
-					expected: e.expected,
-				})),
-				errorPaths: errorPaths,
-				criticalErrors: criticalErrors.map((e: any) => ({
-					path: e.path.join("."),
-					message: e.message,
-					code: e.code,
-				})),
-				// Full request body for debugging
-				requestBody: JSON.stringify({
-					email: body.email,
-					full_name: body.full_name,
-					cities: body.cities,
-					careerPath: body.careerPath,
+				extra: {
+					requestId,
+					email: body.email || "missing",
+					full_name: body.full_name || "missing",
+					cities: body.cities || [],
+					citiesLength: body.cities?.length || 0,
+					citiesType: Array.isArray(body.cities) ? "array" : typeof body.cities,
+					careerPath: body.careerPath || [],
+					careerPathLength: body.careerPath?.length || 0,
+					careerPathType: Array.isArray(body.careerPath) ? "array" : typeof body.careerPath,
 					visaStatus: body.visaStatus,
 					entryLevelPreferences: body.entryLevelPreferences,
 					terms_accepted: body.terms_accepted,
 					age_verified: body.age_verified,
-				}),
-			},
+					// Detailed error breakdown
+					allValidationErrors: validationResult.error.issues.map((e: any) => ({
+						path: e.path.join("."),
+						message: e.message,
+						code: e.code,
+						received: e.received,
+						expected: e.expected,
+					})),
+					errorPaths: errorPaths,
+					criticalErrors: criticalErrors.map((e: any) => ({
+						path: e.path.join("."),
+						message: e.message,
+						code: e.code,
+					})),
+					// Full request body for debugging
+					requestBody: JSON.stringify({
+						email: body.email,
+						full_name: body.full_name,
+						cities: body.cities,
+						careerPath: body.careerPath,
+						visaStatus: body.visaStatus,
+						entryLevelPreferences: body.entryLevelPreferences,
+						terms_accepted: body.terms_accepted,
+						age_verified: body.age_verified,
+					}),
+				},
 				user: { email: body.email || "unknown" },
-			});
-
-			// Flush Sentry before returning validation error
-			await Promise.race([
-				Sentry.flush(2000),
-				new Promise(resolve => setTimeout(resolve, 2100))
-			]).catch(() => {
-				console.warn("[FREE SIGNUP] Validation error - Sentry flush timeout");
 			});
 		} else {
 			// Optional field validation errors - just log to console, don't spam Sentry
@@ -326,7 +315,7 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			});
 		}
 
-	return NextResponse.json(
+		return NextResponse.json(
 		{
 			error: "invalid_input",
 			message:
@@ -768,12 +757,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			level: "error",
 		});
 
-		// CRITICAL: Flush Sentry to ensure error is sent before throwing
-		await Promise.race([
-			Sentry.flush(2000),
-			new Promise(resolve => setTimeout(resolve, 2100))
-		]).catch(() => {
-			console.warn("[FREE SIGNUP] getConfig error - Sentry flush timeout");
+		// Capture in Sentry
+		Sentry.captureException(error, {
+			tags: { endpoint: "signup-free", error_type: "config_error" },
+			user: { email: normalizedEmail },
 		});
 		
 		throw new Error(`SignupMatchingService.getConfig failed: ${error.message}`);
@@ -828,12 +815,10 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 			level: "error",
 		});
 
-		// CRITICAL: Flush Sentry to ensure error is sent
-		await Promise.race([
-			Sentry.flush(2000),
-			new Promise(resolve => setTimeout(resolve, 2100))
-		]).catch(() => {
-			console.warn("[FREE SIGNUP] Matching error - Sentry flush timeout");
+		// Capture in Sentry
+		Sentry.captureException(error, {
+			tags: { endpoint: "signup-free", error_type: "matching_error" },
+			user: { email: normalizedEmail },
 		});
 		
 		// Create a failed result to continue processing
@@ -1057,26 +1042,12 @@ export const POST = asyncHandler(async (request: NextRequest) => {
 				},
 				level: "error",
 			});
-
-			// CRITICAL: Flush Sentry to ensure error is sent before response
-			// Use a Promise.race to prevent hanging if Sentry doesn't respond
-			await Promise.race([
-				Sentry.flush(2000),
-				new Promise(resolve => setTimeout(resolve, 2100))
-			]).catch(() => {
-				// Sentry flush timeout or error - continue anyway
-				console.warn("[FREE SIGNUP] Sentry flush timeout or failed, continuing");
-			});
-		} catch (sentryError) {
-			logSignupEvent("SENTRY_FLUSH_FAILED", {
-				message: "Failed to flush Sentry",
-				originalError: error.message,
-				sentryError: sentryError instanceof Error ? sentryError.message : String(sentryError),
-			}, requestId, sentryError instanceof Error ? sentryError : new Error(String(sentryError)));
-		}
-
-		// CRITICAL: Re-throw error so asyncHandler can also capture it
-		// This ensures error is captured even if inner catch block fails
-		throw error;
+	} catch (sentryError) {
+		console.error("[FREE SIGNUP] Failed to capture error in Sentry", sentryError);
 	}
+
+	// CRITICAL: Re-throw error so asyncHandler can also capture it
+	// This ensures error is captured even if inner catch block fails
+	throw error;
+} // End of catch (criticalError)
 });
